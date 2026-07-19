@@ -44,6 +44,7 @@ class ForceSpec:
     route: list | None = None          # [(x, y), ...] waypoints (blue); None = static (red)
     formation: str = "column"          # column | line | wedge
     count_param: str | None = None     # if set, scn.params[count_param] overrides count (sweep knob)
+    spacing: float | None = None       # m between successive units along the formation (default: formation_spread)
 
 
 @dataclass
@@ -112,11 +113,12 @@ def build_entities(scn: Scenario, rng: np.random.Generator) -> Entities:
     for f in scn.forces:
         pt = scn.platform_types[f.ptype]
         fdir = _FORMATION_DIR.get(f.formation, (-1.0, 0.0))
+        gap = f.spacing if f.spacing is not None else spread   # per-force unit spacing (depth of laydown)
         cx, cy = f.spawn
         for k in range(_force_count(f, scn)):
             # place along the formation direction with small lateral jitter
-            ox = fdir[0] * spread * k
-            oy = fdir[1] * spread * k + rng.normal(0.0, f.spawn_spread * 0.1)
+            ox = fdir[0] * gap * k
+            oy = fdir[1] * gap * k + rng.normal(0.0, f.spawn_spread * 0.1)
             e.x[i], e.y[i] = cx + ox, cy + oy
             e.z[i] = 200.0 if pt.domain == AIR else 0.0
             e.side[i] = f.side

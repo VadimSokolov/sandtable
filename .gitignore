@@ -28,6 +28,7 @@ runs/
 report/build/
 report/_book/
 report/*.pdf
+report/*.log
 
 # Generated viewers (regenerate deterministically via tools/make_viz.py, tools/make_player.py)
 report/viz/*.html

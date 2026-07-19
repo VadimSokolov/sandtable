@@ -21,6 +21,38 @@ from sandtable.scenario import Scenario
 from sandtable.world import World
 
 
+def overwatch_stations(n: int, cx: float, cy: float, r: float,
+                       size: tuple[float, float], aspect: float = 1.0) -> np.ndarray:
+    """`n` UAS loiter stations tiling the contested band, center-first (priority ordered).
+
+    Stations sit on a lattice (spacing ~1.5*sensor_range so footprints tile with mild overlap)
+    centered on the threat centroid (cx, cy), taken in increasing *anisotropic* distance from the
+    centroid. `aspect` penalizes lateral (y) offsets: with aspect>1 the swarm first spreads ALONG
+    the assault/threat axis (x) before adding lateral rings, matching a threat laydown that runs in
+    depth along x (e.g. a defense in depth). aspect=1 recovers the isotropic square lattice.
+
+    Because the first k stations are identical for any n >= k, adding a UAS never removes coverage:
+    detection coverage is monotone non-decreasing in n, with diminishing returns as the line fills
+    and outer stations fall on sparser parts of the laydown. Returns an (n, 2) array clipped to the
+    field.
+    """
+    if n <= 0:
+        return np.zeros((0, 2))
+    step_m = 1.5 * max(r, 1.0)
+    mx = 2 * n + 1                                        # enough columns to lay all n along x
+    my = 2 * int(np.ceil(np.sqrt(n))) + 1                # odd -> the centroid itself is a station
+    ox = (np.arange(mx) - (mx - 1) / 2) * step_m
+    oy = (np.arange(my) - (my - 1) / 2) * step_m
+    gx, gy = np.meshgrid(ox, oy)
+    cand = np.column_stack([cx + gx.ravel(), cy + gy.ravel()])
+    d = np.hypot(cand[:, 0] - cx, max(aspect, 1e-6) * (cand[:, 1] - cy))
+    order = np.argsort(d, kind="stable")
+    cand = cand[order][:n].astype(float)
+    cand[:, 0] = np.clip(cand[:, 0], 0.05 * size[0], 0.95 * size[0])
+    cand[:, 1] = np.clip(cand[:, 1], 0.05 * size[1], 0.95 * size[1])
+    return cand
+
+
 def step(ent: Entities, world: World, scn: Scenario, spawn_x: float) -> None:
     """Set each entity's movement target in place."""
     gx, gy = scn.objective.goal
@@ -48,11 +80,14 @@ def step(ent: Entities, world: World, scn: Scenario, spawn_x: float) -> None:
     # no air entities, so this branch never fires for them.
     air_idx = np.nonzero(blue & (ent.domain == AIR))[0]
     if air_idx.size > 0:
-        ox = float(scn.params.get("overwatch_x", gx * 0.6))
         h = world.size[1]
-        ys = np.linspace(h * 0.15, h * 0.85, air_idx.size) if air_idx.size > 1 else np.array([h * 0.5])
-        tx_new[air_idx] = ox
-        ty_new[air_idx] = ys
+        cx = float(scn.params.get("overwatch_x", gx * 0.6))
+        cy = float(scn.params.get("overwatch_y", h * 0.5))
+        r = float(np.mean(ent.sensor_range[air_idx])) if air_idx.size else 500.0
+        aspect = float(scn.params.get("overwatch_aspect", 1.0))
+        st = overwatch_stations(air_idx.size, cx, cy, r, world.size, aspect=aspect)
+        tx_new[air_idx] = st[:, 0]
+        ty_new[air_idx] = st[:, 1]
 
     # Blue GROUND that have reached the objective hold there (so arrivals accumulate). Air stations
     # are far from the goal, so UAS are unaffected by this.

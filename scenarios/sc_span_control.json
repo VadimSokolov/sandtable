@@ -38,6 +38,7 @@
       "side": 1,
       "ptype": "at_team",
       "count": 4,
+      "count_param": "n_red",
       "spawn": [3000, 1500],
       "spawn_spread": 60.0,
       "formation": "column"
@@ -55,6 +56,7 @@
     "control_mode": "direct",
     "comms_level": 0,
     "n_blue": 6,
+    "n_red": 4,
     "route_bias": 0.65,
     "formation_spread": 40.0,
     "tempo": 1.0,

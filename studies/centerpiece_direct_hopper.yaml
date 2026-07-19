@@ -1,0 +1,56 @@
+# Centerpiece (IV-A x IV-B) -- DIRECT control, full grid on Hopper.
+# comms_level {0..5} x span n_blue {2,3,4,5,6,8}, with n_red = n_blue (fair fight, so
+# success reflects control quality + operator dilution, not force numbers). 36 designs
+# x n_repeats seeded reps, one sbatch each on the `normal` partition. Pair with
+# centerpiece_supervisory_hopper.yaml to locate the moving direct->supervisory optimum.
+#
+# Run ON Hopper from /scratch/vsokolov/sandtable (pol env):
+#   polarisopt validate studies/centerpiece_direct_hopper.yaml
+#   polarisopt run      studies/centerpiece_direct_hopper.yaml
+
+name: centerpiece-direct
+workspace: "/scratch/vsokolov/sandtable-runs/centerpiece-direct"
+seed: 42
+
+simulator:
+  type: mission
+  options:
+    scenario: scenarios/sc_span_control.json
+    n_repeats: 300
+    base_seed: 42
+    control_mode: direct
+
+runner:
+  type: slurm
+  options:
+    default_resources:
+      partition: normal
+      time: "00:25:00"
+      mem: "2G"
+      setup_commands:
+        - "source /opt/sw/spack/apps/linux-rhel8-x86_64_v2/gcc-10.3.0/miniconda3-22.11.1-gy/etc/profile.d/conda.sh"
+        - "conda activate pol"
+
+parameters:
+  inline:
+    - { name: comms_level, file: inputs.json, min: 0, max: 5, type: int }
+    - { name: n_blue,      file: inputs.json, min: 2, max: 8, type: int }
+    - { name: n_red,       file: inputs.json, min: 2, max: 8, type: int }
+
+metric:
+  type: identity
+  options:
+    keys: [success_rate, blue_losses, red_losses, time_to_objective, t_obj_success, blue_loss_frac, loss_exchange]
+
+phases:
+  - name: grid
+    type: static
+    design:
+      type: manual
+      options:
+        points: [[0,2,2],[0,3,3],[0,4,4],[0,5,5],[0,6,6],[0,8,8],
+                 [1,2,2],[1,3,3],[1,4,4],[1,5,5],[1,6,6],[1,8,8],
+                 [2,2,2],[2,3,3],[2,4,4],[2,5,5],[2,6,6],[2,8,8],
+                 [3,2,2],[3,3,3],[3,4,4],[3,5,5],[3,6,6],[3,8,8],
+                 [4,2,2],[4,3,3],[4,4,4],[4,5,5],[4,6,6],[4,8,8],
+                 [5,2,2],[5,3,3],[5,4,4],[5,5,5],[5,6,6],[5,8,8]]

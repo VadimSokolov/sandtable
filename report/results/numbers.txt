@@ -1,0 +1,31 @@
+SandTable paper -- generated numbers (source: tools/make_numbers.py over report/data/*.csv)
+==============================================================================
+\cpDirClearLoSpan = 81    # direct success%% span1:2 C0
+\cpDirSevereLoSpan = 56    # direct success%% span1:2 C5
+\cpDirClearHiSpan = 4    # direct success%% span1:8 C0
+\cpSupClearHiSpan = 31    # supervisory success%% span1:8 C0
+\cpSupLoSpanMin = 71    # supervisory span1:2 min success%% over comms
+\cpSupLoSpanMax = 78    # supervisory span1:2 max success%% over comms
+\cpSupLoSpanSpread = 6.3    # supervisory span1:2 comms spread (pp)
+\cpStarLoSpan = 1    # crossover C* at span 1:2
+\cpStarHiSpan = 0    # crossover C* at span 1:8
+\cpDeltaMax = 34    # max supervisory-minus-direct advantage (pp)
+\cpDeltaHiSpanClear = 27    # supervisory advantage at span 1:8, C0 (pp)
+\ucThreeSuccFast = 22    # UC3 success%% route_bias 0 (fast corridor)
+\ucThreeSuccCover = 99    # UC3 success%% route_bias 1 (defilade)
+\ucThreeLossFast = 6.1    # UC3 blue losses route_bias 0 (of 8)
+\ucThreeLossCover = 0.7    # UC3 blue losses route_bias 1 (of 8)
+\ucThreeTimeFast = 468    # UC3 time-to-obj (s) route_bias 0
+\ucThreeTimeCover = 1082    # UC3 time-to-obj (s) route_bias 1
+\ucThreeTempoRatio = 2.3    # UC3 tempo ratio cover/fast
+\ucFiveSwarmMax = 8    # UC5 largest swarm size
+\ucFiveSuccBlind = 2    # UC5 success%% no recon (n=0)
+\ucFiveSuccBestClear = 80    # UC5 success%% max swarm, C0
+\ucFiveSuccBestSevere = 52    # UC5 success%% max swarm, C5
+\ucFiveCovBlind = 0.01    # UC5 coverage no recon
+\ucFiveCovBestClear = 0.79    # UC5 coverage max swarm C0
+\ucFiveCovBestSevere = 0.39    # UC5 coverage max swarm C5
+\ucFiveSuccMidClear = 56    # UC5 success%% n=3 C0
+\ucFiveSuccMidSevere = 28    # UC5 success%% n=3 C5
+\lanchMaxErr = 9.1    # max Lanchester relative error (%)
+\nRep = 300    # Monte-Carlo replications per design

@@ -1,0 +1,46 @@
+# UC-3 route-vs-defilade -- cover/tempo trade-off FRONTIER on Hopper.
+# Dense 1D sweep of route_bias (0=fastest corridor .. 1=maximum defilade) at fixed
+# formation_spread/tempo, high reps, so the (time-to-objective, attrition) Pareto
+# frontier and its knee come out clean. Pairs with the LHS/Morris sensitivity study.
+#
+#   polarisopt run studies/uc3_frontier_hopper.yaml
+
+name: uc3-frontier
+workspace: "/scratch/vsokolov/sandtable-runs/uc3-frontier"
+seed: 42
+
+simulator:
+  type: mission
+  options:
+    scenario: scenarios/uc3_route_defilade.json
+    n_repeats: 300
+    base_seed: 42
+
+runner:
+  type: slurm
+  options:
+    default_resources:
+      partition: normal
+      time: "00:25:00"
+      mem: "2G"
+      setup_commands:
+        - "source /opt/sw/spack/apps/linux-rhel8-x86_64_v2/gcc-10.3.0/miniconda3-22.11.1-gy/etc/profile.d/conda.sh"
+        - "conda activate pol"
+
+parameters:
+  inline:
+    - { name: route_bias, file: inputs.json, min: 0.0, max: 1.0 }
+
+metric:
+  type: identity
+  options:
+    keys: [success_rate, blue_losses, red_losses, time_to_objective, t_obj_success, blue_loss_frac, loss_exchange]
+
+phases:
+  - name: frontier
+    type: static
+    design:
+      type: manual
+      options:
+        points: [[0.0],[0.05],[0.10],[0.15],[0.20],[0.25],[0.30],[0.35],[0.40],[0.45],[0.50],
+                 [0.55],[0.60],[0.65],[0.70],[0.75],[0.80],[0.85],[0.90],[0.95],[1.0]]
