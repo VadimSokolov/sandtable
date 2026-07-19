@@ -43,13 +43,14 @@ Bayesian-optimization and DOE orchestrator, and we drive \nRep{} replications pe
 reproduces Lanchester's square law to within \lanchMaxErr\%. Three studies yield decision-relevant
 results. First, the direct-to-supervisory control optimum \emph{moves}: at a low span of control
 (one operator to two assets) direct control wins only when communications are clear, while at high
-span (one to eight) on-platform autonomy wins even in the clear, by up to \cpDeltaMax{}~percentage
-points. Second, route choice traces a clean speed-survivability frontier: a defilade route reaches
-\ucThreeSuccCover\% mission success against \ucThreeSuccFast\% for a fast exposed corridor, at
-\ucThreeTempoRatio$\times$ the time. Third, a recon swarm cueing near-blind shooters lifts success
-from \ucFiveSuccBlind\% (no recon) to \ucFiveSuccBestClear\%, but jamming severs the
-sensor-to-shooter chain and cuts that to \ucFiveSuccBestSevere\%. \sandtable{} is offered as the
-fast inner-loop companion to ProjectGL for Army mission engineering.
+span (one-to-eight) on-platform autonomy wins at every communications level, by
+\cpDeltaHiSpanClear{}~percentage points even in the clear. Second, route choice traces a clean
+speed-survivability frontier: a defilade route reaches \ucThreeSuccCover\% mission success against
+\ucThreeSuccFast\% for a fast exposed corridor, at \ucThreeTempoRatio$\times$ the time. Third, a
+recon swarm cueing near-blind shooters lifts success from \ucFiveSuccBlind\% (no recon) to
+\ucFiveSuccBestClear\%, but jamming degrades the sensor-to-shooter chain and cuts that to
+\ucFiveSuccBestSevere\%. \sandtable{} is offered as the fast inner-loop companion to ProjectGL for
+Army mission engineering.
 \end{abstract}
 
 \section{Introduction}
@@ -65,10 +66,10 @@ the value of a recon swarm depends on whether its picture survives jamming. Answ
 questions demands experiments that sweep the knobs and measure outcomes against an engineered
 ground truth, not one-off demonstrations.
 
-ProjectGL, the Army's Government-furnished simulation framework built on Unreal Engine, is the
-authoritative environment for this work \citep{stanko2025projectgl}. It models vehicle dynamics,
-sensing, and synthetic terrain at high fidelity and won a 2024 Army Modeling and Simulation award.
-That fidelity is exactly what makes it unsuitable for the \emph{inner loop} of a design study:
+ProjectGL, the Army's Government-furnished simulation framework, is the authoritative,
+high-fidelity environment for this work \citep{stanko2025projectgl}. It models vehicle dynamics,
+sensing, and synthetic terrain in real time. That fidelity is exactly what makes it unsuitable for
+the \emph{inner loop} of a design study:
 each mission runs at or near real time, so a modest experiment of a few hundred design points, each
 averaged over a few hundred stochastic replications, would take weeks of wall-clock time. Bayesian
 optimization and sensitivity analysis need the objective evaluated thousands of times, quickly and
@@ -86,12 +87,12 @@ kept only as detailed as it must be to produce the right \emph{ordering} of desi
 
 A model built for a search loop must satisfy two properties that ordinary simulators often do not.
 It must be a \emph{pure function} of its inputs, with no global or hidden state, so that a run is
-reproducible from its seed, cacheable, and safe to evaluate in parallel; and it must carry an
+reproducible from its seed, cacheable, and safe to evaluate in parallel. It must also carry an
 \emph{engineered ground truth}, a known correct answer for each trial, so that outcomes are scored
 against truth rather than against agreement with the model's own agents. \sandtable{} is designed
 around both.
 
-\paragraph{Contributions} This paper makes the following four contributions.
+The contributions of this paper are the following.
 \begin{enumerate}
 \item \sandtable{}, a fast, reproducible, pure-Python mission-level simulator whose
 \texttt{run\_mission} contract is a pure function of (scenario, seed, parameters), wired into a
@@ -113,14 +114,18 @@ within \lanchMaxErr\%, with the residual explained by known discretization effec
 \section{Background and Related Work}
 \label{sec:related}
 
-\paragraph{Mission engineering and ProjectGL.} Mission engineering analyzes how systems combine to
+\sandtable{} draws on four bodies of work: mission engineering and the ProjectGL environment it
+serves, human-machine teaming and supervisory control, agent-based combat simulation, and design of
+experiments with optimization.
+
+\emph{Mission engineering and ProjectGL.} Mission engineering analyzes how systems combine to
 accomplish a mission and traces measures of effectiveness back to design choices
 \citep{raz2024mission}. ProjectGL provides the Army's shared, modular basis for such analysis in the
 ground domain \citep{stanko2025projectgl}. \sandtable{} does not replace it; it occupies the fast
 end of a fidelity spectrum, producing the response surfaces that tell an engineer which designs are
 worth running at high fidelity.
 
-\paragraph{Human-machine teaming and supervisory control.} The distinction between direct and
+\emph{Human-machine teaming and supervisory control.} The distinction between direct and
 supervisory control dates to early telerobotics \citep{sheridan1978supervisory}, and the limits of
 a single operator's situation awareness \citep{endsley1995awareness} and attention set how many
 assets that operator can effectively command. Operator-capacity models estimate this span from
@@ -132,16 +137,17 @@ map across the span-by-communications design space. For uncrewed-aircraft swarms
 meta-analysis of swarm-management interfaces documents how operator performance degrades as swarm
 size and tempo grow \citep{hocraffer2017meta}, which motivates our sensor-swarm study.
 
-\paragraph{Agent-based combat simulation.} Low-fidelity, effect-based combat models have a long
+\emph{Agent-based combat simulation.} Low-fidelity, effect-based combat models have a long
 lineage. Flocking rules generate formation movement from local interactions
 \citep{reynolds1987flocks}; operation-time agent frameworks schedule swarm tasks against a mission
 clock \citep{wei2013operation}; and general agent-based modeling frameworks such as Mesa
 \citep{masad2015mesa} popularized the pattern we follow, though for a tight optimization loop we use
 a bespoke vectorized state representation rather than per-agent Python objects. A recurring lesson
 in this literature is to validate an emergent model against a closed-form law; we adopt Lanchester's
-square law \citep{kress2020lanchester} for that purpose.
+square law \citep{lanchester1916aircraft}, in the modern treatment of \citet{kress2020lanchester},
+for that purpose.
 
-\paragraph{Design of experiments and optimization.} The studies here are batch DOE sweeps; the same
+\emph{Design of experiments and optimization.} The studies here are batch DOE sweeps; the same
 plumbing supports Bayesian optimization via Monte-Carlo acquisition functions
 \citep{balandat2020botorch} when a design space is too large to grid. The simulator core is built on
 vectorized array programming \citep{harris2020numpy}.
@@ -149,13 +155,19 @@ vectorized array programming \citep{harris2020numpy}.
 \section{The \sandtable{} Model}
 \label{sec:model}
 
+\sandtable{} is a layered mission-level model: a pure-function evaluation contract wraps a
+vectorized state and a fixed-step loop over movement, sensing, engagement, command, and
+communications. The subsections below describe each layer and the two properties that make the model
+fit for a search loop.
+
 \subsection{Design contract}
 The top-level interface is a pure function
 \[
 \texttt{run\_mission}(\text{scenario}, \text{seed}, \text{params}) \;\rightarrow\; \text{metrics},
 \]
 with no module-level state, no global random number generator, and no file or wall-clock access in
-the hot path. A companion \texttt{evaluate} averages the metrics over $n$ seeded replications. This
+the hot path. A companion \texttt{evaluate} averages the metrics across a requested number of seeded
+replications. This
 boundary is what makes a run reproducible from its seed, cacheable, and safe to evaluate
 concurrently, and it is what lets the optimizer treat the simulator as a black-box objective. All
 randomness is drawn from a single generator seeded per replication, so identical seeds reproduce
@@ -169,8 +181,8 @@ parallel NumPy arrays rather than in per-agent objects \citep{harris2020numpy}. 
 on a fixed time step (1~s here). Each step updates, in order, command tasking, planning, motion,
 sensing, and engagement. This vectorized design runs a full mission of up to 1800 steps in roughly
 0.1~s on a single core, about 7 to 11 replications per second depending on scenario, so
-the 44,100 replications behind this paper are a few core-hours, trivially parallel across a
-cluster.
+the 44,100 replications behind this paper are one to two core-hours of compute, trivially parallel
+across a cluster.
 
 \subsection{Movement, sensing, and engagement}
 Ground platforms follow a unicycle kinematic model, with speed capped by a precomputed
@@ -195,9 +207,9 @@ dilutes with span: the effective operator quality is
 q_{\text{operator}}^{\text{eff}} = q_{\text{auto}} + \big(q_{\text{operator}} - q_{\text{auto}}\big)\,
 \min\!\Big(1, \tfrac{\kappa}{n}\Big),
 \]
-where $n$ is the number of supervised assets and $\kappa$ the operator's service capacity. Below
-capacity the operator adds full value; above it, requests queue and the human-in-the-loop advantage
-erodes. Control quality feeds engagement (a well-controlled shooter is more effective; a poorly
+where $n$ is the number of supervised assets and $\kappa$ the operator's attention (span) capacity
+(here $q_{\text{auto}}=0.70$, $q_{\text{operator}}=0.95$, $\kappa=4$). Below capacity the operator
+adds full value; above it, requests queue and the human-in-the-loop advantage erodes. Control quality feeds engagement (a well-controlled shooter is more effective; a poorly
 controlled or stalled asset exposes itself), so the abstract quality translates into mission
 outcomes. This model, an operator as a capacity-limited server whose value is gated by both span
 and link quality, is the mechanism behind the moving optimum of Section~\ref{subsec:centerpiece},
@@ -207,14 +219,20 @@ and it is grounded in the operator-capacity and supervisory-control literature
 \subsection{Communications and EW ladder}
 A single \texttt{comms\_level} parameter indexes a C0--C5 degradation ladder, from clear (C0) to
 severe (C5), that raises tasking latency and message-drop probability and thins the shared picture
-by dropping relayed contacts. Because supervisory autonomy does not depend on the link while direct
-control does, the ladder is the axis along which the two modalities separate.
+by dropping relayed contacts. The six rungs raise one-way tasking latency from 0 to 16 time steps
+and message-drop probability from 0 to 0.55, spanning a benign link to a heavily contested one; the
+rung values are set parameters, not measured link data. Because supervisory autonomy does not depend
+on the link while direct control does, the ladder is the axis along which the two modalities
+separate.
 
 \subsection{Engineered ground truth}
 Every scenario carries a correct answer for the trial (which threats exist, which route survives,
 what outcome a design should produce), and every agent exposes dial-able error and confidence. This
 is what lets a study score a design against truth rather than against agreement with the model's own
 agents, and it is a prerequisite for the pattern-detection objectives the broader program pursues.
+Because each agent's error rate, confidence behavior, and version state are knobs rather than
+emergent artifacts, a study can hold the ground truth fixed and vary only the teaming design under
+test.
 
 \section{Experimental Setup}
 \label{sec:setup}
@@ -234,7 +252,9 @@ orchestrator through its SLURM runner on the GMU Hopper cluster: one batch job p
 each running its \nRep{} replications. Reported outcomes are mission success rate (fraction of
 replications meeting the objective), attrition (mean losses per side), time to objective, and, for
 UC-5, detection coverage (the time-averaged fraction of the live threat force held on the shared
-picture). Success-rate confidence intervals are the normal approximation
+picture). Because a replication ends when the assault force reaches the objective or is eliminated,
+coverage is averaged over an outcome-dependent window, so coverage and success are related, not
+independent, measures. Success-rate confidence intervals are the normal approximation
 $1.96\sqrt{p(1-p)/\nRep{}}$, about 6~percentage points at $p=0.5$.
 
 All numbers and tables in this paper are generated from the study outputs by a single script and
@@ -243,14 +263,18 @@ inlined, so every value traces to code and data.
 \section{Results}
 \label{sec:results}
 
+We first validate the attrition kernel against a closed-form law, then report the three studies:
+route choice, the span-by-communications centerpiece, and the sensor swarm under EW.
+
 \subsection{Validation against Lanchester's square law}
 \label{subsec:validation}
 
 Before drawing design conclusions we check that the attrition kernel obeys a recognized combat law.
 \sandtable{} resolves fire as aimed fire, so when fire is distributed the kill rate on a side is
 proportional to the number of opposing shooters, which is the hypothesis of Lanchester's square law
-\citep{kress2020lanchester}. For equal effectiveness the stronger side annihilates the weaker and
-its survivors are $\sqrt{B_0^2 - R_0^2}$. We isolate the kernel (no movement, no cover, mutual
+\citep{lanchester1916aircraft}. For initial blue and red strengths $B_0$ and $R_0$ of equal
+per-unit effectiveness, the stronger side annihilates the weaker and its survivors are
+$\sqrt{B_0^2 - R_0^2}$. We isolate the kernel (no movement, no cover, mutual
 detection, forces intermixed so fire distributes) and compare the Monte-Carlo mean survivors to that
 closed form (Table~\ref{tab:lanchester}). Agreement is within \lanchMaxErr\%, biased slightly low.
 The bias is expected and conservative: simultaneous discrete-time resolution lets a unit about to
@@ -285,7 +309,7 @@ noise is the sensitivity property a search loop requires.
 \includegraphics[width=\textwidth]{uc3_frontier.pdf}
 \caption{UC-3 route choice. (a) Mission success rises and attrition falls as the route moves from
 the fast corridor toward defilade cover. (b) The speed-survivability frontier: time to objective
-against blue losses, colored by route bias. Bands and markers are means over \nRep{} replications.}
+against blue losses, colored by route bias. Markers and lines are means over \nRep{} replications.}
 \label{fig:uc3}
 \end{figure}
 
@@ -314,8 +338,10 @@ communications) are where a human in the loop wins, red cells everywhere else ar
 autonomy wins, and the black contour is the crossover. The optimum \emph{moves}. At the smallest
 span the crossover sits at C$\cpStarLoSpan{}$: direct control is competitive only while
 communications are near-clear. As span grows the crossover slides left until, at one-to-eight,
-supervisory autonomy dominates at every communications level (crossover C$\cpStarHiSpan{}$), by as
-much as \cpDeltaMax{}~percentage points. The single most decision-relevant reading is the boundary
+supervisory autonomy dominates at every communications level (crossover C$\cpStarHiSpan{}$), by
+\cpDeltaHiSpanClear{}~percentage points even in the clear. Across the whole grid the supervisory
+advantage reaches \cpDeltaMax{}~percentage points, at span one-to-six under the heaviest
+degradation. The single most decision-relevant reading is the boundary
 itself: the more assets one operator must supervise, the less communications degradation it takes
 before control should be handed to the machines. Table~\ref{tab:centerpiece} gives the full grid.
 
@@ -358,11 +384,12 @@ coverage climbs steeply until the swarm is large enough to blanket the depth of 
 to \ucFiveSuccBestClear\%. The sensor-to-shooter chain is the whole story: recon is what lets blind
 shooters engage, and swarm size buys the coverage that cues them.
 
-Electronic warfare breaks that chain. As jamming intensifies it thins the shared picture, and both
-coverage and success collapse toward the no-recon baseline at every swarm size. At the largest swarm,
-success falls from \ucFiveSuccBestClear\% in clear conditions to \ucFiveSuccBestSevere\% under severe
-EW, and coverage from \ucFiveCovBestClear{} to \ucFiveCovBestSevere{}; a mid-sized swarm collapses
-from \ucFiveSuccMidClear\% to \ucFiveSuccMidSevere\%. The design implication is that swarm size and
+Jamming erodes that chain. As jamming intensifies it thins the shared picture, and both coverage and
+success fall sharply at every swarm size, though they stay well above the no-recon baseline. At the
+largest swarm, success falls from \ucFiveSuccBestClear\% in clear conditions to
+\ucFiveSuccBestSevere\% under severe EW, and coverage from \ucFiveCovBestClear{} to
+\ucFiveCovBestSevere{}; a mid-sized swarm falls from \ucFiveSuccMidClear\% to \ucFiveSuccMidSevere\%,
+roughly halving. The design implication is that swarm size and
 communications resilience are complements, not substitutes: buying more aircraft raises the ceiling
 in clear conditions but does not protect the picture once the link is contested.
 
@@ -370,7 +397,7 @@ in clear conditions but does not protect the picture once the link is contested.
 \centering
 \includegraphics[width=\textwidth]{uc5_swarm_jam.pdf}
 \caption{UC-5 sensor swarm under EW. (a) Detection coverage rises with swarm size, with a threshold
-where the swarm blankets the defense in depth, then collapses as jamming (C0 clear to C5 severe)
+where the swarm blankets the defense in depth, then declines as jamming (C0 clear to C5 severe)
 thins the shared picture. (b) Cued mission success tracks coverage and falls with jamming at every
 swarm size. Means over \nRep{} replications.}
 \label{fig:uc5}
@@ -378,8 +405,8 @@ swarm size. Means over \nRep{} replications.}
 
 \begin{table}[H]
 \centering
-\caption{UC-5 detection coverage (cov) and mission success (succ, \%) by swarm size and
-communications level, means over \nRep{} replications.}
+\caption{UC-5 detection coverage (cov) and mission success (succ, \%) by swarm size at selected
+communications levels (C0 clear, C3, C5 severe), means over \nRep{} replications.}
 \label{tab:uc5}
 \input{gen/tab_uc5}
 \end{table}
@@ -398,7 +425,7 @@ statement about one design; each is a map of how the right design moves as condi
 is what mission engineering needs.
 
 Methodologically, the results argue for the two-tier workflow. \sandtable{} ran 44,100
-replications in a few core-hours and returned smooth, well-ordered response surfaces with tight
+replications in one to two core-hours and returned smooth, well-ordered response surfaces with tight
 confidence intervals, precisely the regions and boundaries a high-fidelity ProjectGL study should
 then confirm. The fast tier is not a replacement for fidelity; it is what makes fidelity affordable,
 by spending the expensive engine only on the designs the cheap one has flagged.
@@ -409,15 +436,27 @@ by spending the expensive engine only on the designs the cheap one has flagged.
 \sandtable{} is deliberately low-fidelity, and its conclusions inherit that. Movement is 2.5D
 kinematic, not physics-based; sensing and engagement are effect-based draws, not signal or
 signature models; terrain is a scalar trafficability-and-cover field, not a rendered environment;
-and line of sight is a flat-terrain stub. The command model is a capacity-limited-server
+and line of sight is a flat-terrain stub. Tactical behavior is simplified too: red forces are static
+defenders that fire but neither maneuver nor react, so every finding is conditioned on a
+non-adaptive threat, and recon aircraft cannot be engaged (no air defense is modeled), so swarm size
+carries no survivability cost and the UC-5 upside is an upper bound.
+
+The model's parameters are set, not measured. The command model is a capacity-limited-server
 abstraction of operator attention, calibrated to the qualitative findings of the supervisory-control
-literature rather than to human-subject data. The absolute success rates should therefore be read as
-comparative, not predictive: the value is in the \emph{ordering} of designs and the \emph{location}
-of crossovers, which is what a search loop consumes, not in any single percentage. The moving
-optimum's exact crossover cells near the contour are within Monte-Carlo noise, so the robust claim is
-the direction of the boundary, not its precise cell. The Lanchester check validates the aggregate
-attrition law but not the spatial or command dynamics, which is why the intended role of the model is
-to feed, not replace, high-fidelity validation.
+literature rather than to human-subject data; and the lethality probabilities and the C0--C5 latency
+and drop values are hand-set, so they, not measured link or weapon data, fix where the crossover
+falls and how fast the sensor-to-shooter chain degrades. The studies also use fixed heuristic
+behaviors rather than learned or reinforcement-learning policies, a single operator with no handoff
+or dynamic span reallocation, and three scenarios with small teams; extrapolation to larger forces,
+multi-operator command, or adaptive policies is untested.
+
+The absolute success rates should therefore be read as comparative, not predictive: the value is in
+the \emph{ordering} of designs and the \emph{location} of crossovers, which is what a search loop
+consumes, not in any single percentage. The moving optimum's exact crossover cells near the contour
+are within Monte-Carlo noise, so the robust claim is the direction of the boundary, not its precise
+cell. The Lanchester check validates the aggregate attrition law but not the spatial or command
+dynamics, which is why the intended role of the model is to feed, not replace, high-fidelity
+validation.
 
 \section{Conclusion}
 \label{sec:conclusion}

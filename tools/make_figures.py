@@ -104,8 +104,9 @@ def fig_centerpiece_curves() -> None:
             ax.fill_between(df["comms_level"], (p - _ci(p)) * 100, (p + _ci(p)) * 100,
                             color=col, alpha=0.15, lw=0)
         ax.set_title(f"span 1:{n}")
-        ax.set_xlabel("comms level")
+        ax.set_xlabel("comms / EW level")
         ax.set_xticks(range(6))
+        ax.set_xticklabels([f"C{i}" for i in range(6)])
     axes[0].set_ylabel("mission success (%)")
     axes[0].legend(loc="upper right")
     axes[0].set_ylim(0, 100)
@@ -122,17 +123,18 @@ def fig_uc3_frontier() -> None:
     g = f.groupby("route_bias", as_index=False).mean(numeric_only=True)
     fig, (a0, a1) = plt.subplots(1, 2, figsize=(7.6, 3.1))
 
-    # (a) success and attrition vs route_bias
+    # (a) success and attrition vs route_bias. Colorblind-safe pair (blue vs amber), and the two
+    # series also differ by marker (o vs s), so hue is never the sole channel.
     a0b = a0.twinx()
-    a0.plot(g["route_bias"], g["success_rate"] * 100, color=GREEN, marker="o", ms=3.5, lw=1.7,
+    a0.plot(g["route_bias"], g["success_rate"] * 100, color=BLUE, marker="o", ms=3.5, lw=1.7,
             label="success")
-    a0b.plot(g["route_bias"], g["blue_losses"], color=RED, marker="s", ms=3.5, lw=1.7,
+    a0b.plot(g["route_bias"], g["blue_losses"], color=AMBER, marker="s", ms=3.5, lw=1.7,
              label="blue losses")
     a0.set_xlabel("route bias (0 = fast corridor $\\rightarrow$ 1 = defilade)")
-    a0.set_ylabel("mission success (%)", color=GREEN)
-    a0b.set_ylabel("blue losses (of 8)", color=RED)
+    a0.set_ylabel("mission success (%)", color=BLUE)
+    a0b.set_ylabel("blue losses (of 8)", color=AMBER)
     a0.set_ylim(0, 100); a0b.set_ylim(0, 8)
-    a0.tick_params(axis="y", colors=GREEN); a0b.tick_params(axis="y", colors=RED)
+    a0.tick_params(axis="y", colors=BLUE); a0b.tick_params(axis="y", colors=AMBER)
     a0.set_title("(a) Survivability rises with cover")
     a0b.grid(False)
 

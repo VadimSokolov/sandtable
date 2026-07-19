@@ -4,9 +4,9 @@ SandTable paper -- generated numbers (source: tools/make_numbers.py over report/
 \cpDirSevereLoSpan = 56    # direct success%% span1:2 C5
 \cpDirClearHiSpan = 4    # direct success%% span1:8 C0
 \cpSupClearHiSpan = 31    # supervisory success%% span1:8 C0
-\cpSupLoSpanMin = 71    # supervisory span1:2 min success%% over comms
-\cpSupLoSpanMax = 78    # supervisory span1:2 max success%% over comms
-\cpSupLoSpanSpread = 6.3    # supervisory span1:2 comms spread (pp)
+\cpSupLoSpanMin = 71    # supervisory span1:2 min success%% over comms (rounded)
+\cpSupLoSpanMax = 78    # supervisory span1:2 max success%% over comms (rounded)
+\cpSupLoSpanSpread = 7    # supervisory span1:2 comms spread (pp, rounded endpoints)
 \cpStarLoSpan = 1    # crossover C* at span 1:2
 \cpStarHiSpan = 0    # crossover C* at span 1:8
 \cpDeltaMax = 34    # max supervisory-minus-direct advantage (pp)

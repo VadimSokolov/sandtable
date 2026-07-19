@@ -50,11 +50,14 @@ def centerpiece() -> None:
     put("cpDirClearHiSpan", dsucc(d, 8, 0), "direct success%% span1:8 C0")
     put("cpSupClearHiSpan", dsucc(s, 8, 0), "supervisory success%% span1:8 C0")
 
-    # supervisory comms-invariance: spread across comms for span 1:2
+    # supervisory comms-invariance: spread across comms for span 1:2.
+    # Round endpoints first, then take their difference, so the reported spread is consistent
+    # with the reported (rounded) endpoints (avoids "71 to 78 = 6.3" rounding drift).
     row = s[s.n_blue == 2].sort_values("comms_level")["success_rate"].values * 100
-    put("cpSupLoSpanMin", _fmt(row.min()), "supervisory span1:2 min success%% over comms")
-    put("cpSupLoSpanMax", _fmt(row.max()), "supervisory span1:2 max success%% over comms")
-    put("cpSupLoSpanSpread", _fmt(row.max() - row.min(), 1), "supervisory span1:2 comms spread (pp)")
+    lo, hi = round(row.min()), round(row.max())
+    put("cpSupLoSpanMin", lo, "supervisory span1:2 min success%% over comms (rounded)")
+    put("cpSupLoSpanMax", hi, "supervisory span1:2 max success%% over comms (rounded)")
+    put("cpSupLoSpanSpread", hi - lo, "supervisory span1:2 comms spread (pp, rounded endpoints)")
 
     # crossover C* per span (first comms where delta >= 0)
     stars = {}
@@ -99,7 +102,8 @@ def uc3() -> None:
     keep = [0.0, 0.25, 0.5, 0.75, 1.0]
     sub = g[g.route_bias.isin(keep)]
     lines = [r"\begin{tabular}{rrrrr}", r"\toprule",
-             r"route bias & success (\%) & blue losses & red losses & $t_{\text{obj}}$ (s) \\", r"\midrule"]
+             r"route bias & success (\%) & blue losses (of 8) & red losses (of 6) & $t_{\text{obj}}$ (s) \\",
+             r"\midrule"]
     for _, r in sub.iterrows():
         lines.append(f"{r.route_bias:.2f} & {r.success_rate*100:.0f} & {r.blue_losses:.1f} & "
                      f"{r.red_losses:.1f} & {r.t_obj_success:.0f}" + r" \\")

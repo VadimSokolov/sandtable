@@ -317,3 +317,34 @@ Status: all three scenarios complete with sensitive, insightful 300-rep results;
 Lanchester validated; paper drafted and passing pre-flight. Next: optional Bayesian-
 optimization studies (search rather than grid) and high-fidelity confirmation in
 ProjectGL of the flagged designs.
+
+## 2026-07-19  Self-audit (academic-paper Workflow 4), all ten phases
+
+Ran the full self-audit: pre-flight (5 checks) + Phases 2-8 as parallel read-only
+subagents (math/notation, claims, citations, consistency, limitations, structure/style,
+figures/tables) + Phase 9 (code) + Phase 10 (compile). Fixes applied (all numbers still
+trace to code; figures/tables regenerated from make_numbers.py + make_figures.py):
+- Citations: corrected `raz2024mission` title (CrossRef: "...with System of Systems
+  Interdependence", not the invented subtitle) and given name (Marco, not Mara); added
+  "and others" to Stanko et al. (21 authors); added the primary `lanchester1916aircraft`
+  (OpenAlex W1550662062) for the square law, keeping Kress 2020 as the modern treatment.
+- Claims: removed the unverifiable "2024 M&S award" clause and the "built on Unreal
+  Engine" specific (not supported by the cited SAE paper); softened "severs/breaks/
+  collapse toward baseline" to match the data (UC-5 severe stays well above the no-recon
+  baseline: 52% vs 2%).
+- Accuracy: fixed the +34 pp attribution (that maximum is at span 1:6 under heavy EW;
+  at 1:8 in the clear it is +27, macro cpDeltaHiSpanClear); reconciled the supervisory
+  spread (71 to 78 = 7 pp, not 6.3) by rounding endpoints in make_numbers.py.
+- Limitations: added static (non-maneuvering) red, invulnerable UAS (no air defense, so
+  swarm size has no survivability cost = UC-5 upside is an upper bound), and hand-set pk
+  and C0-C5 ladder values; noted single-operator, no-RL, three-scenario scope.
+- Style: converted the four Related-Work `\paragraph{}` headers and the Contributions
+  header to prose leads; added orienting sentences after Sections 2, 3, 5 (no bare
+  heading stacks); split one 62-word sentence; pinned q_auto/q_operator/kappa values and
+  fixed the n/kappa notation.
+- Figures/tables: recolored UC-3 to a colorblind-safe blue/amber pair with distinct
+  markers; added C0-C5 tick labels to the centerpiece curves; fixed the UC-3 caption
+  ("bands" -> markers/lines), UC-5 table caption (selected levels), and UC-3 table loss
+  units (of 8 / of 6). Added a Section-4 note on the coverage/success truncation coupling.
+Result: pre-flight PASSES all five checks (15/15 citations verified, 2 AI-vocab hits,
+zero em-dashes, contributions resolve, compile clean); 12 pages.
