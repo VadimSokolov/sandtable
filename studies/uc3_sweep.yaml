@@ -1,0 +1,47 @@
+# UC-3 route-vs-defilade -- Latin-hypercube screening (local runner).
+# 48 designs x 20 seeded replications, each design evaluated in a slave
+# subprocess via `python -m sandtable.runner`. Stores the raw KPIs per sample so the
+# response surface (success / attrition / time vs route_bias, spread, tempo) can
+# be plotted. Run from the repo root so the scenario path resolves:
+#
+#   pip install -e '.[opt]'                 # registers simulator type "mission"
+#   polarisopt validate studies/uc3_sweep.yaml
+#   polarisopt run      studies/uc3_sweep.yaml
+#   polarisopt status   studies/uc3_sweep.yaml
+
+name: uc3-sweep
+workspace: "{{ env.HOME }}/sandtable-runs/uc3-sweep"
+seed: 42
+
+simulator:
+  type: mission
+  options:
+    scenario: scenarios/uc3_route_defilade.json
+    n_repeats: 20          # average 20 seeded runs per design (CI ~ +/-0.03 on success)
+    base_seed: 42
+
+runner:
+  type: local
+  options: {}
+
+# The three mission-design knobs, searched over their doctrinal ranges.
+# route_bias 0 = fast exposed corridor, 1 = slow covered route.
+parameters:
+  inline:
+    - { name: route_bias,       file: inputs.json, min: 0.0, max: 1.0 }
+    - { name: formation_spread, file: inputs.json, min: 20.0, max: 120.0 }
+    - { name: tempo,            file: inputs.json, min: 0.5, max: 1.0 }
+
+# Multi-key identity metric: store the interesting KPIs per sample for analysis.
+metric:
+  type: identity
+  options:
+    keys: [success_rate, blue_losses, red_losses, time_to_objective, t_obj_success, blue_loss_frac, loss_exchange]
+
+phases:
+  - name: lhs
+    type: static
+    design:
+      type: lhs
+      options:
+        n: 48

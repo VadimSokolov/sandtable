@@ -1,0 +1,58 @@
+{
+  "name": "UC-3 Route vs Defilade",
+  "id": 3,
+  "size": [6000, 3000],
+  "dt": 1.0,
+  "duration": 1800.0,
+  "platform_types": {
+    "ugv": {
+      "domain": 0,
+      "max_speed": 12.0,
+      "turn_rate": 0.6,
+      "sensor_range": 1500.0,
+      "weapon_range": 1200.0,
+      "pk_base": 0.002,
+      "hp": 1.0
+    },
+    "at_team": {
+      "domain": 0,
+      "max_speed": 0.0,
+      "turn_rate": 0.0,
+      "sensor_range": 2000.0,
+      "weapon_range": 1000.0,
+      "pk_base": 0.008,
+      "hp": 1.0
+    }
+  },
+  "forces": [
+    {
+      "side": 0,
+      "ptype": "ugv",
+      "count": 8,
+      "spawn": [250, 1500],
+      "spawn_spread": 40.0,
+      "formation": "column"
+    },
+    {
+      "side": 1,
+      "ptype": "at_team",
+      "count": 6,
+      "spawn": [3000, 1500],
+      "spawn_spread": 60.0,
+      "formation": "column"
+    }
+  ],
+  "objective": {
+    "goal": [5750, 1500],
+    "goal_radius": 150.0,
+    "survive_fraction": 0.5
+  },
+  "terrain": {
+    "cell": 25.0
+  },
+  "params": {
+    "route_bias": 0.0,
+    "formation_spread": 40.0,
+    "tempo": 1.0
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "name": "Span-of-control x comms (centerpiece)",
+  "id": 2,
+  "size": [6000, 3000],
+  "dt": 1.0,
+  "duration": 1800.0,
+  "platform_types": {
+    "ugv": {
+      "domain": 0,
+      "max_speed": 12.0,
+      "turn_rate": 0.6,
+      "sensor_range": 1500.0,
+      "weapon_range": 1200.0,
+      "pk_base": 0.002,
+      "hp": 1.0
+    },
+    "at_team": {
+      "domain": 0,
+      "max_speed": 0.0,
+      "turn_rate": 0.0,
+      "sensor_range": 2000.0,
+      "weapon_range": 1000.0,
+      "pk_base": 0.005,
+      "hp": 1.0
+    }
+  },
+  "forces": [
+    {
+      "side": 0,
+      "ptype": "ugv",
+      "count": 6,
+      "count_param": "n_blue",
+      "spawn": [250, 1500],
+      "spawn_spread": 40.0,
+      "formation": "column"
+    },
+    {
+      "side": 1,
+      "ptype": "at_team",
+      "count": 4,
+      "spawn": [3000, 1500],
+      "spawn_spread": 60.0,
+      "formation": "column"
+    }
+  ],
+  "objective": {
+    "goal": [5750, 1500],
+    "goal_radius": 150.0,
+    "survive_fraction": 0.5
+  },
+  "terrain": {
+    "cell": 25.0
+  },
+  "params": {
+    "control_mode": "direct",
+    "comms_level": 0,
+    "n_blue": 6,
+    "route_bias": 0.65,
+    "formation_spread": 40.0,
+    "tempo": 1.0,
+    "q_operator": 0.95,
+    "q_auto": 0.70,
+    "q_fallback": 0.50,
+    "q_stall": 0.30,
+    "service_rate": 0.15,
+    "span_capacity": 4.0,
+    "patience": 20,
+    "decision_interval": 22
+  }
+}

@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Environments
+.venv/
+venv/
+env/
+
+# Experiment outputs (keep the dir + the traceable-numbers file, ignore bulky artifacts)
+experiments/results/*
+!experiments/results/.gitkeep
+!experiments/results/numbers.txt
+*-runs/
+runs/
+*.sqlite
+*.sqlite3
+
+# Report build
+report/build/
+report/_book/
+report/*.pdf
+
+# Generated viewers (regenerate deterministically via tools/make_viz.py, tools/make_player.py)
+report/viz/*.html
+
+# Collaborator / Government source documents (not for redistribution; keep my own design notes)
+doc/*.pdf
+doc/*.docx
+doc/mission_eng_console_7.html
+
+# OS
+.DS_Store
+
+# Large / vendored reference (cloned separately, not committed)
+polarisopt-ref/

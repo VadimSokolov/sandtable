@@ -1,0 +1,60 @@
+# UC-3 route-vs-defilade -- Bayesian optimization of the mission design (local).
+# LHS warm-up (12) + sequential GP + q-EI acquisition (batch 4), minimizing the
+# scalar mission cost `mission_score` (failure + tempo + attrition, weighted).
+# The optimizer should drive route_bias toward the covered route, trading tempo
+# for survivability exactly as the sweep's response surface predicts.
+# Run from the repo root:
+#
+#   polarisopt validate studies/uc3_bo.yaml
+#   polarisopt run      studies/uc3_bo.yaml
+#   polarisopt best     studies/uc3_bo.yaml
+
+name: uc3-bo
+workspace: "{{ env.HOME }}/sandtable-runs/uc3-bo"
+seed: 42
+
+simulator:
+  type: mission
+  options:
+    scenario: scenarios/uc3_route_defilade.json
+    n_repeats: 20
+    base_seed: 42
+
+runner:
+  type: local
+  options: {}
+
+parameters:
+  inline:
+    - { name: route_bias,       file: inputs.json, min: 0.0, max: 1.0 }
+    - { name: formation_spread, file: inputs.json, min: 20.0, max: 120.0 }
+    - { name: tempo,            file: inputs.json, min: 0.5, max: 1.0 }
+
+# Scalar mission cost; 0 is an unattainable ideal (instant, lossless success).
+metric:
+  type: mission_score
+  options:
+    w_fail: 1.0
+    w_time: 0.3
+    w_loss: 0.5
+    time_scale: 1800.0
+
+phases:
+  - name: bo
+    type: sequential
+    minimize: true
+    warm_up:
+      type: lhs
+      options:
+        n: 12
+    generator:
+      type: acquisition
+      options:
+        surrogate:   { type: gp,  options: {} }
+        acquisition: { type: qei, options: { mc_samples: 256 } }
+    batch_size: 4
+    stop:
+      type: any
+      criteria:
+        - { type: max_iter, options: { n: 8 } }             # <= 12 + 32 evaluations
+        - { type: plateau,  options: { tol: 0.01, window: 4 } }

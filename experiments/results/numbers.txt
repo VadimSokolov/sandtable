@@ -1,0 +1,71 @@
+# numbers.txt -- every reported UC-3 number traces to a source, script, and date.
+# Format: KEY = VALUE    [source | script | date]
+# Studies run from repo root in conda env `mgl`; stores under ~/mgl-runs/.
+
+## UC-3 route-vs-defilade -- ad-hoc verification sweep (n_reps=200)
+uc3.bias0.00.success      = 0.18   [in-process loop | improve-loop | 2026-07-16]
+uc3.bias0.00.blue_losses  = 6.28   [in-process loop | improve-loop | 2026-07-16]
+uc3.bias0.00.t_obj_succ   = 468    [in-process loop | improve-loop | 2026-07-16]
+uc3.bias0.50.success      = 0.45   [in-process loop | improve-loop | 2026-07-16]
+uc3.bias1.00.success      = 1.00   [in-process loop | improve-loop | 2026-07-16]
+uc3.bias1.00.blue_losses  = 0.72   [in-process loop | improve-loop | 2026-07-16]
+uc3.bias1.00.t_obj_succ   = 1082   [in-process loop | improve-loop | 2026-07-16]
+
+## UC-3 LHS sweep via polarisopt (studies/uc3_sweep.yaml; 48 designs x 20 reps)
+uc3.sweep.n_samples       = 48     [~/mgl-runs/uc3-sweep | analyze_sweep.py | 2026-07-16]
+uc3.sweep.failed          = 0      [polarisopt run log             | 2026-07-16]
+uc3.sweep.wall_s          = 29     [time(1) on polarisopt run      | 2026-07-16]
+uc3.sweep.corr_bias_success   = +0.908  [analyze_sweep.py | 2026-07-16]
+uc3.sweep.corr_bias_bluelosses= -0.930  [analyze_sweep.py | 2026-07-16]
+uc3.sweep.corr_bias_redlosses = +0.904  [analyze_sweep.py | 2026-07-16]
+uc3.sweep.corr_bias_tobj      = +0.631  [analyze_sweep.py | 2026-07-16]
+uc3.sweep.tercile_low.success  = 0.17   [analyze_sweep.py | 2026-07-16]
+uc3.sweep.tercile_low.blue_losses  = 6.72 [analyze_sweep.py | 2026-07-16]
+uc3.sweep.tercile_high.success = 0.90   [analyze_sweep.py | 2026-07-16]
+uc3.sweep.tercile_high.blue_losses = 1.92 [analyze_sweep.py | 2026-07-16]
+
+## UC-3 Morris screening via polarisopt (studies/uc3_morris.yaml; 40 evals x 20 reps)
+uc3.morris.n_evals        = 40     [polarisopt run log | 2026-07-16]
+uc3.morris.mustar.route_bias       = 1.2618 [analyze_morris.py | 2026-07-16]
+uc3.morris.mustar.tempo            = 0.4213 [analyze_morris.py | 2026-07-16]
+uc3.morris.mustar.formation_spread = 0.1541 [analyze_morris.py | 2026-07-16]
+uc3.morris.sigma.route_bias        = 0.6272 [analyze_morris.py | 2026-07-16]
+
+## UC-3 Bayesian optimization via polarisopt (studies/uc3_bo.yaml; GP + q-EI)
+uc3.bo.n_evals            = 32     [polarisopt run log | 2026-07-16]
+uc3.bo.stop_iteration     = 5      [polarisopt run log (plateau) | 2026-07-16]
+uc3.bo.best.mission_score = 0.2097 [polarisopt best | 2026-07-16]
+uc3.bo.best.route_bias    = 0.980  [polarisopt best | 2026-07-16]
+uc3.bo.best.formation_spread = 20.0 [polarisopt best | 2026-07-16]
+uc3.bo.best.tempo         = 1.0    [polarisopt best | 2026-07-16]
+
+## UC-3 Lanchester analytic cross-check (experiments/analysis/lanchester_check.py)
+lanchester.rmse_B         = 0.87   [lanchester_check.py | 2026-07-16]
+lanchester.rmse_R         = 0.12   [lanchester_check.py | 2026-07-16]
+lanchester.invariant_drift_pct = 7.2 [lanchester_check.py | 2026-07-16]
+lanchester.verdict        = PASS   [lanchester_check.py | 2026-07-16]
+
+## Span-of-control x comms centerpiece (studies/sc_sweep_{direct,supervisory}.yaml)
+## 24-cell grid comms_level{0..5} x n_blue{2,4,6,8}, 150 reps/cell. (direct - supervisory) success advantage.
+sc.adv_vs_comms.C0        = -0.11  [analyze_span_control.py | 2026-07-16]
+sc.adv_vs_comms.C5        = -0.34  [analyze_span_control.py | 2026-07-16]
+sc.adv_vs_span.N2         = -0.12  [analyze_span_control.py | 2026-07-16]
+sc.adv_vs_span.N8         = -0.28  [analyze_span_control.py | 2026-07-16]
+sc.best_cell_C0N2.direct  = 0.46   [analyze_span_control.py | 2026-07-16]
+sc.best_cell_C0N2.super   = 0.40   [analyze_span_control.py | 2026-07-16]
+sc.N8.direct_C0           = 0.59   [analyze_span_control.py | 2026-07-16]
+sc.N8.super_C0            = 0.94   [analyze_span_control.py | 2026-07-16]
+
+## Hopper cross-runner validation (studies/uc3_sweep_hopper.yaml, SLURM normal partition)
+hopper.uc3.n_samples      = 48     [~/mgl-runs/uc3-sweep-hopper | 2026-07-16]
+hopper.uc3.failed         = 0      [polarisopt run log | 2026-07-16]
+hopper.uc3.corr_bias_success    = +0.923  [analyze_sweep.py | 2026-07-16]
+hopper.uc3.corr_bias_bluelosses = -0.925  [analyze_sweep.py | 2026-07-16]
+
+## Test suite
+tests.total               = 80     [pytest | 2026-07-16]
+tests.passed              = 80     [pytest | 2026-07-16]
+tests.c2_gate.super_C5N6  = 0.733  [pytest test_span_scenario | 2026-07-16]
+tests.c2_gate.direct_C5N6 = 0.400  [pytest test_span_scenario | 2026-07-16]
+
+# mission_score = 1.0*(1-success_rate) + 0.3*(time_to_objective/1800) + 0.5*blue_loss_frac

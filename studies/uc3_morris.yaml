@@ -1,0 +1,46 @@
+# UC-3 route-vs-defilade -- Morris elementary-effects screening (local runner).
+# 10 trajectories x (3 params + 1) = 40 evaluations, from which SALib ranks each
+# knob's influence on the scalar mission cost (mu*) and its interaction /
+# nonlinearity (sigma). Use this to decide which knobs deserve a BO budget.
+# Run from the repo root:
+#
+#   polarisopt run studies/uc3_morris.yaml
+
+name: uc3-morris
+workspace: "{{ env.HOME }}/sandtable-runs/uc3-morris"
+seed: 42
+
+simulator:
+  type: mission
+  options:
+    scenario: scenarios/uc3_route_defilade.json
+    n_repeats: 20
+    base_seed: 42
+
+runner:
+  type: local
+  options: {}
+
+parameters:
+  inline:
+    - { name: route_bias,       file: inputs.json, min: 0.0, max: 1.0 }
+    - { name: formation_spread, file: inputs.json, min: 20.0, max: 120.0 }
+    - { name: tempo,            file: inputs.json, min: 0.5, max: 1.0 }
+
+# Single scalar objective: SALib's Morris analysis wants one Y per sample.
+metric:
+  type: mission_score
+  options:
+    w_fail: 1.0
+    w_time: 0.3
+    w_loss: 0.5
+    time_scale: 1800.0
+
+phases:
+  - name: morris
+    type: static
+    design:
+      type: morris
+      options:
+        n_trajectories: 10
+        num_levels: 4

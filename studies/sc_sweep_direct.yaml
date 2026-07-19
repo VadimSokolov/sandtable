@@ -1,0 +1,40 @@
+# Span-of-control x comms centerpiece -- direct control, full-factorial grid.
+# comms_level {0..5} x n_blue {2,4,6,8} = 24 designs x 150 seeded reps, via the
+# local runner. Pair with sc_sweep_supervisory.yaml to see the modality crossover.
+# Run from the repo root:
+#
+#   polarisopt run studies/sc_sweep_direct.yaml
+
+name: sc-sweep-direct
+workspace: "{{ env.HOME }}/sandtable-runs/sc-sweep-direct"
+seed: 42
+
+simulator:
+  type: mission
+  options:
+    scenario: scenarios/sc_span_control.json
+    n_repeats: 150
+    base_seed: 42
+    control_mode: direct          # pinned for this study; the swept knobs are comms_level x n_blue
+
+runner:
+  type: local
+  options: {}
+
+parameters:
+  inline:
+    - { name: comms_level, file: inputs.json, min: 0, max: 5, type: int }
+    - { name: n_blue,      file: inputs.json, min: 2, max: 8, type: int }
+
+metric:
+  type: identity
+  options:
+    keys: [success_rate, blue_losses, red_losses, time_to_objective, t_obj_success, blue_loss_frac]
+
+phases:
+  - name: grid
+    type: static
+    design:
+      type: manual
+      options:
+        points: [[0, 2], [0, 4], [0, 6], [0, 8], [1, 2], [1, 4], [1, 6], [1, 8], [2, 2], [2, 4], [2, 6], [2, 8], [3, 2], [3, 4], [3, 6], [3, 8], [4, 2], [4, 4], [4, 6], [4, 8], [5, 2], [5, 4], [5, 6], [5, 8]]

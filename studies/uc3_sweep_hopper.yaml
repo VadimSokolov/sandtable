@@ -1,0 +1,52 @@
+# UC-3 route-vs-defilade LHS sweep on GMU Hopper via the polarisopt SLURM runner.
+# Identical science to studies/uc3_sweep.yaml; only the runner + workspace differ
+# (the whole point of the file+subprocess master/slave contract). polarisopt
+# submits one sbatch per design to the `normal` CPU partition, polls squeue/sacct,
+# and checkpoints to SQLite so it resumes after a master restart.
+#
+# Run ON Hopper from /scratch/vsokolov/projectgl-lite (pol env active):
+#   conda activate pol
+#   polarisopt validate studies/uc3_sweep_hopper.yaml
+#   polarisopt run      studies/uc3_sweep_hopper.yaml
+#   polarisopt status   studies/uc3_sweep_hopper.yaml
+
+name: uc3-sweep-hopper
+workspace: "/scratch/vsokolov/sandtable-runs/uc3-sweep-hopper"
+seed: 42
+
+simulator:
+  type: mission
+  options:
+    scenario: scenarios/uc3_route_defilade.json
+    n_repeats: 40
+    base_seed: 42
+
+runner:
+  type: slurm
+  options:
+    default_resources:
+      partition: normal
+      time: "00:15:00"
+      mem: "2G"
+      setup_commands:
+        - "source /opt/sw/spack/apps/linux-rhel8-x86_64_v2/gcc-10.3.0/miniconda3-22.11.1-gy/etc/profile.d/conda.sh"
+        - "conda activate pol"
+
+parameters:
+  inline:
+    - { name: route_bias,       file: inputs.json, min: 0.0, max: 1.0 }
+    - { name: formation_spread, file: inputs.json, min: 20.0, max: 120.0 }
+    - { name: tempo,            file: inputs.json, min: 0.5, max: 1.0 }
+
+metric:
+  type: identity
+  options:
+    keys: [success_rate, blue_losses, red_losses, time_to_objective, t_obj_success, blue_loss_frac, loss_exchange]
+
+phases:
+  - name: lhs
+    type: static
+    design:
+      type: lhs
+      options:
+        n: 48

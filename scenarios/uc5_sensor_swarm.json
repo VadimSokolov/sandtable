@@ -1,0 +1,79 @@
+{
+  "name": "UC-5 Sensor swarm under EW",
+  "id": 5,
+  "size": [6000, 3000],
+  "dt": 1.0,
+  "duration": 1800.0,
+  "platform_types": {
+    "ugv": {
+      "domain": 0,
+      "max_speed": 12.0,
+      "turn_rate": 0.6,
+      "sensor_range": 600.0,
+      "weapon_range": 1200.0,
+      "pk_base": 0.004,
+      "hp": 1.0
+    },
+    "uas": {
+      "domain": 1,
+      "max_speed": 25.0,
+      "turn_rate": 1.2,
+      "sensor_range": 550.0,
+      "weapon_range": 0.0,
+      "pk_base": 0.0,
+      "hp": 1.0
+    },
+    "at_team": {
+      "domain": 0,
+      "max_speed": 0.0,
+      "turn_rate": 0.0,
+      "sensor_range": 1500.0,
+      "weapon_range": 900.0,
+      "pk_base": 0.006,
+      "hp": 1.0
+    }
+  },
+  "forces": [
+    {
+      "side": 0,
+      "ptype": "ugv",
+      "count": 4,
+      "spawn": [250, 1500],
+      "spawn_spread": 40.0,
+      "formation": "column"
+    },
+    {
+      "side": 0,
+      "ptype": "uas",
+      "count": 3,
+      "count_param": "n_uas",
+      "spawn": [400, 1500],
+      "spawn_spread": 40.0,
+      "formation": "line"
+    },
+    {
+      "side": 1,
+      "ptype": "at_team",
+      "count": 8,
+      "spawn": [3000, 1500],
+      "spawn_spread": 5000.0,
+      "formation": "column"
+    }
+  ],
+  "objective": {
+    "goal": [5750, 1500],
+    "goal_radius": 150.0,
+    "survive_fraction": 0.5
+  },
+  "terrain": {
+    "cell": 25.0
+  },
+  "params": {
+    "n_uas": 3,
+    "comms_level": 0,
+    "route_bias": 0.5,
+    "overwatch_x": 3000.0,
+    "formation_spread": 40.0,
+    "tempo": 1.0
+  }
+}
