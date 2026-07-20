@@ -538,6 +538,43 @@ confidence intervals, precisely the regions and boundaries a high-fidelity Proje
 then confirm. The fast tier is not a replacement for fidelity; it is what makes fidelity affordable,
 by spending the expensive engine only on the designs the cheap one has flagged.
 
+\subsection{Extensions}
+\label{subsec:extensions}
+
+The cheapest gains come from hardening the findings the model already produces. A global sensitivity
+analysis over the operator parameters (service rate, attention capacity, and patience) and the
+C0--C5 latency and drop values, using Morris screening or Sobol indices, would report each crossover
+as a band with a variance decomposition that says which inputs actually move it. That converts the
+moving optimum from a point estimate, whose exact cells sit within Monte-Carlo noise, into a boundary
+with stated confidence, and it names the few parameters worth measuring. Two calibration steps would
+supply those measurements: fitting the command model to human-subject supervisory-control data rather
+than the qualitative anchor used here \citep{cummings2007capacity,chen2011supervisory,hocraffer2017meta},
+and Bayesian calibration of the lethality and link parameters against high-fidelity ProjectGL runs
+\citep{stanko2025projectgl}, so the fast tier inherits the engine's numbers where they set the
+crossover.
+
+Richer mechanisms would close the fidelity gaps that bound the present conclusions. Replacing the
+binary range gate and the flat line-of-sight stub with a range-dependent detection probability, true
+line-of-sight on the trafficability grid, and a false-alarm rate would sharpen the recon-cueing chain
+that drives the swarm study and the shared picture in the centerpiece. A reactive red force that
+maneuvers, seeks cover, and counters reconnaissance would lift every finding off the assumption of a
+static defender, and adding short-range air defense would give swarm size a survivability cost and
+remove the upper bound on the UC-5 result. Extending the single operator to a network of servers with
+dynamic span reallocation and handoff would turn the span-of-control finding from a fixed ratio into a
+staffing and handoff policy, which is closer to how a command post is actually manned.
+
+The largest extensions point the testbed at the program's learning and analytics objectives. Swapping
+the scripted heuristics for reinforcement-learning and imitation policies would test the
+direct-versus-supervisory tradeoff on adaptive teaming behavior rather than fixed rules, and would let
+the same policies transfer to the Learning Agents runtime inside ProjectGL. A deep-learning surrogate
+with uncertainty quantification, fitted to the response surfaces and queried by the
+Bayesian-optimization loop \citep{balandat2020botorch} with an acquisition rule that targets
+high-variance regions, would cut the number of simulator calls each search needs. Broadening the
+use-case library toward the deception and trust cases in the design, spoofed contacts, thermal decoys,
+and confident-but-wrong recommendations, would exercise the engineered-ground-truth machinery for the
+trust-calibration metric and let pattern-mining over the run logs surface the success and failure
+signatures the program set out to detect.
+
 \section{Limitations}
 \label{sec:limitations}
 

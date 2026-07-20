@@ -384,3 +384,21 @@ Result: pre-flight PASSES all five checks (0 AI-vocab hits, zero em-dashes, comp
   and kill tracers (shooter -> victim with an impact burst). Console defaults to the UC-5 swarm view.
 - Verified geometry with a matplotlib preview of two UC-5 combat frames (cue chain + kill tracer both
   correct) and node --check on the emitted JS. The .html viewers remain generated + git-ignored.
+
+### 2026-07-20 - Diagram cleanup + Extensions subsection
+- Figures: fixed the last overflow/overlap in tools/make_diagrams.py. Architecture: widened the
+  build-world, state, and KPI boxes so labels fit inside their borders; dropped a stray backslash so
+  control_quality renders with a plain underscore (matplotlib figure text is not LaTeX). Command
+  model: fanned the four agent-to-comms arrows to distinct endpoints. Verified overflow-free at
+  200-400 DPI.
+- main.tex: added a Discussion subsection "Extensions" (three paragraphs), grounded in the
+  Limitations and the program objectives: (1) hardening the findings -- global sensitivity (Morris/
+  Sobol) reporting the crossover as a band, plus human-subject calibration of the command model and
+  Bayesian calibration of the lethality/link parameters against ProjectGL; (2) richer mechanisms --
+  probabilistic terrain-masked sensing, reactive red + air defense, multi-operator command; (3)
+  learning/analytics -- RL/imitation policies, a DL surrogate with UQ inside the BO loop, and the
+  deception/trust use cases for trust calibration and pattern-mining. Only reuses already-verified
+  citations (cummings2007capacity, chen2011supervisory, hocraffer2017meta, stanko2025projectgl,
+  balandat2020botorch); no new references introduced.
+- Result: pre-flight PASSES all five checks (15/15 citations verified, 0 AI-vocab hits, zero
+  em-dashes, contribution refs resolve, compile clean); still 17 pages.
