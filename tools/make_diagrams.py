@@ -83,9 +83,8 @@ def fig_architecture() -> None:
     wrap = FancyBboxPatch((6, 20), 88, 58, boxstyle="round,pad=0.4,rounding_size=2",
                           fc="none", ec=BLUE, lw=1.4, linestyle=(0, (5, 3)))
     ax.add_patch(wrap)
-    ax.text(9, 74, r"run_mission(scenario, seed, params) $\rightarrow$ metrics   "
-                   r"$\cdot$   pure function, no global state",
-            fontsize=8, style="italic", color=BLUE, ha="left", va="center")
+    ax.text(9, 74, r"run_mission(scenario, seed, params) $\rightarrow$ metrics   $\cdot$   pure function",
+            fontsize=7.4, style="italic", color=BLUE, ha="left", va="center")
 
     for x0 in (20, 55, 82):
         _arrow(ax, x0, 86.5, x0 if x0 != 82 else 70, 78, color=EDGE)
@@ -109,8 +108,8 @@ def fig_architecture() -> None:
         _box(ax, x, 50, 13.5, 12, label, fc=fc, ec=BLUE, fs=7.6, bold=(i == 0))
         if i < 4:
             _arrow(ax, x + 6.9, 50, xs[i + 1] - 6.9, 50, color=INK)
-    ax.text(50, 41.5, "each step advances the state in this fixed order   (dt = 1 s)",
-            ha="center", va="center", fontsize=7.6, color=INK, style="italic")
+    ax.text(50, 41.5, "fixed order, dt = 1 s", ha="center", va="center", fontsize=7.4,
+            color=INK, style="italic")
 
     # loop-back arrow (flat arc just above the pipeline row, clears the build-world box)
     _arrow(ax, 82, 56.5, 18, 56.5, color=AMBER, lw=1.4, rad=0.11)
@@ -155,19 +154,20 @@ def fig_command_model() -> None:
              fontweight="bold", color=BLUE)
     # agents
     for j, y in enumerate(np.linspace(78, 30, 4)):
-        _box(axd, 15, y, 16, 8, f"agent {j+1}", fc="#eaf0fc", ec=BLUE, fs=7.2)
-    # link
-    _box(axd, 50, 54, 20, 15, "comms link\nlatency $\\ell$\ndrop $p$", fc=FILL_WRAP, ec=AMBER, fs=7.4)
-    axd.text(50, 43.5, "EW degrades the link", ha="center", fontsize=6.8, color=RED, style="italic")
+        _box(axd, 14, y, 15, 8, f"agent {j+1}", fc="#eaf0fc", ec=BLUE, fs=7.2)
+    # comms link (wider box so the label is not clipped)
+    _box(axd, 46, 54, 23, 16, "comms link\nlatency $\\ell$\ndrop $p$", fc=FILL_WRAP, ec=AMBER, fs=7.0)
     # operator server
-    _box(axd, 85, 54, 20, 16, "operator\n(single server,\nrate $\\mu$)", fc="#fdeef0", ec=RED, fs=7.4, bold=True)
-    # request / reply arrows
+    _box(axd, 83, 54, 23, 16, "operator\n(single server,\nrate $\\mu$)", fc="#fdeef0", ec=RED, fs=7.0, bold=True)
+    # agent -> link requests
     for y in np.linspace(78, 30, 4):
-        _arrow(axd, 23, y, 40, 54, color=EDGE, lw=0.9, rad=0.12)
-    _arrow(axd, 60, 58, 75, 58, color=INK, lw=1.1)     # to operator
-    _arrow(axd, 75, 50, 60, 50, color=INK, lw=1.1)     # reply back
-    axd.text(67, 61, "request", fontsize=6.6, color="#556", ha="center")
-    axd.text(67, 46.5, "reply", fontsize=6.6, color="#556", ha="center")
+        _arrow(axd, 22, y, 33, 54, color=EDGE, lw=0.9, rad=0.12)
+    # request / reply, in the clear gap between the two boxes
+    _arrow(axd, 58.5, 58, 70.5, 58, color=INK, lw=1.1)   # request to operator
+    _arrow(axd, 70.5, 50, 58.5, 50, color=INK, lw=1.1)   # reply back
+    axd.text(64.5, 62.5, "request", fontsize=6.6, color="#556", ha="center")
+    axd.text(64.5, 45.6, "reply", fontsize=6.6, color="#556", ha="center")
+    axd.text(46, 41, "EW degrades the link", ha="center", fontsize=6.8, color=RED, style="italic")
     # quality outcomes
     axd.text(50, 20, "resulting control quality", ha="center", fontsize=7.4, style="italic", color=INK)
     axd.text(50, 13.5, "serviced in time: $q_{op}$  ·  waiting: $q_{stall}$", ha="center", fontsize=7.2, color=INK)
