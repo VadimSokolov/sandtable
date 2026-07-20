@@ -348,3 +348,27 @@ trace to code; figures/tables regenerated from make_numbers.py + make_figures.py
   units (of 8 / of 6). Added a Section-4 note on the coverage/success truncation coupling.
 Result: pre-flight PASSES all five checks (15/15 citations verified, 2 AI-vocab hits,
 zero em-dashes, contributions resolve, compile clean); 12 pages.
+
+### 2026-07-19 - Abstract rewrite, AI-writing pass, figure cleanup (commit 7d7725b)
+- Abstract rewritten to describe the simulator core (SoA state, fixed-step pipeline, comms/EW
+  ladder, operator-as-shared-server command model, pure run_mission contract) before the results.
+- AI-writing pass beyond the vocab grep: removed both "robust" hits (comms-robust -> nearly
+  comms-invariant; "robust claim" -> "what the study establishes") and one redundant
+  negative-parallelism. audit.py check 2 now reports 0 vocabulary hits.
+- centerpiece_phase.pdf: draw only the longest delta=0 contour (suppress the single-cell
+  Monte-Carlo-noise island); opaque label boxes; "direct control wins" moved clear of the crossover.
+
+### 2026-07-19 - Paper extended with simulator diagrams and scenario detail
+- New tools/make_diagrams.py generates, from the source and scenario JSONs (so they cannot drift):
+  architecture.pdf (layered modules + the fixed-step run_mission pipeline + pure-function wrapper),
+  command_model.pdf (direct vs supervisory operator model, the moving-optimum mechanism),
+  scenarios.pdf (data-driven 3-panel schematic: UC-3 routes/cover, centerpiece operator-over-link,
+  UC-5 near-blind UGVs + UAS overwatch vs defense-in-depth), plus tab_ladder.tex (C0-C5 ladder) and
+  tab_platforms.tex (per-scenario platform params). All figures are matplotlib (uniform pipeline).
+- main.tex: added the three figures + two tables; expanded Section 3 (movement/sensing/engagement
+  now carry the actual v and p_k equations; command model gains the queue/service/patience/fallback
+  detail and its figure; comms ladder gains its table) and Section 4 (scenario schematic + per-scenario
+  laydown/exercise detail + platform table).
+- Bug fixed: raw "at_team" underscore broke the compile (math-mode subscript in text); escaped in
+  the table generator.
+Result: pre-flight PASSES all five checks (0 AI-vocab hits, zero em-dashes, compile clean); 17 pages.

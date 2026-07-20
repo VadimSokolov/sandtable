@@ -163,8 +163,20 @@ vectorized array programming \citep{harris2020numpy}.
 
 \sandtable{} is a layered mission-level model: a pure-function evaluation contract wraps a
 vectorized state and a fixed-step loop over movement, sensing, engagement, command, and
-communications. The subsections below describe each layer and the two properties that make the model
-fit for a search loop.
+communications (Figure~\ref{fig:architecture}). The subsections below describe each layer and the
+two properties that make the model fit for a search loop.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{architecture.pdf}
+\caption{\sandtable{} structure. A pure \texttt{run\_mission} builds the world (terrain rasters) and
+the structure-of-arrays entity state from a scenario, seed, and design parameters, then advances a
+fixed-step pipeline, command tasking, planning, motion, sensing, engagement, that reads and writes
+that state each step, and returns scalar mission KPIs. \texttt{evaluate} averages the KPIs over
+seeded replications, and a design-of-experiments and Bayesian-optimization orchestrator drives
+batches on the HPC cluster.}
+\label{fig:architecture}
+\end{figure}
 
 \subsection{Design contract}
 The top-level interface is a pure function
@@ -185,29 +197,71 @@ Entities (ground vehicles, uncrewed aircraft, sensor and command nodes, and defe
 as a structure of arrays: position, heading, health, sensor and weapon parameters, and side live in
 parallel NumPy arrays rather than in per-agent objects \citep{harris2020numpy}. The mission advances
 on a fixed time step (1~s here). Each step updates, in order, command tasking, planning, motion,
-sensing, and engagement. This vectorized design runs a full mission of up to 1800 steps in roughly
+sensing, and engagement (the pipeline of Figure~\ref{fig:architecture}). This vectorized design runs a full mission of up to 1800 steps in roughly
 0.1~s on a single core, about 7 to 11 replications per second depending on scenario, so
 the 44,100 replications behind this paper are one to two core-hours of compute, trivially parallel
 across a cluster.
 
 \subsection{Movement, sensing, and engagement}
-Ground platforms follow a unicycle kinematic model, with speed capped by a precomputed
-trafficability field, and steer along a lane chosen by a \texttt{route\_bias} parameter that
-interpolates between a fast exposed corridor and a slower covered route. Sensing is a
-range-limited detection draw feeding a per-side shared picture, so recon aircraft can cue ground
-shooters that have not detected a threat themselves. Engagement is aimed fire: every living shooter
-engages its nearest detected enemy within weapon range, and a kill is a Bernoulli draw with
-probability $p_k(1-c)$, where $c$ is the target's terrain cover. Both sides resolve against the
-same pre-step state so there is no ordering bias. This effect-based abstraction is deliberately
-coarse; Section~\ref{subsec:validation} shows it still obeys the right aggregate law.
+\emph{Movement.} Ground platforms follow a unicycle kinematic model: each turns its heading toward
+its current waypoint at a turn-rate limit and advances at
+\[
+v = v_{\max}\;\tau\;g(x,y)\;(0.35 + 0.65\,q),
+\]
+where $\tau$ is a scenario tempo factor, $g(x,y)\in[0,1]$ is the terrain trafficability sampled from
+a precomputed raster (air platforms ignore it), and $q$ is the platform's control quality
+(Section~\ref{subsec:command}), so a poorly controlled or stalled vehicle also loses tempo. Speed is
+capped so a platform never oversteps its waypoint in one step. The waypoint comes from a
+\texttt{route\_bias} parameter that sets a lateral lane between a fast exposed corridor and a slow
+covered route, holds that lane through the threat, and converges onto the objective only over the
+final stretch, so a covered route stays in defilade past the defenders.
+
+\emph{Sensing and shared awareness.} Sensing is a cookie-cutter range gate feeding a per-side shared
+picture. A target is placed on the opposing side's picture if any living observer holds it within
+sensor range with clear line of sight, and then only with probability $1-c_{\text{conceal}}$ at the
+target's location, so concealment lowers detectability. The picture is \emph{shared}: a contact any
+friendly sensor holds is visible to every friendly shooter, which is what lets recon aircraft cue
+ground vehicles that have not detected the threat themselves. A contact held \emph{only} by an air
+sensor must be relayed, so under electronic warfare it is dropped from the shared picture with the
+link's message-drop probability (Section~\ref{subsec:comms}); a contact also held organically by a
+ground sensor is unaffected. Line of sight is a flat-terrain stub in the present model.
+
+\emph{Engagement.} Engagement is aimed fire. Every living shooter engages its nearest detected enemy
+within weapon range, and a kill is a Bernoulli draw with probability
+\[
+p_k = p_k^{\text{base}}\,(1 - c_{\text{cover}})\,q_{\text{shooter}}\,(2 - q_{\text{target}}),
+\]
+clipped to $[0,1]$, where $c_{\text{cover}}$ is terrain cover at the target: cover reduces incoming
+lethality, and control quality couples both ways, since a well-controlled shooter fires more
+effectively and a poorly controlled target exposes itself. Both sides fire against the same pre-step
+state and damage is applied simultaneously, so there is no turn-order bias; recon aircraft carry no
+weapon and are not targeted (no short-range air defense is modeled). This effect-based abstraction is
+deliberately coarse; Section~\ref{subsec:validation} shows it still obeys the right aggregate law.
 
 \subsection{Command model: direct versus supervisory}
-The command layer is where the human-machine teaming questions live. In \emph{supervisory} mode
-each asset runs on-platform autonomy at a steady control quality $q_{\text{auto}}$, independent of
-communications. In \emph{direct} mode a single human operator issues commands over the modeled
-communications link: a well-served asset acts at a high quality $q_{\text{operator}}$, but commands
-incur a round-trip latency and can be dropped, and while an asset waits it acts at a degraded stall
-quality. Crucially, the operator is a single server shared across all supervised assets. Attention
+\label{subsec:command}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{command_model.pdf}
+\caption{The command model, the mechanism behind the moving optimum. Under \emph{direct} control an
+asset requests a single shared operator over the comms/EW link and waits: the reply is high quality
+when it arrives in time, low while the asset waits, and poor when the link drops it. Under
+\emph{supervisory} control each asset decides locally at a steady autonomous quality, independent of
+the link. More supervised assets both dilute the operator's per-decision quality and lengthen its
+queue.}
+\label{fig:command}
+\end{figure}
+
+The command layer is where the human-machine teaming questions live (Figure~\ref{fig:command}). In
+\emph{supervisory} mode each asset runs on-platform autonomy at a steady control quality
+$q_{\text{auto}}$, independent of communications. In \emph{direct} mode an asset requests the operator
+over the modeled link, paying a round trip of $2\ell$ steps at one-way latency $\ell$ with per-message
+drop probability $p$ (Table~\ref{tab:ladder}), and the single operator serves queued requests at a
+fixed rate $\mu$. A request answered within the asset's patience returns the high operator quality
+$q_{\text{operator}}$; while it waits the asset holds a low stall quality $q_{\text{stall}}$; and a
+dropped or timed-out request drops the asset to a poor autonomous fallback $q_{\text{fallback}}$.
+Crucially, the operator is a single server shared across all supervised assets. Attention
 dilutes with span: the effective operator quality is
 \[
 q_{\text{operator}}^{\text{eff}} = q_{\text{auto}} + \big(q_{\text{operator}} - q_{\text{auto}}\big)\,
@@ -223,13 +277,24 @@ and it is grounded in the operator-capacity and supervisory-control literature
 \citep{cummings2007capacity,chen2011supervisory}.
 
 \subsection{Communications and EW ladder}
+\label{subsec:comms}
 A single \texttt{comms\_level} parameter indexes a C0--C5 degradation ladder, from clear (C0) to
 severe (C5), that raises tasking latency and message-drop probability and thins the shared picture
-by dropping relayed contacts. The six rungs raise one-way tasking latency from 0 to 16 time steps
-and message-drop probability from 0 to 0.55, spanning a benign link to a heavily contested one; the
-rung values are set parameters, not measured link data. Because supervisory autonomy does not depend
-on the link while direct control does, the ladder is the axis along which the two modalities
-separate.
+by dropping relayed contacts (Table~\ref{tab:ladder}). The six rungs raise one-way tasking latency
+from 0 to 16 time steps and message-drop probability from 0 to 0.55, spanning a benign link to a
+heavily contested one; the rung values are set parameters, not measured link data. The same latency
+$\ell$ and drop probability $p$ gate both the direct-control round trip (Section~\ref{subsec:command})
+and the air-relay path in sensing, so a single dial degrades both tasking and the shared picture.
+Because supervisory autonomy does not depend on the link while direct control does, the ladder is the
+axis along which the two modalities separate.
+
+\begin{table}[H]
+\centering
+\caption{Communications / EW degradation ladder (\texttt{comms\_level}). Latency is one-way, in
+1~s steps; drop probability is per message. Values are set parameters, overridable per study.}
+\label{tab:ladder}
+\input{gen/tab_ladder}
+\end{table}
 
 \subsection{Engineered ground truth}
 Every scenario carries a correct answer for the trial (which threats exist, which route survives,
@@ -243,13 +308,49 @@ test.
 \section{Experimental Setup}
 \label{sec:setup}
 
-We study three scenarios drawn from the program's use-case library. UC-3 (route choice) sweeps a
-ground formation's \texttt{route\_bias} from a fast corridor to a covered defilade route. The
-centerpiece crosses control modality (direct, supervisory) with span of control (one operator to
-$\{2,3,4,5,6,8\}$ assets) and the C0--C5 communications ladder, in a fair fight where red strength
-scales with blue. UC-5 (sensor swarm) sweeps recon swarm size ($0$ to $\ucFiveSwarmMax{}$ aircraft)
-against the C0--C5 ladder, with the swarm cueing near-blind ground shooters against a defense in
-depth.
+We study three scenarios drawn from the program's use-case library (Figure~\ref{fig:scenarios};
+platform parameters in Table~\ref{tab:platforms}). All three share a 6~km $\times$ 3~km area in which
+a blue force spawns on the west edge and must move a surviving majority to an objective on the east
+edge, held by static anti-tank (AT) teams. UC-3 (route choice) sweeps a ground formation's
+\texttt{route\_bias} from a fast corridor to a covered defilade route. The centerpiece crosses
+control modality (direct, supervisory) with span of control (one operator to $\{2,3,4,5,6,8\}$
+assets) and the C0--C5 communications ladder, in a fair fight where red strength scales with blue.
+UC-5 (sensor swarm) sweeps recon swarm size ($0$ to $\ucFiveSwarmMax{}$ aircraft) against the C0--C5
+ladder, with the swarm cueing near-blind ground shooters against a defense in depth.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{scenarios.pdf}
+\caption{The three scenarios, drawn from their scenario files. (a) UC-3: eight ground vehicles route
+past six AT-team defenders; \texttt{route\_bias} slides the lane from the exposed center corridor into
+the northern cover band (red, amber, green lanes shown). (b) Centerpiece: one operator supervises
+$n$ ground assets over the comms/EW link against AT teams scaled with blue. (c) UC-5: near-blind
+ground vehicles (sensor range $\ll$ weapon range) are cued by a UAS overwatch (teal, with sensor
+footprints) laid out in depth to blanket a defense in depth of six AT teams. Faint rings are weapon
+ranges; the star is the objective.}
+\label{fig:scenarios}
+\end{figure}
+
+The scenarios exercise different parts of the model. UC-3 turns on terrain and routing: the eight
+ground vehicles have low lethality, so the decision is exposure against tempo, not firepower, and
+\texttt{route\_bias} trades a short exposed path through the AT kill zone for a longer covered detour.
+The centerpiece turns on the command layer: it fixes a moderately covered route and varies only the
+teaming design (modality, span, communications), with the operator serving requests at rate
+$\mu=0.15$ per step, span capacity $\kappa=4$, patience 20 steps, and a decision roughly every 22
+steps. UC-5 turns on the air layer and the shared-picture relay: four ground vehicles whose sensor
+range (350~m) is far shorter than their weapon range (1400~m) cannot see the threats they out-range,
+so they depend on a UAS overwatch, laid out along the assault axis to blanket the depth of the
+defense, and jamming degrades the relay that carries that picture. Table~\ref{tab:platforms} lists
+the platform parameters for each scenario.
+
+\begin{table}[H]
+\centering
+\caption{Platform parameters per scenario (from the scenario files). Sensor and weapon are detection
+and engagement ranges; $p_k$ is the base per-opportunity kill probability. Note UC-5's near-blind
+ground vehicle (sensor 350~m, weapon 1400~m) and its unarmed UAS.}
+\label{tab:platforms}
+\input{gen/tab_platforms}
+\end{table}
 
 Each design point is averaged over \nRep{} Monte-Carlo replications. Seeds are derived so that
 matching cells across the paired direct and supervisory studies share seed blocks, giving common
