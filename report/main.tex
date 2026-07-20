@@ -17,9 +17,9 @@
 \newcommand{\sandtable}{\textsc{SandTable}}
 \captionsetup{font=small,labelfont=bf}
 
-\title{\sandtable{}: A Fast Mission-Level Testbed for\\
+\title{\sandtable{}: A Fast Mission-Level Testbed for
 Human-Machine Teaming Experiments Under Contested Communications}
-\author{Vadim Sokolov\\
+\author{Mark Fahim, Joe Bricio, Ali Raz, Vadim Sokolov\\
 \small Department of Systems Engineering and Operations Research\\[-2pt]
 \small George Mason University\\[-2pt]
 \small \texttt{vsokolov@gmu.edu}}
@@ -538,6 +538,41 @@ confidence intervals, precisely the regions and boundaries a high-fidelity Proje
 then confirm. The fast tier is not a replacement for fidelity; it is what makes fidelity affordable,
 by spending the expensive engine only on the designs the cheap one has flagged.
 
+
+\sandtable{} is deliberately low-fidelity, and its conclusions inherit that. Movement is 2.5D
+kinematic, not physics-based; sensing and engagement are effect-based draws, not signal or
+signature models; terrain is a scalar trafficability-and-cover field, not a rendered environment;
+and line of sight is a flat-terrain stub. Tactical behavior is simplified too: red forces are static
+defenders that fire but neither maneuver nor react, so every finding is conditioned on a
+non-adaptive threat, and recon aircraft cannot be engaged (no air defense is modeled), so swarm size
+carries no survivability cost and the UC-5 upside is an upper bound.
+
+The model's parameters are set, not measured. The command model is a capacity-limited-server
+abstraction of operator attention, calibrated to the qualitative findings of the supervisory-control
+literature rather than to human-subject data; and the lethality probabilities and the C0--C5 latency
+and drop values are hand-set, so they, not measured link or weapon data, fix where the crossover
+falls and how fast the sensor-to-shooter chain degrades. The studies also use fixed heuristic
+behaviors rather than learned or reinforcement-learning policies, a single operator with no handoff
+or dynamic span reallocation, and three scenarios with small teams; extrapolation to larger forces,
+multi-operator command, or adaptive policies is untested.
+
+The absolute success rates should therefore be read as comparative, not predictive: the value is in
+the \emph{ordering} of designs and the \emph{location} of crossovers, which is what a search loop
+consumes, not in any single percentage. The moving optimum's exact crossover cells near the contour
+are within Monte-Carlo noise, so what the study establishes is the direction of the boundary, not
+the precise cell. The Lanchester check validates the aggregate attrition law but not the spatial or command
+dynamics, which is why the intended role of the model is to feed, not replace, high-fidelity
+validation.
+
+We built \sandtable{}, a fast, reproducible, pure-Python mission-level testbed, as the inner-loop
+companion to the Army's high-fidelity ProjectGL, and used it to produce three decision-relevant
+maps for human-machine teaming under contested communications: a moving direct-to-supervisory
+control optimum, a speed-survivability frontier for route choice, and the EW-induced collapse of a
+sensor-to-shooter chain. The tool obeys a recognized attrition law, runs a full mission in about a
+tenth of a second, and plugs directly into a Bayesian-optimization and DOE orchestrator, so the
+next step is to search these design spaces with optimization rather than grids, and to confirm the
+flagged designs in ProjectGL.
+
 \subsection{Extensions}
 \label{subsec:extensions}
 
@@ -574,46 +609,6 @@ use-case library toward the deception and trust cases in the design, spoofed con
 and confident-but-wrong recommendations, would exercise the engineered-ground-truth machinery for the
 trust-calibration metric and let pattern-mining over the run logs surface the success and failure
 signatures the program set out to detect.
-
-\section{Limitations}
-\label{sec:limitations}
-
-\sandtable{} is deliberately low-fidelity, and its conclusions inherit that. Movement is 2.5D
-kinematic, not physics-based; sensing and engagement are effect-based draws, not signal or
-signature models; terrain is a scalar trafficability-and-cover field, not a rendered environment;
-and line of sight is a flat-terrain stub. Tactical behavior is simplified too: red forces are static
-defenders that fire but neither maneuver nor react, so every finding is conditioned on a
-non-adaptive threat, and recon aircraft cannot be engaged (no air defense is modeled), so swarm size
-carries no survivability cost and the UC-5 upside is an upper bound.
-
-The model's parameters are set, not measured. The command model is a capacity-limited-server
-abstraction of operator attention, calibrated to the qualitative findings of the supervisory-control
-literature rather than to human-subject data; and the lethality probabilities and the C0--C5 latency
-and drop values are hand-set, so they, not measured link or weapon data, fix where the crossover
-falls and how fast the sensor-to-shooter chain degrades. The studies also use fixed heuristic
-behaviors rather than learned or reinforcement-learning policies, a single operator with no handoff
-or dynamic span reallocation, and three scenarios with small teams; extrapolation to larger forces,
-multi-operator command, or adaptive policies is untested.
-
-The absolute success rates should therefore be read as comparative, not predictive: the value is in
-the \emph{ordering} of designs and the \emph{location} of crossovers, which is what a search loop
-consumes, not in any single percentage. The moving optimum's exact crossover cells near the contour
-are within Monte-Carlo noise, so what the study establishes is the direction of the boundary, not
-the precise cell. The Lanchester check validates the aggregate attrition law but not the spatial or command
-dynamics, which is why the intended role of the model is to feed, not replace, high-fidelity
-validation.
-
-\section{Conclusion}
-\label{sec:conclusion}
-
-We built \sandtable{}, a fast, reproducible, pure-Python mission-level testbed, as the inner-loop
-companion to the Army's high-fidelity ProjectGL, and used it to produce three decision-relevant
-maps for human-machine teaming under contested communications: a moving direct-to-supervisory
-control optimum, a speed-survivability frontier for route choice, and the EW-induced collapse of a
-sensor-to-shooter chain. The tool obeys a recognized attrition law, runs a full mission in about a
-tenth of a second, and plugs directly into a Bayesian-optimization and DOE orchestrator, so the
-next step is to search these design spaces with optimization rather than grids, and to confirm the
-flagged designs in ProjectGL.
 
 \section*{Acknowledgments}
 This work was performed under the VIPR-GS FP6111 program (U.S. Army GVSC, via the Clemson-led
