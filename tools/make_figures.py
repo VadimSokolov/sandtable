@@ -68,16 +68,20 @@ def fig_centerpiece_phase() -> None:
             v = Z[i, j]
             ax.text(c, i, f"{v:+.0f}", ha="center", va="center", fontsize=7.5,
                     color="white" if abs(v) > 0.55 * vmax else "#222")
-    # moving-optimum boundary: delta = 0 contour on a refined grid
+    # moving-optimum boundary: the delta = 0 crossover. Draw only the longest contour segment, so
+    # the tiny near-zero island around a single cell (within Monte-Carlo noise) is not shown.
     cc, nn = np.meshgrid(comms, np.arange(len(spans)))
-    ax.contour(cc, nn, Z, levels=[0], colors="k", linewidths=1.6)
+    segs = ax.contour(cc, nn, Z, levels=[0], alpha=0).allsegs[0]
+    if len(segs):
+        main = max(segs, key=lambda p: np.hypot(*np.diff(p, axis=0).T).sum())
+        ax.plot(main[:, 0], main[:, 1], color="k", lw=1.7, zorder=5)
     cb = fig.colorbar(im, ax=ax, pad=0.02)
     cb.set_label("Supervisory $-$ Direct  success (pp)")
-    bbox = dict(boxstyle="round,pad=0.25", fc="white", ec="none", alpha=0.72)
-    ax.text(0.15, 0.55, "direct\n(human in loop)\nwins", fontsize=7.5, color="#12429c",
-            ha="left", va="center", bbox=bbox)
-    ax.text(2.35, 4.75, "supervisory (autonomy) wins", fontsize=7.5, color="#8c1c22",
-            ha="center", va="center", bbox=bbox)
+    # opaque label boxes (so the contour cannot show through), placed clear of the crossover
+    lbl = dict(fontsize=7.5, ha="center", va="center", zorder=6,
+               bbox=dict(boxstyle="round,pad=0.26", fc="white", ec="none"))
+    ax.text(0.0, 1.5, "direct control\nwins", color="#12429c", **lbl)
+    ax.text(2.35, 4.75, "supervisory autonomy wins", color="#8c1c22", **lbl)
     ax.set_title("Moving optimum: when to hand control to on-platform autonomy")
     fig.savefig(FIG / "centerpiece_phase.pdf")
     fig.savefig(FIG / "centerpiece_phase.png", dpi=170)

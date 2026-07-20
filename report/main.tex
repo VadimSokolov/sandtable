@@ -29,28 +29,34 @@ Human-Machine Teaming Experiments Under Contested Communications}
 \maketitle
 
 \begin{abstract}
-Designing human-machine teams for contested ground operations requires comparing many
-combinations of control modality, formation, and autonomy against uncertain communications and
-electronic warfare (EW). High-fidelity engines such as the Army's Government-furnished
-\emph{ProjectGL} render each mission at or near real time, which is too slow for the thousands of
-Monte-Carlo replications an optimizer or a design-of-experiments sweep needs. We present
-\sandtable{}, a lightweight, pure-Python, mission-level simulator that stands in for that engine
-inside the experiment inner loop. A mission is a pure function of scenario, seed, and design
-parameters, so runs are reproducible, cacheable, and trivially parallel; a full mission of up to
-1800 time steps completes in about a tenth of a second on one CPU core. \sandtable{} plugs into a
-Bayesian-optimization and DOE orchestrator, and we drive \nRep{} replications per design across
-147 designs (about 44,100 replications) on an HPC cluster. Its attrition kernel
-reproduces Lanchester's square law to within \lanchMaxErr\%. Three studies yield decision-relevant
-results. First, the direct-to-supervisory control optimum \emph{moves}: at a low span of control
-(one operator to two assets) direct control wins only when communications are clear, while at high
-span (one-to-eight) on-platform autonomy wins at every communications level, by
-\cpDeltaHiSpanClear{}~percentage points even in the clear. Second, route choice traces a clean
-speed-survivability frontier: a defilade route reaches \ucThreeSuccCover\% mission success against
-\ucThreeSuccFast\% for a fast exposed corridor, at \ucThreeTempoRatio$\times$ the time. Third, a
-recon swarm cueing near-blind shooters lifts success from \ucFiveSuccBlind\% (no recon) to
-\ucFiveSuccBestClear\%, but jamming degrades the sensor-to-shooter chain and cuts that to
-\ucFiveSuccBestSevere\%. \sandtable{} is offered as the fast inner-loop companion to ProjectGL for
-Army mission engineering.
+Designing human-machine teams for contested ground operations means comparing many combinations of
+control modality, formation, and autonomy against uncertain communications and electronic warfare
+(EW). High-fidelity engines such as the Army's Government-furnished \emph{ProjectGL} render each
+mission at or near real time, too slow for the thousands of Monte-Carlo replications a
+design-of-experiments sweep or optimizer needs. We present \sandtable{}, a lightweight, pure-Python,
+mission-level simulator that stands in for that engine inside the experiment inner loop.
+\sandtable{} holds every entity (ground vehicles, uncrewed aircraft, sensor and command nodes) as
+parallel NumPy arrays and advances a fixed one-second step that updates, in order, command tasking,
+movement over trafficable terrain, range-limited sensing into a per-side shared picture, and
+aimed-fire engagement; a C0--C5 communications/EW ladder adds tasking latency, drops messages, and
+thins that shared picture. The command layer carries the teaming question: a direct operator is
+modeled as a single capacity-limited server whose attention dilutes across the assets it supervises
+and whose orders ride the degradable link, whereas supervisory autonomy runs on-platform at a steady
+quality independent of the link. A whole mission is a pure function of (scenario, seed, parameters),
+so runs are reproducible, cacheable, and trivially parallel, and one mission of up to 1800 steps
+completes in about a tenth of a second on one CPU core. \sandtable{} plugs into a
+Bayesian-optimization and DOE orchestrator; we drive \nRep{} replications across 147 designs (about
+44,100 replications) on an HPC cluster, and the attrition kernel reproduces Lanchester's square law
+to within \lanchMaxErr\%. Three studies yield decision-relevant results. First, the
+direct-to-supervisory control optimum \emph{moves}: at a low span of control (one operator to two
+assets) direct control wins only when communications are clear, while at high span (one-to-eight)
+on-platform autonomy wins at every communications level, by \cpDeltaHiSpanClear{}~percentage points
+even in the clear. Second, route choice traces a clean speed-survivability frontier: a defilade
+route reaches \ucThreeSuccCover\% mission success against \ucThreeSuccFast\% for a fast exposed
+corridor, at \ucThreeTempoRatio$\times$ the time. Third, a recon swarm cueing near-blind shooters
+lifts success from \ucFiveSuccBlind\% (no recon) to \ucFiveSuccBestClear\%, but jamming degrades the
+sensor-to-shooter chain and cuts that to \ucFiveSuccBestSevere\%. \sandtable{} is the fast
+inner-loop companion to ProjectGL for Army mission engineering.
 \end{abstract}
 
 \section{Introduction}
@@ -301,8 +307,8 @@ time and loses \ucThreeLossFast{} of eight vehicles; the covered route succeeds 
 of the time and loses \ucThreeLossCover{}, at the cost of \ucThreeTimeCover{}~s, roughly
 \ucThreeTempoRatio$\times$ longer. Panel~(b) plots the resulting frontier: there is no free lunch,
 only a quantified exchange rate between minutes and casualties that a mission engineer can price
-against the tactical situation. That the model produces a smooth, well-ordered frontier rather than
-noise is the sensitivity property a search loop requires.
+against the tactical situation. The frontier is smooth and well-ordered, the sensitivity property a
+search loop requires.
 
 \begin{figure}[H]
 \centering
@@ -350,7 +356,8 @@ before control should be handed to the machines. Table~\ref{tab:centerpiece} giv
 \includegraphics[width=\textwidth]{centerpiece_curves.pdf}
 \caption{Mission success versus communications degradation for direct (blue) and supervisory (red)
 control, at three spans of control. Direct control degrades with both communications and span;
-supervisory autonomy is comms-robust. Bands are \nRep{}-replication binomial confidence intervals.}
+supervisory autonomy is nearly comms-invariant. Bands are \nRep{}-replication binomial confidence
+intervals.}
 \label{fig:cp_curves}
 \end{figure}
 
@@ -414,15 +421,15 @@ communications levels (C0 clear, C3, C5 severe), means over \nRep{} replications
 \section{Discussion}
 \label{sec:discussion}
 
-The three studies share a structure that is useful to name. In each, the best design is not fixed
-but \emph{contingent} on the contested-conditions axis, and \sandtable{} locates where the
-contingency flips. Route choice prices tempo against survivability so a planner can pick a point on
-the frontier to match the mission. The centerpiece turns span of control and communications state
-into a single rule: hand control to autonomy sooner as either span or degradation grows, and the
-phase diagram says exactly when. The swarm study shows that sensing capacity and link resilience
-must be bought together, because EW attacks the chain that connects them. None of these is a
-statement about one design; each is a map of how the right design moves as conditions change, which
-is what mission engineering needs.
+All three studies make the same point in different settings: the best design is not fixed but
+\emph{contingent} on the contested-conditions axis, and \sandtable{} locates where it flips. Route
+choice prices tempo against survivability so a planner can pick a point on the frontier to match the
+mission. The centerpiece turns span of control and communications state into a single rule: hand
+control to autonomy sooner as either span or degradation grows, and the phase diagram says exactly
+when. The swarm study shows that sensing capacity and link resilience must be bought together,
+because EW attacks the chain that connects them. None of these is a claim about a single design; each
+shows how the right choice shifts as conditions change, which is the question a mission engineer
+actually has to answer.
 
 Methodologically, the results argue for the two-tier workflow. \sandtable{} ran 44,100
 replications in one to two core-hours and returned smooth, well-ordered response surfaces with tight
@@ -453,8 +460,8 @@ multi-operator command, or adaptive policies is untested.
 The absolute success rates should therefore be read as comparative, not predictive: the value is in
 the \emph{ordering} of designs and the \emph{location} of crossovers, which is what a search loop
 consumes, not in any single percentage. The moving optimum's exact crossover cells near the contour
-are within Monte-Carlo noise, so the robust claim is the direction of the boundary, not its precise
-cell. The Lanchester check validates the aggregate attrition law but not the spatial or command
+are within Monte-Carlo noise, so what the study establishes is the direction of the boundary, not
+the precise cell. The Lanchester check validates the aggregate attrition law but not the spatial or command
 dynamics, which is why the intended role of the model is to feed, not replace, high-fidelity
 validation.
 
