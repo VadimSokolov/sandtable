@@ -90,9 +90,9 @@ def fig_architecture() -> None:
         _arrow(ax, x0, 86.5, x0 if x0 != 82 else 70, 78, color=EDGE)
 
     # build state
-    _box(ax, 50, 68, 74, 8,
-         "build world (terrain rasters: speed, cover, conceal)   +   entities (SoA arrays)",
-         fc="#f0f7f2", ec=GREEN, fs=8)
+    _box(ax, 50, 68, 86, 8,
+         "build world (terrain: speed, cover, conceal)   +   entities (SoA arrays)",
+         fc="#f0f7f2", ec=GREEN, fs=7.0)
     _arrow(ax, 50, 64, 50, 58.5, color=EDGE)
 
     # the fixed-step pipeline (5 stages)
@@ -117,9 +117,9 @@ def fig_architecture() -> None:
             color="#9a6a12", style="italic")
 
     # state row read/written by the pipeline
-    _box(ax, 50, 30, 80, 8,
-         "state: SoA entity arrays  (x, y, heading, hp, seen, control\\_quality, ...)  +  terrain rasters",
-         fc="#f7f7f4", ec=EDGE, fs=7.6)
+    _box(ax, 50, 30, 86, 8,
+         "state: SoA arrays  (x, y, heading, hp, seen, control_quality, ...)  +  terrain rasters",
+         fc="#f7f7f4", ec=EDGE, fs=7.0)
     _arrow(ax, 30, 44, 30, 34, color=EDGE, ls=(0, (2, 2)))
     _arrow(ax, 70, 34, 70, 44, color=EDGE, ls=(0, (2, 2)))
     ax.text(31.5, 39, "read", fontsize=6.6, color=EDGE, ha="left", style="italic")
@@ -127,9 +127,9 @@ def fig_architecture() -> None:
 
     # output
     _arrow(ax, 50, 20, 50, 13.5, color=EDGE)
-    _box(ax, 50, 8, 82, 9,
+    _box(ax, 50, 8, 86, 9,
          "mission KPIs: success, blue/red losses, time-to-objective, detection coverage",
-         fc=FILL_WRAP, ec=AMBER, fs=8, bold=True)
+         fc=FILL_WRAP, ec=AMBER, fs=7.4, bold=True)
 
     # side wrappers
     ax.text(2.5, 49, "evaluate(): average over N seeded replications", rotation=90,
@@ -159,9 +159,9 @@ def fig_command_model() -> None:
     _box(axd, 46, 54, 23, 16, "comms link\nlatency $\\ell$\ndrop $p$", fc=FILL_WRAP, ec=AMBER, fs=7.0)
     # operator server
     _box(axd, 83, 54, 23, 16, "operator\n(single server,\nrate $\\mu$)", fc="#fdeef0", ec=RED, fs=7.0, bold=True)
-    # agent -> link requests
-    for y in np.linspace(78, 30, 4):
-        _arrow(axd, 22, y, 33, 54, color=EDGE, lw=0.9, rad=0.12)
+    # agent -> link requests (fan into distinct points on the box's left edge, not one pile)
+    for y, ey in zip(np.linspace(78, 30, 4), (58.5, 55.5, 52.5, 49.5)):
+        _arrow(axd, 22, y, 32.5, ey, color=EDGE, lw=0.9, rad=0.05)
     # request / reply, in the clear gap between the two boxes
     _arrow(axd, 58.5, 58, 70.5, 58, color=INK, lw=1.1)   # request to operator
     _arrow(axd, 70.5, 50, 58.5, 50, color=INK, lw=1.1)   # reply back
