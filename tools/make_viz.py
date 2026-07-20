@@ -222,6 +222,7 @@ TEMPLATE = r"""<style>
         <button class="tp play" id="play" title="Play / pause">&#9654;</button>
         <button class="tp" id="stepf" title="Step forward">&#9654;&#9654;</button>
         <button class="tp" id="loop" title="Loop" style="min-width:auto">loop</button>
+        <button class="tp" id="rings" title="Toggle range rings + cue lines" style="min-width:auto">rings</button>
         <div class="speeds">
           <button class="sp" data-s="0.5">0.5&times;</button>
           <button class="sp on" data-s="1">1&times;</button>
@@ -276,6 +277,8 @@ TEMPLATE = r"""<style>
           <span><span class="dot" style="background:var(--red)"></span>Threat</span>
           <span><span class="dot rnd" style="border:1.5px solid var(--amber);background:transparent"></span>detected</span>
           <span><span class="dot" style="background:var(--ink-faint)"></span>killed</span>
+          <span><span class="dot" style="background:var(--air)"></span>cue link</span>
+          <span><span class="dot" style="background:var(--amber)"></span>kill tracer</span>
         </div>
       </div>
     </div>
@@ -307,7 +310,7 @@ TEMPLATE = r"""<style>
   let series=[];        // per-frame aggregates
   let terrainCanvas=null;
   let head=0;           // playhead in frame-index units (float)
-  let playing=false, speed=1, looping=false;
+  let playing=false, speed=1, looping=false, ringsOn=true;
   const FPS=9;          // frame-indices advanced per second at 1x
   let lastTs=null;
 
@@ -430,13 +433,48 @@ TEMPLATE = r"""<style>
       ctx.lineWidth=1.5; ctx.stroke();
     });
 
-    // UAS sensor rings first (under glyphs)
+    // range rings (under glyphs): UAS + ground sensor footprints, red weapon envelopes
+    if(ringsOn){
+      T.entities.forEach((e,i)=>{
+        if(!f.alive[i]) return;
+        const [x,y]=pos(i,head), sx=X(x), sy=Y(y);
+        if(e.side===BLUE && e.domain===AIR && e.sensor_range>0){
+          ctx.beginPath(); ctx.arc(sx,sy, e.sensor_range*sc,0,7);
+          ctx.strokeStyle="rgba(55,230,207,.16)"; ctx.lineWidth=1; ctx.stroke();
+        } else if(e.side===RED && e.weapon_range>0){
+          ctx.beginPath(); ctx.arc(sx,sy, e.weapon_range*sc,0,7);
+          ctx.setLineDash([3,4]); ctx.strokeStyle="rgba(255,90,114,.11)"; ctx.lineWidth=1; ctx.stroke(); ctx.setLineDash([]);
+        } else if(e.side===BLUE && e.domain===GROUND && e.sensor_range>0){
+          ctx.beginPath(); ctx.arc(sx,sy, e.sensor_range*sc,0,7);
+          ctx.strokeStyle="rgba(79,176,255,.13)"; ctx.lineWidth=1; ctx.stroke();
+        }
+      });
+    }
+
+    // sensor-to-shooter cue lines: a ground shooter engaging a detected enemy it cannot see itself,
+    // linked through the friendly air sensor that holds that contact (the UC-5 kill chain, live).
     T.entities.forEach((e,i)=>{
-      if(e.side===BLUE && e.domain===AIR && f.alive[i] && e.sensor_range>0){
-        const [x,y]=pos(i,head);
-        ctx.beginPath(); ctx.arc(X(x),Y(y), e.sensor_range*sc, 0, 7);
-        ctx.strokeStyle="rgba(55,230,207,.16)"; ctx.lineWidth=1; ctx.stroke();
-      }
+      if(e.side!==BLUE || e.domain!==GROUND || !f.alive[i] || e.weapon_range<=0) return;
+      const [ix,iy]=pos(i,head);
+      let tgt=-1, td=Infinity;
+      T.entities.forEach((o,j)=>{
+        if(o.side!==RED || !f.alive[j] || !f.seen[j]) return;
+        const [jx,jy]=pos(j,head), d=Math.hypot(jx-ix,jy-iy);
+        if(d<=e.weapon_range && d>e.sensor_range && d<td){ td=d; tgt=j; }   // in range but unseen by self => cued
+      });
+      if(tgt<0) return;
+      const [tx,ty]=pos(tgt,head);
+      let cue=-1, cd=Infinity;
+      T.entities.forEach((a,m)=>{
+        if(a.side!==BLUE || a.domain!==AIR || !f.alive[m]) return;
+        const [ax,ay]=pos(m,head), d=Math.hypot(ax-tx,ay-ty);
+        if(d<=a.sensor_range && d<cd){ cd=d; cue=m; }
+      });
+      if(cue<0) return;
+      const [ax,ay]=pos(cue,head);
+      ctx.strokeStyle="rgba(55,230,207,.55)"; ctx.lineWidth=1; ctx.setLineDash([2,3]);
+      ctx.beginPath(); ctx.moveTo(X(ax),Y(ay)); ctx.lineTo(X(tx),Y(ty)); ctx.lineTo(X(ix),Y(iy)); ctx.stroke();
+      ctx.setLineDash([]);
     });
 
     // death flashes (unit alive last frame, dead now)
@@ -473,6 +511,18 @@ TEMPLATE = r"""<style>
           ctx.beginPath(); ctx.moveTo(sx-4,sy-4); ctx.lineTo(sx+4,sy+4); ctx.moveTo(sx+4,sy-4); ctx.lineTo(sx-4,sy+4); ctx.stroke(); }
       }
     });
+
+    // kill tracers: shooter -> victim for kills arriving at this frame, with an impact burst
+    if(f.kills && f.kills.length){
+      f.kills.forEach(([s,tg])=>{
+        const [sx,sy]=pos(s,head), vx=X(f.x[tg]), vy=Y(f.y[tg]);
+        ctx.strokeStyle="rgba(255,220,120,.92)"; ctx.lineWidth=1.6;
+        ctx.beginPath(); ctx.moveTo(X(sx),Y(sy)); ctx.lineTo(vx,vy); ctx.stroke();
+        ctx.strokeStyle="rgba(255,90,114,.95)"; ctx.lineWidth=1.6;
+        for(let a=0;a<6;a++){ const ang=a*Math.PI/3;
+          ctx.beginPath(); ctx.moveTo(vx,vy); ctx.lineTo(vx+Math.cos(ang)*7, vy+Math.sin(ang)*7); ctx.stroke(); }
+      });
+    }
 
     updateRail(fi);
     drawSpark(fi);
@@ -537,13 +587,18 @@ TEMPLATE = r"""<style>
   document.getElementById("stepf").onclick=()=>{ playing=false; updatePlayBtn(); head=Math.min(T.frames.length-1,Math.floor(head)+1); draw(); };
   document.getElementById("stepb").onclick=()=>{ playing=false; updatePlayBtn(); head=Math.max(0,Math.ceil(head)-1); draw(); };
   document.getElementById("loop").onclick=(e)=>{ looping=!looping; e.target.style.color=looping?C.amber:""; e.target.style.borderColor=looping?C.amber:""; };
+  const ringsBtn=document.getElementById("rings");
+  ringsBtn.style.color=C.amber; ringsBtn.style.borderColor=C.amber;   // on by default
+  ringsBtn.onclick=(e)=>{ ringsOn=!ringsOn; e.target.style.color=ringsOn?C.amber:""; e.target.style.borderColor=ringsOn?C.amber:""; draw(); };
   document.querySelectorAll(".sp").forEach(b=> b.onclick=()=>{ speed=parseFloat(b.dataset.s);
     document.querySelectorAll(".sp").forEach(x=>x.classList.remove("on")); b.classList.add("on"); });
   document.getElementById("seek").oninput=(e)=>{ playing=false; updatePlayBtn(); head=(e.target.value/100)*(T.frames.length-1); draw(); };
   pick.onchange=()=>prep(parseInt(pick.value,10));
   window.addEventListener("resize", ()=>{ if(T) resize(); });
 
-  prep(0);
+  const DEFAULT_VIEW = 7;   // UC-5 "Swarm, clear comms": exercises rings, cue lines, and coverage
+  pick.value = DEFAULT_VIEW;
+  prep(DEFAULT_VIEW);
   requestAnimationFrame(tick);
 })();
 </script>

@@ -49,6 +49,7 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
     need = scn.objective.survive_fraction * assault0
 
     frames: list[dict] = []
+    kill_buf: list = []          # (shooter, target) kill pairs since the last snapshot
 
     def snapshot(t: float) -> None:
         frames.append({
@@ -58,7 +59,9 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
             "alive": [int(v) for v in ent.alive],
             "seen": [int(v) for v in ent.seen],
             "cq": [round(float(v), 2) for v in ent.control_quality],
+            "kills": [[s, tg] for s, tg in kill_buf],
         })
+        kill_buf.clear()
 
     snapshot(0.0)
     t = 0.0
@@ -74,7 +77,7 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
         planning.step(ent, world, scn, spawn_x)
         motion.step(ent, world, dt, tempo)
         sensing.step(ent, world, rng, comms)
-        engagement.step(ent, world, dt, rng)
+        engagement.step(ent, world, dt, rng, events=kill_buf)
         t = (k + 1) * dt
 
         red_alive = ent.side_mask(RED)

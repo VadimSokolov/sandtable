@@ -19,7 +19,7 @@ from sandtable.world import World
 
 
 def _side_damage(ent: Entities, world: World, dist: np.ndarray, shooter_side: int,
-                 rng: np.random.Generator, damage: np.ndarray) -> None:
+                 rng: np.random.Generator, damage: np.ndarray, events: list | None = None) -> None:
     shooters = ent.alive & (ent.side == shooter_side)
     if not shooters.any():
         return
@@ -48,10 +48,16 @@ def _side_damage(ent: Entities, world: World, dist: np.ndarray, shooter_side: in
     pk = np.clip(pk, 0.0, 1.0)
     killed = rng.random(shooter_idx.size) < pk
     np.add.at(damage, target_idx[killed], 1.0)
+    # Optional replay hook: record (shooter, target) kill pairs. `events is None` on the hot path
+    # (sim.run_mission), so the optimizer draws the identical RNG stream and pays no overhead.
+    if events is not None:
+        for s, t in zip(shooter_idx[killed], target_idx[killed]):
+            events.append((int(s), int(t)))
 
 
-def step(ent: Entities, world: World, dt: float, rng: np.random.Generator) -> None:
-    """Resolve one round of mutual engagement in place."""
+def step(ent: Entities, world: World, dt: float, rng: np.random.Generator,
+         events: list | None = None) -> None:
+    """Resolve one round of mutual engagement in place. `events`, if given, collects kill pairs."""
     n = ent.n
     if n == 0:
         return
@@ -59,8 +65,8 @@ def step(ent: Entities, world: World, dt: float, rng: np.random.Generator) -> No
     dist = cdist(pos, pos)
 
     damage = np.zeros(n)
-    _side_damage(ent, world, dist, BLUE, rng, damage)
-    _side_damage(ent, world, dist, RED, rng, damage)
+    _side_damage(ent, world, dist, BLUE, rng, damage, events)
+    _side_damage(ent, world, dist, RED, rng, damage, events)
 
     ent.hp = ent.hp - damage
     ent.alive = ent.alive & (ent.hp > 0.0)

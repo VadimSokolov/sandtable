@@ -372,3 +372,15 @@ zero em-dashes, contributions resolve, compile clean); 12 pages.
 - Bug fixed: raw "at_team" underscore broke the compile (math-mode subscript in text); escaped in
   the table generator.
 Result: pre-flight PASSES all five checks (0 AI-vocab hits, zero em-dashes, compile clean); 17 pages.
+
+### 2026-07-19 - Richer single-run replay in the mission console
+- engagement.step gains an optional `events` list that records (shooter, target) kill pairs; it is
+  None on the hot path (sim.run_mission), so the optimizer's RNG stream and outcomes are unchanged
+  (verified: same seed -> identical KPIs; 79 tests pass, 1 skipped).
+- replay.record_trace attaches per-frame `kills` to each snapshot.
+- tools/make_viz.py (full console) now draws: weapon-range rings on threats + sensor rings on ground
+  units (toggle "rings", default on), sensor-to-shooter cue lines derived from the shared picture
+  (a ground shooter engaging a detected enemy it cannot see itself, linked through the covering UAS),
+  and kill tracers (shooter -> victim with an impact burst). Console defaults to the UC-5 swarm view.
+- Verified geometry with a matplotlib preview of two UC-5 combat frames (cue chain + kill tracer both
+  correct) and node --check on the emitted JS. The .html viewers remain generated + git-ignored.
