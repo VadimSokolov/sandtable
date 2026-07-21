@@ -28,4 +28,9 @@ SandTable paper -- generated numbers (source: tools/make_numbers.py over report/
 \ucFiveSuccMidClear = 56    # UC5 success%% n=3 C0
 \ucFiveSuccMidSevere = 28    # UC5 success%% n=3 C5
 \lanchMaxErr = 9.1    # max Lanchester relative error (%)
+\beliefNRep = 24    # belief-demo replications
+\beliefBaseLoss = 6.3    # UC3 mean blue losses, baseline seen-bit model
+\beliefCleanLoss = 6.4    # UC3 mean blue losses, belief tracks, clear comms
+\beliefDecoyLoss = 3.8    # UC3 mean blue losses, belief tracks + decoys (spoofing)
+\beliefJamLoss = 5.2    # UC3 mean blue losses, belief tracks, jammed C5 (stale)
 \nRep = 300    # Monte-Carlo replications per design

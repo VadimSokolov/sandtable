@@ -573,6 +573,44 @@ tenth of a second, and plugs directly into a Bayesian-optimization and DOE orche
 next step is to search these design spaces with optimization rather than grids, and to confirm the
 flagged designs in ProjectGL.
 
+\subsection{A prototype belief layer}
+\label{subsec:belief}
+
+Beyond the three studies, we prototyped the single extension that most changes what the testbed can
+study: a first-class belief layer. The baseline carries perception as one bit, a target is on the
+shared picture or it is not, and a shooter fires against its true position, so electronic warfare can
+only thin the picture and deception has nowhere to act. The prototype instead gives each side a
+persistent \emph{track} per opposing entity: a believed position that is refreshed on detection and
+goes stale, frozen with decaying confidence, when detection lapses, plus optional \emph{false tracks}
+that model decoys and spoofing. Fires resolve against the believed position and its confidence rather
+than truth, so a jammed link lets a track drift and miss, and a decoy draws a wasted shot. The layer
+is opt-in and off by default, so every number reported above is unchanged. Figure~\ref{fig:tick}
+places this state beside the baseline and shows the fixed-order per-step pipeline it plugs into.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{tick_cycle.pdf}
+\caption{One simulation step and the entity state it touches. Top: the fixed-order pipeline within a
+tick (command tasking, planning, motion, sensing, engagement; $\Delta t = 1$~s), a vectorized update
+over the array state rather than a per-agent state machine, annotated with each stage's reads and
+writes. Bottom: the per-entity state today (left) beside the richer belief-aligned state (right). The
+belief and track block is the prototype of this section; suppression, munitions, a command graph, and
+sustainment remain future work (Section~\ref{subsec:extensions}).}
+\label{fig:tick}
+\end{figure}
+
+The effect is first-order. On UC-3, mean blue losses over \beliefNRep{} replications are
+\beliefBaseLoss{} for the baseline seen-bit model and \beliefCleanLoss{} for the belief model in
+clear communications, so with fresh tracks the two nearly coincide. Adding decoys drops blue losses
+to \beliefDecoyLoss{}, because spoofed tracks pull fire off the real force, an effect a
+probability-of-kill modifier cannot produce because it needs a belief that deception can corrupt.
+Severe jamming drops them to \beliefJamLoss{} by a different route, stale tracks whose believed
+positions drift from the moving truth, so the jammed side misses more often. Electronic warfare and
+deception therefore act on outcomes through the belief state, first-order, rather than as modifier
+tables, which is how engagement-level frameworks such as AFSIM allocate fires against tracks rather
+than truth. This is the most decision-relevant step toward the program's deception and
+trust-calibration objectives.
+
 \subsection{Extensions}
 \label{subsec:extensions}
 
@@ -604,7 +642,8 @@ direct-versus-supervisory tradeoff on adaptive teaming behavior rather than fixe
 the same policies transfer to the Learning Agents runtime inside ProjectGL. A deep-learning surrogate
 with uncertainty quantification, fitted to the response surfaces and queried by the
 Bayesian-optimization loop \citep{balandat2020botorch} with an acquisition rule that targets
-high-variance regions, would cut the number of simulator calls each search needs. Broadening the
+high-variance regions, would cut the number of simulator calls each search needs. Building on the
+belief-layer prototype (Section~\ref{subsec:belief}), broadening the
 use-case library toward the deception and trust cases in the design, spoofed contacts, thermal decoys,
 and confident-but-wrong recommendations, would exercise the engineered-ground-truth machinery for the
 trust-calibration metric and let pattern-mining over the run logs surface the success and failure

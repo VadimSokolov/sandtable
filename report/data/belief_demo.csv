@@ -1,0 +1,5 @@
+condition,blue_losses,red_losses,n_rep
+baseline,6.2917,1.8333,24
+clear,6.375,1.5,24
+decoy,3.75,1.0417,24
+jam,5.1667,1.75,24
