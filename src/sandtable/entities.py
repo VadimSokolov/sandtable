@@ -67,6 +67,12 @@ class Entities:
     await_until: np.ndarray = None       # int32: step index a pending operator request resolves; -1 = idle
     decision_cooldown: np.ndarray = None  # float: steps until this agent's next decision event
 
+    # Kill-web state (Increment 5, prototype). Optional: defaulted to neutral values so scenarios
+    # that do not opt into the kill-web mechanics behave byte-identically (0 suppression is a neutral
+    # multiplier, infinite ammo never gates fire).
+    suppression: np.ndarray = None       # float in [0, 1]: incoming-fire suppression; degrades fire and acquisition
+    ammo: np.ndarray = None              # float: rounds remaining (inf = unlimited)
+
     def __post_init__(self) -> None:
         n = self.x.shape[0]
         if self.control_quality is None:
@@ -75,6 +81,10 @@ class Entities:
             self.await_until = np.full(n, -1, np.int32)
         if self.decision_cooldown is None:
             self.decision_cooldown = np.zeros(n)
+        if self.suppression is None:
+            self.suppression = np.zeros(n)
+        if self.ammo is None:
+            self.ammo = np.full(n, np.inf)
 
     @property
     def n(self) -> int:

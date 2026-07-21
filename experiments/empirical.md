@@ -430,3 +430,44 @@ t+dt state machine?", study AFSIM basal behaviors).
 - Demonstration (UC-3, mean blue_losses over 24 seeds): baseline 6.3; belief clear 6.4; +decoys 3.8
   (spoofing pulls fire off real targets); jammed C5 5.2 (stale tracks miss). EW/deception are now
   first-order, not Pk modifiers.
+
+### 2026-07-21 - Full kill-web pass: suppression + munitions mechanics, UC-7 contested-belief scenario
+
+Follow-up to the belief prototype, addressing Joe's kill-web review in full: each entity now carries
+suppression and a finite basic load, and a new contested-belief scenario integrates all layers. Every
+mechanic is opt-in and byte-identical when off (baseline is the degenerate limit).
+
+- src/sandtable/mechanics.py (new): Mech config + suppression/munitions helpers. Suppression is a
+  decaying [0,1] state raised on targets by incoming fire; it scales down a suppressed shooter's Pk
+  (read from a pre-step snapshot so both sides use pre-step values, no shooter-order bias). Munitions
+  = finite rounds per shooter (arm sets ammo_load on pk_base>0 entities), decremented on fire, gates
+  engagement at zero. build_mech returns None unless params["mech"] sets suppression or munitions.
+- Wired into engagement.step, belief.engage (shared semantics), and sim.py (build + arm + per-step
+  decay). When mech is None the engagement draws the identical RNG stream -> byte-identical.
+- Byte-identical PROOF: regenerated report/gen/numbers.tex and every existing report/data/*.csv;
+  `git diff` shows only ADDED macros, zero changes to the 34 prior macros or the 6 existing study
+  CSVs (centerpiece, uc3, uc5, lanchester, belief_demo). Full suite: 102 passed (92 baseline + 10
+  new mechanics tests, tests/test_mechanics.py).
+- scenarios/uc7_spoofed_advance.json (new, id=7): 8 UGV advance vs 8 static AT teams; params bake in
+  the full contested config (comms C3, belief tracks + 6 decoys, suppression + munitions ammo 120).
+- tools/make_killweb_numbers.py (new) -> three CSVs (N=48 seeded reps each):
+  - suppression_sweep.csv (UC-3): supp_fire 0.0->1.0. blue losses 6.2->5.0, success 23%->44%.
+    supp_fire=0 reproduces the baseline exactly (6.2). Base-of-fire effect: the 8 attackers out-gun
+    the 6 defenders, so suppressing them lets the maneuver force cross cheaper.
+  - munitions_sweep.csv (UC-3): defender ammo_load 2..1000. blue losses rise MONOTONICALLY
+    0.0->6.2, converging exactly on the fixed-Pk baseline (6.2) as ammo->inf; success 100%->23%.
+    Sanity: ammo=2 -> 6 teams x 2 shots x pk 0.008 ~= 0.10 blue losses (matches). The fixed-Pk model
+    is the infinite-magazine limit.
+  - uc7_layers.csv (UC-7): peel from truth baseline. blue losses / success%:
+    truth 7.4/6; +belief 7.5/2; +jam 7.3/6; +decoys 4.3/56; +suppress 3.8/65; +full(munitions) 3.0/79.
+    Decoys are the dominant single first-order layer (spoofing breaks the engagement); belief and
+    jamming alone are near-neutral here with fresh tracks.
+- Figures/tables: tools/make_figures.py fig_killweb_sweeps -> report/figures/killweb_sweeps.pdf
+  (a: suppression, b: munitions with dashed fixed-Pk baseline). tools/make_numbers.py killweb() ->
+  new macros (supp*, muni*, ucSeven*, killwebNRep) + report/gen/tab_killweb.tex. Diagram
+  fig_tick_cycle updated: belief/suppression/munitions tagged [built], C2 graph/sustainment [future].
+- Paper: new Results subsection 5.5 "Kill-web mechanics" (subsec:killweb) with the moved tick_cycle
+  figure, suppression + munitions studies (Fig killweb_sweeps), and the UC-7 layered table; belief
+  prototype promoted from Discussion into this Results subsection; 5th contribution added; Extensions
+  and Conclusion updated (suppression/munitions/belief moved from future-work to done). Pre-flight
+  PASSES 5/5; 20 pages.

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from sandtable import belief, c2, engagement, metrics, motion, planning, sensing
+from sandtable import belief, c2, engagement, mechanics, metrics, motion, planning, sensing
 from sandtable.comms_ew import build_comms
 from sandtable.entities import BLUE, GROUND, RED
 from sandtable.scenario import Scenario, build_entities
@@ -33,6 +33,11 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     # Optional belief/track layer (Increment 4, prototype). None unless the scenario opts in via
     # params["belief"]["model"] == "tracks"; when None the baseline engagement path runs unchanged.
     tracks = belief.build_tracks(scn, ent)
+    # Optional kill-web mechanics (Increment 5): suppression and munitions. None unless the scenario
+    # sets params["mech"]; when None the engagement draws the identical RNG stream (byte-identical).
+    mech = mechanics.build_mech(scn)
+    if mech is not None:
+        mechanics.arm(ent, mech)
 
     init_counts = {BLUE: int((ent.side == BLUE).sum()), RED: int((ent.side == RED).sum())}
     blue_mask0 = ent.side == BLUE
@@ -58,11 +63,13 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
         planning.step(ent, world, scn, spawn_x)
         motion.step(ent, world, dt, tempo)
         sensing.step(ent, world, rng, comms)
+        if mech is not None:
+            mechanics.decay(ent, mech)          # relax suppression one step before this tick's fire
         if tracks is None:
-            engagement.step(ent, world, dt, rng)
+            engagement.step(ent, world, dt, rng, mech=mech)
         else:
             belief.update(ent, tracks, comms, rng)
-            belief.engage(ent, world, tracks, rng)
+            belief.engage(ent, world, tracks, rng, mech=mech)
         t = (k + 1) * dt
 
         # Detection coverage: fraction of the living red force currently on the blue shared picture

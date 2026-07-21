@@ -356,9 +356,10 @@ def fig_tick_cycle() -> None:
     """What happens during one timestep, and the per-entity state it reads and writes.
 
     Answers the question "do you have a state machine for t -> t + dt?": sandtable is a fixed-order
-    vectorized pipeline over SoA state, not a per-agent FSM. The lower half contrasts the current
-    entity state with the proposed AFSIM-aligned belief/track layer that would make EW and deception
-    first-order effects.
+    vectorized pipeline over SoA state, not a per-agent FSM. The lower half contrasts the baseline
+    entity state with the AFSIM-aligned kill-web state: belief/tracks, suppression, and munitions are
+    built and studied (they make EW, deception, and sustainment first-order); a command graph and
+    sustainment remain future work.
     """
     fig, ax = plt.subplots(figsize=(7.4, 5.4))
     _clean(ax)
@@ -403,12 +404,12 @@ def fig_tick_cycle() -> None:
             family="monospace", linespacing=1.6)
 
     _box(ax, 73, 41, 44, 42, "", fc="#fbf7ef", ec=AMBER, lw=1.2)
-    ax.text(73, 59.8, "Proposed, AFSIM-aligned  (not built)",
-            ha="center", va="center", fontsize=6.9, fontweight="bold", color="#9a6a12")
+    ax.text(73, 59.8, "Kill-web state, AFSIM-aligned  (built + future)",
+            ha="center", va="center", fontsize=6.5, fontweight="bold", color="#9a6a12")
     bb = FancyBboxPatch((53.5, 42.5), 39, 14.5, boxstyle="round,pad=0.3,rounding_size=1.2",
                         fc="#e9f7f5", ec=AIR, lw=1.2, mutation_aspect=0.5)
     ax.add_patch(bb)
-    ax.text(54.5, 55.2, "belief / tracks (per side)", ha="left", va="top", fontsize=6.3,
+    ax.text(54.5, 55.2, "belief / tracks (per side)  [built]", ha="left", va="top", fontsize=6.3,
             fontweight="bold", color="#0d7d72")
     ax.text(54.5, 52.2,
             "believed x,y . age (staleness) . confidence\n"
@@ -417,10 +418,10 @@ def fig_tick_cycle() -> None:
             "decoys become first-order",
             ha="left", va="top", fontsize=5.5, color=INK, linespacing=1.4)
     rest = (
-        "suppression   decaying; degrades fire/detect\n"
-        "munitions     by class; deplete on fire\n"
-        "C2 graph      command chain / connectivity\n"
-        "sustainment   fuel + fatigue / posture"
+        "suppression   decaying; degrades fire   [built]\n"
+        "munitions     finite load; deplete      [built]\n"
+        "C2 graph      command chain             [future]\n"
+        "sustainment   fuel + fatigue / posture  [future]"
     )
     ax.text(54.0, 39.5, rest, ha="left", va="top", fontsize=5.4, color=INK,
             family="monospace", linespacing=1.6)

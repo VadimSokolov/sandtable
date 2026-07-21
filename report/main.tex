@@ -115,6 +115,11 @@ collapse of a sensor-to-shooter chain (Section~\ref{subsec:uc5}), each generated
 \item An analytic validation: \sandtable{}'s emergent attrition matches Lanchester's square law to
 within \lanchMaxErr\%, with the residual explained by known discretization effects
 (Section~\ref{subsec:validation}).
+\item A first-class kill-web extension, opt-in and byte-identical when off, in which each entity
+carries suppression, a finite basic load of munitions, and a persistent belief/track state, and
+fires resolve against belief rather than truth; suppression, munitions, and deception each move
+mission outcomes as first-order effects, with the fixed-Pk baseline recovered as their degenerate
+limit (Section~\ref{subsec:killweb}).
 \end{enumerate}
 
 \section{Background and Related Work}
@@ -519,11 +524,110 @@ communications levels (C0 clear, C3, C5 severe), means over \nRep{} replications
 \input{gen/tab_uc5}
 \end{table}
 
+\subsection{Kill-web mechanics: suppression, munitions, and contested belief}
+\label{subsec:killweb}
+
+A review of the model raised three related points about its engagement kernel. Attrition should
+emerge from the stream of individual engagements rather than being posited as the primitive; each
+entity should carry the state that governs a modern kill web, at least suppression, a finite basic
+load of munitions, and a perception state; and fires should be allocated against what a shooter
+believes rather than against ground truth, so that jamming, spoofing, and decoys become first-order
+effects instead of probability-of-kill modifiers. The first point already holds: \sandtable{}'s
+engagement is event-based, each living shooter draws a per-shot Bernoulli kill against its nearest
+detected target every tick, so attrition is emergent and the Lanchester match of
+Section~\ref{subsec:validation} is an aggregate cross-check, not the mechanism. The other two we
+address by adding the missing state.
+
+We add three mechanics, each opt-in and off by default. Suppression is a decaying state in $[0,1]$
+that incoming fire raises on its target and that scales down a suppressed shooter's kill probability.
+Munitions are a finite basic load carried per shooter, decremented on fire, that gates engagement
+once a shooter runs dry. Belief replaces the single detected-or-not bit with a persistent
+\emph{track} per opposing entity, a believed position refreshed on detection and going stale with
+decaying confidence when detection lapses, plus optional false tracks for decoys and spoofing; fires
+resolve against the believed position and confidence, not truth. All three are byte-identical when
+off: each is gated so the disabled path draws the identical random stream, and every number in
+Sections~\ref{subsec:validation}--\ref{subsec:uc5} is unchanged. The baseline is their degenerate
+limit, a force with no suppression, unlimited magazines, and perfect knowledge.
+Figure~\ref{fig:tick} shows the per-step pipeline these mechanics plug into and the entity state they
+add.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{tick_cycle.pdf}
+\caption{One simulation step and the entity state it touches. Top: the fixed-order pipeline within a
+tick (command tasking, planning, motion, sensing, engagement; $\Delta t = 1$~s), a vectorized update
+over the array state rather than a per-agent state machine, annotated with each stage's reads and
+writes. Bottom: the per-entity state of the baseline (left) beside the kill-web state (right). The
+belief, suppression, and munitions state is implemented and studied in this section; a command graph
+and fuel-and-resupply sustainment remain future work (Section~\ref{subsec:extensions}).}
+\label{fig:tick}
+\end{figure}
+
+\paragraph{Suppression.} Suppression makes a base of fire worth having. On UC-3, raising the
+suppression strength from off to full lowers mean blue losses from \suppBaseLoss{} to \suppMaxLoss{}
+of eight and lifts mission success from \suppBaseSucc\% to \suppMaxSucc\%
+(Figure~\ref{fig:killweb}a). The attacking echelon out-guns the six defenders, so putting fire on
+them degrades their return fire faster than they degrade the assault, and the maneuver force crosses
+at lower cost. A fixed probability-of-kill table cannot express this, because the benefit is
+contingent on who is firing on whom rather than a property of the weapon. The off setting recovers
+the baseline exactly.
+
+\paragraph{Munitions.} A finite basic load turns rate of fire into a sustainment ceiling. Sweeping
+the defenders' load on UC-3 traces a monotonic curve (Figure~\ref{fig:killweb}b): with
+\muniScarceAmmo{} rounds each the six defenders cannot service every vehicle crossing their
+engagement area, so blue loses \muniScarceLoss{} platforms at \muniScarceSucc\% success, whereas at
+an effectively unlimited load blue loses \muniPlentyLoss{} at \muniPlentySucc\%, reproducing the
+fixed-Pk baseline. The fixed-Pk model is the infinite-magazine limit; between the two, the defender's
+magazine depth sets the attacker's loss rate, which is exactly the quantity a logistics-aware plan
+trades against.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{killweb_sweeps.pdf}
+\caption{Two opt-in kill-web mechanics on UC-3, each swept from its off state. Amber is attacker
+losses (left axis), blue is mission success (right axis). (a) Suppression strength: stronger
+suppression of the defenders lowers attacker losses and raises success. (b) Defender basic load (log
+scale): attacker losses rise monotonically with the defenders' magazine depth and converge on the
+fixed-Pk baseline (dashed) as the load grows without bound. Means over \killwebNRep{} replications.}
+\label{fig:killweb}
+\end{figure}
+
+\paragraph{Contested belief.} With fires resolving against tracks, deception and electronic warfare
+act on the belief state directly. On UC-3, mean blue losses over \beliefNRep{} replications are
+\beliefBaseLoss{} for the baseline seen-bit model and \beliefCleanLoss{} for belief tracks in clear
+communications, so with fresh tracks the two nearly coincide. Adding decoys drops losses to
+\beliefDecoyLoss{}, because spoofed tracks pull fire off the real force, and severe jamming drops
+them to \beliefJamLoss{} by a different route, stale tracks whose believed positions drift from the
+moving truth. Neither effect is reachable by a modifier table, because each needs a belief that
+deception can corrupt, which is how engagement-level frameworks such as AFSIM allocate fires against
+tracks rather than truth.
+
+UC-7 combines these into one contested-belief scenario in the use-case library: eight vehicles
+advance against a denser, spoofable, and jammed defense, with both sides carrying the full kill web.
+Table~\ref{tab:killweb} peels the mechanics on one layer at a time from a truth baseline. Fires
+against belief with fresh tracks, and jamming on top, barely move the grind, and blue loses
+\ucSevenTruthLoss{} of eight at \ucSevenTruthSucc\% success. Decoys are the dominant single layer,
+cutting losses to \ucSevenDecoyLoss{} and lifting success past half, because spoofing the defenders'
+picture is what breaks the engagement. Suppression and finite munitions each add a further increment,
+and the full contested case succeeds \ucSevenFullSucc\% of the time at \ucSevenFullLoss{} losses. In
+this model deception, suppression, and sustainment are first-order levers on the outcome, and the
+testbed scores them against engineered ground truth rather than against agreement with the AI.
+
+\begin{table}[H]
+\centering
+\caption{UC-7 contested-belief scenario: kill-web mechanics peeled on one layer at a time from a
+truth baseline (fires against truth, no suppression, unlimited munitions) up to the full contested
+case. Means over \ucSevenNRep{} replications.}
+\label{tab:killweb}
+\input{gen/tab_killweb}
+\end{table}
+
 \section{Discussion}
 \label{sec:discussion}
 
-All three studies make the same point in different settings: the best design is not fixed but
-\emph{contingent} on the contested-conditions axis, and \sandtable{} locates where it flips. Route
+The route, control, and swarm studies make the same point in different settings: the best design is
+not fixed but \emph{contingent} on the contested-conditions axis, and \sandtable{} locates where it
+flips. Route
 choice prices tempo against survivability so a planner can pick a point on the frontier to match the
 mission. The centerpiece turns span of control and communications state into a single rule: hand
 control to autonomy sooner as either span or degradation grows, and the phase diagram says exactly
@@ -568,48 +672,13 @@ We built \sandtable{}, a fast, reproducible, pure-Python mission-level testbed, 
 companion to the Army's high-fidelity ProjectGL, and used it to produce three decision-relevant
 maps for human-machine teaming under contested communications: a moving direct-to-supervisory
 control optimum, a speed-survivability frontier for route choice, and the EW-induced collapse of a
-sensor-to-shooter chain. The tool obeys a recognized attrition law, runs a full mission in about a
+sensor-to-shooter chain. On the same core we added an opt-in kill web, suppression, finite munitions,
+and a belief state that jamming and decoys corrupt, so attrition emerges from the engagement stream
+and deception and sustainment are first-order effects, with the fixed-Pk baseline recovered exactly
+when the mechanics are off. The tool obeys a recognized attrition law, runs a full mission in about a
 tenth of a second, and plugs directly into a Bayesian-optimization and DOE orchestrator, so the
 next step is to search these design spaces with optimization rather than grids, and to confirm the
 flagged designs in ProjectGL.
-
-\subsection{A prototype belief layer}
-\label{subsec:belief}
-
-Beyond the three studies, we prototyped the single extension that most changes what the testbed can
-study: a first-class belief layer. The baseline carries perception as one bit, a target is on the
-shared picture or it is not, and a shooter fires against its true position, so electronic warfare can
-only thin the picture and deception has nowhere to act. The prototype instead gives each side a
-persistent \emph{track} per opposing entity: a believed position that is refreshed on detection and
-goes stale, frozen with decaying confidence, when detection lapses, plus optional \emph{false tracks}
-that model decoys and spoofing. Fires resolve against the believed position and its confidence rather
-than truth, so a jammed link lets a track drift and miss, and a decoy draws a wasted shot. The layer
-is opt-in and off by default, so every number reported above is unchanged. Figure~\ref{fig:tick}
-places this state beside the baseline and shows the fixed-order per-step pipeline it plugs into.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{tick_cycle.pdf}
-\caption{One simulation step and the entity state it touches. Top: the fixed-order pipeline within a
-tick (command tasking, planning, motion, sensing, engagement; $\Delta t = 1$~s), a vectorized update
-over the array state rather than a per-agent state machine, annotated with each stage's reads and
-writes. Bottom: the per-entity state today (left) beside the richer belief-aligned state (right). The
-belief and track block is the prototype of this section; suppression, munitions, a command graph, and
-sustainment remain future work (Section~\ref{subsec:extensions}).}
-\label{fig:tick}
-\end{figure}
-
-The effect is first-order. On UC-3, mean blue losses over \beliefNRep{} replications are
-\beliefBaseLoss{} for the baseline seen-bit model and \beliefCleanLoss{} for the belief model in
-clear communications, so with fresh tracks the two nearly coincide. Adding decoys drops blue losses
-to \beliefDecoyLoss{}, because spoofed tracks pull fire off the real force, an effect a
-probability-of-kill modifier cannot produce because it needs a belief that deception can corrupt.
-Severe jamming drops them to \beliefJamLoss{} by a different route, stale tracks whose believed
-positions drift from the moving truth, so the jammed side misses more often. Electronic warfare and
-deception therefore act on outcomes through the belief state, first-order, rather than as modifier
-tables, which is how engagement-level frameworks such as AFSIM allocate fires against tracks rather
-than truth. This is the most decision-relevant step toward the program's deception and
-trust-calibration objectives.
 
 \subsection{Extensions}
 \label{subsec:extensions}
@@ -643,11 +712,13 @@ the same policies transfer to the Learning Agents runtime inside ProjectGL. A de
 with uncertainty quantification, fitted to the response surfaces and queried by the
 Bayesian-optimization loop \citep{balandat2020botorch} with an acquisition rule that targets
 high-variance regions, would cut the number of simulator calls each search needs. Building on the
-belief-layer prototype (Section~\ref{subsec:belief}), broadening the
-use-case library toward the deception and trust cases in the design, spoofed contacts, thermal decoys,
-and confident-but-wrong recommendations, would exercise the engineered-ground-truth machinery for the
-trust-calibration metric and let pattern-mining over the run logs surface the success and failure
-signatures the program set out to detect.
+kill-web mechanics of Section~\ref{subsec:killweb}, the entity state a full kill web still lacks, a
+command and connectivity graph and fuel-and-resupply sustainment, would let command-post disruption
+and logistics act as first-order effects the way suppression and munitions now do. Broadening the
+use-case library beyond the UC-7 deception case toward the remaining trust cases in the design,
+confident-but-wrong recommendations and thermal decoys, would exercise the engineered-ground-truth
+machinery for the trust-calibration metric and let pattern-mining over the run logs surface the
+success and failure signatures the program set out to detect.
 
 \section*{Acknowledgments}
 This work was performed under the VIPR-GS FP6111 program (U.S. Army GVSC, via the Clemson-led

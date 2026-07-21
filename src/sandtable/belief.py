@@ -117,11 +117,17 @@ def update(ent: Entities, tracks: Tracks, comms, rng: np.random.Generator) -> No
                 tracks.ttl[sl] = tracks.max_age + 2
 
 
-def engage(ent: Entities, world: World, tracks: Tracks, rng: np.random.Generator) -> None:
+def engage(ent: Entities, world: World, tracks: Tracks, rng: np.random.Generator,
+           mech=None) -> None:
     """Belief-aware engagement: each shooter fires on its nearest live track (by believed position),
     real or decoy. A real track resolves a Bernoulli kill on the true target with Pk scaled by track
     confidence (stale tracks miss more often); a decoy consumes the shot with no effect. Both sides
     resolve against the pre-step state and damage is applied simultaneously.
+
+    `mech`, if given, layers the opt-in kill-web mechanics on top of the belief resolution: a shooter
+    out of ammunition cannot fire, a firing shooter spends a round, its Pk is scaled down by its own
+    pre-step suppression, and each engaged real target is suppressed. When None, the belief path and
+    its RNG draws are byte-identical to the belief-only prototype.
     """
     n = ent.n
     if n == 0:
@@ -131,6 +137,8 @@ def engage(ent: Entities, world: World, tracks: Tracks, rng: np.random.Generator
     q = getattr(ent, "control_quality", None)
     m = tracks.flive.size
     false_pos = np.column_stack([tracks.fx, tracks.fy]) if m else np.zeros((0, 2))
+    # Snapshot suppression before either side fires so both read pre-step values (no order bias).
+    supp0 = ent.suppression.copy() if (mech is not None and mech.suppression) else None
     damage = np.zeros(n)
 
     for s in (BLUE, RED):
@@ -154,14 +162,22 @@ def engage(ent: Entities, world: World, tracks: Tracks, rng: np.random.Generator
         pick = np.argmin(d_all, axis=1)
         for r in np.nonzero(has)[0]:
             shooter = int(si[r])
+            if mech is not None and mech.munitions and ent.ammo[shooter] <= 0.0:
+                continue                                              # out of rounds: no shot fired
             p = int(pick[r])
             if p < n:                                                 # real target
                 cover = world.cover_at(real_pos[p:p + 1, 0], real_pos[p:p + 1, 1])[0]
                 pk = ent.pk_base[shooter] * (1.0 - cover) * tracks.conf[p]
                 if q is not None:
                     pk = pk * q[shooter] * (2.0 - q[p])
+                if mech is not None and mech.suppression:            # suppressed shooter aims worse
+                    pk = pk * (1.0 - mech.supp_fire * supp0[shooter])
                 if rng.random() < min(max(pk, 0.0), 1.0):
                     damage[p] += 1.0
+                if mech is not None and mech.suppression:            # being fired on suppresses target
+                    ent.suppression[p] = min(ent.suppression[p] + mech.supp_gain, 1.0)
             # else: decoy -> shot wasted, no damage
+            if mech is not None and mech.munitions:
+                ent.ammo[shooter] -= 1.0                             # a round was fired (real or decoy)
     ent.hp = ent.hp - damage
     ent.alive = ent.alive & (ent.hp > 0.0)

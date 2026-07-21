@@ -186,11 +186,62 @@ def fig_uc5() -> None:
     print("[uc5] figure written")
 
 
+def fig_killweb_sweeps() -> None:
+    """Two opt-in kill-web mechanics on UC-3, each swept from its off state. Both panels share the
+    convention: amber = attacker losses (left axis), blue = mission success (right axis)."""
+    sp, mp = DATA / "suppression_sweep.csv", DATA / "munitions_sweep.csv"
+    if not (sp.exists() and mp.exists()):
+        print("[killweb] sweep CSVs not present - skipping (run tools/make_killweb_numbers.py)")
+        return
+    S = pd.read_csv(sp).sort_values("supp_fire")
+    M = pd.read_csv(mp).sort_values("ammo_load")
+    fig, (a0, a1) = plt.subplots(1, 2, figsize=(7.6, 3.1))
+
+    # (a) suppression strength. supp_fire = 0 is byte-identical to the fixed-Pk baseline.
+    a0b = a0.twinx()
+    a0.plot(S["supp_fire"], S["blue_losses"], color=AMBER, marker="s", ms=3.5, lw=1.7)
+    a0b.plot(S["supp_fire"], S["success"] * 100, color=BLUE, marker="o", ms=3.5, lw=1.7)
+    a0.set_xlabel("suppression strength (0 = off)")
+    a0.set_ylabel("blue losses (of 8)", color=AMBER)
+    a0b.set_ylabel("mission success (%)", color=BLUE)
+    a0.set_ylim(0, 8); a0b.set_ylim(0, 100)
+    a0.tick_params(axis="y", colors=AMBER); a0b.tick_params(axis="y", colors=BLUE)
+    a0.set_title("(a) Suppression aids the maneuver force")
+    a0b.grid(False)
+
+    # (b) defender basic load (log). ammo -> inf recovers the fixed-Pk baseline (dashed).
+    a1b = a1.twinx()
+    a1.plot(M["ammo_load"], M["blue_losses"], color=AMBER, marker="s", ms=3.5, lw=1.7)
+    a1b.plot(M["ammo_load"], M["success"] * 100, color=BLUE, marker="o", ms=3.5, lw=1.7)
+    base = float(M[M.ammo_load == M.ammo_load.max()]["blue_losses"].iloc[0])
+    a1.axhline(base, ls="--", lw=1.0, color="#888")
+    a1.text(M["ammo_load"].min() * 1.1, base - 0.5, "fixed-Pk baseline\n(ammo $\\rightarrow\\infty$)",
+            fontsize=7.0, color="#555", va="top")
+    a1.set_xscale("log")
+    a1.set_xlabel("defender basic load (rounds)")
+    a1.set_ylabel("blue losses (of 8)", color=AMBER)
+    a1b.set_ylabel("mission success (%)", color=BLUE)
+    a1.set_ylim(0, 8); a1b.set_ylim(0, 100)
+    a1.tick_params(axis="y", colors=AMBER); a1b.tick_params(axis="y", colors=BLUE)
+    a1.set_title("(b) Munitions set a sustainment ceiling")
+    a1b.grid(False)
+
+    fig.savefig(FIG / "killweb_sweeps.pdf")
+    fig.savefig(FIG / "killweb_sweeps.png", dpi=170)
+    plt.close(fig)
+    sf0, sf1 = S.iloc[0], S.iloc[-1]
+    print(f"[killweb] suppression: loss {sf0.blue_losses:.1f}->{sf1.blue_losses:.1f}, "
+          f"success {sf0.success*100:.0f}%->{sf1.success*100:.0f}%")
+    print(f"[killweb] munitions: loss {M.iloc[0].blue_losses:.1f} (ammo {int(M.iloc[0].ammo_load)}) "
+          f"-> {M.iloc[-1].blue_losses:.1f} (ammo {int(M.iloc[-1].ammo_load)}, = baseline)")
+
+
 def main() -> None:
     fig_centerpiece_phase()
     fig_centerpiece_curves()
     fig_uc3_frontier()
     fig_uc5()
+    fig_killweb_sweeps()
     print("figures ->", FIG)
 
 
