@@ -351,10 +351,96 @@ def tab_platforms() -> None:
     print("wrote tab_platforms.tex")
 
 
+# --------------------------------------------------------------------------- one tick: t -> t + dt
+def fig_tick_cycle() -> None:
+    """What happens during one timestep, and the per-entity state it reads and writes.
+
+    Answers the question "do you have a state machine for t -> t + dt?": sandtable is a fixed-order
+    vectorized pipeline over SoA state, not a per-agent FSM. The lower half contrasts the current
+    entity state with the proposed AFSIM-aligned belief/track layer that would make EW and deception
+    first-order effects.
+    """
+    fig, ax = plt.subplots(figsize=(7.4, 5.4))
+    _clean(ax)
+    ax.text(50, 97.5, "One simulation tick, and the entity state it touches",
+            ha="center", va="center", fontsize=10, fontweight="bold", color=INK)
+
+    # ---- the fixed-order pipeline within one tick ----
+    stages = [
+        ("C2\ntasking",          "r: comms\nw: control_q"),
+        ("planning\nroutes",     "r: pos, goal\nw: waypoint"),
+        ("motion\nunicycle",     "r: q, terrain\nw: x, y, hdg"),
+        ("sensing\nshared SA",   "r: pos, LOS\nw: seen"),
+        ("engagement\naimed Pk", "r: seen, cover\nw: hp, alive"),
+    ]
+    xs = np.linspace(15, 85, 5)
+    for i, ((label, rw), x) in enumerate(zip(stages, xs)):
+        _box(ax, x, 81, 14.5, 9, label, fc="#eaf0fc", ec=BLUE, fs=7.4, bold=(i == 0))
+        ax.text(x, 74.0, rw, ha="center", va="center", fontsize=5.4, color="#55606c", linespacing=1.35)
+        if i < 4:
+            _arrow(ax, x + 7.4, 81, xs[i + 1] - 7.4, 81, color=INK, lw=1.0)
+    _arrow(ax, 83, 88, 17, 88, color=AMBER, lw=1.3, rad=0.04)
+    ax.text(50, 93.0,
+            r"advance one tick:  $t \rightarrow t+\Delta t$   ($\Delta t = 1$ s, fixed order, no per-agent FSM)",
+            ha="center", va="center", fontsize=6.8, color="#9a6a12", style="italic")
+
+    # ---- entity state: today (left) vs proposed AFSIM-aligned (right) ----
+    _box(ax, 27, 41, 44, 42, "", fc="#f7f8fa", ec=EDGE)
+    ax.text(27, 59.8, "Entity state today  (SoA, one row per platform)",
+            ha="center", va="center", fontsize=6.9, fontweight="bold", color=INK)
+    today = (
+        "kinematics   x, y, z, heading, speed\n"
+        "status       side, ptype, role, alive, hp, fuel\n"
+        "move target  tgt_x, tgt_y\n"
+        "platform     max_speed, turn_rate,\n"
+        "             sensor_range, weapon_range,\n"
+        "             pk_base, domain\n"
+        "perception   seen  (1 bit, per tick)\n"
+        "control      control_quality, await_until,\n"
+        "             decision_cooldown"
+    )
+    ax.text(6.6, 55.0, today, ha="left", va="top", fontsize=5.4, color=INK,
+            family="monospace", linespacing=1.6)
+
+    _box(ax, 73, 41, 44, 42, "", fc="#fbf7ef", ec=AMBER, lw=1.2)
+    ax.text(73, 59.8, "Proposed, AFSIM-aligned  (not built)",
+            ha="center", va="center", fontsize=6.9, fontweight="bold", color="#9a6a12")
+    bb = FancyBboxPatch((53.5, 42.5), 39, 14.5, boxstyle="round,pad=0.3,rounding_size=1.2",
+                        fc="#e9f7f5", ec=AIR, lw=1.2, mutation_aspect=0.5)
+    ax.add_patch(bb)
+    ax.text(54.5, 55.2, "belief / tracks (per side)", ha="left", va="top", fontsize=6.3,
+            fontweight="bold", color="#0d7d72")
+    ax.text(54.5, 52.2,
+            "believed x,y . age (staleness) . confidence\n"
+            "fires resolve vs belief, not truth\n"
+            "false / decoy tracks -> EW, spoofing,\n"
+            "decoys become first-order",
+            ha="left", va="top", fontsize=5.5, color=INK, linespacing=1.4)
+    rest = (
+        "suppression   decaying; degrades fire/detect\n"
+        "munitions     by class; deplete on fire\n"
+        "C2 graph      command chain / connectivity\n"
+        "sustainment   fuel + fatigue / posture"
+    )
+    ax.text(54.0, 39.5, rest, ha="left", va="top", fontsize=5.4, color=INK,
+            family="monospace", linespacing=1.6)
+
+    ax.text(50, 11.5,
+            "The fixed 1 s tick is the low-fidelity reduction of AFSIM's discrete-event executive;\n"
+            "the belief layer mirrors AFSIM's perception processor and false-target / track effects.",
+            ha="center", va="center", fontsize=6.2, color="#55606c", style="italic", linespacing=1.4)
+
+    fig.savefig(FIG / "tick_cycle.pdf")
+    fig.savefig(FIG / "tick_cycle.png", dpi=170)
+    plt.close(fig)
+    print("wrote tick_cycle.pdf")
+
+
 def main() -> None:
     fig_architecture()
     fig_command_model()
     fig_scenarios()
+    fig_tick_cycle()
     tab_ladder()
     tab_platforms()
     print("diagrams ->", FIG)

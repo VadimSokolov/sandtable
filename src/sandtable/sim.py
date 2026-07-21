@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from sandtable import c2, engagement, metrics, motion, planning, sensing
+from sandtable import belief, c2, engagement, metrics, motion, planning, sensing
 from sandtable.comms_ew import build_comms
 from sandtable.entities import BLUE, GROUND, RED
 from sandtable.scenario import Scenario, build_entities
@@ -30,6 +30,9 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     # over a comms link. None for ground-core scenarios, which then run unchanged.
     comms = build_comms(scn)
     op = c2.build_c2(scn, ent)
+    # Optional belief/track layer (Increment 4, prototype). None unless the scenario opts in via
+    # params["belief"]["model"] == "tracks"; when None the baseline engagement path runs unchanged.
+    tracks = belief.build_tracks(scn, ent)
 
     init_counts = {BLUE: int((ent.side == BLUE).sum()), RED: int((ent.side == RED).sum())}
     blue_mask0 = ent.side == BLUE
@@ -55,7 +58,11 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
         planning.step(ent, world, scn, spawn_x)
         motion.step(ent, world, dt, tempo)
         sensing.step(ent, world, rng, comms)
-        engagement.step(ent, world, dt, rng)
+        if tracks is None:
+            engagement.step(ent, world, dt, rng)
+        else:
+            belief.update(ent, tracks, comms, rng)
+            belief.engage(ent, world, tracks, rng)
         t = (k + 1) * dt
 
         # Detection coverage: fraction of the living red force currently on the blue shared picture

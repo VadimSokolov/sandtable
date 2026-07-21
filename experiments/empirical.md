@@ -402,3 +402,31 @@ Result: pre-flight PASSES all five checks (0 AI-vocab hits, zero em-dashes, comp
   balandat2020botorch); no new references introduced.
 - Result: pre-flight PASSES all five checks (15/15 citations verified, 0 AI-vocab hits, zero
   em-dashes, contribution refs resolve, compile clean); still 17 pages.
+
+### 2026-07-21 - Response to Joe's kill-web / AFSIM review: t+dt diagram + belief-layer prototype
+
+Prompted by Joe's email (attrition-vs-kill-web, rich entity state, belief-based fires, "do you have a
+t+dt state machine?", study AFSIM basal behaviors).
+
+- AFSIM research (sourced note in scratchpad/afsim_research.md): "basal behaviors" is not AFSIM's
+  term; the construct is RIPR behaviors (precondition + execute) in a 5-node behavior tree, driven by
+  WSF_SCRIPT / WSF_TASK / WSF_QUANTUM_TASKER processors and WSF_PERCEPTION_PROCESSOR. Confirmed:
+  tracks = imperfect perception, fires/tasking run against tracks not truth, EW = false-target /
+  track-corruption effects (first-order on belief). Munitions/fuel/command-chain are first-class;
+  suppression/fatigue/posture are NOT in AFSIM (ground-ABM lineage). AFSIM is ITAR / Distribution F
+  and ALL its output is export-controlled, so keep sandtable clean-room to preserve the
+  unclassified/publishable posture.
+- tools/make_diagrams.py: new fig_tick_cycle -> report/figures/tick_cycle.pdf. Shows the fixed-order
+  t->t+dt pipeline (C2->planning->motion->sensing->engagement, dt=1s, no per-agent FSM) with
+  per-stage read/write, and entity state today vs proposed AFSIM-aligned belief/track layer. Verified
+  overlap/overflow-free at 200-210 DPI.
+- src/sandtable/belief.py (new, opt-in) + sim.py wiring: per-side persistent tracks (believed x,y,
+  age/staleness, confidence) refreshed from detections, going stale when detection lapses; fires
+  resolve vs believed position * confidence, not truth; plus false/decoy tracks. Enabled only when
+  params["belief"]["model"]=="tracks"; None otherwise, so the baseline path and every existing number
+  are byte-identical (full suite: 85 passed / 1 skipped; the 79 baseline tests unchanged).
+- tests/test_belief.py (6 tests): opt-in gating, determinism, track staleness/drop, and decoys +
+  jamming as first-order effects.
+- Demonstration (UC-3, mean blue_losses over 24 seeds): baseline 6.3; belief clear 6.4; +decoys 3.8
+  (spoofing pulls fire off real targets); jammed C5 5.2 (stale tracks miss). EW/deception are now
+  first-order, not Pk modifiers.
