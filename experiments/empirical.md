@@ -548,3 +548,51 @@ citations). No numbers change; this is a framing + citation strengthening of sub
 - Citations: ref.bib 37 -> 42 verified entries (sargent2013verification, grimm2005pattern,
   axtell1996aligning, lucas2004fitting, hausken2025modeling; all carry % verified: provenance;
   lucas WARN is year 2003-online vs 2004-print, benign). Pre-flight PASS 5/5, 24 pages.
+
+### 2026-07-22 - Bayesian test & evaluation (Ferry / DOT&E paradigm) demonstrated on SandTable
+
+Researched James P. Ferry's (Metron, DOT&E-funded) Bayesian Decision Theory paradigm for T&E
+(DATAWorks 2023 talk; ITEA J. 44-3 2023, 45-3 2024 "Dynamo"; FUSION 2024) and demonstrated it on the
+centerpiece scenario. The mapping is 1:1: Ferry's hit/miss outcome = our per-replication binary
+mission success; context = params; "likelihood is a simulator" = run_mission. No sim mechanic added;
+this is post-hoc analysis of evaluate() output.
+
+- src/sandtable/bayes_te.py (new): conjugate Beta-Bernoulli posterior + credible interval +
+  P(p>=cut) compliance prob; Wald/Wilson (for contrast); decision_chart() = Bayesian Decision Theory
+  SDP backward recursion over a compliance utility + per-trial cost -> Accept/Reject/Test grid;
+  optimal_stop(); contrast() (posterior on p_B - p_A); discounted_prior() (M&S as a down-weighted
+  prior, effective sample lam*n_sim) + expected_runs_to_confidence(). Pure functions, scipy.stats.
+- tests/test_bayes_te.py (9 tests, all pass): conjugate symmetry, monotone P(>=cut), Wald degeneracy
+  at extremes, chart terminal actions, continue-region shrinks with cost, stopping at extremes,
+  contrast separation, discounted-prior effective sample size, and M&S prior saves runs. Full suite
+  106 -> 115 passed. bayes_te is analysis-only, so run_mission is byte-identical (numbers.tex diff is
+  +33 lines, all bte* macros, zero prior-macro changes).
+- tools/make_bayes_te_numbers.py (new) -> report/data/bayes_te_{intervals,stopping,paths,contrast,
+  prior,prior_curve}.csv. Fair fight (n_red=n_blue), N=300/design, gate p>=0.60. Findings:
+  A. direct C0 span1:2, 248/300: Beta 95% CrI [0.78,0.87], P(success>=0.8)=0.88. Small n=8 (7 succ):
+     Wald upper 1.10 (past 1.0) vs Beta 0.99. Bayesian gives a probability, not a broken interval.
+  B. decision chart + optimal stopping: accept the compliant design in 7 reps, reject a failing one
+     in 4, spend the most (12) on the design nearest the gate, vs the 300-rep fixed budget. Cost up
+     -> continue-test region 279 -> 193 states -> stop sooner.
+  C. paired contrast direct vs supervisory (C4, span1:8): P(super>direct)=1.00, advantage +0.27
+     [0.21,0.33]. HONEST FINDING: CRN gives ~0 variance reduction (paired corr 0.03), because the
+     single per-run RNG stream aligns initial conditions but desyncs once trajectories diverge;
+     realizing CRN would need per-purpose substreams. Reported as-is, not overclaimed.
+  D. FLAGSHIP - SandTable as a discounted Bayesian prior updated by sparse emulated high-fidelity
+     runs (M&S-informed OT). Compliant design's M&S estimate, discounted to lam=0.10 (~30 eff obs),
+     vs an emulated (bias-perturbed) high-fidelity truth 0.78: the informed test reaches a confident
+     accept in ~0 expensive runs vs ~12 from scratch (~12 saved). Guardrail: if truth is actually
+     0.40 (prior wrong), overturning to a confident reject takes ~65 HF runs at lam=0.10 but ~41 at
+     lam=0.05 -> trusting M&S less overturns a bad prior sooner. This is the quantitative "fast tier
+     feeds, not replaces, the slow tier" claim.
+    NOTE: first D attempt backfired (runs_saved=-16.8) because the M&S source design (rate 0.58) sat
+    on the opposite side of the 0.60 gate from the truth (0.68); fixed by sourcing the prior from a
+    design where M&S and truth agree, and by capping the M&S effective sample via a heavy discount.
+- Figure: tools/make_figures.py fig_bayes_te -> report/figures/bayes_te.pdf (a: decision chart +
+  three evidence walks stopping at their verdict; b: CrI width vs HF runs, informed vs HF-only).
+  Macros/table: make_numbers.py bayes_te() -> bte* macros + tab_bayes_te.tex.
+- Citations: ref.bib 42 -> 45 (ferry2024paradigm FUSION 2024 doi 10.23919/FUSION59988.2024.10706400;
+  ferry2023edou ITEA 44-3 doi 10.61278/itea.44.3.1007; ferry2024adaptive ITEA 45-3 doi
+  10.61278/itea.45.3.1002; all verified). Naval Engineers J. 2024 has no exposed DOI -> not cited.
+- Paper: new Results subsection subsec:bayeste (Fig fig:bayeste, Tab tab:bayeste). Pre-flight PASS
+  5/5, 26 pages.

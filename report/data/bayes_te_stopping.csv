@@ -1,0 +1,7 @@
+design,true_rate,cost,decision,n_used,continue_states
+compliant,0.8,0.02,accept,7,279
+compliant,0.8,0.2,accept,7,193
+borderline,0.45,0.02,reject,12,279
+borderline,0.45,0.2,reject,8,193
+noncompliant,0.05,0.02,reject,4,279
+noncompliant,0.05,0.2,reject,2,193

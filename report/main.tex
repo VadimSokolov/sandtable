@@ -715,6 +715,88 @@ Time-to-objective is conditioned on success. Means over \personalityNRep{} repli
 \input{gen/tab_personality}
 \end{table}
 
+\subsection{Bayesian test and evaluation of a design}
+\label{subsec:bayeste}
+
+Each study above returns a mission-success rate per design, but a test-and-evaluation decision needs
+more than a point estimate: the uncertainty on that rate, the probability a requirement is met, and a
+rule for when enough has been tested. That is the Bayesian Decision Theory paradigm for test and
+evaluation, which keeps a posterior over a system's performance and uses a utility to weigh
+information against the cost of testing \citep{ferry2023edou,ferry2024paradigm}. \sandtable{}'s
+per-replication binary outcomes are exactly what the paradigm consumes, with the simulator standing
+in as the likelihood, so we demonstrate it on the centerpiece scenario with no new mechanics
+(Figure~\ref{fig:bayeste}, Table~\ref{tab:bayeste}).
+
+\paragraph{Credible intervals over point estimates.} A design's success draws give a conjugate Beta
+posterior on its success probability. For a direct-control design at span 1:2 over \bteN{}
+replications (\bteHits{} successes) the posterior 95\% credible interval is
+[\bteBetaLo{}, \bteBetaHi{}] and the probability the design clears an 80\% requirement is
+\bteComplyEighty{}, a statement a design gate can act on rather than a $p$-value. The frequentist
+Wald interval nearly coincides at this sample size, but it misbehaves where decisions are often made,
+on little data: from the first \bteSmallN{} replications (\bteSmallHits{} successes) its upper limit
+is \bteWaldHiSmall{}, above one, while the Beta interval stays inside the unit interval at
+\bteBetaHiSmall{}.
+
+\paragraph{A decision chart and when to stop.} Bayesian Decision Theory turns that posterior into an
+accept, reject, or keep-testing rule. Under a compliance utility that accepts once the posterior puts
+at least 90\% of its mass above the requirement, and a per-trial cost, a backward recursion labels
+every (successes, trials) state (Figure~\ref{fig:bayeste}a). Run against the sim, the rule accepts the
+compliant design after \bteStopAccept{} replications, rejects a clearly failing one after
+\bteStopReject{}, and spends the most evidence, \bteStopBorder{}, on the design nearest the gate,
+against the \bteN{} replications a fixed-budget study spends on every design. Raising the per-trial
+cost shrinks the keep-testing region, from \bteContinueCheap{} states to \bteContinueDear{}, so the
+rule stops sooner, the cost-aware behavior a test planner wants.
+
+\paragraph{Comparing two designs.} The same posterior compares designs. At the high-span crossover
+the supervisory control mode beats direct with posterior probability \bteProbSupBetter{}, a
+success-rate advantage of \bteContrastMean{} (95\% CrI [\bteContrastLo{}, \bteContrastHi{}]). One
+caveat we report rather than bury: common random numbers, which should sharpen a paired comparison,
+buy almost nothing here (paired outcome correlation \bteCrnCorr{}), because \sandtable{}'s single
+per-run random stream aligns two designs' initial conditions but desynchronizes once their
+trajectories diverge; realizing the variance reduction would need the stream split into per-purpose
+substreams.
+
+\paragraph{The fast model as a prior for the slow one.} The paradigm's most useful move for a
+two-tier program is to treat cheap model-and-simulation output as a discounted prior that sparse,
+expensive high-fidelity runs then update \citep{ferry2024adaptive}. We weight \sandtable{}'s
+\bteSimN{}-run estimate for the compliant design at \bteLam{} of its nominal sample and confirm it
+against an emulated high-fidelity truth, a bias-perturbed \sandtable{} standing in for a real
+high-fidelity model. The informed test reaches a confident compliance decision in about
+\bteRunsSaved{} fewer expensive runs than testing from scratch (Figure~\ref{fig:bayeste}b), because
+the prior starts the posterior already tight. The discount is the guardrail against a wrong prior:
+when the emulated truth instead sits below the gate (\bteConflictP{}), overturning the optimistic
+prior to a confident reject takes about \bteOverrideMain{} high-fidelity runs at \bteLam{} but only
+about \bteOverrideHalf{} at the lighter discount \bteLamHalf{}, so trusting the cheap model less
+overturns it sooner. This is model-and-simulation-informed operational testing, and it is the
+quantitative form of the claim that the fast tier feeds, not replaces, the slow one.
+
+We stipulate the utilities here (mission value against per-run cost) rather than eliciting them from
+stakeholders, which the source work flags as the hard practical step, and framing \sandtable{} as the
+system under test is a stand-in for a real one. The discounted-prior demonstration is precisely what
+keeps that honest: the model informs the prior, it is not the truth.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{bayes_te.pdf}
+\caption{Bayesian test and evaluation on the centerpiece scenario. (a) The decision chart: for every
+(trials, successes) state the cost-aware rule accepts (green), rejects (red), or keeps testing
+(grey); the three walks are the accumulating evidence of a compliant, a borderline, and a failing
+design, each ending where the rule stops. (b) \sandtable{} as a discounted prior: the mean 95\%
+credible-interval width shrinks far faster in the number of expensive high-fidelity runs when a cheap
+model-and-simulation prior informs the test than when high-fidelity data must do it alone.}
+\label{fig:bayeste}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Bayesian versus frequentist intervals for a design's mission-success probability, at the
+full sample and on the first \bteSmallN{} replications. The Wald interval runs above one on little
+data; the Beta credible interval stays inside [0,1] and yields a compliance probability
+$P(p\ge0.8)$.}
+\label{tab:bayeste}
+\input{gen/tab_bayes_te}
+\end{table}
+
 \section{Discussion}
 \label{sec:discussion}
 

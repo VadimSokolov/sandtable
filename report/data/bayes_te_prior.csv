@@ -1,0 +1,2 @@
+lam,lam_half,h_sim,n_sim,p_true,gate,runs_informed,runs_uninformed,runs_saved,conflict_p,override_main,override_half
+0.1,0.05,248,300,0.78,0.6,0.0,11.98,11.98,0.4,64.99,41.1

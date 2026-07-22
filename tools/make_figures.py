@@ -16,6 +16,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import ticker
+from matplotlib.colors import BoundaryNorm, ListedColormap
+
+from sandtable import bayes_te as bt
 
 DATA = Path("report/data")
 FIG = Path("report/figures")
@@ -236,12 +239,77 @@ def fig_killweb_sweeps() -> None:
           f"-> {M.iloc[-1].blue_losses:.1f} (ammo {int(M.iloc[-1].ammo_load)}, = baseline)")
 
 
+def fig_bayes_te() -> None:
+    """Bayesian test-and-evaluation. (a) The decision chart: for every (trials, successes) state, the
+    cost-aware rule says accept, reject, or keep testing, with three example designs' evidence walks
+    overlaid to their stopping point. (b) SandTable as a discounted prior: the mean credible-interval
+    width shrinks far faster in the number of expensive high-fidelity runs when a cheap M&S prior
+    informs the test than when it does not."""
+    pp, cp = DATA / "bayes_te_paths.csv", DATA / "bayes_te_prior_curve.csv"
+    if not (pp.exists() and cp.exists()):
+        print("[bayes_te] CSVs not present - skipping (run tools/make_bayes_te_numbers.py)")
+        return
+    paths = pd.read_csv(pp)
+    n_max = int(paths.k.max() + 1)
+    chart = bt.decision_chart(n_max, cost=0.02, util=bt.Utility(p_cut=0.60))
+
+    fig, (a0, a1) = plt.subplots(1, 2, figsize=(7.6, 3.2))
+
+    # (a) decision chart over (trials n = h+m, successes h); color by action.
+    grid = np.full((n_max + 1, n_max + 1), np.nan)      # grid[h, n]
+    for n in range(n_max + 1):
+        for h in range(n + 1):
+            grid[h, n] = chart[h, n - h]
+    cmap = ListedColormap([RED, GREEN, "#d6d6d6"])       # 0 reject, 1 accept, 2 test
+    a0.imshow(grid, origin="lower", aspect="auto", cmap=cmap,
+              norm=BoundaryNorm([-0.5, 0.5, 1.5, 2.5], cmap.N), interpolation="nearest")
+    stop = pd.read_csv(DATA / "bayes_te_stopping.csv")
+    nused = stop[stop.cost == stop.cost.min()].set_index("design")["n_used"].to_dict()
+    styles = {"compliant": ("-", BLUE, "compliant (accept)"),
+              "borderline": ("--", "#111", "borderline (reject)"),
+              "noncompliant": ("-.", "#8a5000", "failing (reject)")}
+    zoom = 28                                            # walks all stop early; zoom to the decision region
+    for name, sub in paths.groupby("design"):
+        sub = sub.sort_values("k")
+        sub = sub[sub.k <= int(nused[name])]
+        ls, col, disp = styles.get(name, ("-", "#333", name))
+        a0.plot(sub.k, sub.hits, ls, color=col, lw=1.9, label=disp)
+        a0.plot(sub.k.iloc[-1], sub.hits.iloc[-1], "o", color=col, ms=6, zorder=5)
+    a0.set_xlim(0, zoom); a0.set_ylim(0, zoom)
+    a0.set_xlabel("trials"); a0.set_ylabel("successes")
+    a0.set_title("(a) Decision chart and evidence walks")
+    a0.legend(loc="lower right", fontsize=7.5, frameon=True, facecolor="white", framealpha=0.9)
+    a0.grid(False)
+    a0.text(0.05 * zoom, 0.90 * zoom, "accept", color="#0f5c33", fontsize=9)
+    a0.text(0.66 * zoom, 0.24 * zoom, "reject", color="#7a1015", fontsize=9)
+    a0.text(0.30 * zoom, 0.45 * zoom, "test", color="#555", fontsize=8.5, rotation=42)
+
+    # (b) credible-interval width vs number of high-fidelity runs: informed vs uninformed prior.
+    cur = pd.read_csv(cp).sort_values("k")
+    a1.plot(cur.k, cur.width_uninformed, color=RED, marker="o", ms=3, lw=1.6,
+            label="high-fidelity only")
+    a1.plot(cur.k, cur.width_informed, color=BLUE, marker="s", ms=3, lw=1.6,
+            label="M\\&S-informed prior")
+    a1.set_xlabel("high-fidelity runs")
+    a1.set_ylabel("mean 95\\% CrI width")
+    a1.set_ylim(0, None)
+    a1.set_title("(b) A cheap prior sharpens costly tests")
+    a1.legend(loc="upper right")
+
+    fig.savefig(FIG / "bayes_te.pdf")
+    fig.savefig(FIG / "bayes_te.png", dpi=170)
+    plt.close(fig)
+    print(f"[bayes_te] chart n_max={n_max}; CrI width at k=0 informed "
+          f"{cur.iloc[0].width_informed:.2f} vs uninformed {cur.iloc[0].width_uninformed:.2f}")
+
+
 def main() -> None:
     fig_centerpiece_phase()
     fig_centerpiece_curves()
     fig_uc3_frontier()
     fig_uc5()
     fig_killweb_sweeps()
+    fig_bayes_te()
     print("figures ->", FIG)
 
 

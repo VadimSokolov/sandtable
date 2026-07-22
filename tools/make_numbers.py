@@ -306,6 +306,76 @@ def personality() -> None:
     (GEN / "tab_personality.tex").write_text("\n".join(lines) + "\n")
 
 
+def bayes_te() -> None:
+    """Bayesian test-and-evaluation demo: credible intervals vs frequentist, the decision chart and
+    optimal stopping, the paired contrast, and SandTable as a discounted prior for high-fidelity
+    testing. Reads report/data/bayes_te_*.csv (from tools/make_bayes_te_numbers.py); else skips.
+    """
+    ip = DATA / "bayes_te_intervals.csv"
+    if not ip.exists():
+        _audit.append("# bayes_te CSVs absent - macros skipped (run make_bayes_te_numbers.py)")
+        return
+    I = pd.read_csv(ip).set_index("label")
+    full, small = I.loc["full"], I.loc["small"]
+    put("bteN", int(full.n), "Bayesian T&E headline replications")
+    put("bteHits", int(full.h), "Bayesian T&E headline successes")
+    put("bteBetaLo", _fmt(full.beta_lo, 2), "headline Beta 95%% CrI lower")
+    put("bteBetaHi", _fmt(full.beta_hi, 2), "headline Beta 95%% CrI upper")
+    put("bteWaldLo", _fmt(full.wald_lo, 2), "headline Wald 95%% CI lower")
+    put("bteWaldHi", _fmt(full.wald_hi, 2), "headline Wald 95%% CI upper")
+    put("bteComplyEighty", _fmt(full.p_ge_80, 2), "P(success>=0.80 | data)")
+    put("bteComplySixty", _fmt(full.p_ge_60, 2), "P(success>=0.60 | data)")
+    put("bteSmallN", int(small.n), "small-sample n")
+    put("bteSmallHits", int(small.h), "small-sample successes")
+    put("bteWaldHiSmall", _fmt(small.wald_hi, 2), "small-sample Wald upper (runs past 1.0)")
+    put("bteBetaHiSmall", _fmt(small.beta_hi, 2), "small-sample Beta upper (honest)")
+
+    # B. decision chart + optimal stopping
+    S = pd.read_csv(DATA / "bayes_te_stopping.csv")
+    P = pd.read_csv(DATA / "bayes_te_paths.csv")
+    put("bteMaxRep", int(P.k.max() + 1), "fixed testing budget (reps) the stopping rule undercuts")
+    cheap = S[S.cost == S.cost.min()].set_index("design")
+    dear = S[S.cost == S.cost.max()].set_index("design")
+    put("bteStopAccept", int(cheap.loc["compliant", "n_used"]), "reps to accept the compliant design")
+    put("bteStopBorder", int(cheap.loc["borderline", "n_used"]), "reps to decide the borderline design")
+    put("bteStopReject", int(cheap.loc["noncompliant", "n_used"]), "reps to reject the bad design")
+    put("bteBorderDecision", str(cheap.loc["borderline", "decision"]), "borderline design verdict")
+    put("bteContinueCheap", int(cheap.iloc[0]["continue_states"]), "continue-test states, low cost")
+    put("bteContinueDear", int(dear.iloc[0]["continue_states"]), "continue-test states, high cost")
+
+    # C. paired contrast (direct vs supervisory) + the CRN finding
+    C = pd.read_csv(DATA / "bayes_te_contrast.csv").iloc[0]
+    put("bteContrastMean", _fmt(C.delta_mean, 2), "posterior mean success-rate advantage (super-direct)")
+    put("bteContrastLo", _fmt(C.delta_lo, 2), "advantage 95%% CrI lower")
+    put("bteContrastHi", _fmt(C.delta_hi, 2), "advantage 95%% CrI upper")
+    put("bteProbSupBetter", _fmt(C.p_b_gt_a, 2), "P(supervisory better than direct | data)")
+    put("bteCrnCorr", _fmt(C.crn_corr, 2), "CRN correlation of paired outcomes (near zero)")
+
+    # D. M&S as a discounted prior for high-fidelity testing
+    D = pd.read_csv(DATA / "bayes_te_prior.csv").iloc[0]
+    put("bteLam", _fmt(D.lam, 2), "M&S discount factor")
+    put("bteLamHalf", _fmt(D.lam_half, 2), "lighter M&S discount factor")
+    put("bteSimN", int(D.n_sim), "cheap M&S replications forming the prior")
+    put("bteRunsInformed", _fmt(D.runs_informed, 1), "expected high-fidelity runs to confidence, M&S prior")
+    put("bteRunsUninformed", _fmt(D.runs_uninformed, 1), "expected high-fidelity runs to confidence, no prior")
+    put("bteRunsSaved", _fmt(D.runs_saved, 0), "expensive runs saved by the M&S prior")
+    put("bteConflictP", _fmt(D.conflict_p, 2), "conflicting high-fidelity truth (M&S prior is wrong)")
+    put("bteOverrideMain", _fmt(D.override_main, 0), "high-fidelity runs to overturn a wrong prior, main lambda")
+    put("bteOverrideHalf", _fmt(D.override_half, 0), "high-fidelity runs to overturn a wrong prior, lighter lambda")
+
+    # table: interval comparison (Bayesian vs frequentist), full and small sample
+    def _iv(r):
+        return (f"[{r.beta_lo:.2f}, {r.beta_hi:.2f}] & [{r.wald_lo:.2f}, {r.wald_hi:.2f}] & "
+                f"[{r.wilson_lo:.2f}, {r.wilson_hi:.2f}]")
+    lines = [r"\begin{tabular}{lrrrr}", r"\toprule",
+             r"sample & Bayesian 95\% CrI & Wald 95\% CI & Wilson 95\% CI & $P(p\!\ge\!0.8)$ \\",
+             r"\midrule",
+             f"$n={int(full.n)}$ ({int(full.h)} succ) & {_iv(full)} & {full.p_ge_80:.2f}" + r" \\",
+             f"$n={int(small.n)}$ ({int(small.h)} succ) & {_iv(small)} & {small.p_ge_80:.2f}" + r" \\",
+             r"\bottomrule", r"\end{tabular}"]
+    (GEN / "tab_bayes_te.tex").write_text("\n".join(lines) + "\n")
+
+
 def main() -> None:
     centerpiece()
     uc3()
@@ -314,6 +384,7 @@ def main() -> None:
     belief()
     killweb()
     personality()
+    bayes_te()
     put("nRep", NREP, "Monte-Carlo replications per design")
     tex = "% AUTO-GENERATED by tools/make_numbers.py -- do not edit.\n"
     tex += "\n".join(f"\\newcommand{{\\{k}}}{{{v}}}" for k, v in _macros.items()) + "\n"

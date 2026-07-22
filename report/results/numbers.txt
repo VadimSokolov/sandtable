@@ -65,4 +65,37 @@ SandTable paper -- generated numbers (source: tools/make_numbers.py over report/
 \persAvoidTime = 781    # UC3 time-to-obj (s), personality w_enemy=1
 \persOverTime = 838    # UC3 time-to-obj (s), personality w_enemy=2 (over-caution)
 \persTimeSavePct = 28    # emergent maneuver time saving vs scripted covered route (%)
+\bteN = 300    # Bayesian T&E headline replications
+\bteHits = 248    # Bayesian T&E headline successes
+\bteBetaLo = 0.78    # headline Beta 95%% CrI lower
+\bteBetaHi = 0.87    # headline Beta 95%% CrI upper
+\bteWaldLo = 0.78    # headline Wald 95%% CI lower
+\bteWaldHi = 0.87    # headline Wald 95%% CI upper
+\bteComplyEighty = 0.88    # P(success>=0.80 | data)
+\bteComplySixty = 1.00    # P(success>=0.60 | data)
+\bteSmallN = 8    # small-sample n
+\bteSmallHits = 7    # small-sample successes
+\bteWaldHiSmall = 1.10    # small-sample Wald upper (runs past 1.0)
+\bteBetaHiSmall = 0.99    # small-sample Beta upper (honest)
+\bteMaxRep = 60    # fixed testing budget (reps) the stopping rule undercuts
+\bteStopAccept = 7    # reps to accept the compliant design
+\bteStopBorder = 12    # reps to decide the borderline design
+\bteStopReject = 4    # reps to reject the bad design
+\bteBorderDecision = reject    # borderline design verdict
+\bteContinueCheap = 279    # continue-test states, low cost
+\bteContinueDear = 193    # continue-test states, high cost
+\bteContrastMean = 0.27    # posterior mean success-rate advantage (super-direct)
+\bteContrastLo = 0.21    # advantage 95%% CrI lower
+\bteContrastHi = 0.33    # advantage 95%% CrI upper
+\bteProbSupBetter = 1.00    # P(supervisory better than direct | data)
+\bteCrnCorr = 0.03    # CRN correlation of paired outcomes (near zero)
+\bteLam = 0.10    # M&S discount factor
+\bteLamHalf = 0.05    # lighter M&S discount factor
+\bteSimN = 300    # cheap M&S replications forming the prior
+\bteRunsInformed = 0.0    # expected high-fidelity runs to confidence, M&S prior
+\bteRunsUninformed = 12.0    # expected high-fidelity runs to confidence, no prior
+\bteRunsSaved = 12    # expensive runs saved by the M&S prior
+\bteConflictP = 0.40    # conflicting high-fidelity truth (M&S prior is wrong)
+\bteOverrideMain = 65    # high-fidelity runs to overturn a wrong prior, main lambda
+\bteOverrideHalf = 41    # high-fidelity runs to overturn a wrong prior, lighter lambda
 \nRep = 300    # Monte-Carlo replications per design
