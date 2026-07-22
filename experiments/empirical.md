@@ -524,3 +524,27 @@ open literature only.
   (subsec:personality) delivering the Related-Work forward-reference; macros pers*/personalityNRep +
   report/gen/tab_personality.tex. Framed honestly as one demonstration on one scenario, not a general
   planner-dominance claim.
+
+### 2026-07-22 - Verification & validation reframe (Sargent framework; modern Lanchester + V&V citations)
+
+Response to a review concern that the validation rests only on Lanchester (a 1916 model with old
+citations). No numbers change; this is a framing + citation strengthening of subsec:validation.
+- Confirmed Lanchester is still current: paper already cited kress2020lanchester (2020); added
+  hausken2025modeling (Annals of Operations Research 2025, heterogeneous-force Lanchester) and
+  lucas2004fitting (Lanchester fit to Kursk/Ardennes real battle data). Firecrawl research also found
+  a 2022-2025 wave of Lanchester attrition analyses (Ukraine FPV/Shahed drone economics).
+- Reframed subsec:validation "Validation against Lanchester's square law" -> "Verification and
+  validation": opens with Sargent's VV&A menu (sargent2013verification) and explicitly claims the
+  FOUR legs SandTable already has: (1) verification/reproducibility (pure-function determinism +
+  CRN); (2) extreme-condition/degenerate-limit tests (the byte-identical off-states: suppression->0
+  recovers baseline, ammo->inf converges to fixed-Pk, baseline = degenerate kill web; cross-ref
+  subsec:killweb); (3) face validity / expected-direction monotonicity (the sensitive-results
+  criterion); (4) analytic cross-check (the existing Lanchester square-law match, kept verbatim as
+  the analytic leg). The point: the model had a 4-technique validation story reported as a
+  1-technique story.
+- Discussion/limitations: named the stronger validation forms left open for future work: docking vs
+  an independent model (axtell1996aligning), pattern-oriented validation (grimm2005pattern), and
+  empirical comparison against exercise / high-fidelity ProjectGL traces.
+- Citations: ref.bib 37 -> 42 verified entries (sargent2013verification, grimm2005pattern,
+  axtell1996aligning, lucas2004fitting, hausken2025modeling; all carry % verified: provenance;
+  lucas WARN is year 2003-online vs 2004-print, benign). Pre-flight PASS 5/5, 24 pages.

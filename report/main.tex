@@ -401,29 +401,45 @@ inlined, so every value traces to code and data.
 \section{Results}
 \label{sec:results}
 
-We first validate the attrition kernel against a closed-form law, then report the three studies:
+We first set out the model's verification and validation, then report the three studies:
 route choice, the span-by-communications centerpiece, and the sensor swarm under EW.
 
-\subsection{Validation against Lanchester's square law}
+\subsection{Verification and validation}
 \label{subsec:validation}
 
-Before drawing design conclusions we check that the attrition kernel obeys a recognized combat law.
-\sandtable{} resolves fire as aimed fire, so when fire is distributed the kill rate on a side is
-proportional to the number of opposing shooters, which is the hypothesis of Lanchester's square law
-\citep{lanchester1916aircraft}; area or unaimed fire would instead follow a linear law
-\citep{deitchman1962guerrilla}, and the operations-research treatment of both laws with the search
-and detection that gate them is standard \citep{washburn2009combat}. Our per-shot kill probability
-and rate of fire are the primitives that map onto the Lanchester attrition-rate coefficients
-\citep{bonder1967attrition}, so the check is quantitative. For initial blue and red strengths $B_0$
-and $R_0$ of equal
-per-unit effectiveness, the stronger side annihilates the weaker and its survivors are
-$\sqrt{B_0^2 - R_0^2}$. We isolate the kernel (no movement, no cover, mutual
+\sandtable{} is low-fidelity, so it earns trust the way a combat-distillation model does, through a
+small battery of verification and validation checks rather than a single appeal to realism
+\citep{sargent2013verification}. Four apply here. \emph{Verification:} the evaluation is a pure
+function of its seed, so a run reproduces bit for bit and paired designs can share random numbers,
+the property that keeps the response surfaces smooth enough to optimize. \emph{Extreme-condition and
+degenerate-limit tests:} every added mechanic reduces to a known limit when switched off, and we
+check each numerically in Section~\ref{subsec:killweb}; suppression strength zero recovers the
+baseline exactly, an unbounded defender magazine converges onto the fixed-Pk curve, and the baseline
+is the degenerate kill web with no suppression, unlimited munitions, and perfect knowledge.
+\emph{Face validity:} the mission KPIs move in the direction and with the monotonicity a
+subject-matter expert expects as each design knob turns, the structure our sensitivity criterion
+demands and the studies below display. \emph{Analytic cross-check:} the attrition kernel matches a
+recognized closed-form combat law, developed next.
+
+For that cross-check, \sandtable{} resolves fire as aimed fire, so when fire is distributed the kill
+rate on a side is proportional to the number of opposing shooters, which is the hypothesis of
+Lanchester's square law \citep{lanchester1916aircraft}; area or unaimed fire would instead follow a
+linear law \citep{deitchman1962guerrilla}, and the operations-research treatment of both laws with
+the search and detection that gate them is standard \citep{washburn2009combat}. Our per-shot kill
+probability and rate of fire are the primitives that map onto the Lanchester attrition-rate
+coefficients \citep{bonder1967attrition}, so the check is quantitative. For initial blue and red
+strengths $B_0$ and $R_0$ of equal per-unit effectiveness, the stronger side annihilates the weaker
+and its survivors are $\sqrt{B_0^2 - R_0^2}$. We isolate the kernel (no movement, no cover, mutual
 detection, forces intermixed so fire distributes) and compare the Monte-Carlo mean survivors to that
 closed form (Table~\ref{tab:lanchester}). Agreement is within \lanchMaxErr\%, biased slightly low.
 The bias is expected and conservative: simultaneous discrete-time resolution lets a unit about to
 die still return fire (an effect that vanishes as the per-step kill probability shrinks), and
-nearest-target assignment produces occasional overkill. A low-fidelity model reproducing the square
-law to within a few percent is the defensibility check this class of model calls for.
+nearest-target assignment produces occasional overkill. Lanchester's laws are not a historical
+curiosity: they remain the standard closed form for aggregate attrition in current operations
+research, from irregular-warfare models \citep{kress2020lanchester} to heterogeneous-force
+extensions fitted to present-day equipment mixes \citep{hausken2025modeling}, and they have been
+checked directly against historical battle data \citep{lucas2004fitting}. Reproducing the square law
+to within a few percent is the analytic leg of the checks above, not the whole of them.
 
 \begin{table}[H]
 \centering
@@ -741,9 +757,12 @@ The absolute success rates should therefore be read as comparative, not predicti
 the \emph{ordering} of designs and the \emph{location} of crossovers, which is what a search loop
 consumes, not in any single percentage. The moving optimum's exact crossover cells near the contour
 are within Monte-Carlo noise, so what the study establishes is the direction of the boundary, not
-the precise cell. The Lanchester check validates the aggregate attrition law but not the spatial or command
-dynamics, which is why the intended role of the model is to feed, not replace, high-fidelity
-validation.
+the precise cell. The Lanchester check validates the aggregate attrition law but not the spatial or command dynamics.
+The stronger forms of validation this class of model admits are left open: docking the emergent
+behavior against an independently built model \citep{axtell1996aligning}, pattern-oriented validation
+that asks the model to reproduce several observed tactical patterns at once \citep{grimm2005pattern},
+and empirical comparison against exercise or high-fidelity ProjectGL traces. This is why the intended
+role of the model is to feed, not replace, high-fidelity validation.
 
 We built \sandtable{}, a fast, reproducible, pure-Python mission-level testbed, as the inner-loop
 companion to the Army's high-fidelity ProjectGL, and used it to produce three decision-relevant
