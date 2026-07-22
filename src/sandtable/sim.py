@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from sandtable import belief, c2, engagement, mechanics, metrics, motion, planning, sensing
+from sandtable import belief, c2, engagement, mechanics, metrics, motion, personality, planning, sensing
 from sandtable.comms_ew import build_comms
 from sandtable.entities import BLUE, GROUND, RED
 from sandtable.scenario import Scenario, build_entities
@@ -38,6 +38,9 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     mech = mechanics.build_mech(scn)
     if mech is not None:
         mechanics.arm(ent, mech)
+    # Optional personality-movement mode (opt-in). None unless params["movement"]=="personality";
+    # when None, planning uses the scripted lane and results are byte-identical.
+    pers = personality.build_personality(scn)
 
     init_counts = {BLUE: int((ent.side == BLUE).sum()), RED: int((ent.side == RED).sum())}
     blue_mask0 = ent.side == BLUE
@@ -60,7 +63,7 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     for k in range(n_steps):
         if op is not None:
             c2.step(ent, op, comms, scn, k, rng)
-        planning.step(ent, world, scn, spawn_x)
+        planning.step(ent, world, scn, spawn_x, pers=pers)
         motion.step(ent, world, dt, tempo)
         sensing.step(ent, world, rng, comms)
         if mech is not None:

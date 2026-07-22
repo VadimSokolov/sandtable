@@ -137,31 +137,53 @@ end of a fidelity spectrum, producing the response surfaces that tell an enginee
 worth running at high fidelity.
 
 \emph{Human-machine teaming and supervisory control.} The distinction between direct and
-supervisory control dates to early telerobotics \citep{sheridan1978supervisory}, and the limits of
-a single operator's situation awareness \citep{endsley1995awareness} and attention set how many
-assets that operator can effectively command. Operator-capacity models estimate this span from
-task timing \citep{cummings2007capacity}, and reviews of human-agent teaming and multi-robot
-supervision catalog the resulting interface and workload issues
-\citep{chen2014teaming,chen2011supervisory}. \sandtable{} abstracts these findings into a
-tractable queueing model of operator attention (Section~\ref{sec:model}) whose behavior we then
-map across the span-by-communications design space. For uncrewed-aircraft swarms specifically, a
-meta-analysis of swarm-management interfaces documents how operator performance degrades as swarm
-size and tempo grow \citep{hocraffer2017meta}, which motivates our sensor-swarm study.
+supervisory control dates to early telerobotics \citep{sheridan1978supervisory} and is set within
+the levels-of-automation framework, which places manual control and full autonomy at the ends of a
+continuum whose middle our direct-versus-supervisory axis samples \citep{parasuraman2000types}. The
+limits of a single operator's situation awareness \citep{endsley1995awareness} and attention set how
+many assets that operator can command: fan-out, the ratio of an asset's neglect time to the
+operator's interaction time, bounds the span \citep{olsen2004fanout}, and operator-capacity models
+estimate it from task timing \citep{cummings2007capacity}. Reviews of human-agent teaming and of one
+operator controlling many robots catalog the resulting interface and workload issues
+\citep{chen2014teaming,chen2011supervisory,lewis2013human}. The closest analytic precedent for our
+command model treats the operator as a dynamical queue serving asset requests
+\citep{savla2012queue}; \sandtable{} adopts that capacity-limited-server abstraction of operator
+attention (Section~\ref{sec:model}) and maps its behavior across the span-by-communications design
+space. That the best automation level is itself condition-dependent \citep{kaber2004effects} is the
+moving optimum our centerpiece locates, and the over-reliance and rejection that flank it are the
+poles of automation trust \citep{parasuraman1997humans} the program's trust-calibration objective
+targets. For uncrewed-aircraft swarms specifically, a meta-analysis of swarm-management interfaces
+documents how operator performance degrades as swarm size and tempo grow \citep{hocraffer2017meta},
+which motivates our sensor-swarm study.
 
-\emph{Agent-based combat simulation.} Low-fidelity, effect-based combat models have a long
-lineage. Flocking rules generate formation movement from local interactions
-\citep{reynolds1987flocks}; operation-time agent frameworks schedule swarm tasks against a mission
-clock \citep{wei2013operation}; and general agent-based modeling frameworks such as Mesa
-\citep{masad2015mesa} popularized the pattern we follow, though for a tight optimization loop we use
-a bespoke vectorized state representation rather than per-agent Python objects. A recurring lesson
-in this literature is to validate an emergent model against a closed-form law; we adopt Lanchester's
-square law \citep{lanchester1916aircraft}, in the modern treatment of \citet{kress2020lanchester},
-for that purpose.
+\emph{Agent-based combat simulation.} Low-fidelity, effect-based combat models have a long lineage
+in the combat-distillation tradition: small agent-based models built to expose what drives an
+outcome rather than to reproduce physics. ISAAC and its successor EINSTein move agents by a weighted
+sum of attraction and repulsion propensities toward goals, friendly forces, and enemies
+\citep{ilachinski2000isaac,ilachinski2004artificial}, and MANA added terrain awareness and
+trigger-driven state changes to that scheme \citep{lauren2002mana}; \sandtable{}'s effect-based
+agents sit in this line, and we make the inheritance concrete with an opt-in personality-movement
+mode (Section~\ref{subsec:personality}). Such models are usually built in general agent frameworks,
+the Java MASON engine behind many defense studies \citep{luke2005mason} or, in Python, Mesa
+\citep{masad2015mesa}, whose per-agent object pattern we follow in spirit but replace with a bespoke
+vectorized state for a tight optimization loop. Flocking rules supply formation movement from local
+interactions \citep{reynolds1987flocks}, and operation-time frameworks schedule swarm tasks against
+a mission clock \citep{wei2013operation}. A recurring lesson in this literature is to validate an
+emergent model against a closed-form law; we adopt Lanchester's square law
+\citep{lanchester1916aircraft}, in the modern treatment of \citet{kress2020lanchester}, for that
+purpose.
 
-\emph{Design of experiments and optimization.} The studies here are batch DOE sweeps; the same
-plumbing supports Bayesian optimization via Monte-Carlo acquisition functions
-\citep{balandat2020botorch} when a design space is too large to grid. The simulator core is built on
-vectorized array programming \citep{harris2020numpy}.
+\emph{Design of experiments and optimization.} The studies here are batch DOE sweeps in the
+data-farming tradition, running a fast model across a designed parameter space to reveal response
+structure and outliers \citep{horne2004datafarming}; space-filling designs keep that practical as
+the factor count grows \citep{cioppa2007nolh}, and the statistical basis for designing simulation
+experiments and fitting metamodels to their output is well established \citep{kleijnen2015doe}. The
+same plumbing supports Bayesian optimization via Monte-Carlo acquisition functions
+\citep{balandat2020botorch} when a design space is too large to grid, one instance of the broader
+simulation-optimization family \citep{amaran2016simulation} in which a cheap surrogate is fit to a
+simulator and optimized in its place \citep{barton2006metamodel}. The core is built on vectorized
+array programming \citep{harris2020numpy} and follows standard Monte-Carlo practice, independent
+seeded replications summarized with confidence intervals \citep{law2015simulation}.
 
 \section{The \sandtable{} Model}
 \label{sec:model}
@@ -202,7 +224,11 @@ Entities (ground vehicles, uncrewed aircraft, sensor and command nodes, and defe
 as a structure of arrays: position, heading, health, sensor and weapon parameters, and side live in
 parallel NumPy arrays rather than in per-agent objects \citep{harris2020numpy}. The mission advances
 on a fixed time step (1~s here). Each step updates, in order, command tasking, planning, motion,
-sensing, and engagement (the pipeline of Figure~\ref{fig:architecture}). This vectorized design runs a full mission of up to 1800 steps in roughly
+sensing, and engagement (the pipeline of Figure~\ref{fig:architecture}). This fixed-step pipeline is
+a deliberate reduction of the discrete-event executive that full engagement engines such as AFSIM
+use, whose components self-schedule on their own update intervals \citep{rainey2024afsim}; the
+discrete-event-system formalism makes that model-simplification relation precise
+\citep{zeigler2019theory}. This vectorized design runs a full mission of up to 1800 steps in roughly
 0.1~s on a single core, about 7 to 11 replications per second depending on scenario, so
 the 44,100 replications behind this paper are one to two core-hours of compute, trivially parallel
 across a cluster.
@@ -384,7 +410,12 @@ route choice, the span-by-communications centerpiece, and the sensor swarm under
 Before drawing design conclusions we check that the attrition kernel obeys a recognized combat law.
 \sandtable{} resolves fire as aimed fire, so when fire is distributed the kill rate on a side is
 proportional to the number of opposing shooters, which is the hypothesis of Lanchester's square law
-\citep{lanchester1916aircraft}. For initial blue and red strengths $B_0$ and $R_0$ of equal
+\citep{lanchester1916aircraft}; area or unaimed fire would instead follow a linear law
+\citep{deitchman1962guerrilla}, and the operations-research treatment of both laws with the search
+and detection that gate them is standard \citep{washburn2009combat}. Our per-shot kill probability
+and rate of fire are the primitives that map onto the Lanchester attrition-rate coefficients
+\citep{bonder1967attrition}, so the check is quantitative. For initial blue and red strengths $B_0$
+and $R_0$ of equal
 per-unit effectiveness, the stronger side annihilates the weaker and its survivors are
 $\sqrt{B_0^2 - R_0^2}$. We isolate the kernel (no movement, no cover, mutual
 detection, forces intermixed so fire distributes) and compare the Monte-Carlo mean survivors to that
@@ -600,7 +631,7 @@ communications, so with fresh tracks the two nearly coincide. Adding decoys drop
 them to \beliefJamLoss{} by a different route, stale tracks whose believed positions drift from the
 moving truth. Neither effect is reachable by a modifier table, because each needs a belief that
 deception can corrupt, which is how engagement-level frameworks such as AFSIM allocate fires against
-tracks rather than truth.
+imperfect tracks rather than truth \citep{tryhorn2021afsim}.
 
 UC-7 combines these into one contested-belief scenario in the use-case library: eight vehicles
 advance against a denser, spoofable, and jammed defense, with both sides carrying the full kill web.
@@ -620,6 +651,52 @@ truth baseline (fires against truth, no suppression, unlimited munitions) up to 
 case. Means over \ucSevenNRep{} replications.}
 \label{tab:killweb}
 \input{gen/tab_killweb}
+\end{table}
+
+\subsection{Emergent maneuver: personality-movement propensities}
+\label{subsec:personality}
+
+The route-choice study of Section~\ref{subsec:uc3} steers the assault force along a scripted lane set
+by one \texttt{route\_bias} knob. That knob names the route; it does not let the route respond to
+where the threat actually is. The combat-distillation models we build on take the opposite view: in
+ISAAC, EINSTein, and MANA a unit's next move is a weighted sum of local propensities, and the route
+is whatever those propensities produce \citep{ilachinski2000isaac,ilachinski2004artificial,lauren2002mana}.
+We make that inheritance concrete with an opt-in movement mode that replaces the scripted lane for
+blue ground with such a propensity sum: attraction toward the objective, repulsion from each detected
+enemy that falls off with distance, a pull along the local cover gradient, and a separation term that
+keeps the formation from stacking up. A single weight $w_e$ scales the enemy-repulsion term. The mode
+is off by default, and the disabled path is byte-identical to the scripted planner.
+
+Table~\ref{tab:personality} runs the two movement models on UC-3 over \personalityNRep{} replications.
+With the enemy term off ($w_e{=}0$) the propensity sum is pure goal-seeking and recovers the scripted
+fast corridor exactly, \persStraightLoss{} losses at \persStraightSucc\% success: the reduction checks
+that the mode adds a behavior rather than a bias. Turning the enemy term on bends the route. At
+$w_e{=}1$ the force bows around the detected defenders and reaches the objective with \persAvoidLoss{}
+losses at \persAvoidSucc\% success in \persAvoidTime{}~s. The scripted planner has no setting that
+reaches that point. Its safe extreme, the covered route, also crosses at \persScriptCoverSucc\% but
+costs \persScriptCoverLoss{} losses and takes \persScriptCoverTime{}~s; the emergent route is as
+survivable and about \persTimeSavePct\% faster, because it commits to no fixed lane and instead skirts
+each threat as it comes into view, cutting back toward the objective once past. The route is chosen by
+the model, not by us.
+
+Higher weight is not uniformly better. At $w_e{=}2$ the same force still crosses unharmed but takes
+\persOverTime{}~s, an emergent over-caution: the repulsion field now holds vehicles off approaches
+that were survivable at lower weight. The weight has an interior operating point, the kind of
+structure the sensitivity loop of Section~\ref{sec:results} is built to expose, reached here from
+local movement rules rather than a scripted route. This is one demonstration on one scenario, not a
+claim that emergent movement dominates a planner in general; what it shows is that \sandtable{}
+carries the combat-distillation movement model as a first-class, byte-identical-off option, and that
+on UC-3 it already finds a route the single scripted knob cannot.
+
+\begin{table}[H]
+\centering
+\caption{Personality-movement propensities versus the scripted route planner on UC-3. The scripted
+planner traces a speed-survivability frontier between a fast, exposed corridor and a slow, covered
+route; the opt-in propensity mode recovers the fast corridor at $w_e{=}0$ and, at $w_e{=}1$, produces
+an emergent maneuver that matches the covered route's survivability at lower cost and shorter time.
+Time-to-objective is conditioned on success. Means over \personalityNRep{} replications.}
+\label{tab:personality}
+\input{gen/tab_personality}
 \end{table}
 
 \section{Discussion}

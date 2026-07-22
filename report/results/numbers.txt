@@ -52,4 +52,17 @@ SandTable paper -- generated numbers (source: tools/make_numbers.py over report/
 \ucSevenFullLoss = 3.0    # UC7 blue losses, layer=full
 \ucSevenTruthSucc = 6    # UC7 success%% truth baseline
 \ucSevenFullSucc = 79    # UC7 success%% full contested
+\personalityNRep = 48    # personality-demo replications
+\persScriptFastLoss = 6.2    # UC3 blue losses, scripted fast corridor
+\persScriptFastSucc = 23    # UC3 success%% scripted fast corridor
+\persScriptCoverLoss = 0.9    # UC3 blue losses, scripted covered route (best scripted)
+\persScriptCoverSucc = 100    # UC3 success%% scripted covered route
+\persScriptCoverTime = 1082    # UC3 time-to-obj (s), scripted covered route
+\persStraightLoss = 6.2    # UC3 blue losses, personality w_enemy=0 (drives straight)
+\persStraightSucc = 23    # UC3 success%% personality w_enemy=0
+\persAvoidLoss = 0.0    # UC3 blue losses, personality w_enemy=1 (emergent maneuver)
+\persAvoidSucc = 100    # UC3 success%% personality w_enemy=1
+\persAvoidTime = 781    # UC3 time-to-obj (s), personality w_enemy=1
+\persOverTime = 838    # UC3 time-to-obj (s), personality w_enemy=2 (over-caution)
+\persTimeSavePct = 28    # emergent maneuver time saving vs scripted covered route (%)
 \nRep = 300    # Monte-Carlo replications per design

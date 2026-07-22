@@ -1,0 +1,7 @@
+mode,knob,blue_losses,success,time,n_rep
+scripted,0.0,6.1875,0.2292,468.6,48
+scripted,1.0,0.8542,1.0,1082.2,48
+personality,0.0,6.1875,0.2292,468.6,48
+personality,0.5,3.5833,0.6667,755.6,48
+personality,1.0,0.0,1.0,780.6,48
+personality,2.0,0.0,1.0,837.6,48

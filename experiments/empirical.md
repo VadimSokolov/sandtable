@@ -471,3 +471,56 @@ mechanic is opt-in and byte-identical when off (baseline is the degenerate limit
   prototype promoted from Discussion into this Results subsection; 5th contribution added; Extensions
   and Conclusion updated (suppression/munitions/belief moved from future-work to done). Pre-flight
   PASSES 5/5; 20 pages.
+
+### 2026-07-21 - Related-work expansion + personality-movement demonstration (emergent maneuver)
+
+Addressing a review ask: research existing low-fidelity combat-simulation approaches (AFSIM and the
+combat-distillation lineage), cite them as background, and where useful implement + demonstrate one.
+Two parts.
+
+(1) Reference expansion. Grew report/ref.bib from 15 to ~37 verified entries (all pass
+tools/bibverify.py; every entry carries a `% verified:` provenance line). New background threads with
+DOI/OpenAlex-verified cites: HMT/levels-of-automation (parasuraman2000types, olsen2004fanout,
+lewis2013human, savla2012queue, kaber2004effects, parasuraman1997humans); combat-distillation ABM
+(ilachinski2000isaac, ilachinski2004artificial, lauren2002mana, luke2005mason); data farming + DOE +
+sim-opt (horne2004datafarming, cioppa2007nolh, kleijnen2015doe, amaran2016simulation, barton2006metamodel,
+law2015simulation); Lanchester/attrition validation (deitchman1962guerrilla, bonder1967attrition,
+washburn2009combat); DEVS + AFSIM engagement framework (zeigler2019theory, tryhorn2021afsim,
+rainey2024afsim). Integrated into Related Work (HMT, agent-based combat sim, DOE paragraphs), the
+validation subsection, the kill-web subsection (AFSIM fires-vs-tracks), and the state-and-time
+subsection (DEVS discrete-event executive -> our fixed-step reduction). Removed taylor1983lanchester
+(bibverify FAIL, no locatable source; redundant with other Lanchester cites). NOTE: clean-room wrt
+AFSIM - no AFSIM code/data/output ingested (ITAR/Distribution F); best practices adopted from the
+open literature only.
+
+(2) Personality-movement mode, implemented + demonstrated (the "implement if useful" half).
+- src/sandtable/personality.py (new): ISAAC/EINSTein/MANA weighted attraction-repulsion movement.
+  aim() sets each blue-ground vehicle's target = w_goal*(unit to objective) + enemy repulsion (over
+  DETECTED enemies within radius, inverse-distance falloff) + w_cover*(cover gradient, finite-diff of
+  world.cover_at) + w_sep*(formation separation). No RNG. build_personality returns None unless
+  params["movement"]=="personality"; None -> planning uses the scripted lane, byte-identical.
+- Wired into planning.step (pers=None param + override block after the scripted lane) and sim.py
+  (build pers, pass to planning.step). Byte-identical PROOF: full suite 102 -> 106 passed (4 new),
+  and `git diff report/gen/numbers.tex` shows ONLY added pers* macros, zero changes to the 53 prior
+  macros; all existing study CSVs unchanged.
+- tests/test_personality.py (4 tests): opt-in gating; movement="scripted" == baseline (byte-identical);
+  determinism; and emergent enemy-repulsion lowers mean blue_losses vs w_enemy=0.
+- tools/make_personality_numbers.py (new) -> report/data/personality_sweep.csv (N=48 seeded reps).
+  Time-to-objective conditioned on SUCCESS (matches the UC-3 frontier convention; not censored at
+  duration by failed runs). blue_losses / success% / t_obj(s):
+    scripted fast corridor (route_bias 0):  6.2 / 23  / 469   (fast, exposed)
+    scripted covered route (route_bias 1):  0.9 / 100 / 1082  (safe, slow) -- best scripted
+    personality w_e=0:                       6.2 / 23  / 469   (pure goal-seek -> recovers fast corridor)
+    personality w_e=0.5:                     3.6 / 67  / 756
+    personality w_e=1:                       0.0 / 100 / 781   (EMERGENT MANEUVER)
+    personality w_e=2:                       0.0 / 100 / 838   (emergent over-caution, slower)
+  Headline: the scripted planner traces a speed-survivability frontier (fast+deadly <-> slow+safe);
+  emergent enemy-repulsion at w_e=1 finds a point OFF that frontier -- as survivable as the covered
+  route (0 losses, 100%) but ~28% faster (781 vs 1082 s), because it skirts each threat locally
+  instead of committing to a fixed lane. w_e=0 recovers the fast corridor exactly (reduction check);
+  w_e=2 shows the propensity can be over-weighted into emergent over-caution. The route is chosen by
+  the model, not scripted by route_bias.
+- Paper: new Results subsection "Emergent maneuver: personality-movement propensities"
+  (subsec:personality) delivering the Related-Work forward-reference; macros pers*/personalityNRep +
+  report/gen/tab_personality.tex. Framed honestly as one demonstration on one scenario, not a general
+  planner-dominance claim.

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from sandtable import personality as _personality
 from sandtable.entities import AIR, BLUE, Entities
 from sandtable.scenario import Scenario
 from sandtable.world import World
@@ -53,8 +54,9 @@ def overwatch_stations(n: int, cx: float, cy: float, r: float,
     return cand
 
 
-def step(ent: Entities, world: World, scn: Scenario, spawn_x: float) -> None:
-    """Set each entity's movement target in place."""
+def step(ent: Entities, world: World, scn: Scenario, spawn_x: float, pers=None) -> None:
+    """Set each entity's movement target in place. `pers`, if given, replaces the scripted
+    blue-ground lane with the opt-in personality-movement propensity sum (byte-identical when None)."""
     gx, gy = scn.objective.goal
     bias = float(np.clip(scn.params.get("route_bias", 0.0), 0.0, 1.0))
     spread = float(scn.params.get("formation_spread", 30.0))
@@ -88,6 +90,15 @@ def step(ent: Entities, world: World, scn: Scenario, spawn_x: float) -> None:
         st = overwatch_stations(air_idx.size, cx, cy, r, world.size, aspect=aspect)
         tx_new[air_idx] = st[:, 0]
         ty_new[air_idx] = st[:, 1]
+
+    # Opt-in personality movement: replace the scripted lane for blue GROUND with the weighted
+    # propensity sum (goal, enemy repulsion, cover, separation). None on the baseline path.
+    if pers is not None:
+        res = _personality.aim(ent, world, scn, pers)
+        if res is not None:
+            p_idx, p_tx, p_ty = res
+            tx_new[p_idx] = p_tx
+            ty_new[p_idx] = p_ty
 
     # Blue GROUND that have reached the objective hold there (so arrivals accumulate). Air stations
     # are far from the goal, so UAS are unaffected by this.
