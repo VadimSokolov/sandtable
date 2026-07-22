@@ -113,11 +113,35 @@ The code maps to the layers as follows.
 | Layer | sandtable modules |
 | --- | --- |
 | Simulation core: fixed-step loop, time, terrain | `sim`, `world`, `scenario`, `seeding` |
-| Agent-based modeling: SoA platforms, movement, routing, command | `entities`, `motion`, `planning`, `c2` |
-| Sensing and engagement: shared-picture detection, aimed-fire attrition | `sensing`, `engagement` |
+| Agent-based modeling: SoA platforms, movement, routing, command | `entities`, `motion`, `planning`, `c2`; optional personality-field movement (`personality`) |
+| Sensing and engagement: shared-picture detection, aimed-fire attrition | `sensing`, `engagement`; kill-web state, believed tracks and decoys (`belief`), suppression and finite munitions (`mechanics`) |
 | Cyber / EW: comms degradation, dropped tasking, thinned picture | `comms_ew` |
-| Learning, surrogate and analytics: DOE and Bayesian optimization | `runner`, `plugin`, `opt_metrics` (+ polarisopt) |
+| Learning, surrogate and analytics: DOE, Bayesian optimization and test-and-evaluation | `runner`, `plugin`, `opt_metrics` (+ polarisopt), Bayesian T&E (`bayes_te`) |
 | Data, telemetry and metrics: mission KPIs, replay traces | `metrics`, `replay` |
+
+### Extensions
+
+Two families of capability sit on top of the core. The **simulation mechanics** are opt-in behind
+parameter gates that draw the identical RNG stream when disabled, so the baseline is their degenerate
+limit and every prior result is unchanged (proven by an additive-only diff of the generated numbers):
+
+- **Kill web** (`mechanics`, `belief`): suppression, finite munitions, and a believed-track layer
+  where fires resolve against a *believed* enemy position that jamming and decoys can corrupt, so
+  deception and sustainment become mission effects rather than assumptions.
+- **Personality-field movement** (`personality`): ISAAC / EINSTein / MANA-style weighted
+  attraction-repulsion movement, where a route emerges from local propensities instead of a scripted
+  lane.
+
+An **analysis layer** reads the mission outcomes without changing them:
+
+- **Bayesian test and evaluation** (`bayes_te`): turns mission success/failure draws into
+  Beta-Bernoulli posteriors, decision-chart optimal stopping, and a discounted-prior link that lets
+  the fast tier inform the high-fidelity tier's test plan (Ferry's Bayesian Decision Theory
+  paradigm for M&S-informed operational testing).
+
+Validation follows a standard verification-and-validation menu (Sargent): reproducibility and
+extreme-condition tests, face-validity monotonicity checks, and a Lanchester analytic cross-check as
+the aggregate-attrition anchor (still a current benchmark in the combat-modeling literature).
 
 ## Scenarios (from TDD Section 11)
 
@@ -128,12 +152,16 @@ The code maps to the layers as follows.
    direct-to-supervisory optimum moves.
 3. **Sensor swarm under EW (UC-5)** - UAS recon feeds a shared situational-awareness map cueing
    near-blind ground assets under progressive jamming.
+4. **Contested belief (UC-7)** - a formation advances against a denser, spoofable, jammed defense
+   with the full kill web (suppression, finite munitions, believed tracks, decoys), so deception and
+   sustainment become first-order effects rather than assumptions.
 
 ## Layout
 
 ```
-src/sandtable/  simulator package: world, entities, motion, planning, sensing, engagement,
-                c2, comms_ew, metrics, sim; plus polarisopt runner.py / plugin.py / opt_metrics.py
+src/sandtable/  simulator package: world, entities, motion, planning, sensing, engagement, c2,
+                comms_ew, belief, mechanics, personality, metrics, sim; analysis: bayes_te;
+                plus polarisopt runner.py / plugin.py / opt_metrics.py
 scenarios/      declarative scenario specs (JSON)
 studies/        polarisopt study YAMLs (LHS/Morris sweeps + GP/qEI Bayesian optimization)
 experiments/    empirical.md lab notebook + results/
