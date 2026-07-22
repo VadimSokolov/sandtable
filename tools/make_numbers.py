@@ -370,8 +370,8 @@ def bayes_te() -> None:
     lines = [r"\begin{tabular}{lrrrr}", r"\toprule",
              r"sample & Bayesian 95\% CrI & Wald 95\% CI & Wilson 95\% CI & $P(p\!\ge\!0.8)$ \\",
              r"\midrule",
-             f"$n={int(full.n)}$ ({int(full.h)} succ) & {_iv(full)} & {full.p_ge_80:.2f}" + r" \\",
-             f"$n={int(small.n)}$ ({int(small.h)} succ) & {_iv(small)} & {small.p_ge_80:.2f}" + r" \\",
+             f"$N={int(full.n)}$ ({int(full.h)} succ) & {_iv(full)} & {full.p_ge_80:.2f}" + r" \\",
+             f"$N={int(small.n)}$ ({int(small.h)} succ) & {_iv(small)} & {small.p_ge_80:.2f}" + r" \\",
              r"\bottomrule", r"\end{tabular}"]
     (GEN / "tab_bayes_te.tex").write_text("\n".join(lines) + "\n")
 

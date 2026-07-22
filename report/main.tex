@@ -45,11 +45,12 @@ and whose orders ride the degradable link, whereas supervisory autonomy runs on-
 quality independent of the link. A whole mission is a pure function of (scenario, seed, parameters),
 so runs are reproducible, cacheable, and trivially parallel, and one mission of up to 1800 steps
 completes in about a tenth of a second on one CPU core. \sandtable{} plugs into a
-Bayesian-optimization and DOE orchestrator; we drive \nRep{} replications across 147 designs (about
+Bayesian-optimization and design-of-experiments (DOE) orchestrator; we drive \nRep{} replications across 147 designs (about
 44,100 replications) on an HPC cluster, and the attrition kernel reproduces Lanchester's square law
 to within \lanchMaxErr\%. Three studies yield decision-relevant results. First, the
 direct-to-supervisory control optimum \emph{moves}: at a low span of control (one operator to two
-assets) direct control wins only when communications are clear, while at high span (one-to-eight)
+assets) direct control holds only a narrow edge at the clear end of the ladder, where the crossover
+cells sit within Monte-Carlo noise, while at high span (one-to-eight)
 on-platform autonomy wins at every communications level, by \cpDeltaHiSpanClear{}~percentage points
 even in the clear. Second, route choice traces a clean speed-survivability frontier: a defilade
 route reaches \ucThreeSuccCover\% mission success against \ucThreeSuccFast\% for a fast exposed
@@ -205,7 +206,6 @@ batches on the HPC cluster.}
 \label{fig:architecture}
 \end{figure}
 
-\subsection{Design contract}
 The top-level interface is a pure function
 \[
 \texttt{run\_mission}(\text{scenario}, \text{seed}, \text{params}) \;\rightarrow\; \text{metrics},
@@ -219,7 +219,7 @@ randomness is drawn from a single generator seeded per replication, so identical
 identical metrics bit for bit, and matched seed blocks across paired studies implement common random
 numbers for low-variance comparison.
 
-\subsection{State and time}
+
 Entities (ground vehicles, uncrewed aircraft, sensor and command nodes, and defenders) are stored
 as a structure of arrays: position, heading, health, sensor and weapon parameters, and side live in
 parallel NumPy arrays rather than in per-agent objects \citep{harris2020numpy}. The mission advances
@@ -288,7 +288,7 @@ The command layer is where the human-machine teaming questions live (Figure~\ref
 \emph{supervisory} mode each asset runs on-platform autonomy at a steady control quality
 $q_{\text{auto}}$, independent of communications. In \emph{direct} mode an asset requests the operator
 over the modeled link, paying a round trip of $2\ell$ steps at one-way latency $\ell$ with per-message
-drop probability $p$ (Table~\ref{tab:ladder}), and the single operator serves queued requests at a
+drop probability $p_{\text{drop}}$ (Table~\ref{tab:ladder}), and the single operator serves queued requests at a
 fixed rate $\mu$. A request answered within the asset's patience returns the high operator quality
 $q_{\text{operator}}$; while it waits the asset holds a low stall quality $q_{\text{stall}}$; and a
 dropped or timed-out request drops the asset to a poor autonomous fallback $q_{\text{fallback}}$.
@@ -299,7 +299,7 @@ q_{\text{operator}}^{\text{eff}} = q_{\text{auto}} + \big(q_{\text{operator}} - 
 \min\!\Big(1, \tfrac{\kappa}{n}\Big),
 \]
 where $n$ is the number of supervised assets and $\kappa$ the operator's attention (span) capacity
-(here $q_{\text{auto}}=0.70$, $q_{\text{operator}}=0.95$, $\kappa=4$). Below capacity the operator
+(here $q_{\text{auto}}=0.70$, $q_{\text{operator}}=0.95$, $q_{\text{stall}}=0.30$, $q_{\text{fallback}}=0.50$, $\kappa=4$). Below capacity the operator
 adds full value; above it, requests queue and the human-in-the-loop advantage erodes. Control quality feeds engagement (a well-controlled shooter is more effective; a poorly
 controlled or stalled asset exposes itself), so the abstract quality translates into mission
 outcomes. This model, an operator as a capacity-limited server whose value is gated by both span
@@ -314,7 +314,7 @@ severe (C5), that raises tasking latency and message-drop probability and thins 
 by dropping relayed contacts (Table~\ref{tab:ladder}). The six rungs raise one-way tasking latency
 from 0 to 16 time steps and message-drop probability from 0 to 0.55, spanning a benign link to a
 heavily contested one; the rung values are set parameters, not measured link data. The same latency
-$\ell$ and drop probability $p$ gate both the direct-control round trip (Section~\ref{subsec:command})
+$\ell$ and drop probability $p_{\text{drop}}$ gate both the direct-control round trip (Section~\ref{subsec:command})
 and the air-relay path in sensing, so a single dial degrades both tasking and the shared picture.
 Because supervisory autonomy does not depend on the link while direct control does, the ladder is the
 axis along which the two modalities separate.
@@ -327,7 +327,9 @@ axis along which the two modalities separate.
 \input{gen/tab_ladder}
 \end{table}
 
-\subsection{Engineered ground truth}
+\section{Experimental Setup}
+\label{sec:setup}
+
 Every scenario carries a correct answer for the trial (which threats exist, which route survives,
 what outcome a design should produce), and every agent exposes dial-able error and confidence. This
 is what lets a study score a design against truth rather than against agreement with the model's own
@@ -335,9 +337,6 @@ agents, and it is a prerequisite for the pattern-detection objectives the broade
 Because each agent's error rate, confidence behavior, and version state are knobs rather than
 emergent artifacts, a study can hold the ground truth fixed and vary only the teaming design under
 test.
-
-\section{Experimental Setup}
-\label{sec:setup}
 
 We study three scenarios drawn from the program's use-case library (Figure~\ref{fig:scenarios};
 platform parameters in Table~\ref{tab:platforms}). All three share a 6~km $\times$ 3~km area in which
@@ -356,7 +355,7 @@ ladder, with the swarm cueing near-blind ground shooters against a defense in de
 past six AT-team defenders; \texttt{route\_bias} slides the lane from the exposed center corridor into
 the northern cover band (red, amber, green lanes shown). (b) Centerpiece: one operator supervises
 $n$ ground assets over the comms/EW link against AT teams scaled with blue. (c) UC-5: near-blind
-ground vehicles (sensor range $\ll$ weapon range) are cued by a UAS overwatch (teal, with sensor
+ground vehicles (sensor range $\ll$ weapon range) are cued by an unmanned aircraft system (UAS) overwatch (teal, with sensor
 footprints) laid out in depth to blanket a defense in depth of six AT teams. Faint rings are weapon
 ranges; the star is the objective.}
 \label{fig:scenarios}
@@ -428,7 +427,7 @@ linear law \citep{deitchman1962guerrilla}, and the operations-research treatment
 the search and detection that gate them is standard \citep{washburn2009combat}. Our per-shot kill
 probability and rate of fire are the primitives that map onto the Lanchester attrition-rate
 coefficients \citep{bonder1967attrition}, so the check is quantitative. For initial blue and red
-strengths $B_0$ and $R_0$ of equal per-unit effectiveness, the stronger side annihilates the weaker
+strengths $B_0 \ge R_0$ of equal per-unit effectiveness, the stronger (blue) side annihilates the weaker
 and its survivors are $\sqrt{B_0^2 - R_0^2}$. We isolate the kernel (no movement, no cover, mutual
 detection, forces intermixed so fire distributes) and compare the Monte-Carlo mean survivors to that
 closed form (Table~\ref{tab:lanchester}). Agreement is within \lanchMaxErr\%, biased slightly low.
@@ -439,7 +438,7 @@ curiosity: they remain the standard closed form for aggregate attrition in curre
 research, from irregular-warfare models \citep{kress2020lanchester} to heterogeneous-force
 extensions fitted to present-day equipment mixes \citep{hausken2025modeling}, and they have been
 checked directly against historical battle data \citep{lucas2004fitting}. Reproducing the square law
-to within a few percent is the analytic leg of the checks above, not the whole of them.
+to within \lanchMaxErr\% is the analytic leg of the checks above, not the whole of them.
 
 \begin{table}[H]
 \centering
@@ -495,8 +494,9 @@ Figure~\ref{fig:cp_phase} collapses the full design space into a single decision
 the supervisory-minus-direct success difference; blue cells (bottom-left, low span and clear
 communications) are where a human in the loop wins, red cells everywhere else are where on-platform
 autonomy wins, and the black contour is the crossover. The optimum \emph{moves}. At the smallest
-span the crossover sits at C$\cpStarLoSpan{}$: direct control is competitive only while
-communications are near-clear. As span grows the crossover slides left until, at one-to-eight,
+span the crossover sits near C$\cpStarLoSpan{}$: direct control leads at C0 and is otherwise within
+Monte-Carlo noise of parity across the near-clear cells, so its exact location is approximate. As span
+grows the crossover slides left until, at one-to-eight,
 supervisory autonomy dominates at every communications level (crossover C$\cpStarHiSpan{}$), by
 \cpDeltaHiSpanClear{}~percentage points even in the clear. Across the whole grid the supervisory
 advantage reaches \cpDeltaMax{}~percentage points, at span one-to-six under the heaviest
@@ -651,9 +651,10 @@ imperfect tracks rather than truth \citep{tryhorn2021afsim}.
 
 UC-7 combines these into one contested-belief scenario in the use-case library: eight vehicles
 advance against a denser, spoofable, and jammed defense, with both sides carrying the full kill web.
-Table~\ref{tab:killweb} peels the mechanics on one layer at a time from a truth baseline. Fires
-against belief with fresh tracks, and jamming on top, barely move the grind, and blue loses
-\ucSevenTruthLoss{} of eight at \ucSevenTruthSucc\% success. Decoys are the dominant single layer,
+Table~\ref{tab:killweb} peels the mechanics on one layer at a time from a truth baseline, where blue
+grinds forward and loses \ucSevenTruthLoss{} of eight at \ucSevenTruthSucc\% success. Fires against
+belief with fresh tracks (\ucSevenBeliefLoss{} losses) and jamming on top (\ucSevenJamLoss{}) barely
+move that grind. Decoys are the dominant single layer,
 cutting losses to \ucSevenDecoyLoss{} and lifting success past half, because spoofing the defenders'
 picture is what breaks the engagement. Suppression and finite munitions each add a further increment,
 and the full contested case succeeds \ucSevenFullSucc\% of the time at \ucSevenFullLoss{} losses. In
@@ -728,7 +729,8 @@ in as the likelihood, so we demonstrate it on the centerpiece scenario with no n
 (Figure~\ref{fig:bayeste}, Table~\ref{tab:bayeste}).
 
 \paragraph{Credible intervals over point estimates.} A design's success draws give a conjugate Beta
-posterior on its success probability. For a direct-control design at span 1:2 over \bteN{}
+posterior on its success probability, starting from a neutral Jeffreys $\mathrm{Beta}(\tfrac12,\tfrac12)$
+prior. For a direct-control design at span 1:2 over \bteN{}
 replications (\bteHits{} successes) the posterior 95\% credible interval is
 [\bteBetaLo{}, \bteBetaHi{}] and the probability the design clears an 80\% requirement is
 \bteComplyEighty{}, a statement a design gate can act on rather than a $p$-value. The frequentist
@@ -738,14 +740,17 @@ is \bteWaldHiSmall{}, above one, while the Beta interval stays inside the unit i
 \bteBetaHiSmall{}.
 
 \paragraph{A decision chart and when to stop.} Bayesian Decision Theory turns that posterior into an
-accept, reject, or keep-testing rule. Under a compliance utility that accepts once the posterior puts
-at least 90\% of its mass above the requirement, and a per-trial cost, a backward recursion labels
-every (successes, trials) state (Figure~\ref{fig:bayeste}a). Run against the sim, the rule accepts the
-compliant design after \bteStopAccept{} replications, rejects a clearly failing one after
-\bteStopReject{}, and spends the most evidence, \bteStopBorder{}, on the design nearest the gate,
-against the \bteN{} replications a fixed-budget study spends on every design. Raising the per-trial
-cost shrinks the keep-testing region, from \bteContinueCheap{} states to \bteContinueDear{}, so the
-rule stops sooner, the cost-aware behavior a test planner wants.
+accept, reject, or keep-testing rule. We set a compliance gate at 60\% mission success (below the 80\%
+bar used above only to illustrate the compliance probability) and a utility that scores a confident
+accept at $+20$, a mistaken accept at $-10$, and a reject at $0$, where ``confident'' means the
+posterior places at least 90\% of its mass above the gate; each trial then costs a fixed amount. A
+backward recursion labels every (successes, trials) state (Figure~\ref{fig:bayeste}a). Run against the
+sim at a per-trial cost of $0.02$, the rule accepts the compliant design (success rate $0.80$) after
+\bteStopAccept{} replications, rejects a clearly failing one ($0.05$) after \bteStopReject{}, and
+spends the most evidence, \bteStopBorder{}, on the design nearest the gate ($0.45$), against the
+\bteN{} replications a fixed-budget study spends on every design. Raising the per-trial cost from
+$0.02$ to $0.20$ shrinks the keep-testing region, from \bteContinueCheap{} states to \bteContinueDear{},
+so the rule stops sooner, the cost-aware behavior a test planner wants.
 
 \paragraph{Comparing two designs.} The same posterior compares designs. At the high-span crossover
 the supervisory control mode beats direct with posterior probability \bteProbSupBetter{}, a
