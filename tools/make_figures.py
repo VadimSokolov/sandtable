@@ -243,8 +243,8 @@ def fig_bayes_te() -> None:
     """Bayesian test-and-evaluation. (a) The decision chart: for every (trials, successes) state, the
     cost-aware rule says accept, reject, or keep testing, with three example designs' evidence walks
     overlaid to their stopping point. (b) SandTable as a discounted prior: the mean credible-interval
-    width shrinks far faster in the number of expensive high-fidelity runs when a cheap M&S prior
-    informs the test than when it does not."""
+    width starts far tighter and stays tighter across the expensive high-fidelity runs when a cheap M&S
+    prior informs the test than when it does not."""
     pp, cp = DATA / "bayes_te_paths.csv", DATA / "bayes_te_prior_curve.csv"
     if not (pp.exists() and cp.exists()):
         print("[bayes_te] CSVs not present - skipping (run tools/make_bayes_te_numbers.py)")
@@ -263,12 +263,15 @@ def fig_bayes_te() -> None:
     cmap = ListedColormap([RED, GREEN, "#d6d6d6"])       # 0 reject, 1 accept, 2 test
     a0.imshow(grid, origin="lower", aspect="auto", cmap=cmap,
               norm=BoundaryNorm([-0.5, 0.5, 1.5, 2.5], cmap.N), interpolation="nearest")
+    gx = np.arange(n_max + 1)
+    for val, ec in [(1, "#0f5c33"), (0, "#7a1015")]:     # outline accept/reject: an edge cue that survives colorblindness
+        a0.contour(gx, gx, (grid == val).astype(float), levels=[0.5], colors=ec, linewidths=0.9)
     stop = pd.read_csv(DATA / "bayes_te_stopping.csv")
     nused = stop[stop.cost == stop.cost.min()].set_index("design")["n_used"].to_dict()
     styles = {"compliant": ("-", BLUE, "compliant (accept)"),
               "borderline": ("--", "#111", "borderline (reject)"),
               "noncompliant": ("-.", "#8a5000", "failing (reject)")}
-    zoom = 28                                            # walks all stop early; zoom to the decision region
+    zoom = 34                                            # walks stop early; crop to the decision region (grid runs to n_max)
     for name, sub in paths.groupby("design"):
         sub = sub.sort_values("k")
         sub = sub[sub.k <= int(nused[name])]
@@ -278,18 +281,20 @@ def fig_bayes_te() -> None:
     a0.set_xlim(0, zoom); a0.set_ylim(0, zoom)
     a0.set_xlabel("trials"); a0.set_ylabel("successes")
     a0.set_title("(a) Decision chart and evidence walks")
-    a0.legend(loc="lower right", fontsize=7.5, frameon=True, facecolor="white", framealpha=0.9)
+    a0.legend(loc="upper left", fontsize=7.5, frameon=True, facecolor="white", framealpha=0.9)
     a0.grid(False)
-    a0.text(0.05 * zoom, 0.90 * zoom, "accept", color="#0f5c33", fontsize=9)
-    a0.text(0.66 * zoom, 0.24 * zoom, "reject", color="#7a1015", fontsize=9)
-    a0.text(0.30 * zoom, 0.45 * zoom, "test", color="#555", fontsize=8.5, rotation=42)
+    a0.text(0.58 * zoom, 0.50 * zoom, "accept", color="#0f5c33", fontsize=9, rotation=45,
+            ha="center", va="center")
+    a0.text(0.73 * zoom, 0.15 * zoom, "reject", color="#7a1015", fontsize=9)
+    a0.text(0.47 * zoom, 0.27 * zoom, "test", color="#555", fontsize=8.5, rotation=45,
+            ha="center", va="center")
 
     # (b) credible-interval width vs number of high-fidelity runs: informed vs uninformed prior.
     cur = pd.read_csv(cp).sort_values("k")
     a1.plot(cur.k, cur.width_uninformed, color=RED, marker="o", ms=3, lw=1.6,
             label="high-fidelity only")
     a1.plot(cur.k, cur.width_informed, color=BLUE, marker="s", ms=3, lw=1.6,
-            label="M\\&S-informed prior")
+            label="M&S-informed prior")
     a1.set_xlabel("high-fidelity runs")
     a1.set_ylabel("mean 95\\% CrI width")
     a1.set_ylim(0, None)
@@ -303,6 +308,68 @@ def fig_bayes_te() -> None:
           f"{cur.iloc[0].width_informed:.2f} vs uninformed {cur.iloc[0].width_uninformed:.2f}")
 
 
+def fig_drone() -> None:
+    """Drone-war increment. (a) The EW-immune command link (M1) keeps direct human control from
+    collapsing as the comms/EW ladder worsens. (b) Counter-UAS/SHORAD (M2) turns the sensor-swarm
+    response from monotone-in-size into an interior optimum; the cost-exchange (M3, amber, right axis)
+    peaks at the same place and collapses for oversized swarms."""
+    fp, cp = DATA / "drone_fiber_link.csv", DATA / "drone_cuas_swarm.csv"
+    if not (fp.exists() and cp.exists()):
+        print("[drone] CSVs not present - skipping (run tools/make_drone_numbers.py)")
+        return
+    fig, (a0, a1) = plt.subplots(1, 2, figsize=(7.6, 3.1))
+
+    # (a) EW-immune command link across the comms/EW ladder.
+    F = pd.read_csv(fp)
+    nf = int(F["n_rep"].iloc[0])
+    piv = F.pivot(index="comms_level", columns="link", values="success")
+    x = piv.index.values
+    for link, col, mk, ls in [("jammable", RED, "o", "-"), ("immune", GREEN, "s", "-")]:
+        y = piv[link].values * 100
+        ci = _ci(piv[link].values, nf) * 100
+        a0.plot(x, y, color=col, marker=mk, ms=4, lw=1.8, ls=ls,
+                label=("jammable link" if link == "jammable" else "EW-immune link"))
+        a0.fill_between(x, y - ci, y + ci, color=col, alpha=0.14)
+    a0.set_xlabel("comms / EW level (C0 clear $\\rightarrow$ C5 severe)")
+    a0.set_ylabel("direct-control success (%)")
+    a0.set_ylim(0, 100); a0.set_xticks(x)
+    a0.legend(loc="lower left")
+    a0.set_title("(a) EW-immune link resists jamming")
+
+    # (b) Counter-UAS makes swarm size an interior optimum; cost-exchange on the right axis.
+    C = pd.read_csv(cp)
+    nc = int(C["n_rep"].iloc[0])
+    off = C[C.cuas == "off"].sort_values("n_uas").reset_index(drop=True)
+    on = C[C.cuas == "on"].sort_values("n_uas").reset_index(drop=True)
+    xs = on["n_uas"].values
+    for df, col, mk, ls, lab in [(off, BLUE, "o", "--", "unopposed"), (on, RED, "s", "-", "counter-UAS")]:
+        y = df["success"].values * 100
+        ci = _ci(df["success"].values, nc) * 100
+        a1.plot(df["n_uas"], y, color=col, marker=mk, ms=4, lw=1.8, ls=ls, label=lab)
+        a1.fill_between(df["n_uas"], y - ci, y + ci, color=col, alpha=0.13)
+    pk = int(on["n_uas"][on["success"].idxmax()])
+    a1.axvline(pk, color=RED, ls=":", lw=1.0, alpha=0.6)
+    a1.set_xlabel("recon swarm size (UAS)")
+    a1.set_ylabel("mission success (%)")
+    a1.set_ylim(0, 100); a1.set_xticks(xs)
+    a1.legend(loc="upper left")
+    a1b = a1.twinx()
+    a1b.plot(on["n_uas"], on["cost_exchange"], color=AMBER, marker="^", ms=3.5, lw=1.5)
+    a1b.set_ylabel("cost-exchange (C-UAS)", color=AMBER)
+    a1b.tick_params(axis="y", colors=AMBER)
+    a1b.set_ylim(bottom=0)
+    a1b.grid(False)
+    a1.set_title("(b) Counter-UAS: interior optimum")
+
+    fig.savefig(FIG / "drone.pdf")
+    fig.savefig(FIG / "drone.png", dpi=170)
+    plt.close(fig)
+    print(f"[drone] fiber: jammable {piv['jammable'].iloc[0]*100:.0f}%->{piv['jammable'].iloc[-1]*100:.0f}%, "
+          f"immune {piv['immune'].iloc[0]*100:.0f}%->{piv['immune'].iloc[-1]*100:.0f}% across C0->C5")
+    print(f"[drone] swarm optimum (C-UAS) at size {pk}: success "
+          f"{on['success'].max()*100:.0f}%, oversized {on['success'].iloc[-1]*100:.0f}%")
+
+
 def main() -> None:
     fig_centerpiece_phase()
     fig_centerpiece_curves()
@@ -310,6 +377,7 @@ def main() -> None:
     fig_uc5()
     fig_killweb_sweeps()
     fig_bayes_te()
+    fig_drone()
     print("figures ->", FIG)
 
 
