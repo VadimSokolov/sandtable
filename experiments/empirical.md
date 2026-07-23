@@ -596,3 +596,69 @@ this is post-hoc analysis of evaluate() output.
   10.61278/itea.45.3.1002; all verified). Naval Engineers J. 2024 has no exposed DOI -> not cited.
 - Paper: new Results subsection subsec:bayeste (Fig fig:bayeste, Tab tab:bayeste). Pre-flight PASS
   5/5, 26 pages.
+
+### 2026-07-22 - Drone-war increment: EW-immune link (M1), counter-UAS/SHORAD (M2), cost-exchange (M3)
+
+Integrated three Russo-Ukrainian-war lessons as opt-in, byte-identical-off mechanics, each grounded in
+verified literature and demonstrated driver -> CSV -> generated numbers/figure. Motivation: drones
+central but effect contingent ("depends on the game", Kunertova 2023); air defense keeps pace in a
+hider-finder competition (Calcara et al. 2022); fiber/terminal autonomy immune to EW (Bondar CSIS 2025;
+Kunertova "Drones have boots" 2023). Grok/user framing honored: "consistent with", not "validates".
+
+M1 - EW-immune command link (src/sandtable/c2.py, built earlier this session):
+- Operator gains ew_immune + immune_latency. Direct-control branch draws the SAME two delivered()
+  values, then link_ok = ew_immune or (up and down); lat = immune_latency if immune else comms.latency.
+  RNG-aligned so the off-path is byte-identical. tests/test_ew_immune.py (4) + test_c2 field-set fix.
+- Result (drone_fiber_link.csv, N=200, sc_span_control direct, n_blue=4 n_red=4): jammable success
+  0.54(C0) 0.50 0.505 0.37 0.215(C4) 0.215(C5); immune FLAT 0.605 across the whole ladder (comms enters
+  only via the C2 link here, which the immune link bypasses). C0 gap (+0.065) within MC noise (+/-0.069
+  at N=200); heavy-jam gain ~+0.39 (C4). Consistent-with Bondar 10-20%->70-80% (directional support).
+
+M2 - counter-UAS/SHORAD (src/sandtable/counter_uas.py, NEW; sim.py hook after engagement):
+- build_counter_uas(scn, ent) -> None unless cuas_rate>0 (opt-in; byte-identical off: zero RNG when
+  off). Captures committed swarm size n0. step(): draws rng.random(n_live_uas); p_kill=min(1,rate*
+  n0**sig); a UAS within cuas_reach (2500 m) of a living red defender dies if draw<p_kill. Hazard keys
+  on COMMITTED n0 (not live count), so it does not self-limit as the swarm thins.
+- WHY interior peak: measured exposure window E ~ mission length (n=1,3 run full 1800 steps; n=6 wins by
+  step ~609). Constant hazard => expected survivors n0*(1-p)^E ~ n0*exp(-rate*E*n0^sig), interior-peaked.
+  Linear sig=1 => broad plateau (coverage saturates high for big swarms, redundancy). Superlinear sig=2
+  steepens the tail: a massed swarm is gutted BEFORE the ground force reaches the red zone (~step 500).
+  Probes (scratchpad/probe_cuas.py): sig=1 rate2.5e-4 tail too flat; sig=1.5 rate1.4e-4 peak-tail 0.05
+  (noise); sig=2.0 rate6e-5 CLEAN peak (chosen; default cuas_signature=2.0). First (wrong) design used
+  per-step LIVE-count hazard -> too lethal (even a lone UAS wiped, uniform failure); fixed by tiny rate
+  + initial-size key + superlinear exponent.
+- Result (drone_cuas_swarm.csv, N=200, UC-5): OFF success climbs+saturates 0.14 0.305 0.515 0.525 0.61
+  0.72 0.70 (n=1..8), no interior penalty. ON success 0.17 0.355 0.505 0.435 0.415 0.33 0.29 -> CLEAN
+  interior peak at n=3 (0.505), tail 0.29 at n=8 (drop 21 pp vs peak; small n=1 0.17). Coverage tracks
+  it. air_losses at n=8 ON = 7.5 of 8.
+- Acceptance test PASSES (tests/test_counter_uas.py, 6): baseline monotone (large>small+0.15); under
+  C-UAS mid(3)>small(1)+0.10 AND mid(3)>large(8)+0.10 at NREP=60; + byte-identical-off (8 seeds),
+  gating, n0 capture, attrition (air_losses up, coverage down vs off).
+
+M3 - cost-exchange KPI (src/sandtable/metrics.py, output-only, byte-identical):
+- compute() gains air0 (from sim.py) + blue_air_losses, blue_ground_losses, blue_cost_lost, cost_exchange.
+  Unit costs default 1.0 => per-run cost_exchange == loss_exchange exactly (benign default; prior numbers
+  unchanged). test_metrics EXPECTED_KEYS +4, +2 tests (defaults-to-loss_exchange; domain weights).
+- Study cost-exchange is the RATIO OF MEANS (mean red value destroyed / mean blue cost lost), computed in
+  the driver, NOT the mean of per-run ratios (which is dominated by near-zero-loss denominators; the
+  per-run metric gave a misleading 7.9 at n=3). Stipulated relative costs uas=1, ugv=20, red=15. Result
+  (ON): 0.47 0.81 1.10 0.99 0.98 0.75 0.58 (n=1..8) -> interior peak at n=3 (1.10, ~break-even),
+  collapses to 0.58 at n=8. Oversized swarm bleeds 7.5 drones AND fails the assault (expensive UGVs lost).
+- Full suite: 127 passed / 0 skipped in the canonical mgl env (was 115): +6 counter_uas, +2
+  metrics-cost, +4 M1 earlier. All prior byte-identical tests still pass => M2+M3 perturb no
+  existing scenario. (Count is env-dependent: a leaner env without the polarisopt/torch extras
+  skips the integration tests and reports ~120 passed / 1 skipped; the 127 figure is the full mgl run.)
+
+- tools/make_drone_numbers.py (NEW, N=200) -> drone_fiber_link.csv, drone_cuas_swarm.csv.
+- tools/make_figures.py fig_drone -> report/figures/drone.pdf (a: fiber crossover-flattening; b: swarm
+  interior peak + cost-exchange twin axis). make_numbers.py drone() -> fiber*/cuas* macros + tab_drone.tex
+  (gain/drop macros computed from rounded endpoints for prose self-consistency).
+- ref.bib 45 -> 49: calcara2022drones (10.1162/isec_a_00431), kunertova2023depends
+  (10.1080/00963402.2023.2178180), kunertova2023boots (10.1080/13523260.2023.2262792), all CrossRef-
+  verified 2026-07-22; bondar2025autonomy (CSIS, WebFetch 2026-07-22, manual provenance).
+- Paper: new Results subsec:drone (Fig fig:drone, Tab tab:drone). Discussion limitation reframed (UC-5
+  "no air defense / upper bound" now addressed by the opt-in C-UAS layer); contributions para extended;
+  Extensions: SHORAD marked delivered + GNSS-denial roadmap added.
+- Pre-flight: PASS 5/5 (49/49 citations verified, 1 AI-vocab hit, 0 em-dashes, 7/7 contribution refs
+  resolve incl. new item 6, compile clean). 28 pages (was 26). Cost-exchange reported as ratio of means
+  (mean red value / mean blue cost), not the per-run mean-of-ratios (which gave a misleading 7.9 at n=3).

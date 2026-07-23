@@ -10,9 +10,20 @@ from __future__ import annotations
 
 import numpy as np
 
-from sandtable import belief, c2, engagement, mechanics, metrics, motion, personality, planning, sensing
+from sandtable import (
+    belief,
+    c2,
+    counter_uas,
+    engagement,
+    mechanics,
+    metrics,
+    motion,
+    personality,
+    planning,
+    sensing,
+)
 from sandtable.comms_ew import build_comms
-from sandtable.entities import BLUE, GROUND, RED
+from sandtable.entities import AIR, BLUE, GROUND, RED
 from sandtable.scenario import Scenario, build_entities
 from sandtable.seeding import make_rng
 from sandtable.world import build_world
@@ -41,6 +52,10 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     # Optional personality-movement mode (opt-in). None unless params["movement"]=="personality";
     # when None, planning uses the scripted lane and results are byte-identical.
     pers = personality.build_personality(scn)
+    # Optional counter-UAS / SHORAD (Increment 6): red air defense attrites the blue recon swarm.
+    # None unless params set cuas_rate>0; when None the loop skips it and draws no extra RNG
+    # (byte-identical to any prior run without it).
+    cuas = counter_uas.build_counter_uas(scn, ent)
 
     init_counts = {BLUE: int((ent.side == BLUE).sum()), RED: int((ent.side == RED).sum())}
     blue_mask0 = ent.side == BLUE
@@ -54,6 +69,7 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     # ground-core scenarios (no air) this equals init_counts[BLUE], so they are unchanged.
     ground_blue0 = int(((ent.side == BLUE) & (ent.domain == GROUND)).sum())
     assault0 = ground_blue0 if ground_blue0 > 0 else init_counts[BLUE]
+    air_blue0 = int(((ent.side == BLUE) & (ent.domain == AIR)).sum())   # recon swarm size (for cost KPI)
     need = scn.objective.survive_fraction * assault0
 
     t = 0.0
@@ -73,6 +89,8 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
         else:
             belief.update(ent, tracks, comms, rng)
             belief.engage(ent, world, tracks, rng, mech=mech)
+        if cuas is not None:
+            counter_uas.step(ent, cuas, rng)     # red air defense engages the blue UAS overwatch
         t = (k + 1) * dt
 
         # Detection coverage: fraction of the living red force currently on the blue shared picture
@@ -89,7 +107,7 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
         if not ent.side_mask(BLUE).any():
             break
 
-    result = metrics.compute(scn, init_counts, ent, t_reached, t, assault0=assault0)
+    result = metrics.compute(scn, init_counts, ent, t_reached, t, assault0=assault0, air0=air_blue0)
     result["detection_coverage"] = cov_sum / max(cov_steps, 1)
     return result
 

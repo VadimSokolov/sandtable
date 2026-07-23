@@ -1,0 +1,13 @@
+comms_level,link,success,n_rep
+0,jammable,0.54,200
+0,immune,0.605,200
+1,jammable,0.5,200
+1,immune,0.605,200
+2,jammable,0.505,200
+2,immune,0.605,200
+3,jammable,0.37,200
+3,immune,0.605,200
+4,jammable,0.215,200
+4,immune,0.605,200
+5,jammable,0.215,200
+5,immune,0.605,200

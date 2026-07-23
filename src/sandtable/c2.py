@@ -52,6 +52,8 @@ class Operator:
     decision_interval: int        # mean steps between an agent's decision events
     operator_free_at: float = 0.0  # step at which the single server clears its queue
     resolved_quality: np.ndarray = field(default=None)  # per-agent between-decision quality
+    ew_immune: bool = False        # EW-immune command link (fiber / autonomous terminal guidance)
+    immune_latency: int = 1        # fixed one-way latency of the immune link, off the comms ladder
 
 
 def build_c2(scn: Scenario, ent: Entities) -> Operator | None:
@@ -80,6 +82,8 @@ def build_c2(scn: Scenario, ent: Entities) -> Operator | None:
         patience=int(scn.params.get("patience", 20)),
         decision_interval=int(scn.params.get("decision_interval", 30)),
         resolved_quality=np.full(ent.n, q_auto),
+        ew_immune=bool(scn.params.get("ew_immune_link", False)),
+        immune_latency=int(scn.params.get("immune_latency", 1)),
     )
     return op
 
@@ -121,15 +125,21 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
             ent.decision_cooldown[i] = _reset_cooldown(op, rng)
             continue
 
-        # direct control: request the operator over the (possibly jammed) link.
+        # direct control: request the operator over the link. Both link types draw the same two
+        # Bernoulli message-survival values, so the RNG stream stays aligned and the OFF path is
+        # byte-identical. An EW-immune link (fiber / autonomous terminal guidance) ignores the drops
+        # and rides a fixed low latency off the comms ladder; the single operator is still a shared
+        # server, so span-of-control contention remains the residual limit.
         up_ok = comms.delivered(rng)
         down_ok = comms.delivered(rng)
-        if up_ok and down_ok:
-            recv = k + comms.latency                          # request reaches operator
+        link_ok = op.ew_immune or (up_ok and down_ok)
+        lat = op.immune_latency if op.ew_immune else comms.latency
+        if link_ok:
+            recv = k + lat                                    # request reaches operator
             start = max(op.operator_free_at, recv)            # single shared server
             done = start + 1.0 / op.service_rate              # operator finishes this decision
             op.operator_free_at = done
-            reply = done + comms.latency                      # reply travels back
+            reply = done + lat                                # reply travels back
             wait = reply - k
             if wait <= op.patience:
                 ent.await_until[i] = int(math.ceil(reply))

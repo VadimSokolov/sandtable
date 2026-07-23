@@ -64,6 +64,7 @@ def test_operator_has_expected_fields():
     assert names == {
         "mode", "service_rate", "q_operator", "q_auto", "q_fallback", "q_stall",
         "patience", "decision_interval", "operator_free_at", "resolved_quality",
+        "ew_immune", "immune_latency",
     }
     assert op.mode == "direct"                       # sc_span_control default
     assert op.resolved_quality.shape == (ent.n,)
