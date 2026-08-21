@@ -20,6 +20,21 @@ EXPECTED_KEYS = {
     "blue_cost_lost",
     "cost_exchange",
     "mission_time",
+    # adaptability and operator-load families (CR-4, CR-7, CR-10, CR-11); each is exactly 0.0
+    # when its layer is absent, which `test_teaming_keys_are_zero_without_their_layers` pins.
+    "interventions",
+    "intervention_rate",
+    "hold_fraction",
+    "interaction_steps",
+    "neglect_steps",
+    "fan_out",
+    "operator_utilization",
+    "mean_wait",
+    "wait_p95",
+    "queue_depth_mean",
+    "operator_goodput",
+    "abandon_queue_frac",
+    "abandon_link_frac",
 }
 
 

@@ -25,6 +25,10 @@ Two control modalities (scenario param `control_mode`):
 The single shared server is the span-of-control coupling: more agents means a
 longer queue, so the crossover to supervisory arrives at a milder jamming level.
 
+The server also has *abandonment*: a requester that has waited longer than
+``patience`` stops caring about the answer. Whether the operator finds that out,
+and what it does about it, is the ``queue_policy`` knob documented in `step`.
+
 Deterministic given (rng, state); no globals. Only living blue agents are managed;
 red and air agents keep the neutral control_quality 1.0.
 """
@@ -54,6 +58,12 @@ class Operator:
     resolved_quality: np.ndarray = field(default=None)  # per-agent between-decision quality
     ew_immune: bool = False        # EW-immune command link (fiber / autonomous terminal guidance)
     immune_latency: int = 1        # fixed one-way latency of the immune link, off the comms ladder
+    queue_policy: str = "blind"    # "blind" | "refund" | "admit"; see `step`
+    # Request accounting (CR-10). Counts only, no RNG, so the OFF path stays byte-identical.
+    n_request: int = 0             # direct-mode decision events that reached the link
+    n_serviced: int = 0            # ... that came back with an operator decision
+    n_abandon_queue: int = 0       # ... that reached the operator but could not be served in time
+    n_abandon_link: int = 0        # ... that the link dropped
     # Operator-load accumulators (CR-7). Read out by `metrics.compute`; every one of them is a
     # by-product of state this model already carried, so nothing here changes any decision.
     busy_steps: int = 0            # steps on which the single server was still clearing its queue
@@ -90,7 +100,10 @@ def build_c2(scn: Scenario, ent: Entities) -> Operator | None:
         resolved_quality=np.full(ent.n, q_auto),
         ew_immune=bool(scn.params.get("ew_immune_link", False)),
         immune_latency=int(scn.params.get("immune_latency", 1)),
+        queue_policy=str(scn.params.get("queue_policy", "blind")),
     )
+    if op.queue_policy not in ("blind", "refund", "admit"):
+        raise ValueError(f"queue_policy must be blind|refund|admit, got {op.queue_policy!r}")
     return op
 
 
@@ -146,22 +159,40 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
         down_ok = comms.delivered(rng)
         link_ok = op.ew_immune or (up_ok and down_ok)
         lat = op.immune_latency if op.ew_immune else comms.latency
+        op.n_request += 1
         if link_ok:
             recv = k + lat                                    # request reaches operator
             start = max(op.operator_free_at, recv)            # single shared server
             done = start + 1.0 / op.service_rate              # operator finishes this decision
-            op.operator_free_at = done
             reply = done + lat                                # reply travels back
             wait = reply - k
             if wait <= op.patience:
+                op.operator_free_at = done
                 ent.await_until[i] = int(math.ceil(reply))
                 op.resolved_quality[i] = op.q_operator
                 op.waits.append(float(wait))          # attention-switching wait, serviced only
+                op.n_serviced += 1
             else:
-                ent.await_until[i] = k + op.patience          # gives up waiting -> poor autonomy
+                # The request cannot come back inside the requester's patience, so its answer
+                # will be thrown away. What the operator does with the slot, and whether the
+                # requester is told, is `queue_policy` (CR-10):
+                #   blind  -- the operator works the request anyway and the agent waits it out.
+                #             The slot is spent on an answer nobody will use, which is what makes
+                #             the queue collapse under its own offered load at large span.
+                #   refund -- the operator silently drops work it cannot finish in time. The slot
+                #             is freed for the next requester; the agent still waits out patience.
+                #   admit  -- the operator refuses on arrival and the refusal rides the link home,
+                #             so the agent goes autonomous after one round trip instead of after
+                #             `patience` steps. Explicit admission control.
+                if op.queue_policy == "blind":
+                    op.operator_free_at = done
+                hold = 2 * lat if op.queue_policy == "admit" else op.patience
+                ent.await_until[i] = k + hold                 # gives up waiting -> poor autonomy
                 op.resolved_quality[i] = op.q_fallback
+                op.n_abandon_queue += 1
         else:
             ent.await_until[i] = k + op.patience              # message dropped -> poor autonomy
             op.resolved_quality[i] = op.q_fallback
+            op.n_abandon_link += 1
 
         ent.control_quality[i] = op.q_stall                   # now awaiting

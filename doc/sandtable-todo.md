@@ -499,3 +499,96 @@ data-only. Keep the state inside the `Comms` instance built per run, never modul
 3. The distribution of consecutive-loss run lengths differs measurably between the two channels.
 4. Report whether the modality crossover rung moves between channels. **If it moves, that is a finding
    for the paper, not a bug to tune away.**
+
+---
+
+## CR-10 Operator admission control  (IMPLEMENTED 2026-08-21)
+
+### Why
+
+The published operator works every request it receives. It has no way to notice that the
+requester stopped waiting, so a request that arrives when the queue is already deeper than the
+requester's patience still costs a full service slot, and the answer is thrown away on arrival.
+
+```python
+done = max(op.operator_free_at, k + lat) + 1.0 / op.service_rate
+op.operator_free_at = done          # spent here, unconditionally
+if done + lat - k <= op.patience: ...serviced...
+else: ...the requester gave up, and the slot was spent anyway...
+```
+
+At spans above `n* = (patience + decision_interval) * service_rate` this is self-sustaining:
+every vehicle abandons, every abandonment still consumes the operator, the queue never drains.
+Only 18% of requests get an answer at n=8 on a clean link. Packet loss is then the only thing
+shedding load, which is why mission success *rose* with jamming in the published model.
+
+This is the call-center problem with abandonment, and the standard answers apply
+(`doc/lit-ideas.md` D4a).
+
+### Change
+
+`params["queue_policy"]`, default `"blind"` so every prior number is unchanged:
+
+| policy | server slot on an abandoned request | requester |
+| --- | --- | --- |
+| `blind` | spent | waits out `patience` |
+| `refund` | freed | waits out `patience` |
+| `admit` | freed | told after one round trip (`2*latency`), then drives autonomously |
+
+`refund` isolates the server-side half; `admit` adds the vehicle-side half and is the deployable
+recommendation.
+
+### Result
+
+n=8, direct, proxy tier: clean-link success 0.512 (blind) to 0.840 (admit), and the interior
+optimum in comms level disappears. Goodput inverts from rising-in-jamming to falling-in-jamming.
+Full detail in `doc/autoresearch-conjectures.md`.
+
+### Tests
+
+`tests/test_queue_policy.py`: default byte-identity, request accounting partitions to 1.0,
+unknown policy rejected, both fixed policies raise goodput at saturated span, `admit` empties the
+waiting room relative to `refund`, and all three agree when the operator is never saturated.
+
+---
+
+## CR-11 Hold durations and the fan-out estimate  (IMPLEMENTED 2026-08-21)
+
+### Why
+
+`intervention_rate` counts *events*. Jamming makes each hold longer, so events per vehicle-hour
+**fall** as the burden rises. The first version of the CR-4 test asserted the opposite and failed;
+the failure is the finding.
+
+### Change
+
+`behavior.py` accumulates `hold_steps` and `alive_steps` per entity (counts only, no RNG, so the
+off path stays byte-identical). `metrics.py` derives:
+
+- `hold_fraction`, the share of live vehicle-steps spent stopped waiting on the operator. This is
+  the quantity that tracks burden monotonically.
+- `interaction_steps` (IT) and `neglect_steps` (NT), the observed duty cycle.
+- `fan_out = 1 + NT/IT`, the Olsen and Wood capacity estimate (`10.1145/985692.985722`).
+
+### What it is for
+
+Fan-out has no queue in it, so it predicts capacity as if every vehicle wanting attention got it on
+arrival. Cummings and Mitchell 2008 (`10.1109/TSMCA.2007.914757`) added wait time for exactly that
+reason. Comparing SandTable's own fan-out estimate against the span at which measured success
+actually peaks is therefore a check on a widely used HMT capacity metric, not a metric to optimize.
+Conjecture C9.
+
+### Reporting obligation
+
+`intervention_rate` is never reported without `hold_fraction` beside it.
+
+---
+
+## CR-12 Analytic cross-check: the operator queue solved  (IMPLEMENTED 2026-08-21)
+
+`tools/queue_theory.py`. Closed-form latency cut-off and collapse span, an M/M/1-tail fixed point
+for goodput, and `queue_only_sim`, the request-and-abandon rules with the mission stripped out.
+The stripped model reproduces the interior optimum on its own, which is what establishes that the
+effect belongs to the queue rather than to terrain, sensing, or attrition. Validating the ABM
+against a tractable model is the discipline the build plan committed to. Tests in
+`tests/test_queue_theory.py`.

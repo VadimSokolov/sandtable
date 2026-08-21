@@ -1,0 +1,33 @@
+{
+  "name": "Leader-follower resupply convoy under EW",
+  "id": 11,
+  "size": [6000, 3000],
+  "dt": 1.0,
+  "duration": 1800.0,
+  "platform_types": {
+    "ugv": {"domain": 0, "max_speed": 12.0, "turn_rate": 0.6, "sensor_range": 1200.0,
+            "weapon_range": 900.0, "pk_base": 0.0015, "hp": 1.0},
+    "at_team": {"domain": 0, "max_speed": 0.0, "turn_rate": 0.0, "sensor_range": 1800.0,
+                "weapon_range": 1000.0, "pk_base": 0.006, "hp": 1.0}
+  },
+  "forces": [
+    {"side": 0, "ptype": "ugv", "count": 6, "count_param": "n_blue",
+     "spawn": [250, 1500], "spawn_spread": 20.0, "formation": "column", "spacing": 60.0},
+    {"side": 1, "ptype": "at_team", "count": 5, "count_param": "n_red",
+     "spawn": [3200, 1500], "spawn_spread": 400.0, "formation": "column", "spacing": 500.0}
+  ],
+  "objective": {"goal": [5750, 1500], "goal_radius": 150.0, "survive_fraction": 0.5},
+  "terrain": {"cell": 25.0},
+  "params": {
+    "n_blue": 6,
+    "n_red": 5,
+    "control_mode": "supervisory",
+    "blue_behavior": "leader_follow",
+    "follow_mode": "behavior",
+    "formation_spread": 60.0,
+    "comms_level": 0,
+    "route_bias": 0.5,
+    "tempo": 1.0,
+    "track_timeout": 40
+  }
+}

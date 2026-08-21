@@ -1093,6 +1093,41 @@ lag hurts more than fixed and predictive display recovers), Walker et al. 2012, 
 Several specific numeric values inside Davis 2010 and Nunnally 2012, and per-mode NT/IT values in
 Crandall 2005, could not be confirmed from accessible text.
 
+### D4a: The operator as a queue with impatient customers (added 2026-08-21, drives CR-10/CR-11)
+
+Fan-out in its original form (Olsen and Wood 2004, `10.1145/985692.985722`) is a duty-cycle
+identity: one operator can hold `1 + NT/IT` robots, where NT is how long a robot runs unattended
+and IT is how long it takes to service. It has no queue in it, so it predicts capacity as if every
+robot that wants attention gets it on arrival.
+
+Cummings and Mitchell 2008 (`10.1109/TSMCA.2007.914757`) is the correction: they add **wait time**
+and show that predicted capacity overstates achieved capacity because requests interact through a
+single operator. Their wait decomposition (wait in queue, wait from situation-awareness rebuild,
+wait due to interaction) is the reason SandTable models the operator as a shared server rather than
+as a per-agent gain.
+
+What neither literature carries, and what the SandTable operator has because the model demanded it,
+is **abandonment**: a vehicle that has waited longer than its patience stops waiting and drives on
+autonomously. That is an M/M/1+G queue, the Erlang-A family. The reference results are Garnett,
+Mandelbaum and Reiman 2002 (`10.1287/msom.4.3.208.7753`) for the impatient-customer design problem
+and Gans, Koole and Mandelbaum 2003 (`10.1287/msom.5.2.79.16071`) for the review, including the
+operational distinction this project turns out to need: **whether the server discovers the
+abandonment before or after it has spent the service slot.** A call center that works a call the
+customer already hung up on is spending capacity on nothing. That is exactly the published
+SandTable operator, and it is what produces the congestion collapse at large span (see the CR-10
+entry in `doc/autoresearch-conjectures.md`).
+
+The bridge back to HMT is that the design fix is not a comms fix. It is **admission control**: the
+operator tells a vehicle it cannot be helped, immediately, rather than leaving it stopped for its
+full patience window. That is a concrete, testable interface requirement, and it is the kind of
+recommendation the sponsor can act on without buying a better radio.
+
+**To read next.** (i) Whether any UV-supervision study measures abandonment explicitly rather than
+folding it into "operator error"; (ii) Nehme's discrete-event operator models, which are the closest
+existing queueing treatment of multi-UV supervision and may already contain a reneging term; (iii)
+the call-center literature on *announcements* (telling the customer the expected wait), which is the
+direct analogue of the `admit` policy and has its own empirical effect sizes.
+
 ## D5: Contested electromagnetic environment
 
 ### Tier A, peer reviewed

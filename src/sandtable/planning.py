@@ -131,14 +131,25 @@ def _behavior_targets(ent: Entities, scn: Scenario, bhv, tx_new, ty_new):
     from sandtable import behavior as _behavior
 
     gap = float(scn.params.get("formation_spread", 30.0))
-    foll = np.nonzero((bhv.state == _behavior.LEADER_FOLLOW) & ent.alive)[0]
+    # A column closes up at its destination: past the convergence line the follower drops the
+    # station and runs the lane in, exactly as the scripted planner already converges. Without this
+    # a follower stationed `rank*gap` behind the leader can never reach the objective at all, and
+    # the mission is unscoreable rather than merely hard.
+    gx = scn.objective.goal[0]
+    x_conv = gx - float(scn.params.get("converge_dist", 900.0))
+    foll = np.nonzero((bhv.state == _behavior.LEADER_FOLLOW) & ent.alive & (ent.x < x_conv))[0]
     for i in foll:
-        # Station `gap` metres behind the leader along the leader's own heading, taken from the
-        # follower's current picture of it, which is live or dead-reckoned per `follow_mode`.
+        # Station `rank * gap` metres behind the lead vehicle along its heading, taken from this
+        # follower's own picture of it (live or dead-reckoned per `follow_mode`). Rank comes from
+        # the spawn bookkeeping: `leader[i] = i - k` makes every follower reference the group's
+        # lead vehicle, so `i - leader[i]` is its place in the column. That star topology is the
+        # fielded leader-follower arrangement, and it is what makes the column comms-dependent:
+        # every follower needs the same lead vehicle's pose.
+        rank = max(int(i - ent.leader[i]), 1)
         v = np.hypot(bhv.trk_vx[i], bhv.trk_vy[i])
         ux, uy = (bhv.trk_vx[i] / v, bhv.trk_vy[i] / v) if v > 1e-6 else (1.0, 0.0)
-        tx_new[i] = bhv.trk_x[i] - gap * ux
-        ty_new[i] = bhv.trk_y[i] - gap * uy
+        tx_new[i] = bhv.trk_x[i] - rank * gap * ux
+        ty_new[i] = bhv.trk_y[i] - rank * gap * uy
 
     held = np.nonzero(bhv.holding)[0]
     tx_new[held] = ent.x[held]

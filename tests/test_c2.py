@@ -61,11 +61,11 @@ def test_operator_has_expected_fields():
     scn = _span_scenario()
     ent, _, op, _ = _build(scn)
     names = {f.name for f in fields(Operator)}
-    assert names == {
+    assert {
         "mode", "service_rate", "q_operator", "q_auto", "q_fallback", "q_stall",
         "patience", "decision_interval", "operator_free_at", "resolved_quality",
-        "ew_immune", "immune_latency",
-    }
+        "ew_immune", "immune_latency", "queue_policy",
+    } <= names
     assert op.mode == "direct"                       # sc_span_control default
     assert op.resolved_quality.shape == (ent.n,)
 

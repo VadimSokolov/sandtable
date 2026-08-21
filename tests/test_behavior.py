@@ -74,13 +74,27 @@ def test_teleop_stop_slows_the_mission_under_jamming():
         assert stop["time_to_objective"] > roll["time_to_objective"], f"C{rung}"
 
 
-def test_interventions_rise_with_jamming_under_direct_and_stay_zero_under_supervisory():
-    """CR-4: the metric must track comms contention, and supervisory must never pay it."""
+def test_operator_burden_rises_with_jamming_but_the_event_rate_falls():
+    """CR-4 / CR-11: jamming lengthens each hold, so counting events understates the burden.
+
+    The first version of this test asserted that `intervention_rate` rises with jamming. It does
+    not, and the reason is the finding: a held vehicle is one intervention however long it stays
+    held, and jamming pushes every request to the full `patience` timeout. Events per hour
+    therefore *fall* while the share of the mission spent stopped rises. `hold_fraction` is the
+    quantity that tracks the burden; the rate is reported beside it, never alone.
+    """
     scn = load_scenario(SPAN)
-    rates = [evaluate(scn, n_reps=16, seed=0, params={
+    runs = [evaluate(scn, n_reps=16, seed=0, params={
         "control_mode": "direct", "comms_level": r, "blue_behavior": "auto"}
-    )["intervention_rate"] for r in (0, 2, 4)]
-    assert rates[0] < rates[1] < rates[2], f"not monotone in jamming: {rates}"
+    ) for r in (0, 2, 4)]
+    held = [r["hold_fraction"] for r in runs]
+    rate = [r["intervention_rate"] for r in runs]
+    assert held[0] < held[1] < held[2], f"burden not monotone in jamming: {held}"
+    assert rate[2] < rate[0], f"event rate did not fall as holds lengthened: {rate}"
+
+
+def test_supervisory_never_pays_the_intervention_cost():
+    scn = load_scenario(SPAN)
 
     sup = evaluate(scn, n_reps=16, seed=0, params={
         "control_mode": "supervisory", "comms_level": 5, "blue_behavior": "auto"})

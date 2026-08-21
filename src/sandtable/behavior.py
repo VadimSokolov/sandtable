@@ -15,6 +15,11 @@ Scope boundary, to be stated wherever the intervention count is reported: this m
 dynamics, and terrain never raises autonomy difficulty, so `interventions` counts comms and
 operator-queue contention only. It is not comparable to a field-measured takeover rate.
 
+The layer also accumulates hold *durations*, not just hold counts. An intervention rate alone is
+ambiguous under jamming: heavier jamming makes each hold longer, which lowers the number of holds
+per hour even as the vehicle spends more of the mission stopped. The duration counters let
+`metrics` report the occupied fraction and the Olsen-Goodrich fan-out alongside the rate.
+
 Opt-in via ``params["blue_behavior"]``; ``None`` leaves the pre-existing path byte-identical.
 
 No change to `motion.py` is needed. `motion.step` clamps speed with ``v = min(v, dist/dt)``, so an
@@ -46,6 +51,8 @@ class Behavior:
     holding: np.ndarray           # bool per entity: held in place this tick
     was_holding: np.ndarray       # bool per entity: held on the previous tick (edge detection)
     interventions: np.ndarray     # int32 per entity: recovery-trigger transitions (CR-4)
+    hold_steps: np.ndarray        # int32 per entity: ticks spent held        (interaction time)
+    alive_steps: np.ndarray       # int32 per entity: ticks spent alive and driving-eligible
     trk_x: np.ndarray             # follower's on-platform leader track (CR-3)
     trk_y: np.ndarray
     trk_vx: np.ndarray
@@ -69,15 +76,27 @@ def build_behavior(scn: Scenario, ent: Entities) -> Behavior | None:
         raise ValueError(f"blue_behavior must be None, 'auto', or one of {sorted(_NAMES)}; got {spec!r}")
 
     n = ent.n
+    # Only blue ground carries a behaviour. Everything else (red, and the UAS overwatch, which has
+    # its own station logic in planning) stays on WAYPOINT so no target of theirs is ever overridden.
+    state = np.full(n, WAYPOINT, np.int8)
+    blue_ground = (ent.side == BLUE) & (ent.domain == GROUND)
+    if mode == LEADER_FOLLOW:
+        # The lead vehicle navigates; only followers hold a station on it.
+        state[blue_ground & (ent.role == 1)] = LEADER_FOLLOW
+    else:
+        state[blue_ground] = mode
+
     return Behavior(
         mode=mode,
         follow_mode=str(scn.params.get("follow_mode", "behavior")),
         teleop_stop=bool(scn.params.get("teleop_stop", True)),
         track_timeout=int(scn.params.get("track_timeout", 40)),
-        state=np.full(n, mode, np.int8),
+        state=state,
         holding=np.zeros(n, bool),
         was_holding=np.zeros(n, bool),
         interventions=np.zeros(n, np.int32),
+        hold_steps=np.zeros(n, np.int32),
+        alive_steps=np.zeros(n, np.int32),
         trk_x=ent.x.copy(), trk_y=ent.y.copy(),
         trk_vx=np.zeros(n), trk_vy=np.zeros(n),
         trk_age=np.zeros(n, np.int32),
@@ -111,6 +130,9 @@ def step(ent: Entities, bhv: Behavior, op, comms, scn: Scenario, k: int,
     bhv.holding = hold
     # Rising edge only, so a long hold counts as one intervention rather than one per tick.
     np.add.at(bhv.interventions, np.nonzero(hold & ~bhv.was_holding)[0], 1)
+    # Durations, for the fan-out estimate in `metrics` (CR-11). Counts only, no RNG.
+    bhv.hold_steps += hold
+    bhv.alive_steps += blue_ground
 
 
 def _follow(ent: Entities, bhv: Behavior, comms, scn: Scenario,
