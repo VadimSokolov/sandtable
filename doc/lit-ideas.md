@@ -1,15 +1,21 @@
-# FP6111 Literature: Human-Machine Teaming in a Virtual Prototyping Testbed
+# FP6111 Literature: Mission Design and Human-Machine Teaming
 
 Literature synthesis for VIPR-GS project FP6111, "Virtual Prototyping of Mission and Formation
 Concepts with Autonomy Enabled Ground and Air Systems." The deliverable is a testbed built as
 ProjectGL extensions, with SandTable as the fast pure-Python tier alongside it. Searched 2026-08-21
-across nineteen parallel dimensions in three rounds, against CrossRef, OpenAlex, arXiv, Semantic
+across twenty parallel dimensions in three rounds, against CrossRef, OpenAlex, arXiv, Semantic
 Scholar, and the local Zotero library.
 
 Every entry carries a resolved DOI or canonical arXiv ID, a recorded verification source and date,
 and a claim read from the abstract rather than inferred from the title. Where a claim could not be
 verified, that is stated rather than smoothed over. Nothing here enters `report/ref.bib` until it
 passes `report/tools/audit.py` check 1.
+
+**The two governing concepts.** *Mission design* is the design of mission and formation concepts,
+the project's title and its first promised outcome, scored on resilience, efficiency and operational
+feasibility. *Human-machine teaming* is the unit of analysis behind all four objectives: the operator
+and the machines together, not a vehicle in isolation. Every dimension below is included because it
+bears on one or both. Where a literature is interesting but serves neither, that is said plainly.
 
 **Evidence grades used below.** *Strong* means multiple independent literatures or a proof.
 *Partial* means real but bounded (asymptotic theory, or a domain that does not fully transfer).
@@ -37,10 +43,10 @@ any part of this document as complete.
 
 | # | Objective (verbatim from the SOW) | Dimensions | Coverage |
 | --- | --- | --- | --- |
-| 1 | Detect patterns of success and failure in human-machine collaboration using machine learning | D14 | round 3 |
-| 2 | Evaluate HMI designs that optimize cognitive load distribution | D12, partial D4, D7 | round 3 |
+| 1 | Detect patterns of success and failure in human-machine collaboration using machine learning | D14 | covered, see I21 |
+| 2 | Evaluate HMI designs that optimize cognitive load distribution | D12, partial D4, D7 | covered, see I19 |
 | 3 | Assess the effectiveness of direct versus supervisory control approaches | D4, D7, D1, D2, D3, D5, D6 | strong |
-| 4 | Extend mission engineering and kill web analysis to measure mission success, operational efficiency, and collaboration effectiveness | D13 | round 3 |
+| 4 | Extend mission engineering and kill web analysis to measure mission success, operational efficiency, and collaboration effectiveness | D13 | covered, see I18 |
 
 Objective (3) is the only one that rounds 1 and 2 covered properly. Objectives (1), (2) and (4)
 returned essentially zero hits on their own vocabulary in the round 1 and 2 output: no "kill web,"
@@ -50,8 +56,8 @@ no "mission engineering," no "cognitive load," no "process mining," no "data min
 
 | Research question | Dimensions | Coverage |
 | --- | --- | --- |
-| What metrics are most appropriate for evaluating mission success, efficiency, and feasibility in human-machine teaming? | D17 | round 3 |
-| What best practices and standards should be adopted for HMI, command protocols, and cybersecurity in multi-domain missions? | D12 (HMI), D15 (command protocols), D16 (cybersecurity) | round 3 |
+| What metrics are most appropriate for evaluating mission success, efficiency, and feasibility in human-machine teaming? | D17 | answered: the field has not converged, see I22 |
+| What best practices and standards should be adopted for HMI, command protocols, and cybersecurity in multi-domain missions? | D12 (HMI), D15 (command protocols), D16 (cybersecurity) | covered, see I19, I23, I20 |
 
 Both are open questions the project committed to ANSWERING, not background it can assume. RQ1 in
 particular means the five metric families below are a hypothesis, not a settled instrument set.
@@ -62,17 +68,17 @@ particular means the five metric families below are a hypothesis, not a settled 
 | --- | --- | --- |
 | Agent-based modeling of vehicles, sensors and operators | D10 | strong |
 | Reinforcement learning to explore strategies | D8 | strong |
-| **Bayesian** learning to explore strategies | D18 | round 3 |
-| ABM to deep-learning surrogate with uncertainty to RL, closed loop | D18, partial D9 | round 3 |
+| **Bayesian** learning to explore strategies | D18 | covered, see I25 |
+| ABM to deep-learning surrogate with uncertainty to RL, closed loop | D18, partial D9 | covered, see I17 and I25 |
 | Unscripted and emergent behavior generation | D8, D11, D10 | partial |
 | Cyber-physical elements: comms links, autonomy levels, mission planning | D1, D2, D5 | partial |
 | Cyber-physical elements: **power systems** | none | **uncovered** |
 | EW effect injection (jamming) | D5 | strong |
-| **Cyber** effect injection (spoofing, malware), distinct from EW | D16 | round 3 |
-| Simulated C2 interfaces for human-in-the-loop work | D19 | round 3 |
-| Command architectures: doctrinal planning versus bidding | D15 | round 3 |
-| Scenarios in SysML/LML traced to Army doctrine, Innoslate conformance flagging | D13, D14 | round 3 |
-| ML and data mining over decision, communication and state-transition logs | D14 | round 3 |
+| **Cyber** effect injection (spoofing, malware), distinct from EW | D16 | covered, notional at mission level |
+| Simulated C2 interfaces for human-in-the-loop work | D19 | covered, see I24 |
+| Command architectures: doctrinal planning versus bidding | D15 | covered, and the prior is wrong, see I23 |
+| Scenarios in SysML/LML traced to Army doctrine, Innoslate conformance flagging | D13, D14 | covered, no method exists to adopt |
+| ML and data mining over decision, communication and state-transition logs | D14 | covered, see I21 |
 
 ## The five promised metric families
 
@@ -81,7 +87,7 @@ particular means the five metric families below are a hypothesis, not a settled 
 | TTP effectiveness | mission success rate, time to objective, attrition | D10, D11, D17 | partial |
 | Coordination | communication frequency, teamwork graphs, task handoff | D17, D3 | thin |
 | Human-AI trust | operator surveys, override rates, trust calibration indices | D7, D17 | partial, and see I11 |
-| Adaptability | re-planning time, mission recovery after disruption | D17 | round 3 |
+| Adaptability | re-planning time, mission recovery after disruption | D17 | theory only, no instrument |
 | Contested performance | impact of EW and cyber actions on mission outcomes | D5, D16 | partial |
 
 Only "contested performance" and parts of "TTP effectiveness" are things SandTable currently
@@ -92,17 +98,17 @@ name should change before the metric is published.
 
 | Promised outcome | Dimensions | Coverage |
 | --- | --- | --- |
-| Novel autonomous formation concepts balancing human control and autonomy | D19, D1 | round 3 |
-| Evaluation of those formations on resilience, efficiency, operational feasibility | D17, D13 | round 3 |
-| Translation of mission requirements into human-technology-interface frameworks | D12, D13 | round 3 |
-| Published design patterns, evaluation metrics, testbed architectures | D17, D13 | round 3 |
-| Year 1 demonstration D1, simulated and hybrid, hardware-in-the-loop or emulated vehicles | D19 | round 3 |
+| Novel autonomous formation concepts balancing human control and autonomy | D19, D1 | covered |
+| Evaluation of those formations on resilience, efficiency, operational feasibility | D17, D13 | covered |
+| Translation of mission requirements into human-technology-interface frameworks | D12, D13 | covered |
+| Published design patterns, evaluation metrics, testbed architectures | D17, D13 | covered |
+| Year 1 demonstration D1, simulated and hybrid, hardware-in-the-loop or emulated vehicles | D19 | covered |
 
 | Year 1 task | Dimensions | Coverage |
 | --- | --- | --- |
-| RT1 Scenario requirements gathering and architecture design | D13, D19 | round 3 |
+| RT1 Scenario requirements gathering and architecture design | D13, D19 | covered |
 | RT2 Baseline testbed development, ABM integration | D10, D18 | partial |
-| RT3 Initial HMI evaluation and TTP modeling | D12, D14, D11 | round 3 |
+| RT3 Initial HMI evaluation and TTP modeling | D12, D14, D11 | covered |
 
 ## Residual gaps this review does not close
 
@@ -121,7 +127,7 @@ Stated plainly so they are not mistaken for coverage.
 
 # Part 1: Important Ideas
 
-Sixteen ideas in two groups, each ordered by how much it changes what the project should build or
+Twenty-five ideas in two groups, each ordered by how much it changes what the project should build or
 claim. Group A came from the autonomy and communication sweep, Group B from the algorithms and
 simulation-method sweep.
 
@@ -548,6 +554,384 @@ quality gain. This also finally consumes `formation_spread`, and it gives the le
 scenario that `doc/scenario.md` lists as a fielded GVSC thread with no SandTable counterpart. Design
 spec in `doc/blue_behavior_design.md`.
 
+## I17. The methodology figure, taken alone, describes prior art
+
+**Strong. Two independent publications already do it.**
+
+The proposal's central diagram is agent-based model to deep-learning surrogate with uncertainty to
+reinforcement learning and back. Presented as-is, that is no longer novel in mission engineering.
+
+Cetinkaya, Khodadadian and Topcu (`arXiv:2512.20589`, December 2025) publish a high-fidelity digital
+mission model plus agent-based simulation plus a PPO-trained coordinator, framed explicitly as
+mission engineering, and they cite Raz et al. 2024, which is this team's own foundation paper. Ye et
+al. 2025 (`10.1049/cth2.70064`) already combine deep RL with Bayesian inference on a kill chain.
+
+This is not fatal, it is a positioning problem, and it is much cheaper to fix now than after a
+reviewer finds it. The differentiators that survive are the **human in the loop**, the **contested
+electromagnetic environment**, and **doctrinal conformance**. None of those appear in the prior work.
+The proposal should name the prior art itself and claim the delta, rather than claiming the loop.
+
+A second, sharper positioning problem sits underneath. **Raz et al. 2024 has no human and no
+learning.** Its abstract describes a mission-focused ontology and domain-specific language, spatial
+and temporal consistency checking by set-based design and Allen's interval algebra, and evaluation of
+feasible SoS configurations using graph theory and multiattribute utility theory, on a notional
+sense-decide-effect problem. The evaluation is analytic, not simulation-driven. So objective (4)
+cannot be described as simply continuing that work in a "learn from simulation" direction; the bridge
+has to be built and stated. The good news is that the extension path is unusually clean: multiattribute
+utility over feasible configurations has an obvious slot for a collaboration attribute, and Allen's
+interval algebra is precisely the machinery a procedural-deviation check needs.
+
+## I18. Nobody has put a human inside a measured kill web, and that is objective (4)'s claim
+
+**Strong for the absence, five independent search framings. Strong for the remedy.**
+
+Objective (4) promises to extend kill-web analysis to measure collaboration effectiveness. The
+literature splits cleanly into two non-overlapping halves, and the gap between them is the objective.
+
+**Half one computes graph and matrix quantities over machine nodes.** Jiang et al. 2022
+(`10.1109/SOSE55472.2022.9812689`) on operation loops, Chen et al. 2024 (`10.3390/systems12010031`)
+computing SoS capability from two-terminal connectivity, Wang et al. 2026
+(`10.1007/s11227-026-08444-2`) evaluating kill-web closure under communication constraint from
+probability, time and link-count matrices. Not one has a human term in its state or objective.
+
+**Half two measures teams,** and is never evaluated on a kill web, a mission thread, or any
+engagement structure.
+
+The one partial exception is Fan, Li and Li 2018 (`10.1155/2018/5301752`), manned and unmanned
+collaborative combat capability on a network via information entropy. The project must cite it rather
+than claim an empty field, but its "manned" vehicle is a node with different parameters, not a modeled
+operator: no workload, no span of control, no override, no trust, no handoff. Even the DoD Mission
+Engineering Guide 2.0, which equates a mission architecture with a kill web in so many words, has no
+human as a measured element.
+
+**What this licenses.** That no published work computes a kill-web or mission-thread measure whose
+value depends on a modeled operator's decisions, and that instrumenting the kill web with
+operator-dependent terms is new. **What it does not license.** Claiming nobody has thought about
+humans in kill chains (the meaningful-human-control literature is substantial), or claiming kill-web
+mathematics is unexplored. It is well developed, mostly in Chinese defense-systems venues, and the
+project should build on it rather than restart.
+
+**Do not invent a collaboration-effectiveness index.** There is no published scalar with a formula,
+and Damacharla et al. 2018 (`10.1109/ACCESS.2018.2853560`) states in its abstract that no agreed
+benchmark set exists. But Wilkins et al. 2023 (`10.1002/sys.21730`, IDA-authored, Systems Engineering)
+decomposes team evaluation into Interaction (shared team perspective, cooperative behavior, resource
+allocation) and Performance (collective decision making, collective task performance), and its leaves
+map almost one-to-one onto the project's five promised metric families. Adopt it, and state the
+contribution as instantiating its leaves as computable functions of a run log and attaching the
+result to kill-web structure. That is novel, defensible, and deliverable in a year. Inventing a fresh
+index would be weaker and would draw fire.
+
+**And it constrains the experiment design.** Wilkins et al. argue that a team "might make suboptimal
+decisions but still have good or successful outcomes," so collective decision quality must be assessed
+**directly**, not inferred from outcome. Scoring collaboration effectiveness by regressing mission
+success on control modality is exactly the inference this literature says does not work. A direct
+decision-quality instrument is needed alongside the outcome measure.
+
+## I19. Cognitive load is modelable without a live human, and two plausible sentences are false
+
+**Strong for the recipe, one calibrated and cross-validated study. Strong for both contradictions.**
+
+Objective (2) promises to evaluate HMI designs that optimize cognitive-load distribution. The obvious
+objection is that a constructive simulation has no operator to measure. The literature answers it.
+
+**The recipe.** Donmez, Nehme and Cummings (`10.1109/TSMCA.2010.2046731`) use operator **utilization**
+as a real-time workload surrogate inside a discrete-event multi-vehicle simulation, calibrate the
+utilization-to-wait-time relation against 74 participants, and show it predicts accurately for team
+structures it was **not** calibrated on. That last clause is what makes it usable here: FP6111's first
+promised outcome is novel formation concepts, so a load model that only works on configurations it has
+already seen is worthless. Adopt utilization plus attention-switching wait time as the load metric
+rather than inventing an index. SandTable can compute both today: `c2.py` already models a single
+shared operator server with a queue, which is exactly the state this surrogate reads.
+
+**The credibility ceiling, to be stated whenever the number is reported.** Sarno and Wickens
+(`10.1177/154193129203600105`) put the classic computational workload models at 61 to 77 percent of
+variance explained across task-loading conditions. So this is a ranking instrument and an overload
+flag. It is not a NASA-TLX-comparable score, and it must never be presented as one.
+
+**False sentence one: "adaptive automation lowers operator workload."** Sauer et al.
+(`10.1080/00140139.2012.676673`) found performance-triggered *adaptive* automation **raised** perceived
+workload, fatigue and anxiety relative to letting the operator choose. Calhoun (`10.1177/00187208211037457`)
+names *adaptable* automation, operator-initiated, as the under-researched forefront. The distinction is
+adaptive (system decides) versus adaptable (operator decides), and the evidence favors the latter.
+
+**False sentence two: treating direct-to-supervisory as an ordinal ladder.** Jamieson and Skraaning
+(`10.1177/1555343417732856`) describe levels-of-automation frameworks as abstractions suffering a
+crisis of confidence. This compounds Bradshaw et al. 2013, already in D1. Two named modalities compared
+head to head is defensible. A monotone LOA scale is not, and the paper should not draw one.
+
+**What to measure instead of load level.** Ruff et al. (`10.1162/105474602760204264`) found automation
+level *interacted* with vehicle count and aid reliability across workload, situation awareness and
+trust, so there is no main effect to report cleanly. Cummings et al. 2014 (`10.1109/THMS.2014.2304962`)
+is the strongest modality result found, and its dependent variable is **robustness to increased
+workload** rather than workload level, with task-based self-allocation beating vehicle-based
+assignment. **Workload robustness is the right headline metric for objective (2)**, and it happens to
+be the quantity a C0-C5 ladder is already built to expose.
+
+**One free win.** Van de Merwe et al. (`10.1177/00187208221077804`), a PRISMA review of 17 experiments,
+finds transparency improves situation awareness and performance "without the cost of added mental
+workload," specifically for supervisory and proposal-response roles. So transparency is not the
+interesting HMI variable. Manipulate display **integration** instead.
+
+**The absence that is objective (2)'s opening.** There is no published metric for cognitive load
+*distribution across a human-machine team*, which is the proposal's exact wording, and no published
+mapping from a simulated load index to a subjective score. Both are real novelty openings. Both also
+mean the project must justify its statistic from first principles rather than cite prior art, and
+should budget for that argument.
+
+## I20. Network robustness gives formation design a computable constraint, and it is not connectivity
+
+**Strong. A theorem, a construction algorithm, and a solver.**
+
+This is the most directly reusable result in the whole review for **mission design**, because it turns
+"is this formation any good" into something scoreable.
+
+Sundaram and Hadjicostis (`10.1109/TAC.2010.2088690`) establish that **2f+1 vertex-disjoint paths
+suffice to tolerate f malicious agents, and 2f provably do not**. Guerrero-Bonilla, Prorok and Kumar
+(`10.1109/LRA.2017.2654550`, "Formations for Resilient Robot Teams") turn that into a
+formation-construction algorithm returning feasibility plus the required proximity relationships for a
+given team size and assumed f. Usevitch and Panagou (`10.1016/j.automatica.2019.108586`) make network
+robustness computable from the Laplacian by mixed-integer programming, so **every candidate formation
+can be scored**. Dibaji and Ishii extend the guarantees to double-integrator vehicle dynamics with
+delays; Saulnier et al. (`10.1109/LRA.2017.2655142`) turn it into a runtime maneuver constraint.
+
+**And it corrects an earlier idea in this document.** I2 proposes mapping ladder rungs to algebraic
+connectivity. LeBlanc et al. (`10.1109/JSAC.2013.130413`) state that **connectivity is not adequate**
+to characterize resilient consensus. A formation tuned for algebraic connectivity is not thereby robust
+to a compromised or spoofed agent. Report both metrics and expect them to disagree. Read I2 with this
+attached.
+
+**Two constraints that come with it.** N identical vehicles on one software baseline are close to a
+single point of failure, because redundant systems share vulnerabilities. And Lin et al.
+(`10.1109/SPW50608.2020.00027`) show a learned cooperative team's win rate collapsing from 98.9 percent
+to 0 percent when a single agent's observations are corrupted, so RL-derived formations should be
+expected to fail as a **cliff, not a slope**. That is a further argument for I12's position on where
+learning belongs.
+
+## I21. Objective (1) is two claims with different entitlements, and only one of them is causal
+
+**Strong. The distinction is stated explicitly in the data-farming literature.**
+
+The proposal promises to "detect patterns of success and failure in human-machine collaboration using
+machine learning" over "full logging of decisions, communications, and state transitions." That
+sentence conflates two activities with very different licences.
+
+**Designed-factor effects are causal.** Sanchez (`10.1109/wsc.2018.8632383`) licenses explicitly
+identifying cause and effect, but **only for factors the analyst deliberately varied in the design**.
+Control modality and ladder rung qualify, because the project sets them.
+
+**Emergent log patterns are hypothesis-generating only.** Everything mined out of the trace that was
+not a designed factor is observational, in a world the project itself built. Split objective (1) into
+these two claims and label them differently, or a reviewer will collapse them and discount both.
+
+There is a ready architecture for doing the second kind honestly: Bozorgi et al.
+(`10.1109/ICPM49681.2020.00028`) partition attributes into controllable and non-controllable, mine
+action rules, then use uplift trees to keep only rules with a causal effect.
+
+**The blunt warning to carry.** Hodges (`10.1287/opre.39.3.355`, *Operations Research*, "Six (Or So)
+Things You Can Do with a Bad Model") states in its abstract that in combat analysis the central models
+"are arguably almost entirely unvalidated and most will never be susceptible to adequate validation."
+Its RAND companion is titled *Is It You or Your Model Talking?*. This is the strongest published
+warning about mining patterns from a simulation you built yourself, and the project should cite it
+rather than wait for a reviewer to.
+
+**On conformance checking.** The algorithmics are off the shelf and mature: an IEEE standard event-log
+format, tooling, and a literature review (Dunzer et al., `10.1145/3329007.3329014`). But there is
+**zero** published process mining of military C2 or mission-simulation logs. So compiling a SysML/LML
+doctrinal model into a conformance-checkable normative model plus a standard event log is new work, and
+it is the contribution. **Innoslate should display the deviation report, not compute it.** Proposing an
+HMT extension to the event-log standard is a concrete standards contribution serving research
+question 2.
+
+**Two method constraints.** Permutation importance and partial dependence will over-credit correlated,
+mixed-type factors (Hooker et al., `10.1007/s11222-021-10057-z`; Strobl et al.,
+`10.1186/1471-2105-8-25`), which describes this project's factor set exactly. And effective coordination
+patterns were scenario-specific across four scenarios, so "published design patterns," a promised
+deliverable, must be scenario-conditioned and carry a transfer test.
+
+## I22. The answer to research question 1 is that the field has not converged
+
+**Strong. A twenty-year chain of four papers saying so.**
+
+RQ1 asks which metrics are most appropriate for human-machine teaming. The honest answer is that nobody
+knows, and that is a finding rather than a failure.
+
+Steinfeld et al. (`10.1145/1121241.1121249`) proposed common metrics and promised a toolkit. Murphy and
+Schreckenghost (`10.1109/HRI.2013.6483569`) found 42 metrics across 29 papers, most lacking any
+generalizable measurement mechanism, and concluded they "are not helpful for determining what autonomous
+capabilities and interactions are appropriate for what tasks." Damacharla et al.
+(`10.1109/ACCESS.2018.2853560`) state there is no agreed benchmark set. O'Neill et al.
+(`10.1016/j.chb.2023.107762`) find the construct validity of "human-autonomy team" still contested.
+FP6111 can contribute the convergence. It cannot treat metric selection as a lookup.
+
+**Only one of the five promised families has validated instruments.** Trust is strong (Krausman et al.,
+`10.1145/3530874`, a DEVCOM ARL toolkit). Coordination is partial: several measures are validated, but
+"teamwork graphs" and "task handoff metrics," both named in the proposal, returned genuinely empty
+searches and would be inventions. Adaptability has theory only (Burke et al.,
+`10.1037/0021-9010.91.6.1189` is a conceptual model with no instrument), so the usable formalism has to
+come from resilience engineering rather than team science. **And "contested performance" is not a metric
+family at all, it is a treatment condition.** That last point should be fixed in the project's own
+framing.
+
+**The hard constraint on the testbed, quantified.** McNeese et al. (`10.1177/0018720817743223`) compared
+synthetic-teammate teams against all-human teams using the same instruments: **mission-level performance
+matched, but target-processing efficiency, team situation awareness and verbal behaviors did not**. So
+the constructive tier can screen at scale on TTP effectiveness, resilience and coordination structure,
+all computable from logs, while trust and team-cognition strictly need humans. Constructive team-process
+numbers must be reported as internal comparisons, never as predictions of human-team values.
+
+**Two more contradicted assumptions.** Coordination stability relates to performance **nonlinearly**,
+with synthetic-agent teams rigid and worse (Demir et al., `10.1109/THMS.2018.2877482`), and more process
+is not uniformly better (Crawford and LePine, `10.5465/amr.2011.0206`). A monotone coordination score
+gets the sign wrong. Separately, a single weighted mission-success score is hard to defend at all:
+Hazelrigg (`10.1115/1.2826864`) on Arrow's theorem, Das and Dennis (`10.1007/BF01197559`) on weighted
+sums missing non-convex Pareto regions, and Ravallion (`10.1093/wbro/lkr009`) on mashup indices. Report a
+dashboard plus a non-dominated set, not an index.
+
+## I23. The proposal's market prior is not supported, so promise the crossover instead
+
+**Strong. Three independent head-to-head comparisons.**
+
+The proposal promises to compare doctrinal planning against bidding-based decision systems, with the
+implicit expectation that bidding improves decision-making effectiveness. The literature does not
+support that prior.
+
+Badreldin, Hussein and Khamis (`10.1155/2013/256524`) found a **centralized optimizer beat market-based
+allocation on both allocation quality and compute** for heterogeneous, heavily constrained problems.
+Kalra and Martinoli (`10.1007/4-431-35881-1_10`) found markets win only when information is accurate;
+when it is not, a cheap threshold mechanism matches market quality at a fraction of the expense. Van der
+Horst and Noble (`10.1109/SASOW.2010.8`) explicitly declined to name a winner, mapped the
+parameter-space boundary instead, and warned that partisans of each architecture build scenarios that
+suit it. **FP6111 should promise to locate the crossover, not to show that bidding wins.** That is both
+more defensible and a better fit to what the testbed is for.
+
+**The comms result is reusable as-is, and it is the high-value find.** Otte, Kuhlman and Sofge
+(`10.1007/s10514-019-09828-5`) sweep six auction mechanisms from perfect to nonexistent communication
+under **both** Bernoulli and Gilbert-Elliot channels, with closed-form expectations for two mechanisms
+and hardware validation. Mechanisms that are identical at perfect comms **reorder as the link degrades**,
+which is precisely this project's thesis, arriving from an independent direction. Two cautions: their
+failure model is a lossy auctioneer-to-bidder star, not the peer-consensus mesh that consensus-based
+bundle algorithms use, so curves must not be transferred between those two arms; and **Gilbert-Elliot,
+being bursty, is the right jamming model**, which the C0-C5 ladder should adopt.
+
+**The doctrinal arm has to be built.** Every search for a doctrine-derived allocation algorithm came back
+empty; what exists is multi-criteria decision analysis for course-of-action *evaluation*, not allocation.
+Kewley's agent-based model of Auftragstaktik (`10.1109/WSC.2004.1371410`) is the closest ancestor and it
+had to invent its own baseline. So the promised comparison is a **modeling exercise, not a measurement**,
+and the proposal should say so. The recovery is good: encode the doctrinal arm as a procedure traced to
+FM 5-0 and ATP 3-90 and checkable against the model, which makes it auditable by construction and turns
+the gap into a contribution.
+
+**A methodological trap.** Kishimoto and Nagano (`10.1609/icaps.v26i1.13786`) showed severe
+synchronization overhead that serial evaluation hides entirely. A serial simulator **silently favors
+bidding**, because it never charges the auction its real coordination cost. SandTable must charge both
+arms an explicit message and time budget or the comparison is rigged before it starts.
+
+**Absence worth exploiting.** There is no human anywhere in this literature's markets. A bidding
+architecture with a human approval gate on awards is unstudied, and it is exactly supervisory control of
+a market, which is objective (3).
+
+## I24. Fuse the small human study with the large constructive study, and copy the Finnish design
+
+**Strong for the method, strong for the design precedent.**
+
+FP6111 will have a few human-in-the-loop runs and a great many constructive runs. That looks like a
+weakness. It is a known problem with a published method.
+
+**The method.** Schlicht, Lee, Wolpert, Kochenderfer and Tracey (`arXiv:1408.2053`) give a formal
+multi-fidelity approach to fusing a few expensive human-in-the-loop data points with plentiful cheap
+data. It is the same machinery as the multi-fidelity Bayesian optimization already in the bibliography,
+which means I13 and this idea are one workstream, not two. Their cheap tier is crowdworkers rather than a
+simulator, so FP6111 would be extending it to simulator-as-low-fidelity-source and must fit an explicit
+discrepancy term. **Naming that extension turns the awkward ProjectGL/SandTable split into the
+methodological contribution.**
+
+**The sample-size problem, and the way around it.** Laboratory HITL studies land at n = 24, 36, 39, 42,
+64, or about 10 three-person teams per condition. Brysbaert (`10.5334/joc.72`) shows a two-level
+within-subjects contrast needs more than 50 participants at d = 0.4, and an interaction needs 100 to 200
+or more. So a conventional lab design cannot support the interaction FP6111 cares about. But two Finnish
+studies reach **n = 470** (`10.1136/military-2025-003188`, virtual platoon defence over 44 skirmishes)
+and **n = 495** (`10.54941/ahfe1005912`, live simulation with an armoured brigade), because the unit of
+analysis is a group-versus-group exercise rather than one operator at a console. The second also runs
+teleoperated UGVs in half its scenarios and Wizard-of-Oz "mature autonomy" in the other half, which is
+objective (3) and the Year 1 emulated-vehicle requirement **in a single experiment**. Copy this design.
+
+**No validated operator model is available.** The ACT-R synthetic teammate (`10.1007/s10588-010-9065-3`)
+is the best artefact and its own abstract calls validation "initial." Combined with the McNeese result in
+I22, the policy is: a calibrated operator model may carry mission-level metrics in the constructive tier;
+coordination and trust metrics must come from human runs.
+
+**And the "novel formation concepts" claim is the most exposed one in the proposal.** An ARL survey
+(`arXiv:1606.01288`) states in its abstract that squad-scale coordinated behaviours are "far more complex
+than, for example, formation control." Reframe the deliverable as composition plus task allocation plus
+asset-release policy under an active enemy, not formation geometry. Supporting this: no peer-reviewed
+evaluation of **ground** manned-unmanned formations exists, which licenses first-of-kind novelty and
+simultaneously denies any baseline to compare against.
+
+## I25. The loop's novelty is the surrogate stage, and its danger is intervention, not error
+
+**Strong. Four published fragments, none of them the whole; one direct empirical warning.**
+
+Read this together with I17, because the two findings look contradictory and are not. I17 shows that
+agent-based model plus reinforcement learning, framed as mission engineering, is already published.
+This idea shows that the **three-stage** loop, with a deep surrogate carrying uncertainty in the
+middle, has no published precedent as a composite. Put them together and the project's novelty
+sharpens to something defensible and narrow: **the uncertainty-carrying surrogate stage, plus the
+human, the contested electromagnetic environment, and doctrinal conformance.** Claim that, not the
+loop.
+
+**Four fragments, none complete.** Lamperti et al. (`10.1016/j.jedc.2018.03.011`) do ABM plus ML
+surrogate plus iterative sampling, but for calibration rather than RL. Lye et al.
+(`10.1016/j.cma.2020.113575`, ISMO) do deep surrogate plus optimizer plus retraining feedback **with an
+exponential convergence proof**, but PDE-constrained and with no RL. Lassen et al.
+(`arXiv:2510.07971`) put a neural surrogate inside a multi-agent RL environment loop and, importantly,
+include a surrogate-versus-simulator **policy-equivalence test**, but with no ABM, no UQ stage and no
+retraining arrow. Zheng et al. (`10.1126/sciadv.abk2607`, the AI Economist) put RL inside an ABM with no
+surrogate. **Name ISMO as the parent architecture and adopt the policy-equivalence check as the
+acceptance criterion.** That converts the proposal's figure from a diagram into an instantiation with a
+published convergence result and a published test.
+
+**The failure mode is not what people guard against.** Dyer et al. (NeurIPS 2024,
+`10.52202/079017-0686`) show empirically that conventionally trained surrogates **misjudge intervention
+effects and misguide decision-makers toward suboptimal interventions**. FP6111's RL stage intervenes on
+formation, control mode and comms posture, so the surrogate must be trained on **interventional** data
+by design, not on a passive sample. Three supporting warnings: the policy exploits regions where data is
+insufficient (`arXiv:1802.10592`); incorrect convergence occurs if the approximate model has false
+optima (`10.1109/tevc.2002.800884`); and, most usefully, **one-step prediction likelihood is
+uncorrelated with control performance** (`arXiv:2002.04523`), so **a low surrogate RMSE is not evidence
+that the RL result transfers**. Report the policy-equivalence test instead of the fit statistic.
+
+Mitigations that carry published support: model ensembles, uncertainty-penalized reward giving a
+provable lower bound on true return (MOPO, `arXiv:2005.13239`), short rollouts branched from real ABM
+states (MBPO, `arXiv:1906.08253`), and mandatory true-ABM evaluations every outer iteration, which
+Booker et al. (`10.1007/BF01197708`) show is the only route to a convergence guarantee.
+
+**Deep-surrogate uncertainty is not calibrated out of the box.** Networks are poorly calibrated by
+default (`arXiv:1706.04599`); post-hoc calibration fails under distribution shift while
+model-marginalizing methods hold up (`arXiv:1906.02530`); ensembles are **not** automatically calibrated
+and should be temperature-scaled **after** averaging (`arXiv:2007.08792`); evidential regression is a
+heuristic rather than exact UQ (`10.1609/aaai.v37i8.26096`). Recommended position: deep ensemble,
+temperature scaling after averaging, and **split conformal against fresh ABM runs as the reported
+coverage number, re-measured every retraining round**, because the loop itself breaks exchangeability
+(`arXiv:1904.06019`). This is the concrete answer to "what does the uncertainty box in the figure
+actually contain."
+
+**Bayesian learning, which the proposal names and nothing else in this review covered.** The cluster is
+now supplied: a Bayesian RL survey (`10.1561/2200000049`), VariBAD (`arXiv:1910.08348`), Bayesian
+Delegation (`10.1111/tops.12525`), trust-POMDP (`10.1145/3359616`), DESPOT (`10.1613/jair.5328`). Two
+design consequences worth acting on. **Doctrine can be framed as a prior over agent policies** rather
+than hard-coded behavior trees, which is a more graceful formulation than I15's blackboard problem and
+connects objective (4)'s doctrinal conformance to the learning stage. And **Bayesian Delegation supplies
+a decentralized, communication-free third arm** to the doctrinal-versus-bidding comparison of I23, one
+that should degrade gracefully under jamming where both existing arms will not.
+
+**The hard constraint, and it is a real risk to I13.** No deep neural surrogate of any military or
+combat ABM surfaced anywhere. The single defense-domain instance, an AFRL dogfight simulation
+(`arXiv:1703.09310`), reports that **standard Gaussian-process surrogate optimization failed** because
+combat objectives are "highly volatile," and needed purpose-built repeat sampling. That is a novelty
+opening and a warning at once: the surrogate stage may simply not fit a combat objective without
+deliberate replication design. Budget for that, and do not assume the multi-fidelity machinery of I13
+transfers unexamined.
+
 # Part 2: Comprehensive Review
 
 | Dim | Topic | Verified | Notable absence found |
@@ -564,6 +948,14 @@ spec in `doc/blue_behavior_design.md`.
 | D9 | Optimization, DOE, surrogates | 16 + 18 | No multi-fidelity precedent in combat sim |
 | D10 | ABM combat simulation as method | 15 + 5 grey | No general "low fidelity holds when X" |
 | D11 | Red and blue behavior policies | 19 + 3 grey | No scripted-vs-adaptive red study in mission sim |
+| D12 | Cognitive load and HMI | 36 | No metric for load *distribution* across a team |
+| D13 | Mission engineering and kill webs | 22 + grey | No human inside a measured kill web |
+| D14 | ML pattern discovery from logs | 27 | Zero process mining of military C2 logs |
+| D15 | Command architectures, bidding | 32 + 5 grey | No human in the market, anywhere |
+| D16 | Cyber effects, distinct from EW | 25 | No mission-level cyber effect model |
+| D17 | Human-machine teaming metrics | 31 | "Teamwork graphs", "task handoff" are inventions |
+| D18 | Surrogate-RL loop, Bayesian agents | 37 + 3 grey | No deep surrogate of any combat ABM |
+| D19 | MUM-T and human-in-the-loop design | 31 + 5 grey | No evaluation of *ground* MUM-T formations |
 
 ## D1: Ground military vehicle autonomy
 
@@ -971,6 +1363,233 @@ priorities is "almost impossible" past roughly 20 behaviors).
 teaming ADA430100 (DTIC unreachable all session); any study quantifying scripted versus adaptive red in
 mission-level combat simulation; OneSAF primary documentation; NPS theses via DTIC.
 
+## D12: Cognitive load, workload measurement, and HMI for supervisory control
+
+Serves objective (2) and the HMI half of research question 2. Thirty-six verified Tier A entries, all
+CrossRef-resolved with abstracts read; full file in the session scratchpad.
+
+**Can load be modeled rather than measured?** Yes, with the caveats in I19. Beyond Donmez et al., the
+computational-operator-model line includes queueing models of the operator (Liu et al.,
+`10.1145/1143518.1143520`) and predictive workload modeling in systems engineering (Colombi et al.,
+`10.1002/sys.21210`). Wickens' multiple resource theory (`10.1518/001872008X288394`) supplies the
+structure that makes a load estimate more than a task count: load is not scalar, and two tasks
+competing for the same resource cost more than two that do not.
+
+**Does supervisory control lower load?** No: it changes its character. See I19. The practical
+consequence is that objective (2) should report workload robustness and attention-switching cost, not
+a workload level, because a level comparison invites an interaction the design cannot resolve.
+
+**Physiological measurement is real but does not transfer.** EEG-based workload classification reaches
+87 percent within-task but only 44.8 percent cross-task (Baldwin and Penaranda,
+`10.1016/j.neuroimage.2011.07.047`). If the Year 1 human-in-the-loop demonstration plans EEG-driven
+adaptation, per-operator in-scenario calibration is a budget line and a schedule risk, not a footnote.
+HRV and eye-tracking entries are in the file; none of them remove the calibration problem.
+
+**Transparency versus integration.** Transparency is close to free (I19). The Situation-awareness-based
+Agent Transparency model (Chen et al., `10.1080/1463922X.2017.1315750`) is the framework to cite if the
+project builds an interface, but it is not where the experimental leverage is.
+
+**Notable absences.** No metric for cognitive load distribution across a human-machine team. No
+published mapping from a simulated load index to a subjective score. And, directly relevant to a
+project whose title says ground **and air**: no workload study of a single operator supervising a
+**mixed ground-and-air** formation. The fan-out and span-of-control numbers in D4 come from UAV
+supervision, so they cannot be assumed to transfer to UGVs, still less to a mixed team. If the project
+sets `span_capacity` from that literature, the transfer assumption has to be stated.
+
+## D13: Mission engineering, kill webs, and system-of-systems analysis
+
+Serves objective (4). Twenty-two verified Tier A entries plus grey literature; full file in the
+session scratchpad.
+
+**What is actually computed on a kill web.** The mathematics exists and is mature. Jiang et al. 2022
+(`10.1109/SOSE55472.2022.9812689`) count operation loops with node capability and time efficiency.
+Chen et al. 2024 (`10.3390/systems12010031`) deliberately build a capability measure from
+**two-terminal connectivity** so that it does NOT depend on the number of kill chains. Wang et al.
+2026 (`10.1007/s11227-026-08444-2`) evaluate kill-web **closure under communication constraint** from
+probability, time and link-count capability matrices, which is the closest published work to this
+project's contested-comms framing. Import these rather than reinvent.
+
+**A KPI warning.** Chen et al. make the non-dependence on chain count an explicit design goal. If the
+project plans "closed kill chains per mission" as a KPI, that quantity is expensive to compute and
+ill-conditioned, being highly sensitive to graph density. Two-terminal connectivity and matrix-based
+closure are the published alternatives, and both change what the KPI means. Decide before the metrics
+freeze, because this is expensive to retrofit.
+
+**Domain transfer risk.** Most of the computational kill-web literature is Chinese defense-systems
+research (the NUDT operation-loop line and its descendants) in reliability, complex-networks and
+supercomputing venues. The mathematics is sound and reusable. The scenarios are air and naval, the
+node taxonomies are air-defense flavored, and none of it is validated against ground maneuver
+formations. Import the metric, not the parameterization.
+
+**Mission success is a rare threshold event.** No mission-engineering paper found treats mission
+success as a probability estimated with variance control. MEG 2.0 states measures of success as target
+and threshold values; the journal papers report point comparisons. The machinery lives in reliability
+engineering instead: Yang et al. 2020 (`10.1155/2020/8686717`) give importance sampling with failure
+biasing. Bridging the two is an easy and defensible methodological contribution for objective (4), and
+it matters practically, because crude Monte Carlo will waste SandTable's run budget on a threshold
+event.
+
+**Interoperability is a deliverable the proposal does not name.** Tolk 2023 (`10.1002/sys.70016`)
+argues that technical connection without conceptual alignment is not meaningful interoperability. The
+project runs ProjectGL, SandTable, and an MBSE model, and will claim low-fidelity screening transfers
+to the high-fidelity testbed. That claim needs a documented shared conceptual model, and the Levels of
+Conceptual Interoperability Model is the instrument reviewers will expect.
+
+**MBSE and doctrine tracing.** Cite Vaneman 2016 (`10.1109/SysCon.2016.7490581`) as the peer-reviewed
+anchor for LML. **Innoslate has essentially no peer-reviewed literature**: vendor pages and a course
+handout only. Treat it as tooling, never as a methodological citation.
+
+**Genuinely empty: automated doctrinal-conformance checking of a simulation log.** Searches for
+process-mining conformance checking applied to C2, for doctrine ontologies driving course-of-action
+validation, and for automated checking against the Universal Joint Task List all returned nothing on
+point. Two mature technique families exist and have never been joined to this problem: conformance
+checking from process mining, and runtime verification with temporal-logic monitors. So the
+proposal's "Innoslate flags procedural deviations using model logs" can be presented as novel, but
+there is no method to adopt, no evaluation protocol and no benchmark. The project must import one of
+those two families and say which. Presenting it as a configuration of Innoslate would be an overclaim.
+
+**Could not verify, do not cite yet.** Li et al. 2017 on operation-loop structural robustness
+(`10.1080/00207721.2016.1212429`), the natural foundational citation and the most cited in that line,
+returned no abstract anywhere in the cascade. Combs et al. 1995 on Universal Joint Task List MOEs in
+JTLS (`10.1109/WSC.1995.478973`), potentially the earliest prior art for tying simulation MOEs to a
+doctrinal task list, is title-only. Two further SoS papers were excluded rather than guessed.
+
+**Cite with care.** Zhao and Zhou 2026 is an arXiv cs.ET preprint with a quantum-computing framing
+whose central claims are not independently validated. Cite it for its statement of the kill web as a
+generalization of F2T2EA and for the absence argument, never for a result.
+
+## D14: ML and data mining for patterns of success and failure
+
+Serves objective (1). Twenty-seven verified entries. Headline in I21.
+
+**The entitlement split** is the whole finding: designed factors give causal claims, mined log patterns
+give hypotheses. Bankes' exploratory modeling (`10.1287/opre.41.3.435`) and scenario discovery
+(`10.1016/j.envsoft.2015.11.020`) are the honest framings for the second kind.
+
+**Conformance checking is mature; its application here is not.** An IEEE event-log standard, tooling,
+and a state-of-the-art review exist (`10.1145/3329007.3329014`), and Dunzer et al. note the field
+narrows onto control flow. Zero published process mining of military C2 or mission-simulation logs.
+
+**External validation of ML-discovered TTPs: essentially nobody.** One study validates only against an
+expert-written index; another evaluates comprehensibility. The single external check found benchmarks a
+constructive simulation against National Training Center exercise data, and it is from 1997 and not ML.
+Novelty is available for merely attempting external validation.
+
+**Method traps.** Permutation importance and partial dependence over-credit correlated, mixed-type
+factors (`10.1007/s11222-021-10057-z`, `10.1186/1471-2105-8-25`). Leakage in ML-based science is a
+documented reproducibility problem. Sensitivity analysis practice is widely poor
+(`10.1016/j.envsoft.2019.01.012`). Oreskes et al. (`10.1126/science.263.5147.641`) remains the
+philosophical backstop on what simulation validation can mean at all.
+
+## D15: Command architectures, doctrinal planning versus bidding
+
+Serves the command-protocol half of research question 2 and a promised comparison. Thirty-two verified
+Tier A entries plus grey literature; `report/ref.bib` had **zero** prior coverage of this dimension.
+Headline in I23.
+
+**The canon.** Contract Net (`10.1109/TC.1980.1675516`), the Gerkey and Mataric formal taxonomy
+(`10.1177/0278364904045564`) and its iTax successor (`10.1177/0278364913496484`), consensus-based bundle
+allocation (`10.1109/TRO.2009.2022423`) and its decentralized descendants.
+
+**The comparisons that matter** are in I23: three independent head-to-heads that decline to crown
+bidding, and the Otte et al. comms sweep (`10.1007/s10514-019-09828-5`) showing mechanism reordering as
+the link degrades.
+
+**Two things to fix in the experiment before it runs.** Charge both arms an explicit message and time
+budget, because serial simulation hides synchronization overhead and silently favors bidding. And adopt
+a Gilbert-Elliot bursty channel for the ladder, because that is the model the reusable comms result uses
+and it is the better jamming analogue.
+
+## D16: Cyber effects on autonomous and multi-agent systems
+
+Serves the cybersecurity half of research question 2 and the promised cyber injection. Twenty-five
+verified entries. Headline in I20.
+
+**Effects that can be modeled as perturbations.** GPS and GNSS spoofing against a UAV
+(`10.1002/rob.21513`, `10.1109/JPROC.2016.2526658`), LiDAR spoofing against a learned detector
+(`10.1145/3319535.3339815`), acoustic injection against MEMS inertial sensors
+(`10.1109/EuroSP.2017.42`), false data injection (`10.1145/1952982.1952995`).
+
+**Resilient estimation and control.** Fundamental limits on tolerable corrupted sensors
+(`10.1109/TAC.2014.2303233`), attack detection and identification for cyber-physical systems
+(`10.1109/TAC.2013.2266831`), and a control-theoretic survey (`10.1016/j.arcontrol.2019.04.011`).
+
+**Answer to whether a mission-level cyber effect model exists: no.** There is no peer-reviewed,
+empirically grounded one. The project must state that its cyber injection is **notional at mission
+level**. The defensible stronger position is that component-level magnitudes come from published
+measurements and their propagation to mission outcome is the modeled hypothesis the testbed exists to
+explore. DoD's own Cyber Table Top framing supports this: it defines first steps for testing that
+*collects* the empirical data, which is a direct official warrant for the contribution.
+
+**Cyber must stay separate from EW in the model.** D5 covered jamming, a physical-layer attack on
+signal-to-noise. This dimension is integrity, authentication, software and network. No usable published
+taxonomy separates them, so the project has to define the separation itself and say so.
+
+**Absences worth exploiting.** No published work on cyber effects against the **human supervisory-control
+loop**, which is a clean novelty claim intersecting the trust metric family. And none against
+**bidding-based task allocation**, which the project already promises to compare.
+
+## D17: Metrics for human-machine teaming
+
+Serves research question 1 and all five metric families. Thirty-one verified entries, all CrossRef
+200-resolved. Headline in I22.
+
+**Frameworks.** Steinfeld et al. (`10.1145/1121241.1121249`), the Murphy and Schreckenghost survey
+(`10.1109/HRI.2013.6483569`), and the contested construct validity of human-autonomy teaming
+(`10.1016/j.chb.2023.107762`).
+
+**Trust is the one solid family**, with a measurement catalogue and a DEVCOM ARL toolkit
+(`10.1145/3530874`), plus behavioral calibration detection as an alternative to self-report.
+
+**Resilience supplies what team science does not.** Adaptability has a conceptual model
+(`10.1037/0021-9010.91.6.1189`) but no instrument, so the usable formalism for re-planning time and
+mission recovery comes from resilience engineering rather than from teamwork research.
+
+**Aggregation.** Do not build a weighted mission-success index. Arrow-theorem implications for design
+(`10.1115/1.2826864`), weighted sums missing non-convex Pareto regions (`10.1007/BF01197559`), and the
+mashup-index critique (`10.1093/wbro/lkr009`) together make it indefensible. Report a dashboard and a
+non-dominated set.
+
+**No peer-reviewed MOE/MOP standard exists for mission engineering.** Objective (4) must cite the DoD
+Mission Engineering Guide v2.0 and label it grey.
+
+## D18: Deep surrogates with uncertainty, RL in the loop, and Bayesian agents
+
+Serves the proposal's methodology figure and its promise of Bayesian learning. Thirty-seven verified
+Tier A entries, DOIs CrossRef-resolved and arXiv IDs API-verified. Headline in I25.
+
+**Surrogates of agent-based models.** Calibration by ML surrogate (`10.1016/j.jedc.2018.03.011`),
+surrogates for ABM more generally (`10.1371/journal.pone.0263150`), task-oriented surrogates for tipping
+points (`10.1038/s41467-024-48024-7`), and simulation-based inference as the surrounding frontier
+(`10.1073/pnas.1912789117`). Calibration comparison and identifiability problems are covered in the file.
+
+**Model discrepancy is not optional.** Brynjarsdottir and O'Hagan (`10.1088/0266-5611/30/11/114007`)
+show that ignoring the discrepancy term produces confidently wrong physical parameters, which bears
+directly on I13's two-tier calibration plan.
+
+**Bayesian agents**, the cluster nothing else in this review reached: survey, VariBAD, Bayesian
+Delegation, trust-aware POMDP decision making, DESPOT, a POMDP review, and Bayesian reward extrapolation.
+See I25 for the two design consequences.
+
+## D19: Manned-unmanned teaming, human-in-the-loop and hybrid experimentation
+
+Serves the ground-and-air scope, objective (3), and the Year 1 demonstration. Thirty-one verified Tier A
+entries plus grey literature. Headline in I24.
+
+**The aerial relay is well supported**, with a closed-form line-of-sight manifold, a measured VHF relay
+beyond 50 km at 500 m altitude, and a 38 percent reduction in UGV exposure from threat-directed aerial
+sensing. **But nothing covers relay behaviour under jamming**, which is exactly the regime this project
+studies, and CR-6 in `doc/sandtable-todo.md` notes that endurance, the relay's binding constraint, is
+unmodeled.
+
+**Wizard-of-Oz is a legitimate instrument** for standing in for autonomy that does not exist yet, and one
+of the large Finnish studies uses it as half of a two-arm design. That is the cheapest credible route to
+the Year 1 hybrid demonstration.
+
+**The exposed claim.** An ARL survey (`arXiv:1606.01288`) states that squad-scale coordinated behaviours
+are far more complex than formation control, and no peer-reviewed evaluation of ground manned-unmanned
+formations exists. First-of-kind novelty is available, and there is no baseline to compare against.
+
 ## D0: Seed set and the Vinitsky cluster
 
 Covered in I4 and I9. One item needs explicit handling.
@@ -1034,3 +1653,46 @@ From the algorithms and simulation-method sweep:
     FSMs, and recovering the expressiveness costs the readability the migration was for (I15).
 18. **Write the specific-intended-use statement and acceptability criteria in advance,** and add
     numeric validation metrics rather than monotonicity plots (D10 credibility gap).
+
+From the SOW-gap sweep (D12 to D19):
+
+19. **Name the prior art for the methodology figure and claim the delta.** ABM plus RL framed as mission
+    engineering is published, and it cites this team's own foundation paper. The surviving novelty is the
+    uncertainty-carrying surrogate stage plus the human, the EM environment, and doctrinal conformance
+    (I17, I25). Highest-priority positioning fix in this round.
+20. **Adopt Wilkins et al. 2023 as the definition of collaboration effectiveness** rather than inventing
+    an index, and state the contribution as instantiating its leaves from a run log and attaching them to
+    kill-web structure (I18).
+21. **Do not infer decision quality from mission outcome.** A direct decision-quality instrument is
+    needed alongside the outcome measure (I18).
+22. **Adopt operator utilization plus attention-switching wait as the load metric** (I19), and always
+    report the 61 to 77 percent variance-explained ceiling with it. Queued as CR-7.
+23. **Delete any sentence claiming adaptive automation lowers workload, and do not build an ordinal
+    levels-of-automation scale** (I19). Report workload robustness instead of workload level.
+24. **Split objective (1) into designed-factor effects and mined log patterns,** labelled with different
+    entitlements, and cite Hodges 1991 before a reviewer does (I21).
+25. **Say that Innoslate displays the deviation report and does not compute it,** and name which
+    technique family (process-mining conformance checking or temporal-logic monitoring) is being imported
+    (I21).
+26. **Reframe the bidding comparison as locating the crossover,** not as showing bidding wins, and state
+    that the doctrinal arm is a modeling exercise because no doctrine-derived allocation algorithm exists
+    (I23).
+27. **Charge both command arms a message and time budget, and make the ladder channel bursty** (I23).
+    Queued as CR-9. If the crossover rung moves under a Gilbert-Elliot channel at the same mean drop
+    rate, that is a finding.
+28. **Score formations by network robustness as well as algebraic connectivity, and expect disagreement**
+    (I20). Queued as CR-8. Attach the LeBlanc caveat to I2 wherever connectivity is used.
+29. **State that mission-level cyber effects are notional,** with component-level magnitudes drawn from
+    published measurement and their propagation the modeled hypothesis (D16).
+30. **Copy the Finnish group-versus-group design** to escape the human-in-the-loop sample-size wall, and
+    name the extension of multi-fidelity fusion to simulator-as-cheap-tier as the methodological
+    contribution (I24).
+31. **Reframe "novel formation concepts"** as composition plus task allocation plus asset-release policy
+    under an active enemy, since ARL states squad-scale behaviour is far more complex than formation
+    control and no ground MUM-T baseline exists (I24).
+32. **Report the policy-equivalence test, not the surrogate RMSE,** and train the surrogate on
+    interventional data by design (I25).
+33. **Budget for the possibility that the surrogate stage does not fit.** The one defense-domain attempt
+    found standard GP surrogate optimization failed on combat objectives (I25).
+34. **Report a dashboard and a non-dominated set, never a weighted mission-success index** (I22).
+35. **Stop calling "contested performance" a metric family.** It is a treatment condition (I22).

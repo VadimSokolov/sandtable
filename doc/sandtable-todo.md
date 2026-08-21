@@ -37,6 +37,9 @@ division cannot study the teaming.
 | CR-4 intervention rate | feasibility, in the Army's own currency | the measured output of teaming |
 | CR-5 station keeping | makes formation geometry a real design variable | secondary |
 | CR-6 endurance | bounds which formation concepts are feasible at all | secondary |
+| CR-7 operator load metrics | scores concepts on operator feasibility | the load half of teaming, objective (2) |
+| CR-8 formation robustness score | makes formation quality a computed number | secondary |
+| CR-9 budgets and bursty channel | prices the command architectures honestly | how the human's decisions actually reach the team |
 
 Keep this table honest. If a CR lands and its column claim turns out to be false, fix the claim.
 
@@ -330,3 +333,169 @@ an aerial comms relay is only a comms answer for as long as it can stay up.
 Decide before implementing: is endurance in scope for the current paper, or deferred? If deferred,
 say so in the limitations rather than leaving an allocated-but-dead field that reads as an
 oversight.
+
+---
+
+## CR-7 Operator utilization and attention-switching cost as load metrics
+
+**Priority:** P2. **Status:** not started. **Depends on:** nothing. Can land before CR-1.
+
+### Why
+
+Objective (2) is cognitive-load distribution, and the standing objection is that a constructive
+simulation has no operator to measure. The literature answers it, and SandTable can compute the
+answer almost for free.
+
+Donmez, Nehme and Cummings (`10.1109/TSMCA.2010.2046731`) use operator **utilization** as a real-time
+workload surrogate inside a discrete-event multi-vehicle simulation, calibrate the
+utilization-to-wait-time relation against 74 participants, and show it predicts accurately for team
+structures it was **not** calibrated on. That cross-structure validity is what makes it usable here,
+because the project's first promised outcome is *novel* formation concepts.
+
+`c2.py` already holds every piece of state this needs. It models a single shared operator server with
+`service_rate`, tracks `operator_free_at`, and per-agent `await_until` and `decision_cooldown`. Nobody
+is reading any of it out.
+
+### Change
+
+Accumulate over the mission, inside the existing `c2.step`:
+
+| Quantity | Definition |
+| --- | --- |
+| `operator_utilization` | fraction of mission steps where `operator_free_at > k`, that is the server is busy |
+| `mean_wait` | mean `reply - k` over serviced requests, the attention-switching wait |
+| `wait_p95` | 95th percentile of the same, since overload shows in the tail |
+| `queue_depth_mean` | mean number of agents with `await_until >= 0` |
+
+Surface all four through `metrics.compute`. All must be `0.0` when `op is None`, so ground-core
+scenarios are unchanged and no recorded number moves.
+
+### Mandatory qualifier
+
+Sarno and Wickens (`10.1177/154193129203600105`) put computational workload models at 61 to 77 percent
+of variance explained. This is a **ranking instrument and an overload flag, not a NASA-TLX-comparable
+score**. Any table or figure carrying it must say so. Do not label the column "workload."
+
+### Related: `span_capacity` rests on an untransferred assumption
+
+`c2.build_c2` defaults `span_capacity = 4.0` and uses it for attention dilution. The fan-out and
+span-of-control literature behind that number (D4) is **UAV supervision**. D12 found no workload study
+of a single operator supervising a **mixed ground-and-air** formation, and the project's title says
+ground and air. This does not require a code change, but the default needs a source comment naming the
+assumption, and the paper needs a sentence stating it.
+
+### Tests
+
+1. With no C2 layer, all four keys are exactly `0.0` and the run is byte-identical.
+2. `operator_utilization` rises monotonically with blue count at a fixed `service_rate`.
+3. `mean_wait` rises monotonically with ladder rung under `direct` and stays flat under
+   `supervisory`.
+
+---
+
+## CR-8 Score formations by network robustness, not connectivity alone
+
+**Priority:** P2. **Status:** not started. **Depends on:** CR-3 (needs a formation to score).
+
+### Why
+
+This is the most directly reusable result in the literature review for **mission design**, because it
+turns "is this formation any good" into a computed number. See idea I20 in `doc/lit-ideas.md`.
+
+Sundaram and Hadjicostis (`10.1109/TAC.2010.2088690`) prove **2f+1 vertex-disjoint paths suffice to
+tolerate f malicious or compromised agents, and 2f provably do not**. Guerrero-Bonilla, Prorok and Kumar
+(`10.1109/LRA.2017.2654550`) turn that into a formation-construction algorithm returning feasibility and
+the required proximity relationships for a given team size and assumed f. Usevitch and Panagou
+(`10.1016/j.automatica.2019.108586`) make network robustness computable from the graph Laplacian by
+mixed-integer programming.
+
+**And it corrects an assumption already in the project's literature.** Idea I2 proposes mapping ladder
+rungs to algebraic connectivity (the Fiedler eigenvalue). LeBlanc et al. (`10.1109/JSAC.2013.130413`)
+state that **connectivity is not adequate** to characterize resilient consensus. A formation tuned for
+algebraic connectivity is **not** thereby robust to a compromised agent. The two metrics will disagree,
+and that disagreement is a publishable result rather than a bug.
+
+### Change
+
+A pure scoring function, no coupling to the sim loop:
+
+```python
+# src/sandtable/formation_metrics.py
+def comms_graph(ent, comms, scn) -> np.ndarray      # adjacency from range/link model
+def algebraic_connectivity(adj) -> float             # Fiedler value, the I2 metric
+def r_robustness(adj) -> int                         # the I20 metric
+```
+
+Report both per mission. Expect them to rank formations differently and say so in the paper.
+
+### Scope guard
+
+The theorems are about **consensus** among agents. SandTable's blue agents do not currently run a
+consensus protocol; they pursue independent targets. So this scores the **communication topology's**
+resilience, not a proven property of the mission outcome. Do not write that the formation "tolerates f
+compromised agents" unless and until a consensus step exists. Score the graph, and say it is the graph.
+
+### Tests
+
+1. A fully connected graph returns the known maximal robustness for its size.
+2. A path graph returns robustness 1 regardless of length, while its algebraic connectivity falls with
+   length. This is the disagreement, and it should appear in a test.
+3. Both metrics are `0.0` and skipped when no comms layer exists.
+
+---
+
+## CR-9 Charge both command arms a real budget, and make the channel bursty
+
+**Priority:** P2. **Status:** not started. **Depends on:** nothing for the channel half.
+
+### Why, part one: a serial simulator silently favors bidding
+
+The project promises to compare doctrinal planning against bidding-based decision systems. Kishimoto
+and Nagano (`10.1609/icaps.v26i1.13786`) showed severe synchronization overhead in parallel allocation
+that **serial evaluation hides entirely**. SandTable evaluates serially. If the bidding arm is added
+without charging it for the messages an auction actually needs and the time it takes to clear, the
+comparison is rigged before it runs, in favor of bidding.
+
+**Change:** both arms declare an explicit message count and a time cost per allocation decision, paid
+through the existing comms model. Report messages-per-decision alongside the outcome. See idea I23.
+
+### Why, part two: the ladder's channel is memoryless, and jamming is not
+
+`comms_ew.py` models message loss as an independent Bernoulli draw per message
+(`delivered()` returns `rng.random() >= p_drop`) with a fixed per-level latency. Real jamming is
+**bursty**: losses arrive in runs, not independently.
+
+This matters for the centerpiece result rather than being a detail. Under memoryless loss at
+`p_drop = 0.35`, a direct-control agent gets intermittent service and mostly keeps moving. Under bursty
+loss with the **same mean**, it can stall for a long consecutive run and then be served normally. The
+distribution of stall lengths changes even though the mean drop rate does not, and stall length is what
+`c2.py` converts into mission effect through `patience` and fallback. **The crossover rung could move.**
+
+Otte, Kuhlman and Sofge (`10.1007/s10514-019-09828-5`) sweep auction mechanisms under **both** Bernoulli
+and Gilbert-Elliot channels precisely because the two give different answers, and that is the closest
+published work to this project's thesis.
+
+### Change
+
+Add an optional two-state Gilbert-Elliot channel to `comms_ew.Comms`: good and bad states with
+transition probabilities and per-state drop rates, calibrated so the **stationary mean drop rate equals
+the current ladder value at every rung**. That makes the comparison clean: same mean, different burst
+structure, so any change in the result is attributable to burstiness alone.
+
+| Param | Default | Meaning |
+| --- | --- | --- |
+| `channel` | `"bernoulli"` | `"bernoulli"` keeps today's behavior exactly. `"gilbert_elliot"` enables the bursty channel. |
+| `ge_burst_len` | 4 | Mean dwell in the bad state, in messages. The mean drop rate is held to the ladder value. |
+
+**Statefulness warning.** The Gilbert-Elliot channel carries state across draws, so `Comms` stops being
+data-only. Keep the state inside the `Comms` instance built per run, never module-level, or
+`run_mission` stops being a pure function of `(scenario, seed)`.
+
+### Tests
+
+1. `channel="bernoulli"` is byte-identical to the pre-change build at every rung.
+2. Over a long run, the Gilbert-Elliot empirical drop rate matches the ladder value at each rung to
+   within Monte Carlo error. Same mean is the whole point.
+3. The distribution of consecutive-loss run lengths differs measurably between the two channels.
+4. Report whether the modality crossover rung moves between channels. **If it moves, that is a finding
+   for the paper, not a bug to tune away.**
