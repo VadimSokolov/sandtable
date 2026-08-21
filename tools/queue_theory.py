@@ -52,12 +52,16 @@ def serviceable(latency: float, service_rate: float, patience: float) -> bool:
 
 
 def collapse_span(p_drop: float, service_rate: float, patience: float,
-                  decision_interval: float) -> float:
-    """Span above which the abandonment cycle sustains its own overload."""
+                  decision_interval: float, n_operators: int = 1) -> float:
+    """Span above which the abandonment cycle sustains its own overload.
+
+    Linear in crew size: `c` consoles each serving at `service_rate` carry `c` times the load,
+    so the staffing question and the span question are the same question.
+    """
     d = two_way_delivery(p_drop)
     if d <= 0.0:
         return float("inf")
-    return (patience + decision_interval) * service_rate / d
+    return n_operators * (patience + decision_interval) * service_rate / d
 
 
 def solve(n: int, latency: float, p_drop: float, service_rate: float = 0.15,
@@ -111,7 +115,8 @@ def solve(n: int, latency: float, p_drop: float, service_rate: float = 0.15,
 
 def queue_only_sim(n: int, latency: float, p_drop: float, service_rate: float = 0.15,
                    patience: float = 20.0, decision_interval: float = 30.0,
-                   policy: str = "blind", steps: int = 20000, seed: int = 0) -> dict:
+                   policy: str = "blind", steps: int = 20000, seed: int = 0,
+                   n_operators: int = 1) -> dict:
     """The operator queue on its own, with no terrain, no sensing, and no combat.
 
     Same request-and-abandon rules as `c2.step`, same jittered cooldown, nothing else. If the
@@ -124,7 +129,7 @@ def queue_only_sim(n: int, latency: float, p_drop: float, service_rate: float = 
     lo, hi = max(1, int(decision_interval) // 2), max(2, int(decision_interval) * 3 // 2)
     await_until = np.full(n, -1)
     cooldown = rng.integers(lo, hi + 1, size=n)
-    free_at = 0.0
+    free_at = np.zeros(max(n_operators, 1))
     served = dropped = abandoned = 0
     for k in range(steps):
         for i in range(n):
@@ -141,15 +146,16 @@ def queue_only_sim(n: int, latency: float, p_drop: float, service_rate: float = 
                 await_until[i] = k + patience
                 dropped += 1
                 continue
-            done = max(free_at, k + latency) + S
+            console = int(np.argmin(free_at))
+            done = max(free_at[console], k + latency) + S
             reply = done + latency
             if reply - k <= patience:
-                free_at = done
+                free_at[console] = done
                 await_until[i] = int(math.ceil(reply))
                 served += 1
             else:
                 if policy == "blind":
-                    free_at = done
+                    free_at[console] = done
                 await_until[i] = k + (2 * latency if policy == "admit" else patience)
                 abandoned += 1
     total = max(served + dropped + abandoned, 1)
@@ -169,6 +175,7 @@ def main() -> None:
     ap.add_argument("--patience", type=float, default=20.0)
     ap.add_argument("--decision-interval", type=float, default=30.0)
     ap.add_argument("--spans", type=int, nargs="+", default=[2, 4, 6, 8, 10, 12])
+    ap.add_argument("--crew", type=int, default=1, help="number of operator consoles")
     ap.add_argument("--refund", action="store_true")
     a = ap.parse_args()
     if a.scenario:
@@ -180,7 +187,7 @@ def main() -> None:
         print(f"operating point read from {a.scenario}")
 
     print(f"service_rate={a.service_rate}  patience={a.patience}  "
-          f"decision_interval={a.decision_interval}  policy="
+          f"decision_interval={a.decision_interval}  crew={a.crew}  policy="
           f"{'refund/admit' if a.refund else 'blind'}")
     print(f"latency cut-off: a request is serviceable only while "
           f"2*lat + {1/a.service_rate:.2f} <= {a.patience:.0f}, i.e. lat <= "
@@ -191,7 +198,7 @@ def main() -> None:
     print(hdr)
     for lvl, (lat, drop) in enumerate(_LADDER):
         d = two_way_delivery(drop)
-        ns = collapse_span(drop, a.service_rate, a.patience, a.decision_interval)
+        ns = collapse_span(drop, a.service_rate, a.patience, a.decision_interval, a.crew)
         blocked = "" if serviceable(lat, a.service_rate, a.patience) else "   (latency-blocked)"
         print(f"  C{lvl}   {lat:>3}  {drop:.2f}  {d:.3f}  {ns:6.2f}{blocked}")
     print()
@@ -200,9 +207,10 @@ def main() -> None:
     for n in a.spans:
         row = []
         for lvl, (lat, drop) in enumerate(_LADDER):
-            r = solve(n, lat, drop, a.service_rate, a.patience, a.decision_interval, a.refund)
+            r = solve(n / max(a.crew, 1), lat, drop, a.service_rate, a.patience,
+                      a.decision_interval, a.refund)
             q = queue_only_sim(n, lat, drop, a.service_rate, a.patience, a.decision_interval,
-                               "refund" if a.refund else "blind")
+                               "refund" if a.refund else "blind", n_operators=a.crew)
             row.append(f"  {r['goodput']:.2f}/{q['goodput']:.2f}")
         print(f"  n={n:<3}" + "".join(row))
 

@@ -72,3 +72,19 @@ def test_refunding_the_slot_removes_the_relief():
 def test_queue_accounting_partitions_requests():
     r = qt.queue_only_sim(8, 2, 0.10, **OP, steps=4000)
     assert r["goodput"] + r["abandon_queue_frac"] + r["abandon_link_frac"] == pytest.approx(1.0)
+
+
+def test_collapse_span_is_linear_in_crew_size():
+    """c consoles carry c times the load, so staffing and span are the same question."""
+    one = qt.collapse_span(0.0, **OP, n_operators=1)
+    two = qt.collapse_span(0.0, **OP, n_operators=2)
+    assert two == pytest.approx(2.0 * one)
+    # Eight vehicles sit above the one-console threshold and below the two-console one, which is
+    # why a second operator is the difference between a collapsed queue and a working one.
+    assert one < 8 < two
+
+
+def test_a_second_console_rescues_the_collapsed_queue():
+    solo = qt.queue_only_sim(8, 0, 0.0, **OP, policy="blind", n_operators=1)["goodput"]
+    pair = qt.queue_only_sim(8, 0, 0.0, **OP, policy="blind", n_operators=2)["goodput"]
+    assert solo < 0.2 and pair > 0.9, f"solo={solo:.3f} pair={pair:.3f}"

@@ -258,6 +258,16 @@ goodput at n=8:
 | staggered start, `blind` | 0.194 | 0.271 | 0.370 | 0.418 | 0.000 | 0.000 |
 | staggered start, `admit` | 0.738 | 0.725 | 0.678 | 0.520 | 0.000 | 0.000 |
 
+Mission success tells the same story: the interior optimum shrinks from +0.160 (C0 to C2) under a
+synchronized start to +0.086 (C0 to C3) under a staggered one, and admission control still buys
++0.270 at a clean link.
+
+| n=8 success | C0 | C1 | C2 | C3 | C4 | C5 |
+| --- | --- | --- | --- | --- | --- | --- |
+| synchronized, `blind` | 0.512 | 0.555 | **0.672** | 0.660 | 0.598 | 0.598 |
+| staggered, `blind` | 0.551 | 0.586 | 0.586 | **0.637** | 0.539 | 0.539 |
+| staggered, `admit` | **0.820** | 0.813 | 0.734 | 0.652 | 0.535 | 0.555 |
+
 Staggering buys 0.01 to 0.05 of goodput, not the 0.35 one seed suggested. The collapse is a
 steady-state property of the queue, not a startup transient: `blind` still rises with jamming under
 a staggered start, `admit` still falls, and admission control still delivers roughly four times the

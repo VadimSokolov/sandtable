@@ -22,8 +22,11 @@ Two control modalities (scenario param `control_mode`):
   and collapses as latency/drop and queue contention grow: the crossover the
   span-of-control study is built to expose.
 
-The single shared server is the span-of-control coupling: more agents means a
-longer queue, so the crossover to supervisory arrives at a milder jamming level.
+The shared server is the span-of-control coupling: more agents means a longer queue, so the
+crossover to supervisory arrives at a milder jamming level. ``n_operators`` turns the single
+operator into a crew of that many consoles, each serving at ``service_rate``, so the same study
+answers a staffing question rather than only a span question. One console is the default and
+reproduces the published single server exactly.
 
 The server also has *abandonment*: a requester that has waited longer than
 ``patience`` stops caring about the answer. Whether the operator finds that out,
@@ -54,7 +57,8 @@ class Operator:
     q_stall: float                # control quality while awaiting a pending request
     patience: int                 # steps an agent waits before giving up -> fallback
     decision_interval: int        # mean steps between an agent's decision events
-    operator_free_at: float = 0.0  # step at which the single server clears its queue
+    operator_free_at: float = 0.0  # step at which the (first) server clears its queue
+    crew_free_at: np.ndarray = None  # per-console free times when n_operators > 1 (CR-14)
     resolved_quality: np.ndarray = field(default=None)  # per-agent between-decision quality
     ew_immune: bool = False        # EW-immune command link (fiber / autonomous terminal guidance)
     immune_latency: int = 1        # fixed one-way latency of the immune link, off the comms ladder
@@ -67,7 +71,7 @@ class Operator:
     decision_cooldown_seed: np.ndarray = None   # staggered starting phases, when opted in
     # Operator-load accumulators (CR-7). Read out by `metrics.compute`; every one of them is a
     # by-product of state this model already carried, so nothing here changes any decision.
-    busy_steps: int = 0            # steps on which the single server was still clearing its queue
+    busy_steps: float = 0.0        # busy-console-steps; with one console this is a step count
     total_steps: int = 0
     queue_depth_sum: float = 0.0   # summed count of agents with a request outstanding
     waits: list = field(default_factory=list)   # per-serviced-request wait, in steps
@@ -110,6 +114,13 @@ def build_c2(scn: Scenario, ent: Entities,
     )
     if op.queue_policy not in ("blind", "refund", "admit"):
         raise ValueError(f"queue_policy must be blind|refund|admit, got {op.queue_policy!r}")
+    n_operators = int(scn.params.get("n_operators", 1))
+    if n_operators < 1:
+        raise ValueError(f"n_operators must be at least 1, got {n_operators}")
+    if n_operators > 1:
+        # A crew of `c` consoles, each serving at `service_rate`. One console reproduces the
+        # published single server exactly, which is why the array is only allocated above one.
+        op.crew_free_at = np.zeros(n_operators)
     if scn.params.get("stagger_decisions") and rng is not None:
         # `decision_cooldown` starts at zero for every entity, so without this every agent's
         # first decision event fires on step 0 and the operator opens the mission with a
@@ -120,6 +131,14 @@ def build_c2(scn: Scenario, ent: Entities,
         op.decision_cooldown_seed = rng.integers(0, max(op.decision_interval, 1), size=blue.size)
         ent.decision_cooldown[blue] = op.decision_cooldown_seed
     return op
+
+
+def _claim(op: Operator, console: int, done: float) -> None:
+    """Mark the chosen console busy until `done`. Console -1 is the single-server path."""
+    if console < 0:
+        op.operator_free_at = done
+    else:
+        op.crew_free_at[console] = done
 
 
 def _reset_cooldown(op: Operator, rng: np.random.Generator) -> int:
@@ -136,8 +155,12 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
 
     # Operator-load sampling (CR-7), taken before this tick's decisions are resolved.
     op.total_steps += 1
-    if op.operator_free_at > k:
-        op.busy_steps += 1
+    if op.crew_free_at is None:
+        if op.operator_free_at > k:
+            op.busy_steps += 1
+    else:
+        # Fraction of consoles still clearing work, so utilization stays comparable across crews.
+        op.busy_steps += float((op.crew_free_at > k).mean())
     op.queue_depth_sum += float((ent.await_until[blue] >= 0).sum()) if blue.size else 0.0
 
     for i in blue:
@@ -177,12 +200,17 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
         op.n_request += 1
         if link_ok:
             recv = k + lat                                    # request reaches operator
-            start = max(op.operator_free_at, recv)            # single shared server
+            if op.crew_free_at is None:
+                console = -1
+                start = max(op.operator_free_at, recv)        # single shared server
+            else:
+                console = int(np.argmin(op.crew_free_at))     # earliest-free console (CR-14)
+                start = max(op.crew_free_at[console], recv)
             done = start + 1.0 / op.service_rate              # operator finishes this decision
             reply = done + lat                                # reply travels back
             wait = reply - k
             if wait <= op.patience:
-                op.operator_free_at = done
+                _claim(op, console, done)
                 ent.await_until[i] = int(math.ceil(reply))
                 op.resolved_quality[i] = op.q_operator
                 op.waits.append(float(wait))          # attention-switching wait, serviced only
@@ -200,7 +228,7 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 #             so the agent goes autonomous after one round trip instead of after
                 #             `patience` steps. Explicit admission control.
                 if op.queue_policy == "blind":
-                    op.operator_free_at = done
+                    _claim(op, console, done)
                 hold = 2 * lat if op.queue_policy == "admit" else op.patience
                 ent.await_until[i] = k + hold                 # gives up waiting -> poor autonomy
                 op.resolved_quality[i] = op.q_fallback
