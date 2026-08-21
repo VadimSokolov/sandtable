@@ -51,3 +51,8 @@ doc/mission_eng_console_7.html
 
 # Large / vendored reference (cloned separately, not committed)
 polarisopt-ref/
+
+# autoresearch (workflow 7)
+results.tsv
+.autoresearch/
+run.log

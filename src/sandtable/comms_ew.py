@@ -6,7 +6,24 @@ control every operator<->agent decision pays this cost twice (request out, reply
 back); under SUPERVISORY control only the rare exception channel does, which is
 why supervisory degrades gracefully as jamming rises. The ladder point is
 overridable through `scn.params` so the improve-loop can retune it without code
-changes. Pure and data-only: a run stays a pure function of (scenario, seed).
+changes.
+
+Two channel models share that ladder (`scn.params["channel"]`):
+
+- ``"bernoulli"`` (default): losses are independent per message, the memoryless
+  model. This is the historical behaviour and is byte-identical to it.
+- ``"gilbert_elliot"``: a two-state Markov chain (GOOD/BAD) whose losses arrive in
+  *runs*, which is how real jamming behaves. The chain is calibrated so its
+  stationary drop rate equals the ladder's ``p_drop`` at every rung, so the two
+  channels differ **only** in burst structure and never in mean. Any result that
+  moves between them is attributable to burstiness alone.
+
+  The chain draws exactly one uniform per message, the same as the Bernoulli path,
+  so the two channels stay aligned on a shared seed and their comparison is paired.
+
+The Gilbert-Elliot chain carries state across draws, so a `Comms` instance is no
+longer data-only. The state lives on the per-run instance built by `build_comms`,
+never at module level, so `run_mission` remains a pure function of (scenario, seed).
 """
 from __future__ import annotations
 
@@ -31,16 +48,34 @@ _LADDER = {
 class Comms:
     level: int
     latency: int          # one-way link latency, in steps
-    p_drop: float         # per-message drop probability
+    p_drop: float         # per-message drop probability (the ladder value, and the
+                          # stationary drop rate of the Gilbert-Elliot chain)
     label: str
+    channel: str = "bernoulli"   # "bernoulli" | "gilbert_elliot"
+    p_gb: float = 0.0            # GOOD -> BAD transition probability
+    p_bg: float = 0.0            # BAD  -> GOOD transition probability
+    _bad: bool = False           # per-run chain state; never module level
 
     def round_trip(self) -> int:
         """Steps for a request to reach the operator and the reply to return."""
         return 2 * self.latency
 
     def delivered(self, rng: np.random.Generator) -> bool:
-        """Bernoulli message-survival draw (True = message not dropped)."""
-        return bool(rng.random() >= self.p_drop)
+        """Message-survival draw (True = message not dropped). One uniform per call.
+
+        Bernoulli: survival iff the draw clears the ladder drop rate.
+
+        Gilbert-Elliot: the same single uniform advances the two-state chain, and the
+        message is lost exactly when the chain sits in BAD afterwards. Because the
+        chain's stationary BAD probability is set to ``p_drop`` (see `build_comms`),
+        the long-run drop rate matches the Bernoulli channel rung for rung while the
+        losses arrive in runs of mean length ``1 / p_bg``.
+        """
+        u = rng.random()
+        if self.channel != "gilbert_elliot":
+            return bool(u >= self.p_drop)
+        self._bad = (u >= self.p_bg) if self._bad else (u < self.p_gb)
+        return not self._bad
 
 
 def build_comms(scn: Scenario) -> Comms:
@@ -50,4 +85,16 @@ def build_comms(scn: Scenario) -> Comms:
     # Improve-loop overrides (retune the operating point without touching the ladder).
     lat = int(scn.params.get("comms_latency", lat))
     drop = float(scn.params.get("comms_p_drop", drop))
-    return Comms(level=level, latency=lat, p_drop=drop, label=label)
+
+    channel = str(scn.params.get("channel", "bernoulli"))
+    p_gb = p_bg = 0.0
+    if channel == "gilbert_elliot":
+        # Calibrate the chain so its stationary BAD probability equals the ladder drop
+        # rate: with mean bad-state dwell L we need p_bg = 1/L and, from
+        # pi_bad = p_gb / (p_gb + p_bg) = drop,  p_gb = drop * p_bg / (1 - drop).
+        # Same mean, different burst structure, which is the whole point of the contrast.
+        burst = max(1.0, float(scn.params.get("ge_burst_len", 4.0)))
+        p_bg = 1.0 / burst
+        p_gb = 0.0 if drop >= 1.0 else drop * p_bg / (1.0 - drop)
+    return Comms(level=level, latency=lat, p_drop=drop, label=label,
+                 channel=channel, p_gb=p_gb, p_bg=p_bg)

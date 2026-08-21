@@ -22,7 +22,7 @@ def blue_at_goal(ent: Entities, scn: Scenario) -> np.ndarray:
 
 def compute(scn: Scenario, init_counts: dict, ent: Entities,
             t_reached: float | None, t_elapsed: float, assault0: int | None = None,
-            air0: int = 0) -> dict:
+            air0: int = 0, bhv=None, op=None) -> dict:
     blue0 = max(init_counts[BLUE], 1)
     red0 = max(init_counts[RED], 1)
     blue_alive = int(ent.side_mask(BLUE).sum())
@@ -49,7 +49,10 @@ def compute(scn: Scenario, init_counts: dict, ent: Entities,
     blue_cost_lost = blue_air_losses * cost_uas + blue_ground_losses * cost_ugv
     red_cost_lost = red_losses * cost_red
 
+    out_extra = _teaming_metrics(scn, ent, bhv, op, t_elapsed)
+
     return {
+        **out_extra,
         "success": success,                                   # MOE: mission accomplished
         "time_to_objective": tto,                             # MOE: tempo (s)
         "blue_losses": float(blue_losses),                    # MOE: attrition
@@ -65,3 +68,42 @@ def compute(scn: Scenario, init_counts: dict, ent: Entities,
         "cost_exchange": red_cost_lost / max(blue_cost_lost, 1.0),  # MOP: cost-weighted exchange
         "mission_time": float(t_elapsed),
     }
+
+
+def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) -> dict:
+    """Adaptability and operator-load families (CR-4, CR-7).
+
+    Every key is exactly 0.0 when its layer is absent, so ground-core scenarios and every number
+    recorded before these landed are unchanged.
+
+    Two qualifiers are mandatory wherever these are reported.
+
+    `intervention_rate` counts comms and operator-queue contention **only**. Terrain enters
+    SandTable as a speed raster and a cover tradeoff, never as autonomy difficulty that forces a
+    takeover, so this is not comparable to a field-measured soldier takeover rate.
+
+    `operator_utilization` is a workload *surrogate* in the sense of Donmez, Nehme and Cummings.
+    Computational workload models explain roughly 61 to 77 percent of variance (Sarno and Wickens),
+    so it is a ranking instrument and an overload flag, not a NASA-TLX-comparable score. Do not
+    label it "workload".
+    """
+    from sandtable.entities import GROUND
+
+    out = {"interventions": 0.0, "intervention_rate": 0.0,
+           "operator_utilization": 0.0, "mean_wait": 0.0,
+           "wait_p95": 0.0, "queue_depth_mean": 0.0}
+
+    if bhv is not None:
+        n_ground = max(int(((ent.side == BLUE) & (ent.domain == GROUND)).sum()), 1)
+        hours = max(t_elapsed, 1e-9) / 3600.0
+        out["interventions"] = float(bhv.interventions.sum())
+        out["intervention_rate"] = out["interventions"] / (n_ground * hours)
+
+    if op is not None and op.total_steps > 0:
+        out["operator_utilization"] = op.busy_steps / op.total_steps
+        out["queue_depth_mean"] = op.queue_depth_sum / op.total_steps
+        if op.waits:
+            w = np.asarray(op.waits, float)
+            out["mean_wait"] = float(w.mean())
+            out["wait_p95"] = float(np.percentile(w, 95))
+    return out

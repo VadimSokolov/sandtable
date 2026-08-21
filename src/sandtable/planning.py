@@ -54,9 +54,13 @@ def overwatch_stations(n: int, cx: float, cy: float, r: float,
     return cand
 
 
-def step(ent: Entities, world: World, scn: Scenario, spawn_x: float, pers=None) -> None:
-    """Set each entity's movement target in place. `pers`, if given, replaces the scripted
-    blue-ground lane with the opt-in personality-movement propensity sum (byte-identical when None)."""
+def step(ent: Entities, world: World, scn: Scenario, spawn_x: float, pers=None, bhv=None) -> None:
+    """Set each entity's movement target in place.
+
+    `pers`, if given, replaces the scripted blue-ground lane with the opt-in
+    personality-movement propensity sum (byte-identical when None). `bhv`, if given, is the
+    behaviour layer: it may hold an agent in place or place it on a follower station, and it is
+    applied last so it overrides the lane (byte-identical when None)."""
     gx, gy = scn.objective.goal
     bias = float(np.clip(scn.params.get("route_bias", 0.0), 0.0, 1.0))
     spread = float(scn.params.get("formation_spread", 30.0))
@@ -100,6 +104,12 @@ def step(ent: Entities, world: World, scn: Scenario, spawn_x: float, pers=None) 
             tx_new[p_idx] = p_tx
             ty_new[p_idx] = p_ty
 
+    # Behaviour layer (opt-in). A held agent targets its own position, which `motion.step` turns
+    # into exactly zero speed via its `v = min(v, dist/dt)` clamp; a follower targets its column
+    # station behind the leader it can currently see. None leaves every target untouched.
+    if bhv is not None:
+        tx_new, ty_new = _behavior_targets(ent, scn, bhv, tx_new, ty_new)
+
     # Blue GROUND that have reached the objective hold there (so arrivals accumulate). Air stations
     # are far from the goal, so UAS are unaffected by this.
     dist_goal = np.hypot(ent.x - gx, ent.y - gy)
@@ -113,4 +123,24 @@ def step(ent: Entities, world: World, scn: Scenario, spawn_x: float, pers=None) 
     ty_new = np.where(red, ent.y, ty_new)
 
     ent.tgt_x, ent.tgt_y = tx_new, ty_new
-    _ = spread  # reserved for the richer formation model
+    _ = spread  # consumed by the behaviour layer's follower stations; unused on the scripted path
+
+
+def _behavior_targets(ent: Entities, scn: Scenario, bhv, tx_new, ty_new):
+    """Apply behaviour-layer target overrides: follower stations first, then holds."""
+    from sandtable import behavior as _behavior
+
+    gap = float(scn.params.get("formation_spread", 30.0))
+    foll = np.nonzero((bhv.state == _behavior.LEADER_FOLLOW) & ent.alive)[0]
+    for i in foll:
+        # Station `gap` metres behind the leader along the leader's own heading, taken from the
+        # follower's current picture of it, which is live or dead-reckoned per `follow_mode`.
+        v = np.hypot(bhv.trk_vx[i], bhv.trk_vy[i])
+        ux, uy = (bhv.trk_vx[i] / v, bhv.trk_vy[i] / v) if v > 1e-6 else (1.0, 0.0)
+        tx_new[i] = bhv.trk_x[i] - gap * ux
+        ty_new[i] = bhv.trk_y[i] - gap * uy
+
+    held = np.nonzero(bhv.holding)[0]
+    tx_new[held] = ent.x[held]
+    ty_new[held] = ent.y[held]
+    return tx_new, ty_new

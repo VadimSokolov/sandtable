@@ -54,6 +54,12 @@ class Operator:
     resolved_quality: np.ndarray = field(default=None)  # per-agent between-decision quality
     ew_immune: bool = False        # EW-immune command link (fiber / autonomous terminal guidance)
     immune_latency: int = 1        # fixed one-way latency of the immune link, off the comms ladder
+    # Operator-load accumulators (CR-7). Read out by `metrics.compute`; every one of them is a
+    # by-product of state this model already carried, so nothing here changes any decision.
+    busy_steps: int = 0            # steps on which the single server was still clearing its queue
+    total_steps: int = 0
+    queue_depth_sum: float = 0.0   # summed count of agents with a request outstanding
+    waits: list = field(default_factory=list)   # per-serviced-request wait, in steps
 
 
 def build_c2(scn: Scenario, ent: Entities) -> Operator | None:
@@ -100,6 +106,12 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
     """Advance the C2 queue/latency model one tick and write ent.control_quality in place."""
     blue = np.nonzero((ent.side == BLUE) & ent.alive)[0]
 
+    # Operator-load sampling (CR-7), taken before this tick's decisions are resolved.
+    op.total_steps += 1
+    if op.operator_free_at > k:
+        op.busy_steps += 1
+    op.queue_depth_sum += float((ent.await_until[blue] >= 0).sum()) if blue.size else 0.0
+
     for i in blue:
         # 1) A pending request has come back: adopt its resolved quality, re-arm the cooldown.
         if ent.await_until[i] >= 0 and k >= ent.await_until[i]:
@@ -144,6 +156,7 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
             if wait <= op.patience:
                 ent.await_until[i] = int(math.ceil(reply))
                 op.resolved_quality[i] = op.q_operator
+                op.waits.append(float(wait))          # attention-switching wait, serviced only
             else:
                 ent.await_until[i] = k + op.patience          # gives up waiting -> poor autonomy
                 op.resolved_quality[i] = op.q_fallback

@@ -11,6 +11,7 @@ from __future__ import annotations
 import numpy as np
 
 from sandtable import (
+    behavior,
     belief,
     c2,
     counter_uas,
@@ -56,6 +57,10 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     # None unless params set cuas_rate>0; when None the loop skips it and draws no extra RNG
     # (byte-identical to any prior run without it).
     cuas = counter_uas.build_counter_uas(scn, ent)
+    # Optional blue behavior layer (CR-1): modality selects a behaviour repertoire rather than
+    # only a quality gain. None unless params set blue_behavior; when None planning takes exactly
+    # its previous code path and the run is byte-identical.
+    bhv = behavior.build_behavior(scn, ent)
 
     init_counts = {BLUE: int((ent.side == BLUE).sum()), RED: int((ent.side == RED).sum())}
     blue_mask0 = ent.side == BLUE
@@ -79,7 +84,9 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     for k in range(n_steps):
         if op is not None:
             c2.step(ent, op, comms, scn, k, rng)
-        planning.step(ent, world, scn, spawn_x, pers=pers)
+        if bhv is not None:
+            behavior.step(ent, bhv, op, comms, scn, k, rng)
+        planning.step(ent, world, scn, spawn_x, pers=pers, bhv=bhv)
         motion.step(ent, world, dt, tempo)
         sensing.step(ent, world, rng, comms)
         if mech is not None:
@@ -107,7 +114,8 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
         if not ent.side_mask(BLUE).any():
             break
 
-    result = metrics.compute(scn, init_counts, ent, t_reached, t, assault0=assault0, air0=air_blue0)
+    result = metrics.compute(scn, init_counts, ent, t_reached, t, assault0=assault0, air0=air_blue0,
+                             bhv=bhv, op=op)
     result["detection_coverage"] = cov_sum / max(cov_steps, 1)
     return result
 
