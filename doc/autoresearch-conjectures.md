@@ -38,7 +38,7 @@ promotion criteria in the integrity rule.
 | C2 | The ladder's top rungs are not resolvable: C4 and C5 produce identical results because every direct-control request already times out at C4. The six-rung ladder has fewer than six distinguishable levels, and the cut-off has a closed form. | mechanism derived, prediction queued | |
 | C3 | There is no direct-vs-supervisory crossover at the published span (n=6): supervisory dominates at every rung. The crossover exists only in a 2-D (span x rung) structure, so a 1-D ladder sweep understates the modality result. | supported at proxy | |
 | C7 | **Queue relief.** At a span where the single operator is the binding constraint, *degrading* the link **improves** direct-control mission success. First mechanism proposed (the stall/fallback quality gap) is **refuted**; the surviving mechanism is congestion collapse, restated as C8. | mechanism refuted, restated | |
-| C8 | **Congestion collapse by unrefunded abandonment.** The operator spends a service slot on every request it receives, including requests whose answer will arrive after the requester has given up. At large span the offered load exceeds capacity, almost every request is abandoned, and packet loss then acts as unintended admission control. Explicit admission control should remove the interior optimum and dominate at every rung. | **confirmed at proxy**, full-tier gate pending | |
+| C8 | **CONFIRMED AT FULL TIER.** **Congestion collapse by unrefunded abandonment.** The operator spends a service slot on every request it receives, including requests whose answer will arrive after the requester has given up. At large span the offered load exceeds capacity, almost every request is abandoned, and packet loss then acts as unintended admission control. Explicit admission control should remove the interior optimum and dominate at every rung. | **confirmed, full tier, 32 blocks x 64 reps** | |
 | C9 | **Fan-out overpredicts.** The Olsen-Goodrich duty-cycle capacity `1 + NT/IT`, measured from SandTable's own hold durations, exceeds the span at which measured mission success actually peaks, and the gap widens with jamming. | instrumented (CR-11), untested | |
 | C4 | Correcting teleoperation stop semantics (CR-2) moves the crossover toward cleaner links, because a severed-link teleoperated vehicle currently keeps driving at 54.5% speed. | queued | |
 | C5 | A behaviour-based follower (on-platform dead reckoning) degrades less than a link-based follower as the ladder worsens, matching the sign of Cheung et al. 2022 at mission rather than path-error level. | queued (needs CR-1, CR-3) | |
@@ -347,3 +347,33 @@ Every one traces to a proxy or full-tier `AR_ROW` line in the run logs and to a 
   0.505 (refund, C3); 0.135 on one console against 0.990 on two.
 - success at n=8, C0: 0.512 blind, 0.840 admit, published physics; 0.012 blind, 0.695 admit,
   teleoperation physics; 0.027 and 0.734 respectively under a staggered start.
+
+
+---
+
+## Full-tier confirmation of C8
+
+`sc_span_control`, n_blue=8, direct, 32 blocks x 64 reps (the contract seed set), commit `1678d04`.
+Paired on block-matched mission seeds, gated by `tools/autoresearch.py gate` against the contract's
+MPE of 0.03 and 60% consistency requirement.
+
+| arm | C0 | C2 |
+| --- | --- | --- |
+| `blind` (published operator) | 0.5625 | 0.6768 |
+| `admit` (admission control) | 0.7998 | 0.7612 |
+
+| gate | contrast | paired delta | t | wins | verdict |
+| --- | --- | --- | --- | --- | --- |
+| G1 | admission control at C0 | **+0.2373** +/- 0.0147 | 16.14 | 32/32 | KEEP |
+| G2 | the interior optimum, `blind` C2 over C0 | **+0.1143** +/- 0.0157 | 7.29 | 29/32 | KEEP |
+| G3 | with admission control, C0 over C2 | **+0.0386** +/- 0.0147 | 2.63 | 23/32 | KEEP |
+
+G2 and G3 together are the whole result. Under the published operator, degrading the link from
+clear to C2 **improves** mission success by 11.4 points, and the effect clears every arm of the
+gate. Give the operator the ability to refuse a request it cannot serve in time, and the same
+contrast **reverses sign**: the clear link is now better, by 3.9 points. The pathology and its
+remedy are both statistically robust at full scale, on the contract seeds, paired.
+
+Proxy tier had these at 0.512 / 0.672 and 0.840 / 0.758 against full tier 0.5625 / 0.6768 and
+0.7998 / 0.7612. Every ranking is preserved, which is the fourth independent check that the
+16x16 proxy tracks the 32x64 tier on this scenario.
