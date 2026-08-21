@@ -117,6 +117,8 @@ def update(ent: Entities, tracks: Tracks, comms, rng: np.random.Generator) -> No
                 tracks.ttl[sl] = tracks.max_age + 2
 
 
+# src/sandtable/belief.py
+
 def engage(ent: Entities, world: World, tracks: Tracks, rng: np.random.Generator,
            mech=None) -> None:
     """Belief-aware engagement: each shooter fires on its nearest live track (by believed position),
@@ -166,18 +168,47 @@ def engage(ent: Entities, world: World, tracks: Tracks, rng: np.random.Generator
                 continue                                              # out of rounds: no shot fired
             p = int(pick[r])
             if p < n:                                                 # real target
-                cover = world.cover_at(real_pos[p:p + 1, 0], real_pos[p:p + 1, 1])[0]
-                pk = ent.pk_base[shooter] * (1.0 - cover) * tracks.conf[p]
-                if q is not None:
-                    pk = pk * q[shooter] * (2.0 - q[p])
-                if mech is not None and mech.suppression:            # suppressed shooter aims worse
-                    pk = pk * (1.0 - mech.supp_fire * supp0[shooter])
-                if rng.random() < min(max(pk, 0.0), 1.0):
+                # ============================================================
+                # FIX: Get cover value safely
+                # ============================================================
+                try:
+                    # Get cover at target position
+                    cover_arr = world.cover_at(real_pos[p:p + 1, 0], real_pos[p:p + 1, 1])
+                    if cover_arr is not None and len(cover_arr) > 0:
+                        cover = float(cover_arr[0])
+                    else:
+                        cover = 0.0
+                except (IndexError, TypeError, AttributeError):
+                    cover = 0.0
+                
+                # Calculate PK with safety checks
+                pk = ent.pk_base[shooter] * (1.0 - cover)
+                
+                # Apply track confidence
+                if p < len(tracks.conf):
+                    pk = pk * float(tracks.conf[p])
+                else:
+                    pk = pk * 1.0
+                
+                # Apply control quality
+                if q is not None and shooter < len(q) and p < len(q):
+                    pk = pk * float(q[shooter]) * (2.0 - float(q[p]))
+                
+                # Apply suppression
+                if mech is not None and mech.suppression and supp0 is not None:
+                    if shooter < len(supp0):
+                        pk = pk * (1.0 - mech.supp_fire * float(supp0[shooter]))
+                
+                # Clamp and apply
+                pk = min(max(pk, 0.0), 1.0)
+                if rng.random() < pk:
                     damage[p] += 1.0
-                if mech is not None and mech.suppression:            # being fired on suppresses target
+                
+                # Apply suppression to target
+                if mech is not None and mech.suppression and p < len(ent.suppression):
                     ent.suppression[p] = min(ent.suppression[p] + mech.supp_gain, 1.0)
             # else: decoy -> shot wasted, no damage
-            if mech is not None and mech.munitions:
+            if mech is not None and mech.munitions and shooter < len(ent.ammo):
                 ent.ammo[shooter] -= 1.0                             # a round was fired (real or decoy)
     ent.hp = ent.hp - damage
     ent.alive = ent.alive & (ent.hp > 0.0)
