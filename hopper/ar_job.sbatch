@@ -7,12 +7,16 @@
 # tools/ar_eval.py. The evaluator parallelizes inside the job with --jobs, so a battery
 # is one node's worth of cores rather than a SLURM array: the arms of a contrast then
 # share a machine and a wall clock, which keeps a run's cells comparable.
+# Sized for BACKFILL, not for peak speed. A 32-core six-hour request waited a day behind
+# the account's other work; 16 cores for two hours slots into the gaps the scheduler is
+# already leaving. Override with `sbatch --cpus-per-task=... --time=...` when the queue is
+# empty and wall clock matters more than start time.
 #SBATCH --partition=normal
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=16G
-#SBATCH --time=06:00:00
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=8G
+#SBATCH --time=02:00:00
 #SBATCH --output=/scratch/vsokolov/sandtable-ar/runlogs/%x-%j.out
 #SBATCH --error=/scratch/vsokolov/sandtable-ar/runlogs/%x-%j.err
 
@@ -32,7 +36,13 @@ echo "# code=$(cd /scratch/vsokolov/sandtable-ar && find src tools -name '*.py' 
 python tools/autoresearch.py guard
 date -u +"# start %Y-%m-%dT%H:%M:%SZ"
 
-bash "hopper/batteries/${BATTERY}.sh"
+# BATTERY may name several batteries; they run in sequence inside one allocation, which
+# is the polite way to use a partition with few nodes.
+for b in ${BATTERY}; do
+  echo "### BATTERY $b START"
+  bash "hopper/batteries/${b}.sh"
+  echo "### BATTERY $b COMPLETE"
+done
 
 date -u +"# end %Y-%m-%dT%H:%M:%SZ"
-echo "### BATTERY ${BATTERY} COMPLETE"
+echo "### ALL BATTERIES COMPLETE"
