@@ -592,3 +592,25 @@ The stripped model reproduces the interior optimum on its own, which is what est
 effect belongs to the queue rather than to terrain, sensing, or attrition. Validating the ABM
 against a tractable model is the discipline the build plan committed to. Tests in
 `tests/test_queue_theory.py`.
+
+---
+
+## CR-13 Staggered decision phase  (IMPLEMENTED 2026-08-21)
+
+`entities.py` starts every agent's `decision_cooldown` at zero, so on step 0 all n blue agents fire
+a decision event at once and the single operator opens the mission with a burst of n requests. Real
+vehicles are not phase-locked. `params["stagger_decisions"]` draws a uniform starting phase in
+`[0, decision_interval)`; off by default and byte-identical when off.
+
+Found by reading the initialization, not by search, which is the argument for auditing state that
+the search never varies. Its effect turned out to be small (goodput +0.01 to +0.05 at n=8), so its
+value was in ruling out a startup transient as the explanation for CR-10's result rather than in
+changing any number. Tests in `tests/test_stagger.py`.
+
+### Known and deliberately unchanged
+
+`build_c2` computes attention dilution from `(ent.side == BLUE).sum()`, which counts dead vehicles,
+while the operator queue serves only live ones. So per-decision quality does not improve as the
+force takes losses even though the queue drains. That is defensible (an operator's assigned span
+does not shrink the instant a vehicle is hit) but it is an asymmetry, and it should be stated
+wherever span-of-control results are reported.

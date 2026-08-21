@@ -64,6 +64,7 @@ class Operator:
     n_serviced: int = 0            # ... that came back with an operator decision
     n_abandon_queue: int = 0       # ... that reached the operator but could not be served in time
     n_abandon_link: int = 0        # ... that the link dropped
+    decision_cooldown_seed: np.ndarray = None   # staggered starting phases, when opted in
     # Operator-load accumulators (CR-7). Read out by `metrics.compute`; every one of them is a
     # by-product of state this model already carried, so nothing here changes any decision.
     busy_steps: int = 0            # steps on which the single server was still clearing its queue
@@ -72,8 +73,13 @@ class Operator:
     waits: list = field(default_factory=list)   # per-serviced-request wait, in steps
 
 
-def build_c2(scn: Scenario, ent: Entities) -> Operator | None:
-    """Build the operator model, or None if the scenario declares no C2 layer."""
+def build_c2(scn: Scenario, ent: Entities,
+             rng: np.random.Generator | None = None) -> Operator | None:
+    """Build the operator model, or None if the scenario declares no C2 layer.
+
+    `rng` is used only when the scenario opts into `stagger_decisions`; without it the RNG
+    stream is untouched and every previously recorded number is reproduced exactly.
+    """
     mode = scn.params.get("control_mode")
     if mode is None:
         return None
@@ -104,6 +110,15 @@ def build_c2(scn: Scenario, ent: Entities) -> Operator | None:
     )
     if op.queue_policy not in ("blind", "refund", "admit"):
         raise ValueError(f"queue_policy must be blind|refund|admit, got {op.queue_policy!r}")
+    if scn.params.get("stagger_decisions") and rng is not None:
+        # `decision_cooldown` starts at zero for every entity, so without this every agent's
+        # first decision event fires on step 0 and the operator opens the mission with a
+        # synchronized burst of n requests. Real vehicles are not phase-locked. Drawing a
+        # uniform starting phase removes the startup transient; leaving it off reproduces the
+        # published stream byte for byte, which is why it is opt-in rather than a fix.
+        blue = np.nonzero(ent.side == BLUE)[0]
+        op.decision_cooldown_seed = rng.integers(0, max(op.decision_interval, 1), size=blue.size)
+        ent.decision_cooldown[blue] = op.decision_cooldown_seed
     return op
 
 

@@ -213,3 +213,53 @@ stable at C3, and the measured goodput turns the corner in exactly that interval
 The tool also carries `queue_only_sim`, the same request-and-abandon rules with the mission removed
 entirely. It reproduces the interior optimum on its own, which is the cleanest available evidence
 that the effect belongs to the queue and not to terrain, sensing, or attrition.
+
+
+### The modality gap is mostly the missing feature (span sweep, clean link)
+
+Proxy, `sc_span_control`, comms C0, published physics, 16 blocks x 16 reps. Success rises with span
+in every arm because red strength is held fixed while blue grows, so read the *gaps*, not the levels.
+
+| span | `blind` | `admit` | supervisory | superv - blind | superv - admit |
+| --- | --- | --- | --- | --- | --- |
+| n=2 | 0.441 | 0.441 | 0.387 | -0.055 | -0.055 |
+| n=4 | 0.578 | 0.621 | 0.535 | -0.043 | -0.086 |
+| n=6 | 0.617 | 0.734 | 0.746 | +0.129 | +0.012 |
+| n=8 | 0.512 | 0.840 | 0.852 | **+0.340** | +0.012 |
+| n=10 | 0.750 | 0.855 | 0.957 | +0.207 | +0.102 |
+| n=12 | 0.863 | 0.949 | 0.988 | +0.125 | +0.039 |
+
+Under the published operator the supervisory advantage peaks at 34 points at n=8. Under admission
+control it is 1 point there and never exceeds 10 across the sweep. **The published finding that
+on-platform autonomy dominates at high span is, at a clean link, substantially an artifact of an
+operator that cannot say "not now".**
+
+`blind` and `admit` are bit-identical at n=2, which is the theory's own consistency check: below
+n\* nothing is ever abandoned at the operator, so the policy has nothing to act on.
+
+### CR-13: a second artifact of the same family, found by audit rather than by search
+
+`entities.py` initializes `decision_cooldown` to zero for every entity, so on step 0 every blue
+agent fires a decision event at once and the operator opens the mission with a synchronized burst
+of n requests. Vehicles in the field are not phase-locked. On one seed at n=8, C0, giving each
+agent a uniform starting phase moves goodput from 0.013 to 0.361, which is large enough that the
+congestion result cannot be reported before checking whether it is partly a startup transient.
+
+Opt-in as `params["stagger_decisions"]`; off is byte-identical (hash `90c4763ba205b9d8`).
+This is why the full-tier confirm was stopped and requeued rather than run to completion: confirming
+a configuration that may be superseded is the waste the two-tier rule exists to prevent.
+
+**Verdict: C8 survives.** Across 16 blocks the single-seed reading does not hold up. Operator
+goodput at n=8:
+
+| arm | C0 | C1 | C2 | C3 | C4 | C5 |
+| --- | --- | --- | --- | --- | --- | --- |
+| synchronized start, `blind` | 0.180 | 0.227 | 0.337 | 0.397 | 0.000 | 0.000 |
+| staggered start, `blind` | 0.194 | 0.271 | 0.370 | 0.418 | 0.000 | 0.000 |
+| staggered start, `admit` | 0.738 | 0.725 | 0.678 | 0.520 | 0.000 | 0.000 |
+
+Staggering buys 0.01 to 0.05 of goodput, not the 0.35 one seed suggested. The collapse is a
+steady-state property of the queue, not a startup transient: `blind` still rises with jamming under
+a staggered start, `admit` still falls, and admission control still delivers roughly four times the
+goodput on a clean link. The one-seed number was noise, and the cost of checking it was one proxy
+battery against the cost of publishing a transient as a mechanism.

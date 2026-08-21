@@ -41,7 +41,7 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     # Optional C2 layer (Increment 2): a single operator supervising the blue agents
     # over a comms link. None for ground-core scenarios, which then run unchanged.
     comms = build_comms(scn)
-    op = c2.build_c2(scn, ent)
+    op = c2.build_c2(scn, ent, rng)
     # Optional belief/track layer (Increment 4, prototype). None unless the scenario opts in via
     # params["belief"]["model"] == "tracks"; when None the baseline engagement path runs unchanged.
     tracks = belief.build_tracks(scn, ent)
