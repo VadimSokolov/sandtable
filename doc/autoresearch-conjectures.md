@@ -377,3 +377,129 @@ remedy are both statistically robust at full scale, on the contract seeds, paire
 Proxy tier had these at 0.512 / 0.672 and 0.840 / 0.758 against full tier 0.5625 / 0.6768 and
 0.7998 / 0.7612. Every ranking is preserved, which is the fourth independent check that the
 16x16 proxy tracks the 32x64 tier on this scenario.
+
+
+---
+
+## The throughput cliff (Hopper, proxy tier, `st-searchC-9437188`)
+
+Vehicles delivered to the objective under teleoperation physics, one operator, **clean link**,
+16 blocks x 16 reps. `arrived` is a count, so unlike `success` it is comparable across spans.
+
+| span | `blind` (published) | `admit` | crew of 2 | supervisory |
+| --- | --- | --- | --- | --- |
+| n=2 | 0.38 | 0.38 | 0.41 | 0.39 |
+| n=3 | 0.91 | 0.91 | 0.91 | 0.90 |
+| n=4 | 1.26 | 1.27 | 1.42 | 1.33 |
+| n=5 | 1.97 | 1.90 | 2.20 | 2.26 |
+| n=6 | **2.21** | 2.32 | 2.45 | 2.57 |
+| n=8 | **0.68** | 3.45 | 3.60 | 3.79 |
+| n=10 | **0.00** | 4.75 | 4.87 | 4.94 |
+| n=12 | **0.00** | 5.85 | 5.91 | 5.99 |
+
+Under the published operator, throughput **peaks at six vehicles and falls to exactly zero at ten**.
+Twelve teleoperated vehicles, one operator, a perfect radio, and not one of them reaches the
+objective. Every other arm rises monotonically; admission control alone delivers 5.85 of 12.
+
+The closed form put the collapse span at **n\* = 6.30**, and the measured throughput peak is at
+n=6. A closed-form threshold derived from three timing parameters predicts, to within one vehicle,
+where an agent-based mission simulation stops delivering anything at all.
+
+This is the chart the sponsor should see. It says the capacity limit of a one-operator formation is
+not a soft degradation but a cliff, that the cliff sits at a computable span, and that an interface
+feature moves it rather than a better radio.
+
+
+## G4 and G5: the teleoperation gates, full tier (Hopper, `st-gateB-9437187`)
+
+`sc_span_control`, n_blue=8, direct, CR-2 teleoperation physics, 32 blocks x 64 reps.
+
+| arm | C0 | C2 |
+| --- | --- | --- |
+| `blind` (published operator) | **0.0083** | 0.2900 |
+| `admit` | **0.7534** | 0.6738 |
+
+| gate | contrast | paired delta | t | wins | verdict |
+| --- | --- | --- | --- | --- | --- |
+| G4 | admission control at C0 | **+0.7451** +/- 0.0130 | 57.39 | 32/32 | KEEP |
+| G5 | the interior optimum, `blind` C2 over C0 | **+0.2817** +/- 0.0107 | 26.34 | 32/32 | KEEP |
+
+Eight teleoperated vehicles, one operator, a **clean link**: 0.8% mission success. Let the operator
+refuse work it cannot finish in time and the same configuration reaches 75.3%. Under a staggered
+start the pair is 0.0239 and 0.7500, so the opening burst is not what produces it.
+
+G5 is the pathology at its most extreme: jamming the link to C2 multiplies success by 35.
+
+## C9: fan-out is load-dependent and does not see the cliff
+
+Olsen and Wood's `1 + NT/IT`, measured from SandTable's own hold durations, against span.
+Teleoperation physics, clean link, proxy tier.
+
+| span | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `blind` fan-out estimate | 3.88 | 3.63 | 3.36 | 3.05 | 2.59 | 2.18 | 2.14 | 2.13 |
+| `blind` vehicles delivered | 0.38 | 0.91 | 1.26 | 1.97 | **2.21** | 0.68 | **0.00** | **0.00** |
+| `admit` fan-out estimate | 3.88 | 3.63 | 3.45 | 3.21 | 3.05 | 3.13 | 3.38 | 3.76 |
+
+Three things, and the third is the one that matters.
+
+1. The estimate is **not load-invariant**. It falls from 3.88 to 2.13 as span grows, so the answer
+   to "how many vehicles can this operator hold" depends on how many they are currently holding.
+   The identity assumes it does not.
+2. It never equals the empirical capacity. Throughput peaks at six vehicles; the estimate reads
+   between 3.9 and 2.6 across that range and never lands on it.
+3. **It gives no warning of the cliff.** Between n=8 and n=10 the estimate moves from 2.18 to 2.14,
+   a 2% change, while delivered vehicles go from 0.68 to zero. A metric intended to bound span is
+   flat across exactly the interval where the formation stops working.
+
+Under admission control the estimate is roughly flat in span (3.88 to 3.05 to 3.76), which is what
+a load-invariant capacity metric should look like. So the instability is a symptom of the queue
+pathology rather than of the metric alone, and the practical reading is that fan-out is safe to use
+only on a system that already has admission control. That is a sharper version of the correction
+Cummings and Mitchell 2008 made when they added wait time to the estimate.
+
+Supervisory reads exactly 0.00 at every span because there are no holds to measure, which is
+correct by construction and must be stated wherever the column appears.
+
+
+---
+
+## P2 confirmed at full tier: the threshold is the operator's, not the link's
+
+Hopper `st-theory-i-9437166`, 32 blocks x 64 reps. Both predictions were written into this ledger
+before the runs, which is what makes them confirmations rather than searches.
+
+### P2a. `service_rate` creates and destroys the interior optimum
+
+`n* = (patience + decision_interval) * service_rate`. Nothing in it refers to communications.
+
+| arm | n\* | span | regime | goodput C0 -> C3 | success C0 -> C3 |
+| --- | --- | --- | --- | --- | --- |
+| `n8_fast` (sr 0.30) | 12.60 | 8 | stable | 0.991 -> 0.627, falling | 0.889 -> 0.751, falling |
+| `n8_pub` (sr 0.15) | 6.30 | 8 | collapsed | 0.170 -> 0.398, **rising** | 0.562 -> 0.681, **rising** |
+| `n4_slow` (sr 0.075) | 3.15 | 4 | collapsed | 0.122 -> 0.225, **rising** | 0.233 -> 0.263, **rising** |
+| `n4_pub` (sr 0.15) | 6.30 | 4 | stable | 0.985 -> 0.569, falling | 0.602 -> 0.384, falling |
+
+A clean two-by-two. The *same span* n=4 shows the "jamming helps" effect with a slow operator and
+not with the published one; the *same span* n=8 shows it with the published operator and not with a
+fast one. The effect follows the threshold, not the span and not the link.
+
+`n4_slow` also reads exactly 0.000 at C3, which the same closed form predicts for a different
+reason: at service rate 0.075 the latency cut-off is `(20 - 13.33)/2 = 3.33` steps, and C3's
+latency is 4.
+
+### P2b. `patience` moves the latency cut-off, to the decimal
+
+Cut-off `= (patience - 1/service_rate)/2`. The prediction on record was that C4 and C5 are the same
+rung at the published patience, that C4 separates once patience exceeds 21.3, and that C5 needs
+patience above 38.67.
+
+| patience | predicted cut-off | C3 (lat 4) | C4 (lat 8) | C5 (lat 16) |
+| --- | --- | --- | --- | --- |
+| 20 | 6.67 | 0.569 | **0.000** | **0.000** |
+| 30 | 11.67 | 0.635 | 0.416 | **0.000** |
+| 45 | 19.17 | 0.641 | 0.423 | 0.195 |
+
+Three separate on-off transitions, all three where the arithmetic says. Conjecture C2 moves from
+observed to **proved**: the C0-C5 ladder does not have six distinguishable rungs for direct control,
+it has as many as the operator's patience buys, and the formula says how many.

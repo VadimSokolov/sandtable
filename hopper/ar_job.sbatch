@@ -26,6 +26,10 @@ conda activate pol
 
 cd /scratch/vsokolov/sandtable-ar
 export PYTHONPATH=src
+# Unbuffered, so a long battery reports rows as it produces them rather than at exit.
+# Without this a job looks stalled for its whole run and there is no way to tell a slow
+# battery from a hung one.
+export PYTHONUNBUFFERED=1
 export JOBS="${SLURM_CPUS_PER_TASK:-8}"
 export BLOCKS="${BLOCKS:-0-31}"
 export REPS="${REPS:-64}"
