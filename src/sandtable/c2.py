@@ -9,6 +9,12 @@ expose themselves less; poorly-controlled agents stall and blunder).
 
 Two control modalities (scenario param `control_mode`):
 
+Decision events arrive at a jittered fixed rate by default. With ``terrain_demand`` set they
+arrive faster on difficult ground, which makes the offered load *spatially correlated*: a column
+entering a defile calls for help together rather than independently, and a queue sized for the
+average rate meets a burst. That coupling is what connects terrain to the teaming loop rather than
+only to the movement loop.
+
 - ``supervisory`` (human-on-the-loop): the agent decides locally and immediately
   at quality ``q_auto`` (~0.7). No queue, no wait; comms degradation is almost
   irrelevant. Quality is steady but mediocre.
@@ -63,6 +69,7 @@ class Operator:
     ew_immune: bool = False        # EW-immune command link (fiber / autonomous terminal guidance)
     immune_latency: int = 1        # fixed one-way latency of the immune link, off the comms ladder
     queue_policy: str = "blind"    # "blind" | "refund" | "admit"; see `step`
+    terrain_demand: float = 0.0    # >0 makes difficult ground raise the call-for-help rate (CR-15)
     # Request accounting (CR-10). Counts only, no RNG, so the OFF path stays byte-identical.
     n_request: int = 0             # direct-mode decision events that reached the link
     n_serviced: int = 0            # ... that came back with an operator decision
@@ -111,6 +118,7 @@ def build_c2(scn: Scenario, ent: Entities,
         ew_immune=bool(scn.params.get("ew_immune_link", False)),
         immune_latency=int(scn.params.get("immune_latency", 1)),
         queue_policy=str(scn.params.get("queue_policy", "blind")),
+        terrain_demand=float(scn.params.get("terrain_demand", 0.0)),
     )
     if op.queue_policy not in ("blind", "refund", "admit"):
         raise ValueError(f"queue_policy must be blind|refund|admit, got {op.queue_policy!r}")
@@ -141,17 +149,38 @@ def _claim(op: Operator, console: int, done: float) -> None:
         op.crew_free_at[console] = done
 
 
-def _reset_cooldown(op: Operator, rng: np.random.Generator) -> int:
-    """A jittered inter-decision interval so agents desynchronize (queue contention)."""
+def _reset_cooldown(op: Operator, rng: np.random.Generator, difficulty: float = 0.0) -> int:
+    """A jittered inter-decision interval so agents desynchronize (queue contention).
+
+    With `terrain_demand` on, the interval shortens on difficult ground (CR-15): a vehicle
+    picking its way through a defile calls for help more often than one on a road. Exactly one
+    integer is drawn either way, so the OFF path is byte-identical and the two paths stay paired
+    on a shared seed.
+    """
     lo = max(1, op.decision_interval // 2)
     hi = max(lo + 1, op.decision_interval * 3 // 2)
-    return int(rng.integers(lo, hi + 1))
+    c = int(rng.integers(lo, hi + 1))
+    if op.terrain_demand > 0.0 and difficulty > 0.0:
+        c = max(1, int(round(c / (1.0 + op.terrain_demand * difficulty))))
+    return c
 
 
 def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
-         rng: np.random.Generator) -> None:
-    """Advance the C2 queue/latency model one tick and write ent.control_quality in place."""
+         rng: np.random.Generator, world=None) -> None:
+    """Advance the C2 queue/latency model one tick and write ent.control_quality in place.
+
+    `world` is read only when the scenario opts into `terrain_demand`; without it the demand
+    process is the stationary one this model has always had.
+    """
     blue = np.nonzero((ent.side == BLUE) & ent.alive)[0]
+
+    # Terrain difficulty, when demand is terrain-driven. `speed` is a trafficability multiplier in
+    # [0, 1], so 1 - speed is how hard the ground is under each vehicle right now.
+    if op.terrain_demand > 0.0 and world is not None and blue.size:
+        diff = np.clip(1.0 - world.speed_at(ent.x[blue], ent.y[blue]), 0.0, 1.0)
+        difficulty = dict(zip(blue.tolist(), diff.tolist()))
+    else:
+        difficulty = {}
 
     # Operator-load sampling (CR-7), taken before this tick's decisions are resolved.
     op.total_steps += 1
@@ -168,7 +197,7 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
         if ent.await_until[i] >= 0 and k >= ent.await_until[i]:
             ent.control_quality[i] = op.resolved_quality[i]
             ent.await_until[i] = -1
-            ent.decision_cooldown[i] = _reset_cooldown(op, rng)
+            ent.decision_cooldown[i] = _reset_cooldown(op, rng, difficulty.get(i, 0.0))
             continue
 
         # 2) Still awaiting a reply: sit at the low stall quality (hesitating without guidance).
@@ -185,7 +214,7 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
         if op.mode == "supervisory":
             ent.control_quality[i] = op.q_auto
             op.resolved_quality[i] = op.q_auto
-            ent.decision_cooldown[i] = _reset_cooldown(op, rng)
+            ent.decision_cooldown[i] = _reset_cooldown(op, rng, difficulty.get(i, 0.0))
             continue
 
         # direct control: request the operator over the link. Both link types draw the same two

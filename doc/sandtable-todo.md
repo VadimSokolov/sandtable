@@ -614,3 +614,45 @@ while the operator queue serves only live ones. So per-decision quality does not
 force takes losses even though the queue drains. That is defensible (an operator's assigned span
 does not shrink the instant a vehicle is hit) but it is an asymmetry, and it should be stated
 wherever span-of-control results are reported.
+
+---
+
+## CR-15 Terrain-driven operator demand  (IMPLEMENTED 2026-08-21)
+
+### Why
+
+Decision events arrived at a jittered fixed rate, so the load offered to the operator was
+*stationary*: every vehicle called for help at the same average rate wherever it was. Real demand
+is spatially correlated. A column entering a defile needs help together, so a queue sized for the
+average rate meets a burst, and the closed-form collapse threshold, which assumes stationary
+arrivals, is optimistic.
+
+This is also the missing link between terrain and the teaming loop. Before this, terrain acted only
+on movement and exposure; the HMT layer never saw it.
+
+### Change
+
+`params["terrain_demand"]` (default 0.0, off and byte-identical) scales the inter-decision interval
+by local trafficability: `interval / (1 + terrain_demand * (1 - speed_at(x, y)))`. Exactly one
+integer is drawn either way, so the on and off paths stay paired on a shared seed.
+
+### Result
+
+At the published span of six, right at the stationary threshold of 6.30, correlated demand pushes
+the queue over the edge: goodput 0.751 with stationary demand, 0.281 at `terrain_demand=2`. So the
+centerpiece scenario as shipped is *just* stable only because its demand process is unrealistically
+smooth. Admission control recovers it to 0.778.
+
+### Reporting obligation, revised
+
+The CR-4 qualifier changes. With `terrain_demand` off, terrain never raises autonomy difficulty and
+the intervention rate is not comparable to a field takeover rate at all. With it on, difficult
+ground does raise the call rate, which is closer to what a field takeover rate measures, but the
+coupling is a modeled scalar rather than a perception stack meeting real terrain, so the comparison
+stays qualitative. Both `metrics.py` and `behavior.py` docstrings now say this.
+
+### Tests
+
+`tests/test_terrain_demand.py`: off-path byte-identity, monotone in the coupling strength, pulls
+the collapse below the published span, admission control still recovers it, supervisory pays
+nothing for the same demand increase.

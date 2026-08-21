@@ -12,8 +12,9 @@ quality gain survives unchanged and now multiplies a behaviour instead of standi
 
 Scope boundary, to be stated wherever the intervention count is reported: this models how a UGV is
 *tasked and commanded*, not how an off-road stack *drives*. SandTable has no LiDAR, no vehicle
-dynamics, and terrain never raises autonomy difficulty, so `interventions` counts comms and
-operator-queue contention only. It is not comparable to a field-measured takeover rate.
+dynamics, and no perception stack, so `interventions` counts comms and operator-queue contention.
+Terrain enters that count only through the `terrain_demand` coupling of CR-15, as a modeled scalar
+on the call-for-help rate. It is not comparable to a field-measured takeover rate either way.
 
 The layer also accumulates hold *durations*, not just hold counts. An intervention rate alone is
 ambiguous under jamming: heavier jamming makes each hold longer, which lowers the number of holds

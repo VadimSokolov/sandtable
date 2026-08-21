@@ -273,3 +273,77 @@ steady-state property of the queue, not a startup transient: `blind` still rises
 a staggered start, `admit` still falls, and admission control still delivers roughly four times the
 goodput on a clean link. The one-seed number was noise, and the cost of checking it was one proxy
 battery against the cost of publishing a transient as a mechanism.
+
+
+Under CR-2 teleoperation physics the same robustness check gives, at n=8:
+
+| arm | C0 | C1 | C2 | C3 |
+| --- | --- | --- | --- | --- |
+| staggered, `blind` | 0.027 | 0.164 | 0.348 | 0.379 |
+| staggered, `admit` | 0.734 | 0.703 | 0.703 | 0.582 |
+
+so the teleoperation result is 27x rather than 59x once the opening burst is removed, and every
+qualitative statement stands.
+
+### C10: the staffing curve (CR-14)
+
+Generalizing the operator to a crew of `c` consoles makes the collapse threshold linear in crew
+size, `n* = c (patience + decision_interval) * service_rate / d`, so the one-console threshold of
+6.30 vehicles becomes 12.60 with two. Eight vehicles straddle them, and the simulator agrees:
+operator goodput at n=8, C0 is **0.135 on one console and 0.990 on two**. One console with
+admission control reaches **0.73**.
+
+That comparison is the decision-relevant one, because the two levers have very different costs:
+an interface feature that tells a vehicle "not now" recovers most of the benefit of hiring a
+second operator. Full staffing sweep queued.
+
+---
+
+## Promotion plan (Step 11), drafted before the full-tier confirm lands
+
+Nothing below is written into the manuscript until the gates pass at the full tier and the
+pre-flight protocol runs. Recorded now so the promotion is mechanical rather than improvised.
+
+### Scope of contamination, stated precisely
+
+`build_c2` returns None unless a scenario sets `control_mode`, and only `sc_span_control` does.
+UC-3, UC-5 and UC-7 have no operator at all, so the route-choice and sensor-swarm findings are
+untouched. Everything below is confined to the centerpiece study, which is exactly where the
+modality claims live.
+
+### The framing
+
+A fast mission-level model is only as good as the mechanism that was left out of it. SandTable's
+operator was a queue without admission control, and that single omission produced a headline
+result (degrading the link improves mission success) that reads as a property of contested
+communications and is not one. The closed form says exactly when the omission bites, the remedy is
+an interface feature rather than a radio, and the same analysis turns the span-of-control study
+into a staffing curve. That is a stronger contribution than the original finding, because it is
+a statement about what this class of model has to contain to be trusted.
+
+### Edits required
+
+| Location | Change |
+| --- | --- |
+| Abstract | "at high span on-platform autonomy is better at every communications level" needs its condition: that holds for an operator with no admission control, and the gap closes to about a point when the operator can refuse |
+| Contributions | the moving-optimum item gains a second half: the closed-form thresholds and the admission-control result |
+| Related work | add the queueing-with-abandonment thread beside the existing fan-out citations: `garnett2002impatient`, `gans2003callcenters` |
+| Model, command section | state the abandonment semantics explicitly, add both closed-form thresholds, introduce `queue_policy` and `n_operators` |
+| Model, ladder section | latency and drop covary on the C0--C5 ladder, and direct control saturates above a computable latency, so the ladder has fewer distinguishable rungs than levels for this modality |
+| Results | new subsection: congestion collapse, the two thresholds, the admission-control contrast, the staffing curve |
+| Discussion | the design recommendation, and the point that it is an interface requirement rather than a communications one |
+| Limitations | the operator's abandonment semantics were a modeling choice, both variants are now implemented, and which one is right is an empirical question about real command posts |
+| Future work | the "network of servers with dynamic span reallocation" item is now half delivered (static crews, CR-14); what remains is dynamic reallocation and handoff |
+
+### Numbers that must reach `results/numbers.txt`
+
+Every one traces to a proxy or full-tier `AR_ROW` line in the run logs and to a commit hash.
+
+- `n* = (patience + decision_interval) * service_rate / (1-p_drop)^2`, evaluated at the
+  `sc_span_control` operating point: 6.30 vehicles at C0, 12.60 with a crew of two.
+- latency cut-off `(patience - 1/service_rate)/2 = 6.67` steps, which places C4 and C5 on the
+  same rung and is measured as goodput exactly 0.000 at both.
+- goodput at n=8: 0.180 (blind, C0) rising to 0.397 (blind, C3); 0.797 (refund, C0) falling to
+  0.505 (refund, C3); 0.135 on one console against 0.990 on two.
+- success at n=8, C0: 0.512 blind, 0.840 admit, published physics; 0.012 blind, 0.695 admit,
+  teleoperation physics; 0.027 and 0.734 respectively under a staggered start.

@@ -83,7 +83,7 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     cov_steps = 0
     for k in range(n_steps):
         if op is not None:
-            c2.step(ent, op, comms, scn, k, rng)
+            c2.step(ent, op, comms, scn, k, rng, world)
         if bhv is not None:
             behavior.step(ent, bhv, op, comms, scn, k, rng)
         planning.step(ent, world, scn, spawn_x, pers=pers, bhv=bhv)

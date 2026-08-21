@@ -78,9 +78,13 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
 
     Two qualifiers are mandatory wherever these are reported.
 
-    `intervention_rate` counts comms and operator-queue contention **only**. Terrain enters
-    SandTable as a speed raster and a cover tradeoff, never as autonomy difficulty that forces a
-    takeover, so this is not comparable to a field-measured soldier takeover rate.
+    `intervention_rate` counts comms and operator-queue contention. Whether terrain contributes
+    depends on `terrain_demand` (CR-15): with it off, terrain enters SandTable only as a speed
+    raster and a cover tradeoff, never as autonomy difficulty that forces a takeover, so the rate
+    is not comparable to a field-measured soldier takeover rate at all. With it on, difficult
+    ground raises the call-for-help rate, which is closer to what a field takeover rate measures,
+    but the coupling is a modeled scalar rather than a perception stack meeting real terrain, so
+    the comparison is qualitative in either case.
 
     `intervention_rate` is a rate of *events*, and jamming lengthens each event, so it can fall
     while the burden rises. Always read it next to `hold_fraction`, the share of live vehicle-steps
