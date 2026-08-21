@@ -10,6 +10,14 @@ dist/
 .mypy_cache/
 .ipynb_checkpoints/
 
+# Doc 
+pitch/
+doc/afcent_positioning.md
+doc/Proposal_FP6111_Bricio_Clemson_Army_11-20-2025.*
+doc/TDD_FP6111_HMT_Virtual_Prototyping_Testbed_ProjectGL_v0.3.docx
+doc/VIPR-GS_3.25.18_Project_Plan.docx
+doc/fig/
+
 # Environments
 .venv/
 venv/

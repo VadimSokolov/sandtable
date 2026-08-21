@@ -114,10 +114,10 @@ The code maps to the layers as follows.
 | --- | --- |
 | Simulation core: fixed-step loop, time, terrain | `sim`, `world`, `scenario`, `seeding` |
 | Agent-based modeling: SoA platforms, movement, routing, command | `entities`, `motion`, `planning`, `c2`; optional personality-field movement (`personality`) |
-| Sensing and engagement: shared-picture detection, aimed-fire attrition | `sensing`, `engagement`; kill-web state, believed tracks and decoys (`belief`), suppression and finite munitions (`mechanics`) |
-| Cyber / EW: comms degradation, dropped tasking, thinned picture | `comms_ew` |
+| Sensing and engagement: shared-picture detection, aimed-fire attrition | `sensing`, `engagement`; kill-web state, believed tracks and decoys (`belief`), suppression and finite munitions (`mechanics`), counter-UAS / SHORAD attrition of the recon swarm (`counter_uas`) |
+| Cyber / EW: comms degradation, dropped tasking, thinned picture | `comms_ew`; EW-immune command link (fiber / autonomous terminal guidance) via the `ew_immune_link` gate in `c2` |
 | Learning, surrogate and analytics: DOE, Bayesian optimization and test-and-evaluation | `runner`, `plugin`, `opt_metrics` (+ polarisopt), Bayesian T&E (`bayes_te`) |
-| Data, telemetry and metrics: mission KPIs, replay traces | `metrics`, `replay` |
+| Data, telemetry and metrics: mission KPIs, cost-weighted exchange, replay traces | `metrics`, `replay` |
 
 ### Extensions
 
@@ -131,6 +131,12 @@ limit and every prior result is unchanged (proven by an additive-only diff of th
 - **Personality-field movement** (`personality`): ISAAC / EINSTein / MANA-style weighted
   attraction-repulsion movement, where a route emerges from local propensities instead of a scripted
   lane.
+- **Drone-war increment** (`counter_uas`, `c2`, `metrics`): an EW-immune command link (`ew_immune_link`,
+  standing in for fiber or autonomous terminal guidance) that carries tasking at a fixed latency off
+  the C0-C5 ladder, counter-UAS / SHORAD attrition whose per-drone hazard rises with committed swarm
+  size (`cuas_rate`, `signature`), and a cost-weighted `cost_exchange` KPI. The first flattens the
+  comms-degradation crossover; the second turns the UC-5 swarm response from monotone-in-size into an
+  interior optimum, as a mechanism demonstration rather than a modeled air-defense system.
 
 An **analysis layer** reads the mission outcomes without changing them:
 
@@ -160,8 +166,10 @@ the aggregate-attrition anchor (still a current benchmark in the combat-modeling
 
 ```
 src/sandtable/  simulator package: world, entities, motion, planning, sensing, engagement, c2,
-                comms_ew, belief, mechanics, personality, metrics, sim; analysis: bayes_te;
-                plus polarisopt runner.py / plugin.py / opt_metrics.py
+                comms_ew, belief, mechanics, personality, counter_uas, metrics, replay, sim;
+                analysis: bayes_te; plus polarisopt runner.py / plugin.py / opt_metrics.py
+tools/          make_*_numbers.py produce report/data/*.csv; make_numbers.py / make_figures.py /
+                make_diagrams.py turn that CSV into report/gen/*.tex and report/figures/*.pdf
 scenarios/      declarative scenario specs (JSON)
 studies/        polarisopt study YAMLs (LHS/Morris sweeps + GP/qEI Bayesian optimization)
 experiments/    empirical.md lab notebook + results/
@@ -173,7 +181,7 @@ doc/            proposal, TDD, and console mockup (internal, not tracked)
 ## Environment
 
 ```bash
-conda activate sandtable          # Python 3.12 env for this project
+conda activate mgl                # the canonical env for this project (Python 3.12)
 pip install -e '.[dev,graph,viz]'
 # optimization driver (git only; add [bo] for the Bayesian-optimization backend = torch):
 pip install 'polarisopt @ git+https://github.com/VadimSokolov/polarisopt.git'
@@ -188,6 +196,57 @@ python -m sandtable.runner scenarios/uc3_route_defilade.json /tmp/out.json   # s
 python -c "from sandtable.sim import run_mission; from sandtable.scenario import load_scenario; \
            print(run_mission(load_scenario('scenarios/uc3_route_defilade.json'), seed=0))"
 ```
+
+## Develop
+
+Every command below runs from the repository root, in the `mgl` env. Scripts resolve `report/` and
+`scenarios/` relative to the working directory, so running them from a subdirectory silently writes
+to the wrong place.
+
+```bash
+# full suite: 127 tests, about 2 min
+conda run -n mgl python -m pytest tests/ -q
+# one file, then one test
+conda run -n mgl python -m pytest tests/test_counter_uas.py -q
+conda run -n mgl python -m pytest tests/test_counter_uas.py::test_off_is_byte_identical -q
+```
+
+Lint config lives in `pyproject.toml` (ruff, line-length 100), but `ruff` is not currently installed
+in `mgl`; `pip install ruff` first if you want `ruff check src tests tools` to run.
+
+Regenerating the report is two stages, and the split matters: the producers re-run the simulator and
+are slow, the consumers are pure CSV-to-LaTeX and are fast. If you only changed prose or plotting,
+run the consumers alone.
+
+```bash
+# stage 1, producers: run missions, write report/data/*.csv  (slow; only when the model changed)
+conda run -n mgl python tools/make_drone_numbers.py       # drone_fiber_link, drone_cuas_swarm
+conda run -n mgl python tools/make_killweb_numbers.py     # suppression_sweep, munitions_sweep, uc7_layers
+conda run -n mgl python tools/make_belief_numbers.py      # belief_demo
+conda run -n mgl python tools/make_personality_numbers.py # personality_sweep
+conda run -n mgl python tools/make_bayes_te_numbers.py    # bayes_te_*
+conda run -n mgl python tools/lanchester_check.py         # lanchester (analytic cross-check)
+
+# stage 2, consumers: read report/data/*.csv, write the LaTeX the manuscript \input-s
+conda run -n mgl python tools/make_numbers.py    # -> report/gen/numbers.tex, tab_*.tex, results/numbers.txt
+conda run -n mgl python tools/make_figures.py    # -> report/figures/*.pdf
+conda run -n mgl python tools/make_diagrams.py   # -> architecture, command_model, scenarios figures
+```
+
+The centerpiece and UC-3/UC-5 CSVs (`centerpiece_*.csv`, `uc3_frontier.csv`, `uc5_swarm_jam.csv`)
+come from the polarisopt studies in `studies/` run on the Hopper cluster, not from a local script.
+
+Compile and pre-flight the manuscript from `report/`:
+
+```bash
+cd report
+latexmk -pdf -outdir=build -interaction=nonstopmode main.tex   # -> report/build/main.pdf
+python3 tools/audit.py                                         # 5 mechanical checks, exit 0 = pass
+```
+
+`report/tools/audit.py` checks citation provenance (every `ref.bib` entry carries a `% verified:`
+line), AI-writing signs, em-dash absence, that every `\ref{}` in the contribution block resolves, and
+a clean compile. Pass `--no-compile` to skip the slow LaTeX check while iterating.
 
 ## Conventions
 
