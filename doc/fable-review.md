@@ -2011,3 +2011,60 @@ calibration promised in ratios but no retrodiction shown (ship the two-anchor mi
 and Giachetti/Barnes, even if crude); refund requires knowing the requester's deadline (answer:
 patience is protocol-declared between software, one sentence); and the retraction record read as
 instability (answer: present the ledger as the method, which it is).
+
+## Round 12 (2026-08-22, the coordinator's round 12)
+
+### The one pre-run catch: O4 is aimed at a prediction q_droop cannot produce
+
+Verified at c2.py line 514: q_droop scales the SERVICED decision's quality toward q_auto in
+proportion to utilization, and nothing else. No cadence change, no re-request on a degraded
+answer, no rework. Requests fire on cooldowns regardless of outcome quality, so the queue's
+arrival and booking arithmetic is quality-blind by construction, and the goodput collapse
+location CANNOT move under this knob except through the second-order mission loop (slower
+vehicles, different attrition, the demand valve). O4 as described ("the collapse itself moves
+left") will therefore be refuted by construction, not because the co-option claim is wrong but
+because the knob lacks the channel the prediction invokes. My Round 11 sentence carried that
+condition implicitly ("errors generate rework and rework is offered load"); q_droop degrades
+answers and generates no rework, and I should have said the condition out loud. Amend O4 before
+droop.sh runs: registered predictions (a) the SUCCESS-optimal span moves left with droop, (b) the
+goodput cliff location is droop-invariant up to the mission-physics loop. That pair is itself a
+clean result, a decomposition showing quality effects and load effects separate exactly where the
+model says they must. If the full co-option claim is wanted later, it needs a rework knob (a
+served-but-degraded decision re-requests early with probability proportional to droop); optional,
+not this week.
+
+### Reading the droop sweep honestly
+
+Cells one through four are informative: droop could in principle have compressed admission
+control's value to nothing (at full droop a served answer approaches autonomy, so the lever's
+worth must come from the waiting cost alone), and it did not. Cell five is one-sided by
+construction: droop harms only the direct arm, so supervisory-over-direct could not have flipped;
+report it, but do not count it among the orderings that carried risk. The C3 pilot instability
+should stay in the ledger as a SCOPE BOUNDARY, not an error to bury: CR-30's invariance claim is
+"at the shipped operating points," and C3 is where the armor has not been tested. And the
+goodput magnitude-stability is the right lead, with its attribution said aloud: it is stable
+because admission control operates on booking arithmetic, which is quality-blind, so the
+invariance is a mechanism feature rather than a fortunate constant, and saying why preempts the
+too-good-to-be-true read of five numbers inside 0.02 of each other.
+
+### Q1: a subsection, and specifically a table
+
+Your instinct is right and the form matters more than the length. Not an appendix (the record is
+load-bearing for believing the survivors; buried evidence does not confer credibility), not a
+paragraph (six structured events compressed to prose invites the "they buried it" reading). A
+half-page methods subsection whose body is a table: one row per registered claim, columns
+registered / falsifier / outcome (gated, refuted on own falsifier, retracted, cut pre-tier,
+amended pre-result) / where recorded. Include the two instrument repairs as rows; instruments
+caught by adversarial review are the strongest single evidence the loop has teeth. The table
+format is the point: it shows the DENOMINATOR (how many registrations, how many died), which is
+the only thing that distinguishes a pre-registered loop from survivorship plus good manners. No
+adjectives anywhere in the subsection; rows and counts carry it.
+
+### Q2: nothing jumps the queue; two items ride in parallel at zero cluster cost
+
+Run teleop_price.sh and droop.sh (with the O4 amendment, which is textual). Nothing I have goes
+ahead of them. Two things cost no cluster time and should happen while they run: the centerpiece
+contour overlay from the foundations review (predict the crossover contour from n*(rung) plus
+link arithmetic and draw it over the measured phase diagram; existing CSVs, one figure, and it is
+the picture that makes the sufficiency thesis visible on the paper's own centerpiece), and the
+one-sentence C3 scope line above. After that, run and stop asking is the correct plan.

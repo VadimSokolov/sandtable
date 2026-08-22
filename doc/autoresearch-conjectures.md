@@ -2273,3 +2273,43 @@ hold fraction is a PARTIAL mediator and something else carries the remainder, wi
 deterministic re-consultation cadence the leading suspect. **Registered now: prediction 2 may not
 be reported as full mediation, whatever the tier data look like.** The most it can claim is that
 hold fraction accounts for the ordering across arms that differ in hold fraction.
+
+## CR-30 AMENDMENT: O4 was aimed at something the knob cannot produce
+
+*Written 2026-08-22 on Fable's Round 12, BEFORE `droop.sh` was submitted. The battery had produced
+no data and was still queued behind jobs 9446092-95.*
+
+Fable's Round 11 co-option sentence said a quality droop should move the collapse itself LEFT,
+because a degraded answer is rework and rework is offered load. I wrote O4 to test that. Fable then
+read the code and found that the sentence carries a REWORK CONDITION this model does not meet, and
+it is right. Verified independently before the amendment: `_reset_cooldown` takes the terrain
+difficulty and nothing else, and `control_quality` reaches `motion`, `engagement` and `belief` but
+never the request cadence. A badly served vehicle drives slower and shoots worse. It does not ask
+again sooner. **The queue's booking arithmetic is quality-blind by construction.**
+
+So O4 as first written would have been refuted BY CONSTRUCTION rather than on the merits, which is
+the worst kind of registered prediction: it looks like a test and cannot fail informatively. Split
+into a decomposition instead:
+
+- **2a.** The SUCCESS-optimal span moves LEFT as droop rises, because quality reaches the mission.
+- **2b.** The GOODPUT cliff location is droop-INVARIANT, up to the second-order mission loop.
+
+FALSIFIER for the pair: the goodput cliff moves materially while the success optimum does not,
+which would mean quality reaches the booking arithmetic by a path neither of us found in the code,
+and the mechanism section would have to carry it.
+
+Passing both is a sharper result than the co-option claim it replaces, because it is a
+decomposition rather than a direction: quality effects and load effects separate exactly where the
+model's own structure says they must. The full co-option claim needs a rework channel, which this
+model does not have and which is not built for this battery.
+
+**Two reading rules recorded before the data.** The supervisory-over-direct ordering is ONE-SIDED
+by construction, since a droop harms only the direct arm, so it is reported and not counted among
+the orderings that could have failed; four orderings carried real risk, not five. And the goodput
+magnitude-stability, if it survives at tier, is to be reported WITH its cause rather than as a
+surprise: it is stable because admission control acts on booking arithmetic that never sees
+quality. Saying why is what stops it reading as too good to be true.
+
+**Scope, not error.** The 48-seed pilot at C3 showed the refund ordering wobbling in sign. The
+shipped claim is at C0 and n = 8, where it does not. That stays in the ledger as a scope boundary:
+the invariance is asserted at the operating points the paper quotes, and not swept.
