@@ -317,24 +317,29 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
         # byte-identical. An EW-immune link (fiber / autonomous terminal guidance) ignores the drops
         # and rides a fixed low latency off the comms ladder; the single operator is still a shared
         # server, so span-of-control contention remains the residual limit.
-        up_ok = comms.delivered(rng)
-        down_ok = comms.delivered(rng)
-        link_ok = op.ew_immune or (up_ok and down_ok)
         lat = op.immune_latency if op.ew_immune else comms.latency
+        up_ok = comms.delivered(rng)
+        # Read the queue before pricing the reply. The reply is not sent when the request is: it
+        # leaves when the operator finishes, so the two messages are separated by `done - k` steps,
+        # and on a channel with memory that gap is what decides whether their fates are correlated
+        # (CR-18). Reading the queue consumes no randomness, so moving it above the second draw
+        # leaves the stream exactly where it was.
+        recv = k + lat                                        # request reaches operator
+        if op.crew_free_at is None:
+            console = -1
+            start = max(op.operator_free_at, recv)            # single shared server
+        else:
+            console = int(np.argmin(op.crew_free_at))         # earliest-free console (CR-14)
+            start = max(op.crew_free_at[console], recv)
+        done = start + 1.0 / op.service_rate                  # operator finishes this decision
+        reply = done + lat                                    # reply travels back
+        down_ok = comms.reply_survives(rng, done - k)
+        link_ok = op.ew_immune or (up_ok and down_ok)
         op.n_request += 1
         late = k >= op.late_from
         if late:
             op.n_request_late += 1
         if link_ok:
-            recv = k + lat                                    # request reaches operator
-            if op.crew_free_at is None:
-                console = -1
-                start = max(op.operator_free_at, recv)        # single shared server
-            else:
-                console = int(np.argmin(op.crew_free_at))     # earliest-free console (CR-14)
-                start = max(op.crew_free_at[console], recv)
-            done = start + 1.0 / op.service_rate              # operator finishes this decision
-            reply = done + lat                                # reply travels back
             wait = reply - k
             if wait <= op.patience:
                 _claim(op, console, done)

@@ -73,11 +73,20 @@ def two_way_delivery_bursty(p_drop: float, burst_len: float) -> float:
     The consequence for the ladder is that `p_drop` is not a sufficient statistic for a link. Two
     channels with the same mean loss put different loads on the same operator.
 
-    Scope, and it is a real one. `burst_len` is the channel's coherence measured in MESSAGES, and
-    `c2.step` draws the request and the reply back to back, so the model treats them as adjacent in
-    channel time when physically they are separated by the operator's whole service time. Whether a
-    real link behaves this way is a question about coherence time against round-trip time, and the
-    answer is bracketed rather than assumed: `burst_len = 1/(1-p)` is the memoryless point, where
+    THIS FORMULA DESCRIBES A MESSAGE-CLOCKED CHANNEL, AND THAT TURNED OUT TO BE THE WRONG ONE.
+    `burst_len` is coherence measured in MESSAGES, and the chain advances one transition per
+    message, so a request and its reply are adjacent in chain time even though the operator's whole
+    service delay separates them in mission time. Pricing the reply at the moment it is actually
+    sent (`channel_clock="step"`, CR-18) collapses the effect: realized round-trip delivery at eight
+    vehicles goes 0.9352 to 0.8945 at the nominal rung and 0.7598 to 0.6478 at the contested one,
+    landing on the Bernoulli values of 0.9057 and 0.6348. The service delay outruns the channel's
+    coherence, so the handshake is independent after all and burstiness at a matched mean drop rate
+    does nothing to this queue. The ladder's `p_drop` IS a sufficient statistic for the operator,
+    which is the opposite of what the message-clocked model says.
+
+    The formula is kept because it is the correct description of the adjacent limit, which is the
+    right physics for a jammer whose sweep is slow against the round trip, and because the size of
+    the gap between the two clocks is the measure of the artifact. Bracketing it: `burst_len = 1/(1-p)` is the memoryless point, where
     the two draws are independent and `d` returns exactly to `(1-p)^2`, and as coherence grows `d`
     saturates at `(1-p)`, because a chain left in GOOD by the first message loses the second only
     on a fresh transition. So for any coherence at or above the memoryless point the effect is

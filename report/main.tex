@@ -290,6 +290,31 @@ Booking the wait differently does not rescue it, and we report the alternatives 
 \input{gen/tab_staffing}
 \end{table}
 
+\subsection{When reliance closes the loop: a span at which the team has two answers}
+\label{subsec:band}
+
+Every queue result above assumes a vehicle's request cycle does not depend on whether its last request was answered. That assumption is what gives the model one threshold. It is also not obviously true of an operator-reliant vehicle, which may ask again sooner after being left unanswered than after being served, and the difference matters more than it looks: it makes offered load a function of the state the queue is already in. We add the smallest mechanism that does this. A fraction $\pi$ of abandoned requests return after a short backoff $\rho$ instead of the standing decision interval $\tau$, and everything else is unchanged.
+
+The threshold then splits. Deep in collapse every request abandons, so the mean cycle is $P + 1 + \tau - \pi(\tau - \rho)$ and the collapsed state sustains itself above $n_c$. In the healthy state only a fraction $a_h$ abandons, so only that fraction returns early, and the healthy state survives up to $n_h$:
+\begin{equation}
+n_c = \frac{c\,\mu\,(P + 1 + \tau - \pi(\tau-\rho))}{d}, \qquad
+n_h = \frac{c\,\mu\,(P + 1 + \tau - a_h\,\pi(\tau-\rho))}{d},
+\label{eq:band}
+\end{equation}
+\begin{equation}
+n_h - n_c = \frac{c\,\mu\,\pi\,(\tau-\rho)\,(1 - a_h)}{d}.
+\label{eq:bandwidth}
+\end{equation}
+Between $n_c$ and $n_h$ both states are self-sustaining. Three things follow, and none of them is specific to this particular retry rule. The band is empty exactly when the return does not shorten the cycle, so any reliance loop that closes faster after a failure opens one. At the abandonment floor $a_h = 1-d$ the link cancels out of Equation~\ref{eq:bandwidth} entirely, so jamming relocates the band without widening it. And the width inverts into a design rule: holding a failed requester off for at least $\tau - 1/(c\mu\pi)$ steps, which is \qBandFloor{} at this operating point, leaves a band narrower than one vehicle, which is a band no staffing decision can land inside.
+
+The floor $a_h = 1-d$ is the wrong number to use on a clear link, where it is zero and Equation~\ref{eq:band} collapses back onto the single threshold. A request can also abandon because the queue was busy, and at C0 that is the only way it can. Reading the healthy abandonment off the retry-free arm instead (\qBandAbandon{} at six vehicles) puts the band at $(\qBandLo{}, \qBandHi{})$, so five vehicles sit inside it and six do not.
+
+That is a testable prediction about initial conditions rather than about means, so we test it that way. Staggering the vehicles' first decision events is a healthy start and the synchronized default is not, and the two are compared at each span. Staggering also perturbs the random stream and has an effect of its own, so the quantity that isolates the loop is the difference of differences against the retry-free arm. It is null everywhere except at five vehicles, where mission success moves by \qBandSuccess{} ($t = \qBandSuccessT{}$, 32 of 32 blocks) and operator goodput by \qBandGood{} ($t = \qBandGoodT{}$, 32 of 32). One span below it gives \qBandBelow{} and one span above it \qBandAbove{}. At five vehicles the model has two answers, and which one it gives depends on how the vehicles happened to start.
+
+The operational content is in what closes the band. Freeing the slot does: the same contrast at five vehicles falls from \qBandBlind{} under \texttt{blind} to \qBandRefund{} under \texttt{refund} and \qBandAdmit{} under \texttt{admit}, a factor of forty-four and twenty. A console that discards work it cannot finish in time removes the bistability, not merely the average loss, which is a stronger reason to build admission control than the mean effect of Section~\ref{subsec:queue}. That \texttt{admit} closes the band less completely than \texttt{refund} is consistent rather than anomalous: notification returns a requester to service sooner, which raises the request rate, which is what the retry loop does. Admission control's second half is itself a small reliance loop.
+
+Three limitations belong with this. The upper edge is not a constant: $a_h$ is itself a function of span, so Equation~\ref{eq:band} with a frozen $a_h$ brackets the edge rather than locating it, and the honest reading of $\qBandHi{}$ is an estimate at one operating point. Four vehicles sits inside the predicted band and shows nothing, which is a question about basins rather than about stability: the collapsed state is self-sustaining there, but a synchronized start is not a large enough disturbance to reach it, and we have not mapped the basin boundary. And $\pi$ and $\rho$ are declared rather than measured. Nothing here says how often a real crew re-requests after being left unanswered, only that if they do it at all, and faster than they would otherwise, a span exists at which the team's behavior is not determined by its parameters.
+
 \subsection{Sensor swarm under electronic warfare}
 \label{subsec:uc5}
 

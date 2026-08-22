@@ -66,6 +66,34 @@ class Comms:
     jam_p_drop: float = 0.0
     base_latency: int = 0
     base_p_drop: float = 0.0
+    # Channel clock (CR-18). The Gilbert-Elliot chain advances one transition per MESSAGE, so a
+    # request and its reply are adjacent in chain time even though the operator's whole service
+    # delay separates them in mission time. That makes the handshake maximally correlated for a
+    # coding reason rather than a physical one. `step` prices the reply on the chain's actual decay
+    # over the elapsed lag instead. `message` is the default and leaves every recorded number
+    # unchanged.
+    clock: str = "message"
+
+    def reply_survives(self, rng: np.random.Generator, lag: float) -> bool:
+        """Draw the reply's survival, given the request survived and `lag` steps have passed.
+
+        One uniform, as `delivered` uses, so the stream stays aligned either way.
+
+        For a two-state chain with second eigenvalue `lam = 1 - p_gb - p_bg`, the probability that
+        a message sent `L` steps after a delivered one also survives is
+
+            P = 1 - p * (1 - lam^L),
+
+        which is `1 - p_gb` at `L = 1` (the adjacent case the message clock always assumes) and
+        decays to the marginal `1 - p` as `L` grows, recovering an independent handshake. The
+        round-trip delivery rate therefore runs from `(1-p)(1-p_gb)` down to `(1-p)^2` as the
+        service delay outruns the channel's coherence.
+        """
+        if self.channel != "gilbert_elliot" or self.clock != "step":
+            return self.delivered(rng)
+        lam = max(0.0, 1.0 - self.p_gb - self.p_bg)
+        keep = 1.0 - self.p_drop * (1.0 - lam ** max(1.0, float(lag)))
+        return bool(rng.random() < keep)
 
     def set_step(self, k: int) -> None:
         """Put the link on its jammed or its standing parameters for step `k`."""
@@ -133,7 +161,10 @@ def build_comms(scn: Scenario) -> Comms:
         j_lat, j_drop, _ = _LADDER[j_level]
         j_lat = int(scn.params.get("jam_latency", j_lat))
         j_drop = float(scn.params.get("jam_p_drop", j_drop))
-    return Comms(level=level, latency=lat, p_drop=drop, label=label,
+    clock = str(scn.params.get("channel_clock", "message"))
+    if clock not in ("message", "step"):
+        raise ValueError(f"channel_clock must be 'message' or 'step', got {clock!r}")
+    return Comms(level=level, latency=lat, p_drop=drop, label=label, clock=clock,
                  channel=channel, p_gb=p_gb, p_bg=p_bg,
                  jam_start=j_start, jam_end=j_end,
                  jam_latency=j_lat, jam_p_drop=j_drop,

@@ -212,6 +212,38 @@ def main() -> None:
     _sps = served_per_step()
     wc = rows("st-waitcost-9443162.out")
     sf = rows("st-stopf-9443653.out")
+    hy = rows("st-hyst-9443432.out")
+
+    def _did(sec: str, n: str) -> tuple:
+        """[stag - burst | retry] - [stag - burst | no retry], paired on the shared block set.
+
+        Staggering the first decision events also perturbs the RNG stream and has a direct effect
+        on the mission, so the retry-off arm is the control and only this interaction isolates the
+        reliance loop.
+        """
+        a, b, c, d = (row(hy, sec, arm, n)["vals"] for arm in
+                      ("stag_retry", "burst_retry", "stag_off", "burst_off"))
+        diff = [(w - x) - (y - z) for w, x, y, z in zip(a, b, c, d)]
+        n_ = len(diff)
+        mean = sum(diff) / n_
+        var = sum((v - mean) ** 2 for v in diff) / (n_ - 1)
+        return mean, (mean / ((var / n_) ** 0.5) if var > 0 else float("inf"))
+
+    def _band() -> tuple:
+        """The fold band at the published operating point, with the MEASURED healthy abandonment.
+
+        The link-drop floor is zero at C0, which would put the upper edge back on the no-retry
+        threshold and predict bistability at six vehicles, where the simulator shows none. The
+        healthy abandonment fraction is read off the retry-off arm instead.
+        """
+        sys.path.insert(0, str(ROOT / "tools"))
+        import queue_theory as qt
+        a_h = 1.0 - pick(hy, "H2", "burst_off", "6")
+        return (qt.fold_band(0.0, sr, pat, di, retry_prob=1.0, retry_backoff=4.0,
+                             abandon_healthy=a_h),
+                qt.backoff_floor(sr, di, 1.0), a_h)
+
+    _bd = _band()
 
     def _sf(stop: str, q: str) -> tuple:
         """admit minus refund in one cell of the teleop_stop x q_stall factorial."""
@@ -291,6 +323,20 @@ def main() -> None:
         # The wait-cost sweep (st-waitcost). `q_stall` is the control quality of a vehicle
         # awaiting a decision and `q_fallback` = 0.50 that of one that gave up, so the top of the
         # sweep is a setting in which waiting costs nothing.
+        # --- CR-17, the fold band -----------------------------------------------------------
+        "qBandLo":           f"{_bd[0][0]:.2f}",
+        "qBandHi":           f"{_bd[0][1]:.2f}",
+        "qBandFloor":        f"{_bd[1]:.2f}",
+        "qBandAbandon":      f"{_bd[2]:.3f}",
+        "qBandSuccess":      f"{_did('H1', '5')[0]:+.3f}",
+        "qBandSuccessT":     f"{_did('H1', '5')[1]:.2f}",
+        "qBandGood":         f"{_did('H2', '5')[0]:+.3f}",
+        "qBandGoodT":        f"{_did('H2', '5')[1]:.2f}",
+        "qBandBelow":        f"{_did('H1', '4')[0]:+.3f}",
+        "qBandAbove":        f"{_did('H1', '6')[0]:+.3f}",
+        "qBandBlind":        f"{paired(row(hy, 'H3', 'stag', 'blind'), row(hy, 'H3', 'burst', 'blind'))[0]:+.3f}",
+        "qBandRefund":       f"{paired(row(hy, 'H3', 'stag', 'refund'), row(hy, 'H3', 'burst', 'refund'))[0]:+.3f}",
+        "qBandAdmit":        f"{paired(row(hy, 'H3', 'stag', 'admit'), row(hy, 'H3', 'burst', 'admit'))[0]:+.3f}",
         "qStallLow":         "0.10",
         "qStallPub":         "0.30",
         # The 2x2 factorial: the same contrast in four cells, each gated on its own, so the

@@ -206,3 +206,40 @@ def test_the_burst_effect_is_bounded_by_the_marginal_survival_rate():
         assert qt.two_way_delivery_bursty(p, 1e9) == pytest.approx(1.0 - p, abs=1e-6)
         # Below the memoryless point the chain is anti-correlated and the bound does not apply.
         assert qt.two_way_delivery_bursty(p, 1.0) < qt.two_way_delivery(p)
+
+
+def test_step_clocking_returns_the_handshake_to_independence():
+    """CR-18. The message clock made the reply adjacent to its request; the step clock does not.
+
+    Run both clocks through the live channel at the lag the operator actually imposes. Under the
+    message clock the pair is correlated and beats Bernoulli; under the step clock the chain has
+    decayed and the pair is independent, so the round trip lands on `(1-p)^2`.
+    """
+    import sys
+
+    import numpy as np
+
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
+    from sandtable.comms_ew import build_comms
+    from sandtable.scenario import Scenario, load_scenario
+
+    base = load_scenario(pathlib.Path(__file__).resolve().parents[1]
+                         / "scenarios" / "sc_span_control.json")
+    for level, p in ((2, 0.10), (3, 0.20)):
+        rates = {}
+        for clock in ("message", "step"):
+            prm = dict(base.params, comms_level=level, channel="gilbert_elliot",
+                       channel_clock=clock)
+            c = build_comms(Scenario(**{**base.__dict__, "params": prm}))
+            rng = np.random.default_rng(7)
+            n, ok = 60000, 0
+            for _ in range(n):
+                # Both draws always taken, as `c2.step` takes them. A short-circuiting `and` would
+                # skip the second on a failed first and leave the chain a transition behind.
+                up = c.delivered(rng)
+                down = c.reply_survives(rng, 30.0)
+                ok += up and down
+            rates[clock] = ok / n
+        assert rates["message"] == pytest.approx(qt.two_way_delivery_bursty(p, 4.0), abs=0.01)
+        assert rates["step"] == pytest.approx(qt.two_way_delivery(p), abs=0.01)
+        assert rates["step"] < rates["message"]

@@ -1073,3 +1073,80 @@ The null is consistent with the closed form rather than against it. Six vehicles
 both predicted thresholds at every rung (7.96 Bernoulli against 7.37 bursty at rung 2), so the
 queue has slack and the extra completed round trips are absorbed. The theory localizes the effect
 near the threshold, which is what `st-bspan-9443684` sweeps span to find.
+
+### st-bspan-9443684 S1 (full tier, rung 3): the registered sign flip, confirmed in shape
+
+`ge - bern` on mission success, span sweep at a matched mean drop rate of 0.20:
+
+| n_blue | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
+|---|---|---|---|---|---|---|---|---|
+| effect | +0.0288 | +0.0039 | -0.0171 | **-0.0488** | **-0.0522** | -0.0293 | +0.0186 | +0.0005 |
+| t | 1.85 | 0.27 | -1.09 | **-3.23** | **-3.82** | -2.32 | 1.79 | 0.06 |
+
+Bold = gated. The registered profile holds: burstiness HELPS at small span, where the extra
+completed round trips are answers a vehicle wanted; crosses zero; HARMS at intermediate span,
+where they are load the operator cannot absorb; and converges once both arms are collapsed.
+
+The placement is off. The registered bracket was (8.60, 10.08), the two predicted thresholds. The
+harm is gated at 8 and 9, just below the bursty threshold rather than between the two, and the zero
+crossing sits near 6.5 rather than 8.60. The closed form locates the span at which the collapsed
+state becomes self-sustaining, not the span at which queueing starts to bite, and the second is
+about one and a half vehicles to the left of the first. The mechanism is confirmed and the
+quantitative placement is not; both belong in the report.
+
+### CR-18: the burstiness result was an artifact of clocking the channel in messages
+
+Review (round 4) found the defect and it is real. The Gilbert-Elliot chain advances one transition
+per MESSAGE, and `c2.step` drew the request and the reply back to back, so the model treated the
+two as adjacent in channel time even though the operator's service delay separates them by tens of
+steps in mission time. That inflates round-trip delivery from `(1-p)^2` to `(1-p)(1-p_gb)` for a
+coding reason rather than a physical one.
+
+The repair prices the reply at the moment it is actually sent. For a chain with second eigenvalue
+`lam = 1 - p_gb - p_bg`, a message sent `L` steps after a delivered one survives with probability
+`1 - p(1 - lam^L)`, which is `1 - p_gb` at `L = 1` and decays to the marginal `1 - p`. One uniform
+either way, so the stream is unmoved; `channel_clock="message"` remains the default and is
+byte-identical across 29 metrics and 32 runs.
+
+Realized round-trip delivery, n=8, direct, 32 seeds:
+
+| rung | Bernoulli | GE message-clocked | GE step-clocked |
+|---|---|---|---|
+| 1 | 0.9057 | 0.9352 | 0.8945 |
+| 2 | 0.8180 | 0.8703 | 0.8210 |
+| 3 | 0.6348 | 0.7598 | 0.6478 |
+| 4 | 0.4172 | 0.5593 | 0.4199 |
+
+**Step clocking returns the handshake to independence at every rung.** The service delay outruns
+the channel's coherence, so the whole effect disappears, and with it the closed-form threshold
+shift and the gated S1 sign flip. The honest conclusion inverts the one I recorded earlier: at a
+matched mean drop rate, burst structure does nothing to this operator queue, and the ladder's
+`p_drop` IS a sufficient statistic for it.
+
+Two things survive. The closed form is the correct description of the adjacent limit, which is the
+right physics for a jammer whose sweep is slow against the round trip, so the two clocks bracket a
+real (p, coherence/RTT) surface rather than one being simply wrong. And every published gated cell
+is unaffected: Bernoulli has no chain to clock, so `reply_survives` reduces to `delivered` and the
+result is identical, which `st-clock-9443902` K2 checks rather than assumes.
+
+`st-bspan-9443684`'s S1 rows are retained as the measurement of the artifact's size, not as a
+finding. `st-clock-9443902` K1 re-runs the same span sweep under both clocks; registered
+prediction is that the flip vanishes under step clocking.
+
+### The defile demo is a mixture shift, not a slowdown (48-seed histograms)
+
+Per-seed `operator_goodput`, n=5, staggered (healthy) start:
+
+| terrain_demand | retry on: fraction below 0.3 | above 0.7 | retry off: below 0.3 |
+|---|---|---|---|
+| 0.25 | 0.10 | 0.54 | 0.00 |
+| 0.50 | 0.40 | 0.29 | 0.00 |
+| 0.75 | 0.42 | 0.12 | 0.00 |
+| 1.00 | 0.60 | 0.00 | 0.00 |
+
+With the loop closed the distribution is bimodal (at demand 0.25, 23 of 48 seeds above 0.9 and 11
+near 0.35 with a hollow middle) and terrain moves the MIXING FRACTION between the two branches. With
+the loop open it is unimodal at every terrain setting, 48 of 48 seeds above 0.9 at demand 0.25 and
+none below 0.7 even at 1.0. So the mean moving smoothly is the average of a fraction migrating
+between two branches, not each mission degrading. That is the tipping evidence, and it is stronger
+than the mean contrast that motivated it.

@@ -946,3 +946,213 @@ hypothesis with a test, not a metaphor.
   "before more operators" not "rather than," the retry-realism limitation, the retrial-queue
   lineage cited, and the utilization-high/goodput-zero/request-rate-elevated fingerprint that
   makes the operational reading falsifiable.
+
+## Round 4 (2026-08-22, repo at c31a2d4)
+
+Read for this round: st-stopf-9443653, the CR-17 gate (H1/H2), the defile table, the burstiness
+derivation and its d measurements, and the current c2.py (retry implementation, and the new
+late-window counters that now exist at late_from = 0.75 x duration). Two micro-checks run this
+round, both decisive: (1) blue_behavior="auto" with teleop_stop=False is BIT-IDENTICAL to the
+published-physics path, verified on 16 of 16 run pairs across seeds and policies on every shared
+metric; (2) the retry cooldown is the ordinary jittered draw rescaled by rho/tau and therefore
+inherits terrain scaling, which slightly moves one claim below.
+
+### 1. The three-decimal registration: no paradox, once the degrees of freedom are counted
+
+The puzzle dissolves under the bit-identity check. The factorial's four cells were: two numbers
+already measured in st-waitcost (the stopped column), and two byte-identical re-executions of the
+published-physics arms (the driving column; that is why they reproduce W1 to four decimals
+INCLUDING the t statistics, which is the fingerprint of the same runs re-executed, not of a
+confirmed statistical prediction). My registration therefore contained exactly one falsifiable
+claim, the structural equivalence of the driving column with the published column, which is a
+code-path identity that behavior.py's docstring already asserted and my check has now verified at
+bit level. Given that one fact, all four term values follow by arithmetic on known numbers. So "a
+pre-registered quantitative prediction that lands to three decimals" carried zero statistical
+information about whether the terms are non-null. There was never a collision between the prior
+and the gate, because the prior never bet on the noise.
+
+And where my registration DID bet on the noise, score it honestly: I predicted base and quality
+would not gate (correct, twice), and that stop main and interaction WOULD gate (wrong, twice).
+Stop main cleared |t| and MPE and failed only sign consistency at 53 percent; interaction missed
+both narrowly (t = 1.58 against 1.70, 0.0293 against 0.030). My error was variance arithmetic: I
+assumed the difference of two seed-paired contrasts keeps most of the pairing benefit, and it
+does not; the DoD mean halves while its se barely drops (0.0151 against 0.0161 for the stopped
+contrast alone).
+
+Shipping the four cells with a conditional reading and no subtraction is the right call, for a
+reason worth stating: no information is discarded. The decomposition is a linear map of the
+cells; any reader can compute it. The gate governs which ASSERTIONS the paper makes, not which
+numbers it carries, and the cells are each gated on their own terms. Add one sentence noting the
+bit identity of the driving column with the published arm, because it retires the
+surface-equivalence question permanently and explains the four-decimal reproduction a sharp
+reader will otherwise puzzle over.
+
+What the contract is missing is not a way to price a prior but a sequential rule. A registered
+prediction whose term lands in a near-miss band (say |t| in [1.2, 1.70), point estimate within
+the registered interval) should buy exactly one pre-declared extension, sized in advance: here 32
+to about 44 blocks would gate the interaction if the estimate holds (1.58 x sqrt(44/32) = 1.85).
+That prices registration correctly: it cannot override the gate, it can only purchase a second,
+larger look whose alpha cost is budgeted. Without such a rule every near-miss becomes a judgment
+call, which is what the contract exists to prevent.
+
+On the 60 percent consistency criterion: under homogeneous per-block effects, expected
+consistency is Phi(t/sqrt(B)), which at the gate boundary (t = 1.70, B = 32) is 62 percent. So
+for direct paired contrasts the criterion is nearly redundant with the t rule, and its marginal
+content is a heterogeneity tripwire: observed 53 percent against an expected 67 at t = 2.43 says
+the stop-main effect is concentrated in a subpopulation of blocks with large magnitude. For a
+DERIVED term that is the expected case, not a pathology; interactions are moderator-driven by
+construction. Keep consistency as a veto for primary direct contrasts; for linear combinations,
+demote it to a flag that triggers a moderator analysis, with a sign test or block-median as the
+robust guard. And run the moderator analysis here, because it converts the failure into content:
+registered prediction, the per-block stop-main DoD correlates with how much of that block's hold
+time is spent inside red weapon range. If that lands, the correct paper sentence is conditional
+and gated at cell level anyway: the notification increment exists where waits happen under fire.
+
+### 2. The rule for two-factor objections
+
+Concede the instance first: my round-3 objection was issued at maximum severity when the repo
+documented, and one 40-second check would have confirmed, that the second factor was zero by
+construction. behavior.py says teleop_stop=False reproduces the pre-CR-2 path; I neither cited
+the contract nor ran a seed before objecting. The objection came with its resolving design (the
+factorial), which is the half I got right; it lacked the price tag, which is the half I got
+wrong.
+
+The rule, in three grades, with the burden on the objector to state the grade:
+
+- Grade A, documented zero: the repo asserts equivalence of the second factor (byte-identity
+  contract, off-path guarantee). Reviewer's duty: cite the contract and run or request the
+  one-seed check. The objection is a checklist item, never a block.
+- Grade B, boundable: the second factor's magnitude can be bounded from numbers in hand (an
+  operating-point compression bound, a share-of-time bound). The bound ships WITH the objection,
+  and it blocks only if the bound is comparable to the effect, say within a factor of two.
+- Grade C, unbounded: no bound available. Blocks the causal LABEL, never the cells: report the
+  measurements, withhold the attribution, and the objector owes the cheapest discriminating
+  design alongside the objection.
+
+Plus the meta-rule that would have saved a round here: when the resolving run costs less than
+the argument about it, run it before writing the objection. Two 78-second batteries beat three
+paragraphs, every time, and this codebase's byte-identity discipline makes grade-A checks
+unusually cheap. The reflex you should keep from this exchange is not "reviewer objections about
+confounds are cheap noise": the objection forced the factorial, and the factorial produced the
+bit-identity receipt and the cell-level presentation, which is better than what it replaced. The
+reflex to drop is letting a grade-A objection carry grade-C rhetoric.
+
+### 3. The defile: the 0.4 percent margin is dressing, and the story does not need it
+
+Drop the "5.00 against 5.02" sentence. The a_h machinery is a first iterate of an endogenous
+fixed point; it cannot support three-digit placement of the edge, and a referee who notices will
+discount the parts of the result that are actually gated. The load-bearing structure is already
+in hand and does not touch the in-defile edge at all:
+
+1. The band at n=5 on FLAT ground is gated, hard: H1 +0.3130 (t=18.2, 32/32), H2 +0.5722
+   (t=61.1, 32/32). Coexistence of two branches at the operating span is established.
+2. At pi=1 the collapsed branch barely notices terrain. Its cycle is P + 1 + rho_eff, and the
+   implementation makes rho_eff the jittered draw rescaled by rho/tau, so terrain scales only the
+   small rho term: n_c is about 3.75 on flat ground and about 3.45 in the defile at
+   terrain_demand=1. The collapsed branch is self-sustaining at n=5 everywhere on the map.
+3. Therefore the defile needs to supply exactly two things: entry (the collapse begins in the
+   defile) and persistence (the state survives onto easy ground, where the gated flat-ground
+   band does the locking). Whether the in-defile healthy branch was destroyed (moved cliff) or
+   merely made shallow (basin escape) is a real question about the entry mechanism, but the
+   lock-in headline is insensitive to its answer.
+
+The cells that separate moved-cliff from shallow-basin, cheapest first:
+
+- Zero compute: the per-seed histogram of the defile runs you already have. At terrain_demand
+  0.5 the mean is 0.509, which is almost exactly the midpoint of the two candidate modes.
+  Registered prediction: that cell is bimodal, modes near 0.8 and 0.15 with a hollow middle
+  (stochastic tipping out of a coexisting basin). A unimodal pile near 0.5 instead means graded
+  slowdown, and the tip story weakens badly. Print the 24 points before anything else.
+- The persistence instrument now exists: operator_goodput_late (late_from = 0.75 x duration).
+  Registered prediction for st-defile: at demand 1.0, retry-on late-window goodput below 0.15
+  while retry-off sits above 0.85, provided the column clears the defile before three quarters
+  of the mission; and the reversed-geometry control (defile late in the route) shows a healthy
+  early window in both arms. Note also the whole-mission arithmetic already argues persistence:
+  retry-off dips only to 0.908 at demand 1.0, so in-defile time alone cannot produce retry-on's
+  0.287 unless the state persists after exit or the collapse traps the column in the defile,
+  which is the same lock-in expressed spatially.
+- The clamp, if you want the in-defile question answered on its own: flat map, decision_interval
+  set to the defile-effective value, IC contrast at n=5. Two branches at fixed parameters means
+  the shifted band is real; a single collapsed state means demand moved the cliff below the
+  operating point and the defile entry is a threshold crossing, not a basin escape. Either
+  answer leaves the headline intact, which is exactly why the paper should not stake it on 5.02.
+
+### 4. Burstiness: the closed form is right about the simulator, and the simulator contradicts its own timescales
+
+The derivation itself is correct for the code as written, and I verified the logic against
+c2.step and comms_ew: the two draws are consecutive same-vehicle calls with nothing interleaved,
+survival means the chain lands GOOD, so d = (1-p)(1-p_gb) exactly, and your five measured rungs
+confirm it to three or four decimals. No dispute there.
+
+The artifact is real and it is precisely locatable: the reply is drawn zero chain-transitions
+after the request, while the model's own physics separates the two transmissions by 2*lat + 1/mu
+sim-steps plus queue delay. Worse, the chain is clocked per MESSAGE and shared across every
+vehicle and the sensing relay, so its coherence unit ("burst_len = 4") is four messages, a
+duration in sim-time that floats with offered load. A channel whose coherence time depends on how
+often blue asks is not a channel property, and the sim's declared timescales already contradict
+the adjacency assumption: physical separations of roughly 9 to 39 steps against a dwell of about
+4 messages. So: exactly right about the simulator, and the simulator is wrong about itself.
+
+The repair is cheap and exact. For a two-state chain the lagged conditional is closed-form:
+
+    P(reply survives | request survived, lag L) = 1 - p(1 - lambda^L),  lambda = 1 - p_gb - p_bg.
+
+Check the endpoints: L=1 gives 1 - p(p_gb + p_bg) = 1 - p_gb (using p_gb = p*p_bg/(1-p)), your
+adjacent formula; L to infinity gives 1 - p, Bernoulli. One uniform per message survives (only
+the threshold changes), streams stay aligned, and it is opt-in behind something like
+ge_clock = "message" (default, byte-identical) | "step" with L = 2*lat + ceil(1/mu), or the
+actual computed wait if you accept reordering the draw site (flag: that moves a draw relative to
+the Bernoulli path and needs its own pairing note).
+
+Now the stakes, quantified at burst 4: lambda is 0.74 at rung 1 and 0.69 at rung 3; lambda^L is
+0.064 at rung 1 (L about 9) and 0.004 at rung 3 (L about 15). The GE-minus-Bernoulli delivery gap
+becomes (1-p) * p * lambda^L: 0.003 at rung 1 against the current 0.034, and 0.0006 at rung 3
+against the current 0.110. Eleven times smaller at the mildest rung, two hundred times smaller
+where your n* shift is largest. Under physical clocking the handshake advantage, the 3.7 to 35.2
+percent n* shift, and st-bspan's sign-flip bracket all effectively vanish. Hold st-bspan's result
+out of the manuscript until the clocking question is settled.
+
+But do not just delete it, because the adjacency limit is CORRECT physics in a named regime: a
+slow-sweep jammer or shadowing with dwell times much longer than the round trip really does show
+both legs the same channel; fast fading really is Bernoulli. Which limit applies is governed by
+one dimensionless ratio, coherence time over round-trip-plus-service time, and the current code
+hard-codes that ratio to infinity within a handshake and to about eight steps between handshakes,
+both by accident of draw order. So the salvage is a sharper conjecture that subsumes the current
+result as an endpoint: mean drop rate is not a sufficient statistic for the ladder (C1's claim)
+because the sufficient pair is (p, coherence/RTT), and the SIGN of burstiness's effect on n*
+depends on where that ratio sits. Expose coherence in time units, sweep it, and the st-bspan
+bracket becomes one slice of a surface instead of an artifact-dependent point claim.
+
+On the second half: yes, in the model as clocked, burstiness is entirely a scalar change to d.
+Your Fano measurement (0.878 against 0.876, under-dispersed everywhere), the raised request rate,
+and the lowered link abandonment are all pure-d signatures, and the message-clocked shared chain
+guarantees it: interleaving scrambles any temporal structure before a second message from the
+same vehicle sees the chain. But that conclusion is bound to the same clocking artifact. A
+step-clocked chain produces common-mode outages, windows in which every vehicle's messages fail
+together, and a common-mode outage with retry on is a correlated demand burst arriving at lag
+about P + rho_eff: the CR-17 tipping input, manufactured by the channel itself. Registered as a
+question rather than a prediction, because the cohort arithmetic is marginal (a 20-step dwell at
+n=5 catches roughly 2 to 5 requests against an onset near 3): with ge_clock="step" and retry on,
+inside the band, does a bad dwell of at least the backoff tip the team? If yes, EW regains
+tipping power through client indiscipline, and the round-3 finding "a jam only unloads the queue"
+acquires its scope condition: true for uncorrelated drops without retry, false for correlated
+outages with it. That would tie Q4, CR-17, and the jam-window capability into one mechanism, and
+it is the only reading under which burst structure matters in this model at all.
+
+### Round 4 in one line each
+
+- Q1: no paradox: the driving column is bit-identical to the published arms (verified 16/16), so
+  the three-decimal hit was one structural fact plus arithmetic; my genuinely statistical bets
+  went 2 of 4; ship the cells, add a sequential-extension rule to the contract, demote
+  consistency to a heterogeneity flag for derived terms, and run the moderator analysis.
+- Q2: grade objections A (documented zero: check, never block), B (bound ships with the
+  objection), C (blocks the label, never the cells, and owes the discriminating design); run any
+  check that costs less than the argument; my round-3 objection was grade A wearing grade C.
+- Q3: drop the 5.02 dressing; the flat-ground band at n=5 is gated and n_c is everywhere below 5,
+  so the defile needs only entry plus persistence; print the 24-seed histogram (bimodality test),
+  then read operator_goodput_late, then clamp tau if the in-defile question still matters.
+- Q4: derivation right about the sim, sim inconsistent with its own timescales (message-clocked
+  shared chain, zero-lag reply); lagged conditional 1 - p(1 - lambda^L) fixes it for one uniform
+  per message; under physical clocking the entire burstiness result shrinks 11x to 200x, so hold
+  st-bspan and reframe as the (p, coherence/RTT) surface; burst structure currently IS scalar d,
+  and the only route by which it could matter is step-clocked common-mode outages feeding retry.
