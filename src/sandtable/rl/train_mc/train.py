@@ -37,6 +37,7 @@ def train_or_run(scenario_path):
         best_trace["seed"] = 42
 
     print("\nStarting Seeded Monte Carlo Search...")
+    env.reset()
     n_blue = env.unwrapped.n_blue
     
     for episode in range(num_episodes):

@@ -165,12 +165,12 @@ def find_viewer_template() -> str:
     
     base_dir = Path(__file__).parent
     
-    # Known locations from file structure, relative to this script
     possible_paths = [
-        base_dir / "../../report/viz/mission_viewer.html",
+        base_dir / "../../../report/viz/mission_viewer.html",
         Path.cwd() / "report/viz/mission_viewer.html",
         Path.cwd() / "../report/viz/mission_viewer.html",
         Path.cwd() / "../../report/viz/mission_viewer.html",
+        Path.cwd() / "../../../report/viz/mission_viewer.html",
     ]
     
     for path in possible_paths:
@@ -178,8 +178,8 @@ def find_viewer_template() -> str:
         if resolved.exists():
             return str(resolved)
     
-    # If not found, look for any .html file in the whole project
-    project_root = base_dir.parent.parent
+    # If not found, look for any .html file in the whole project (up one more level)
+    project_root = base_dir.parent.parent.parent
     for html_file in project_root.rglob("mission_viewer.html"):
         return str(html_file)
     
