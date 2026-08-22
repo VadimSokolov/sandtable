@@ -973,3 +973,52 @@ registered as a check with the falsifier that the transition moves outside [12,1
 shown given its resolution and its support, and check that the registered falsifier is not one the
 instrument would fire on its own. Both defects here were invisible in the results and obvious in
 the parameter's own support, which is three lines of code away.
+
+## 2026-08-22 evening: what the paper now claims, and what is still open
+
+**Settled and in the manuscript.**
+
+- **The span result is attributed** (CR-25, `st-attrib-9445987`). Sweeping span with defenders fixed
+  gives +0.555; holding the force ratio reverses it to -0.676; DiD +1.231 at t = 75.9, 32/32.
+  Supervisory control bounds the non-console channels at -0.171, so console 75% and scenario 25%.
+  The threshold-artifact channel is dead: `arrived_frac` falls monotonically at every rung, -0.385
+  at t = -68.5, and its own DiD is +0.554 at t = +72.0, with the split repeating at 72/28.
+  Manuscript: `subsec:attrib`, contribution 4, abstract.
+- **The three levers are named together** in the discussion, with what they share: all software,
+  none adds an operator, a console, or a radio, all three act on the same mechanism.
+- **The burst result ships** (`st-policyburst-9445271`). Refund is worth +0.108 of goodput at eight
+  assets on a memoryless link and +0.361 on a bursty one of the same marginal delivery, difference
+  +0.253 at t = 73.8, 32/32. On success the same difference gates only at n = 8 (+0.083, t = 3.9),
+  and the manuscript says so rather than sweeping the claim.
+- **Two external checks bracket the span axis.** MAGIC's fourteen robots at the top (retrodicted
+  numerically) and Giachetti et al. 2012's one robot at the bottom, whose team-size by
+  centralization interaction IS this paper's direct-versus-supervisory contrast, found
+  independently and explained from output logs rather than in advance. See `doc/lit-ideas.md` I28.
+
+**Cut, and why.** CR-28 (`stall_decay`) is out of the paper. The knob works and is tested, but a
+null on a self-authored knob with a self-chosen range is not evidence. The code stays as a stress
+control; `st-stall-9446094` enters the ledger as a labeled stress test and is not cited for the
+recommendation. Replaced by CR-29, which prices the wait with `behavior.py`, written for CR-2.
+
+**Instruments repaired this session.**
+
+- `retry_spread` was guarded on a width bound, which admits `rho = 4` with spread 12 (mean 5.83, a
+  45.7% shift) and spread 26 (mean 9.39). Replaced by a guard on the realized mean over the full
+  cooldown support, tolerance 2%. Standing convention: `s <= rho - 1`, and every jitter arm's
+  realized mean is computed by value and printed in its battery's registration before submission.
+- `duration` is readable as a param, so mission length is auditable without editing scenario files.
+- `audit.py` check 4 capped the contribution block at 4000 characters and was silently skipping the
+  last item. Fixed here and in the skill master.
+
+**In flight.** Jobs 9446092-95 (desync, rate, stall, aimd). `teleop_price.sh` (CR-29) written,
+smoke-tested, queued behind them.
+
+**Open, in the order they are worth doing.**
+
+1. Read desync D4/D5/D6 and rate's rho = 22 identity cell. D5 and D6 can retire the n = 4 cell as
+   sculpture, and that is the point of running them.
+2. CR-29 at tier.
+3. Lewis et al. 2010 (`10.1177/0018720810366859`), the last open retrodiction, needs source text.
+4. Sobol indices over the queue parameters. Never started.
+5. CR-8 (r-robustness against algebraic connectivity) and C5 (blocked on a convoy operating point),
+   both older than the queue line and both still unstarted.
