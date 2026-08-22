@@ -912,3 +912,39 @@ admit-refund increment falls monotonically in q_stall and vanishes at 0.50, at b
 settings; if the teleop-only increment is instead an artifact of that physics, the increment is
 flat in q_stall. `blind` rides along as the control against the whole queue effect scaling with
 q_stall.
+
+### st-waitcost-9443162 (full tier, 32 blocks x 64 reps, interactive, complete)
+
+`q_stall` swept 0.10 / 0.30 / 0.50 against `q_fallback` = 0.50, n=8, C0, blind/refund/admit.
+
+| contrast | physics | q_stall=0.10 | 0.30 | 0.50 |
+|---|---|---|---|---|
+| admit - refund | published | +0.0161 (t=1.37) | +0.0142 (t=1.37) | +0.0093 (t=0.89) |
+| admit - refund | teleop | **+0.0913 (t=5.59)** | **+0.0801 (t=4.97)** | **+0.0459 (t=3.72)** |
+| refund - blind | published | **+0.3062 (t=20.05)** | **+0.2231 (t=14.65)** | **+0.1768 (t=14.01)** |
+| refund - blind | teleop | **+0.5962 (t=73.93)** | **+0.6650 (t=78.47)** | **+0.7495 (t=105.02)** |
+
+Bold = gated. Registered predictions were a monotone decline to zero (wait-cost reading) or a flat
+profile (artifact reading). **Neither.** The notification increment declines monotonically and
+stays gated: it halves from 0.0913 to 0.0459 as waiting becomes free, so the cost of waiting
+carries about half of it. Under published physics it is not gated at any wait cost, which retires
+the question of whether the earlier non-gate at q_stall=0.30 was an underpowered miss.
+
+Decomposition of the teleop increment at the published q_stall (0.0801): quality-of-waiting
+0.034 (the 0.30-to-0.50 drop), stopped motion 0.037 (the teleop-minus-published gap at matched
+q_stall=0.50), residual 0.0093. The middle term is inferred from a cross-physics difference at
+matched q_stall rather than gated directly.
+
+Unexplained and flagged: `refund - blind` rises with q_stall under teleop and falls under published
+physics. Opposite signs on the same sweep.
+
+Note the q_stall=0.30 published cell reproduces the earlier st-refund-9442831 value (+0.0142,
+t=1.37) to four decimals, which confirms the harness is pairing on the same block seeds.
+
+### st-hyst-9443432 (full tier, submitted)
+
+CR-17 fold band. H1/H2 sweep n_blue = 3,4,5,6,8 across {burst, staggered} x {retry, no retry} on
+`success` and `operator_goodput`; H3 asks whether refund and admit close the band at n=5; H4 sweeps
+`retry_backoff` = 4,8,12,16,20 against the predicted floor of 15.33. Gated by difference of
+differences (`tools/ar_contrast.py --did`), because staggering perturbs the RNG stream and has a
+direct effect of its own. Predictions registered in `doc/autoresearch-conjectures.md` under CR-17.
