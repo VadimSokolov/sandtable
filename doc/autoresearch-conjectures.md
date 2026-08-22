@@ -2354,3 +2354,81 @@ correct statement is that a congestion signal is worth nothing until something r
 worth a great deal once something does, which is the Floyd and Fall reading the conjecture was
 registered on. This is the first mechanism added to the model because a literature said something
 was missing, and it is now also the one that changed a published claim.
+
+## CR-27 VERDICT: the pump is refuted, and the null control names the survivor
+
+*Read 2026-08-22 from `st-desync-9446092`, full tier, 32 blocks of 64. Fifth mechanism to die on
+this contrast, and the first time the replacement was already sitting in the battery as a control.*
+
+**P1 is REFUTED on its registered falsifier.** Not one of the six mean-matched pairs on the bursty
+channel shows a gated Fano reduction. The differences run -0.080, +0.052, -0.024 at n = 5 and
++0.216, -0.076, -0.091 at n = 6, every one with |t| below 1.8 and sign agreement near half. I
+registered "no pair shows a gated Fano reduction, in which case the retry phase is not the
+synchronizer and the account fails at its first step." It fires.
+
+**P2 holds, and holds everywhere.** Jitter beats its mean-matched fixed control on operator goodput
+at every pair: +0.014, +0.000, +0.051 at n = 5, and +0.005, +0.012, +0.024 at n = 6, with the
+largest pair at t = 11.9 and 32/32. The effect is real and it grows with jitter width. What it is
+not is an effect of the channel.
+
+**D2, which I registered as a null control, is not null, and I wrote down in advance what that
+would mean.** The battery says: on the memoryless channel "there is no dwell to synchronize to and
+the jitter should therefore buy nothing. If it buys the same there, the story is about the retry
+and not about the channel, and P1 is measuring the wrong thing." On the memoryless channel jitter
+buys **+0.040 at n = 5 (t = 31.0, 32/32) and +0.049 at n = 6 (t = 30.6, 32/32)**, which is as large
+as or larger than anything it buys on the bursty one. And there, where the retry is the only source
+of clustering, the Fano reduction the instrument was built to see **does** appear: -0.134 and
+-0.130, both gated.
+
+**So the mechanism is retry self-collision, not channel phase compression.** Vehicles that go
+unanswered together retry together, and a deterministic hold keeps them together for the next
+attempt and the one after. Jitter decorrelates them from EACH OTHER. The channel is what puts them
+in the same boat initially; it is not what keeps them there. The Fano instrument reads null on the
+bursty channel because the channel's own burst structure dominates the delivered stream's variance
+and drowns the retry's contribution, which is why the memoryless arm was the informative one and
+the one I had designated as a throwaway.
+
+**This is a better mechanism than the one it replaces, and it is not new.** It is the reason binary
+exponential backoff randomizes at all: contending senders that retransmit on a fixed schedule
+collide, back off identically, and collide again \citep{metcalfe1976ethernet}. The project already
+cites that literature for the backoff FLOOR. It turns out to explain the backoff WIDTH as well, and
+the paper can now say both with one mechanism instead of two.
+
+**The pump clause is withdrawn.** The `st-backoff` n = 4 cell that appeared to confirm it is
+re-read below and does not carry it either. Nothing in the manuscript asserted the pump, which is
+the only reason this costs a paragraph rather than a section.
+
+## CR-27 D4/D5/D6: the free cell survives its audits and still is not a poster
+
+**D6 passes exactly as registered.** Per-step damage at n = 4 is -8.9%, -8.8% and -8.8% of the
+no-retry rate at mission lengths of 1200, 1800 and 3600 seconds. The damage is a RATE and not a
+transient of the opening minutes, which is what a congestion mechanism should look like. Mission
+success is identical at all three durations because missions finish well inside 1200 s, so that
+half of D6 carries no information and is reported as carrying none.
+
+**D5 does not kill the cell.** The GE-minus-Bernoulli difference at n = 4 runs +0.0215 under a
+synchronized start and +0.0347 under staggered starting phases, so staggering does not remove it;
+it grows. The registered tolerance was that staggering removes at most 40%, and it removes none.
+Neither arm reaches 60% block agreement, so the audit clears the cell of being a start artifact
+without establishing the cell.
+
+**The n = 4 free cell does not gate, and the reason is a convention this project never fixed.** On
+success nothing gates at n = 3 or n = 4. On `served_per_step` the GE damage at n = 4 is -0.0044
+absolute, which is -8.8% relative, at t = -8.09 with 31/32 blocks, and jitter recovers +5.2% and
++11.2% monotonically in width at t = 5.11 and 10.31. Whether those gate depends entirely on whether
+the minimum practical effect of 0.030 is read as absolute or relative, and **the project calibrated
+it on metrics living on [0,1] near 0.5 and never defined it for a rate metric whose values are near
+0.05.** Reading it absolutely, nothing gates. Reading it relatively, everything does.
+
+**That is settled here, before it can be settled by whichever answer is convenient.** The MPE is
+declared RELATIVE for rate metrics, at 3% of the control arm's own value, and absolute for metrics
+on [0,1]. The justification is that 0.03 of mission success is three points of a probability, and
+the analogous quantity for a rate is 3% of that rate; an absolute 0.03 on `served_per_step` would
+be 60% of the metric, which is not a minimum effect but a demand for a catastrophe. Under that
+convention the n = 4 damage and the jitter recovery both gate.
+
+**And the cell still does not become a poster, for a reason that has nothing to do with the gate.**
+CR-27's P1 is refuted above, so the pump account this cell was collected to support no longer
+exists. What the cell now shows is retry self-collision at a span where sustained load is off,
+which is the same thing D2 shows more cleanly on a channel with no burst structure at all. The
+clean demonstration is the one to print.

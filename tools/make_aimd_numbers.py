@@ -18,6 +18,22 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from make_queue_numbers import ROOT, paired  # noqa: E402
 
+
+def agree(hi: dict, lo: dict) -> tuple[float, float, int, int]:
+    """Like `paired`, but the third value counts blocks agreeing with the effect's OWN sign.
+
+    `make_queue_numbers.paired` returns blocks with a POSITIVE difference, which is agreement only
+    when the effect is positive. Reporting that for a negative effect inverts the sign-consistency
+    statistic and would understate exactly the contrasts that show a cost.
+    """
+    d = [a - b for a, b in zip(hi["vals"], lo["vals"], strict=True)]
+    n = len(d)
+    mean = sum(d) / n
+    var = sum((x - mean) ** 2 for x in d) / (n - 1)
+    t = mean / ((var / n) ** 0.5) if var > 0 else float("inf")
+    return mean, t, sum(1 for x in d if x * mean > 0), n
+
+
 LOG = "st-aimd-9446095.out"
 SPAN = {"4": "Four", "6": "Six", "8": "Eight", "10": "Ten", "12": "Twelve"}
 SEC = {"Clear": "rung 0", "Jam": "rung 2"}
@@ -54,12 +70,12 @@ def main() -> None:
             for n, ntag in SPAN.items():
                 for arm in ("blind", "refund", "admit", "aimd"):
                     m[f"ai{mtag}{rtag}{arm.capitalize()}{ntag}"] = f"{get(sec, arm, n)['mean']:.3f}"
-                eff, t, w, N = paired(get(sec, "aimd", n), get(sec, "admit", n))
+                eff, t, w, N = agree(get(sec, "aimd", n), get(sec, "admit", n))
                 m[f"ai{mtag}{rtag}Gain{ntag}"] = f"{eff:+.3f}"
                 m[f"ai{mtag}{rtag}Gain{ntag}T"] = f"{t:.1f}"
                 m[f"ai{mtag}{rtag}Gain{ntag}Blocks"] = str(w)
                 # What telling the requester is worth with NO response rule: the sign is the point.
-                eff2, t2, w2, _ = paired(get(sec, "admit", n), get(sec, "refund", n))
+                eff2, t2, w2, _ = agree(get(sec, "admit", n), get(sec, "refund", n))
                 m[f"ai{mtag}{rtag}Tell{ntag}"] = f"{eff2:+.3f}"
                 m[f"ai{mtag}{rtag}Tell{ntag}T"] = f"{t2:.1f}"
     m["aiBlocks"] = str(len(get("rung 0 (operator_goodput)", "aimd", "8")["vals"]))

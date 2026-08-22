@@ -17,6 +17,22 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from make_queue_numbers import ROOT, paired, row, rows  # noqa: E402
 
+
+def agree(hi: dict, lo: dict) -> tuple[float, float, int, int]:
+    """Like `paired`, but the third value counts blocks agreeing with the effect's OWN sign.
+
+    `make_queue_numbers.paired` returns blocks with a POSITIVE difference, which is agreement only
+    when the effect is positive. Reporting that for a negative effect inverts the sign-consistency
+    statistic and would understate exactly the contrasts that show a cost.
+    """
+    d = [a - b for a, b in zip(hi["vals"], lo["vals"], strict=True)]
+    n = len(d)
+    mean = sum(d) / n
+    var = sum((x - mean) ** 2 for x in d) / (n - 1)
+    t = mean / ((var / n) ** 0.5) if var > 0 else float("inf")
+    return mean, t, sum(1 for x in d if x * mean > 0), n
+
+
 LOG = "st-policyburst-9445271.out"
 SEC = {"Succ": "policyburst START Q1", "Good": "Q2 the same on the queue"}
 CHAN = {"Bern": "bern", "Ge": "co", "Magic": "mg"}
@@ -46,7 +62,7 @@ def main() -> None:
     for mtag, sec in SEC.items():
         for n, ntag in SPAN.items():
             for ctag, pre in CHAN.items():
-                eff, t, w, _ = paired(row(rs, sec, f"{pre}_ref", n), row(rs, sec, f"{pre}_blind", n))
+                eff, t, w, _ = agree(row(rs, sec, f"{pre}_ref", n), row(rs, sec, f"{pre}_blind", n))
                 m[f"bu{mtag}{ctag}{ntag}"] = f"{eff:+.3f}"
                 m[f"bu{mtag}{ctag}{ntag}T"] = f"{t:.1f}"
             dm, dt, dw, dn = _did(rs, sec, n)
