@@ -1239,3 +1239,33 @@ The 64-seed full-repair column is a probe and nothing more; the C1 lesson applie
 and `st-bclock-9443926` were cancelled and superseded by `st-clockfull-9444130`, which runs K1, K2,
 J1 and J2 against the completed model. Registration this time, having been refuted once: the
 interaction SURVIVES at rung 2 and is null at rung 1.
+
+### st-defile2-9443773 E1: my registered interpretation says this is a moved cliff, not a drag
+
+Difference of differences on operator goodput, five vehicles, sweeping terrain demand:
+
+| terrain_demand | 0.0 | 0.25 | 0.5 | 0.75 | 1.0 | 1.5 | 2.0 |
+|---|---|---|---|---|---|---|---|
+| effect | +0.5722 | +0.4752 | +0.3682 | +0.2369 | +0.1627 | +0.1015 | +0.0765 |
+
+All gated at 32 of 32. The profile is **monotone decreasing**, and the registration said: "a
+single-peaked profile is the signature of a band being dragged past a fixed span; a monotone
+profile would mean I am watching a moved cliff and not a band." So by my own criterion, terrain
+does not tip a bistable team across a basin boundary. It removes the healthy branch.
+
+The reading that survives. On flat ground the band already contains five vehicles, at (3.75, 5.80),
+so there was never a band sitting above the operating point waiting to be dragged onto it. Adding
+terrain demand shortens the decision interval, which lowers both edges, and the upper edge falls
+below five first. Past that point only the collapsed state exists and the initial condition stops
+mattering, which is exactly a monotone decline to zero. Terrain destroys the bistability by
+removing the good state rather than creating it.
+
+**The "defile tips the team" framing is therefore dropped.** It was never shipped to the
+manuscript, which claims only what D4 gates: a longer backoff cuts the terrain penalty sevenfold.
+That result now has its mechanism, and it is the same one: lengthening the backoff shortens the
+cycle less, which raises both band edges, which puts the healthy branch back above five vehicles
+even on difficult ground. The design rule works by restoring the good state, not by widening a basin.
+
+Consistency check worth recording: E1 at terrain_demand = 0 reads +0.5722, which reproduces H2's
+five-vehicle cell to four decimals from an independent job. The block pairing is doing what it
+claims across submissions.
