@@ -983,3 +983,34 @@ with `blue_behavior="auto"` throughout), submitted as `st-stopf-9443653`. Regist
 from the reviewer, before the run: base +0.009, quality main +0.005, stop main +0.037, interaction
 +0.029, the substantive claim being that the interaction is the largest single term, so the channel
 is quality-of-waiting-while-stopped rather than quality of waiting.
+
+### st-stopf-9443653 (full tier, complete): the factorial that replaced the withdrawn split
+
+`teleop_stop` x `q_stall`, both inside the teleoperation stack (`blue_behavior="auto"`
+throughout), n=8, C0, admit against refund.
+
+| | q_stall = 0.30 | q_stall = 0.50 |
+|---|---|---|
+| stopped while waiting | **+0.0801 (t=4.97, 78%)** | **+0.0459 (t=3.72, 69%)** |
+| still driving | +0.0142 (t=1.37, 66%) | +0.0093 (t=0.89, 53%) |
+
+Bold = gated. **The gate accepts the contrast in exactly the two cells where the waiting asset is
+stopped**, which states the conditional cell by cell with no subtraction between surfaces.
+
+Two things fell out that were not the point of the run.
+
+First, the `teleop_stop=False` cells reproduce the published-physics arm to four decimals
+(+0.0142/t=1.37 and +0.0093/t=0.89 against W1's +0.0142/t=1.37 and +0.0093/t=0.89). The behavior
+layer with the stop semantics off is the pre-CR-2 path, so the confound that motivated this run
+has zero magnitude. The reviewer's objection was sound in principle and void in fact, which is
+worth recording because the run that established it also produced the better presentation.
+
+Second, the reviewer's registered predictions for the four factorial terms were confirmed to three
+decimals: base +0.009 (measured +0.0093), quality main +0.005 (+0.0049), stopped-motion main
++0.037 (+0.0366), interaction +0.029 (+0.0293). **But none of the four terms passes the contract.**
+The quality main effect is six times below the MPE of 0.03; the stopped-motion main effect clears
+|t| and the MPE but fails sign consistency at 53%; the interaction fails on both. Only the total
+in the stopped cell is gated. So the decomposition is right in its ordering and unreportable under
+this contract, and the manuscript gives the cells instead. A higher tier would not rescue the
+quality term: it sits below the smallest effect this contract will report by construction, which
+is itself the finding that the standalone quality-of-waiting channel is practically zero.

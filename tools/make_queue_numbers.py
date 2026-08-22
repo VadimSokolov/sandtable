@@ -211,6 +211,11 @@ def main() -> None:
     _book = fanout_bookings()
     _sps = served_per_step()
     wc = rows("st-waitcost-9443162.out")
+    sf = rows("st-stopf-9443653.out")
+
+    def _sf(stop: str, q: str) -> tuple:
+        """admit minus refund in one cell of the teleop_stop x q_stall factorial."""
+        return paired(row(sf, "F1", f"admit_{stop}", q), row(sf, "F1", f"refund_{stop}", q))
 
     def _wc(sec: str, q: str) -> tuple:
         """admit minus refund at one wait cost, paired on the shared block set."""
@@ -287,6 +292,17 @@ def main() -> None:
         # awaiting a decision and `q_fallback` = 0.50 that of one that gave up, so the top of the
         # sweep is a setting in which waiting costs nothing.
         "qStallLow":         "0.10",
+        "qStallPub":         "0.30",
+        # The 2x2 factorial: the same contrast in four cells, each gated on its own, so the
+        # conditional is read off the cells rather than computed by subtracting between them.
+        "qFacStopPub":       f"{100 * _sf('stop', '0.3')[0]:+.1f}",
+        "qFacStopPubT":      f"{_sf('stop', '0.3')[1]:.2f}",
+        "qFacStopFree":      f"{100 * _sf('stop', '0.5')[0]:+.1f}",
+        "qFacStopFreeT":     f"{_sf('stop', '0.5')[1]:.2f}",
+        "qFacGoPub":         f"{100 * _sf('go', '0.3')[0]:+.1f}",
+        "qFacGoPubT":        f"{_sf('go', '0.3')[1]:.2f}",
+        "qFacGoFree":        f"{100 * _sf('go', '0.5')[0]:+.1f}",
+        "qFacGoFreeT":       f"{_sf('go', '0.5')[1]:.2f}",
         "qStallFree":        "0.50",
         "qNotifyTeleLow":    f"{100 * _wc('W2', '0.1')[0]:+.1f}",
         "qNotifyTeleFree":   f"{100 * _wc('W2', '0.5')[0]:+.1f}",

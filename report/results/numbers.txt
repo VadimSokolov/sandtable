@@ -179,6 +179,15 @@ Operator-queue numbers (source: tools/make_queue_numbers.py over report/data/que
 \qGoodRefundTwelve = 57.9
 \qGoodAdmitTwelve = 44.9
 \qStallLow = 0.10
+\qStallPub = 0.30
+\qFacStopPub = +8.0
+\qFacStopPubT = 4.97
+\qFacStopFree = +4.6
+\qFacStopFreeT = 3.72
+\qFacGoPub = +1.4
+\qFacGoPubT = 1.37
+\qFacGoFree = +0.9
+\qFacGoFreeT = 0.89
 \qStallFree = 0.50
 \qNotifyTeleLow = +9.1
 \qNotifyTeleFree = +4.6
