@@ -1177,3 +1177,36 @@ vehicles across the fold band. The interaction may be entirely the artifact acti
 band that H1 established. `st-bclock-9443926` re-runs it under `channel_clock="step"`; registered
 prediction is a null at every rung. If it survives, burst structure has a channel into this model
 that is not the scalar `d`, and the Fano evidence says it should not.
+
+### st-defile-9443710 D4: the backoff floor cuts the cost of difficult ground by 85%
+
+Hard ground minus flat, five vehicles, staggered start, retry on, sweeping the backoff:
+
+| retry_backoff | 4 | 8 | 12 | 16 | 20 |
+|---|---|---|---|---|---|
+| terrain penalty | -0.5189 | -0.5113 | -0.3439 | -0.1474 | -0.0755 |
+| t | -87.67 | -107.40 | -80.41 | -51.07 | -60.50 |
+
+All gated: difficult ground always costs something. But the cost falls sevenfold as the backoff
+crosses the predicted floor, from -0.52 at a backoff of four steps to -0.076 at twenty. The residual
+is the part terrain imposes directly by shortening the decision interval, which no backoff rule can
+touch. This is the design rule working on the case that matters operationally rather than on the
+synthetic initial-condition contrast that established it.
+
+### st-bspan-9443684 S2: the artifact replicates one rung down
+
+`ge - bern` on mission success at rung 2 (mean drop 0.10):
+
+| n_blue | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
+|---|---|---|---|---|---|---|---|---|
+| effect | **+0.0391** | -0.0078 | **-0.0815** | **-0.0659** | -0.0220 | +0.0103 | +0.0000 | -0.0059 |
+
+Same shape as S1 and shifted one vehicle left, as the lower rung's lower thresholds require: harm
+peaks at 7 and 8 here against 8 and 9 at rung 3. The message-clocked artifact is therefore
+reproducible and structured, not noise, which is what makes `st-clock-9443902` a real test: a
+pattern this consistent across two rungs either survives physical clocking or it was never about
+the channel.
+
+### st-burst-9443645 C3: the interaction on mission outcome, quarantined with C2
+
+-0.0630 / -0.1572 / -0.1191 at rungs 1 / 2 / 3, all gated. Held back for the same reason as C2.
