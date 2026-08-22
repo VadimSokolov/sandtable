@@ -73,6 +73,7 @@ class Comms:
     # over the elapsed lag instead. `message` is the default and leaves every recorded number
     # unchanged.
     clock: str = "message"
+    reply_model: str = "coherent"   # "coherent" | "marginal" (experimental control, see below)
     _k: int = 0            # current mission step, set by `set_step`
     _last_k: int = 0       # step at which the chain was last resolved
 
@@ -93,6 +94,16 @@ class Comms:
         """
         if self.channel != "gilbert_elliot" or self.clock != "step":
             return self.delivered(rng)
+        if self.reply_model == "marginal":
+            # EXPERIMENTAL CONTROL, not a physical claim. The coherent reply below raises the
+            # round-trip delivery `d` above the Bernoulli `(1-p)^2`, and `d` is the denominator of
+            # the collapse span, so a burst sweep at fixed `p` walks the operating point toward
+            # collapse on the FIRST moment while it is also changing the temporal structure. This
+            # arm severs that path: the reply is drawn against the marginal rate whatever the lag,
+            # so `d = (1-p)^2` exactly at every dwell and the only thing a burst sweep varies is
+            # the structure. Comparing the two arms decomposes the burst effect into its
+            # round-trip-correlation half and its clustering half.
+            return bool(rng.random() >= self.p_drop)
         lam = max(0.0, 1.0 - self.p_gb - self.p_bg)
         keep = 1.0 - self.p_drop * (1.0 - lam ** max(1.0, float(lag)))
         return bool(rng.random() < keep)
@@ -187,8 +198,15 @@ def build_comms(scn: Scenario) -> Comms:
     clock = str(scn.params.get("channel_clock", "message"))
     if clock not in ("message", "step"):
         raise ValueError(f"channel_clock must be 'message' or 'step', got {clock!r}")
+    reply_model = str(scn.params.get("reply_model", "coherent"))
+    if reply_model not in ("coherent", "marginal"):
+        raise ValueError(f"reply_model must be 'coherent' or 'marginal', got {reply_model!r}")
+    if reply_model == "marginal" and clock != "step":
+        raise ValueError("reply_model='marginal' is a control on the step-clocked reply and has "
+                         "no meaning under the message clock")
     return Comms(level=level, latency=lat, p_drop=drop, label=label, clock=clock,
                  channel=channel, p_gb=p_gb, p_bg=p_bg,
+                 reply_model=reply_model,
                  jam_start=j_start, jam_end=j_end,
                  jam_latency=j_lat, jam_p_drop=j_drop,
                  base_latency=lat, base_p_drop=drop)

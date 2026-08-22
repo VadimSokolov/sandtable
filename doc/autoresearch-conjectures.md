@@ -1341,3 +1341,81 @@ tail rather than the mean, so it should move first and by more. `queue_depth_mea
 console rather than the vehicle, and the cross-vehicle knee at this span sits at `L = 15.8`, so
 every arm at `L = 40` and above is already past it and the DiD there should be WEAKER than in
 `wait_p95`, since the retry changes the vehicle's cycle and not the console's aggregate gap.
+
+### CR-19 second correction: the burst sweep was not holding the round trip fixed
+
+Fable found this and I confirmed it before acting. It invalidates L1 of `st-coherence-9444790` as a
+structure measurement, and the fix is a control arm rather than a code change, because the thing
+that produced it is correct physics.
+
+`reply_survives` under the step clock returns `1 - p(1 - lam^lag)`, which is the probability the
+chain is still GOOD `lag` steps after the uplink found it good. Multiplied by the uplink's `1-p`,
+the round-trip delivery is
+
+    d(L) = (1-p) [1 - p(1 - lam^lag)],
+
+which runs from `(1-p)^2` at a memoryless channel up toward `(1-p)` as the dwell lengthens. That is
+right: **a coherent channel favours round trips.** If the request got through, the channel was
+good, and a channel with memory is likely still good when the answer comes back. Measured on the
+live channel at the shortest realizable reply lag (`1/mu = 6.67`, an empty queue):
+
+| L | d measured | n* = c mu Lambda / d | n_blue = 8 as a fraction of n* |
+|---|---|---|---|
+| Bernoulli | 0.640 | 10.08 | 0.79 |
+| 4   | 0.655 | 9.88 | 0.81 |
+| 14  | 0.728 | 8.89 | 0.90 |
+| 28  | 0.760 | 8.51 | 0.94 |
+| 60  | 0.782 | 8.28 | 0.97 |
+| 120 | 0.790 | 8.17 | 0.98 |
+
+So the sweep walks the operating point from 0.81 to 0.98 of the collapse span **on the first
+moment**. Any effect L1 finds is attributable to that walk at least as readily as to dispersion,
+and my registered claim that "`d` and `n*` do not move" was simply false. It was false in my own
+docstring, which stated the bound `(1-p)^2 <= d <= (1-p)` and which I had written myself.
+
+**The control.** `reply_model="marginal"` draws the reply against the marginal rate whatever the
+lag, pinning `d` at `(1-p)^2 = 0.640` for every dwell (verified to 0.001 over 200k handshakes at
+six dwells). It is an experimental control and not a physical claim, in the same way a placebo arm
+is not a claim about medicine. Byte identity verified; two tests added. Resubmitted as
+`st-coherence2-9445040` with the decomposition
+
+    mg - bern  = structure at fixed round-trip delivery
+    co - mg    = the round-trip correlation bonus
+    co - bern  = the old confounded contrast, kept so the two halves add up.
+
+**Amended sign.** With `d` held fixed the round-trip bonus is gone, and the bonus was working in
+the OPPOSITE direction to my registered negative: a longer dwell delivered more round trips, which
+helps. So `co - bern` mixes a helping first-moment term with whatever the structure does. I keep
+the registered negative for `mg - bern` and now expect `co - mg` positive, with `co - bern`
+ambiguous in sign, which is a better-specified registration than the one it replaces.
+
+### Q4 settled: the message clock does not deliver the dwell the scenario asks for
+
+The retraction defense needed something better than "the new convention is nicer". Measured on the
+live model at rung 3 with `ge_burst_len = 4`, that is, a channel the scenario asks to fade for four
+steps:
+
+| clock | span | mean inter-message gap | realized outage, steps | realized outage, messages |
+|---|---|---|---|---|
+| message | 4  | 7.58 | **25.12** | 4.10 |
+| message | 8  | 3.78 | **12.33** | 3.93 |
+| message | 12 | 2.11 | **7.44**  | 3.98 |
+| step | 4  | 15.04 | 6.39 | 1.46 |
+| step | 8  | 7.55  | 4.67 | 1.78 |
+| step | 12 | 4.25  | 3.60 | 2.00 |
+
+Under the message clock the outage lasts four MESSAGES at every load, so its duration in steps is
+the inter-message gap times four: the same radio fades for 25 steps at four vehicles and 7 at
+twelve. A fade whose duration shrinks threefold because eight vehicles were added is not a property
+of a radio. Under the step clock the realized dwell is 3.6 to 6.4 steps against the requested 4,
+and the residual is a known sampling bias: an outage is only observable when it spans two messages,
+so short outages are invisible at sparse message density and the estimate is biased up, which is
+exactly the direction and the ordering seen.
+
+This is not a choice between two conventions. One of them returns the number the scenario file
+asked for and the other misses it by a factor of six at low span. A companion measurement, the
+probability that two adjacent messages agree as a function of their separation in STEPS, says the
+same thing: under the message clock it is 0.90 at every separation from 0 to 40 steps, a channel
+with unbounded coherence time; under the step clock it decays 1.00, 0.87, 0.77, 0.69 to the chance
+level 0.694 by about ten steps, which is a fade. Both are load-invariant, so the sharper statement
+is the dwell, not the autocorrelation. Captured as a unit test.

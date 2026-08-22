@@ -155,3 +155,85 @@ def test_the_step_clock_leaves_a_memoryless_channel_untouched():
         for k in range(500):
             a._k = b._k = k
             assert a.delivered(ra) == b.delivered(rb)
+
+
+def test_the_marginal_reply_control_pins_round_trip_delivery_at_every_dwell():
+    """The coherent reply is correct physics and that is exactly the problem for an experiment: a
+    burst sweep at fixed p also moves the round-trip delivery d, and d is the denominator of the
+    collapse span, so the sweep walks the operating point on the first moment while it is changing
+    the structure. The control severs that path and must hold d at (1-p)^2 for every dwell."""
+    p = 0.20
+    for burst in (4.0, 28.0, 120.0):
+        c = _ge(burst, p)
+        c.reply_model = "marginal"
+        rng = np.random.default_rng(11)
+        ok, n = 0, 40000
+        for h in range(n):
+            c._k = h * 43
+            up = c.delivered(rng)
+            dn = c.reply_survives(rng, 6.67)
+            ok += up and dn
+        assert abs(ok / n - (1.0 - p) ** 2) < 0.01
+
+
+def test_the_coherent_reply_raises_delivery_as_the_dwell_lengthens():
+    """The drift the control exists to remove, asserted so it cannot silently disappear. A
+    coherent channel favours round trips: if the uplink got through the channel was good, and a
+    channel with memory is likely still good when the reply returns."""
+    p = 0.20
+    ds = []
+    for burst in (4.0, 28.0, 120.0):
+        c = _ge(burst, p)
+        rng = np.random.default_rng(11)
+        ok, n = 0, 40000
+        for h in range(n):
+            c._k = h * 43
+            up = c.delivered(rng)
+            dn = c.reply_survives(rng, 6.67)
+            ok += up and dn
+        ds.append(ok / n)
+    assert ds == sorted(ds)
+    assert ds[0] > (1.0 - p) ** 2 - 0.01        # already above Bernoulli at the shortest dwell
+    assert ds[-1] > ds[0] + 0.10                # and materially above it at the longest
+    assert ds[-1] < 1.0 - p                     # bounded by the one-way rate
+
+
+def test_the_message_clock_does_not_deliver_the_dwell_the_scenario_asks_for():
+    """The retraction defense, as a unit test. A Gilbert-Elliot chain built for a mean bad dwell of
+    four STEPS must produce outages of about four steps. Under the message clock it produces
+    outages of four MESSAGES, whose duration in steps is the inter-message gap times four, so the
+    same radio fades for 4 steps or 40 depending on how often it is consulted. No radio does that.
+    """
+    p, burst = 0.20, 4.0
+    for gap, want_msg in ((1, burst), (10, burst)):
+        c = _ge(burst, p)
+        c.clock = "message"
+        rng = np.random.default_rng(5)
+        runs, cur = [], 0
+        for h in range(20000):
+            c._k = h * gap
+            if c.delivered(rng):
+                if cur:
+                    runs.append(cur)
+                cur = 0
+            else:
+                cur += 1
+        # outage length in MESSAGES is invariant, which is the bug
+        assert abs(np.mean(runs) - want_msg) < 0.5
+        # so outage length in STEPS scales with the gap, which is what makes it not a channel
+        assert abs(np.mean(runs) * gap - want_msg * gap) < 0.5 * gap
+
+    # under the step clock the dwell in STEPS is what was asked for, at any consultation rate
+    for gap in (1, 3):
+        c = _ge(burst, p)
+        rng = np.random.default_rng(5)
+        bad_steps, spells = 0, 0
+        prev = False
+        for h in range(60000):
+            c._k = h * gap
+            bad = not c.delivered(rng)
+            if bad and not prev:
+                spells += 1
+            prev = bad
+            bad_steps += bad * gap
+        assert 0.5 * burst < bad_steps / max(spells, 1) < 2.0 * burst
