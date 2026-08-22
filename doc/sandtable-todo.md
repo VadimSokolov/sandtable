@@ -839,3 +839,66 @@ Realized round-trip delivery collapses onto the Bernoulli value at every rung, s
 matched mean does nothing to the queue through `d`. Every published gated cell is unaffected:
 Bernoulli has no chain to clock. What survives is an interaction with CR-17's reliance loop, which
 is being gated against the completed repair.
+
+## 2026-08-22: foundational audit, prompted by "question everything"
+
+Three findings from auditing the model rather than extending it. The first two are problems with
+what the paper CLAIMS, not with what the code DOES; the third is a defence of the code.
+
+### A1. The span sweep varies span and force ratio together, and the paper reads it as span
+
+Rung 0, `blind`, 32 replications a point, `sc_span_control`:
+
+| n_blue | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 10 | 12 | 16 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| success | .531 | .375 | .500 | .688 | .562 | .375 | .469 | .750 | .906 | **.969** |
+| operator goodput | 1.000 | 1.000 | .985 | .962 | .784 | .361 | .195 | .062 | .018 | **.007** |
+| blue loss fraction | .641 | .594 | .578 | .400 | .552 | .580 | .512 | .388 | .315 | **.201** |
+
+**Mission success is 97% while the operator answers 0.7% of requests.** Success has a local minimum
+at seven, exactly where the queue collapses, and then climbs monotonically as the operator becomes
+irrelevant. The blue loss fraction falls the whole way, which is the tell: the defenders are FIXED
+at four, so a larger assault force beats them more efficiently. The sweep buys combat power along
+with span and the two cannot be separated in the published design.
+
+The manuscript reports spans one-to-two through one-to-eight. That is the dip and nothing else, so
+its headline that congestion defeats direct control at high span is measured inside the window
+where the confound runs in its favour, and the effect reverses on mission success just outside it.
+`st-forceratio-9445778` holds the ratio at the published 6:4 and repeats the sweep.
+
+**This does not touch the queue mechanism**, which is measured on `operator_goodput` and is
+monotone, well gated and analytically predicted. It touches what the paper may say about DECISIONS.
+
+If the confound is confirmed, there is a genuine finding underneath it rather than only a
+correction: there are two ways to survive operator collapse, stay below it or go far enough past it
+that the assets stop needing the operator, and the worst place to stand is on the threshold. That
+is a U-shaped design curve with its trough at `n*`, and "if you must exceed n*, exceed it by a
+lot" is a sharper recommendation than anything currently in the paper.
+
+### A2. Half the force dies during the mission, so "span of control" is not a constant
+
+`blue_loss_frac` runs 0.64 down to 0.20 across the sweep. At the centerpiece operating point it is
+0.55, so a span of six is really a span of six falling to three. Reading `n*` as a staffing number
+assumes a population the mission is actively destroying. The measured cliff still brackets `n*`
+(between six and eight against a predicted 6.45), so the error is not large here, but the reading
+is looser than the paper's presentation implies and belongs in the limitations.
+
+### A3. The agent-based layer is NOT redundant, and the divergence is informative
+
+The queue alone, with no terrain, sensing, or combat, was compared against full SandTable on
+`operator_goodput` at sixteen operating points. Mean absolute gap 0.045, max 0.195. Away from the
+cliff the two agree to within 0.014; AT and past the cliff the queue-only model over-predicts
+collapse badly (rung 0, n=8: SandTable 0.195 against queue-only 0.0004; n=12: 0.018 against
+0.0003).
+
+The mission is a **demand valve**. Vehicles die or reach the objective and stop asking, so the
+queue never carries the fixed population a queueing model assumes. That is the agent-based layer's
+actual contribution to the queue results, it is the reason the closed form is a threshold
+prediction rather than a performance prediction, and it should be said out loud in the paper
+instead of left as an unexplained gap between two numbers that are presented as agreeing.
+
+### Cleared by the audit
+- `fan_out`, `hold_fraction` and `interventions` read zero in the plain `sc_span_control` direct
+  configuration, which looked like the manuscript reporting zeros. It is not: the reported values
+  come from `st-searchC` C9, where the behaviour layer is active, and they are 3.88 at two assets
+  against a 2.15 floor. No error.
