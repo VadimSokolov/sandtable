@@ -1,0 +1,10 @@
+\begin{tabular}{@{}p{0.20\textwidth}p{0.24\textwidth}p{0.18\textwidth}p{0.30\textwidth}@{}}
+\toprule
+external source & what it reports & what the closed forms say & status \\
+\midrule
+MAGIC 2010 field competition \citep{olson2012magic} & 14 robots on one task operator, reported unsaturated & $n^\star = 33$ at their cadence & \textbf{numerical}: predicted operator sits at 47\% utilization, unsaturated as reported \\
+Giachetti et al.\ 2012 \citep{giachetti2012agent} & capacity one robot; team size hurts under centralized authority, no effect decentralized & the same interaction, with a threshold & \textbf{sign only}: a two-level design cannot separate serialization from congestion \\
+fan-out \citep{olsen2004fanout,crandall2005validating} & $\mathrm{FO} = \mathrm{NT}/\mathrm{IT} + 1 = 4.3$ here & $n^\star = 6.45$ here & \textbf{compatible}: a duty-cycle bound and a stability bound, same order, not the same quantity \\
+wait time \citep{cummings2008predicting} & up to 67\% of operator capacity lost to waiting & waiting is the binding term above $n^\star$ & \textbf{qualitative}: agrees on which term binds, no value compared \\
+\bottomrule
+\end{tabular}
