@@ -1049,3 +1049,27 @@ strongest operational statement the queue thread has produced.
 That `admit` closes the band slightly LESS completely than `refund` is not noise and has a reading:
 notification returns a requester to service sooner, so it raises the request rate, which is the
 same thing the retry loop does. Admission control's second half is itself a small reliance loop.
+
+### st-burst-9443645 C1 (full tier): burstiness does not move the crossover, and does nothing at n=6
+
+| rung | direct: GE - Bernoulli | supervisory |
+|---|---|---|
+| 0 | +0.0000 | +0.0000 |
+| 1 | -0.0156 (t=-0.98) | +0.0000 |
+| 2 | -0.0078 (t=-0.42) | +0.0000 |
+| 3 | +0.0039 (t=0.27) | +0.0000 |
+| 4 | +0.0000 | +0.0000 |
+| 5 | +0.0000 | +0.0000 |
+
+Nothing gates. Supervisory is exactly zero at every rung, which is the correctness check: it does
+not use the link for decisions, so a channel change must not touch it.
+
+**This retires a local probe that misled me.** At 48 seeds the same cell read 0.667 for Bernoulli
+against 0.521 for Gilbert-Elliot at rung 2, which I took as a real effect. At 2048 missions per
+cell it is -0.0078. The lesson is the one the contract exists to enforce: a 48-seed probe on a
+binary outcome is a hypothesis generator, never evidence.
+
+The null is consistent with the closed form rather than against it. Six vehicles sits well below
+both predicted thresholds at every rung (7.96 Bernoulli against 7.37 bursty at rung 2), so the
+queue has slack and the extra completed round trips are absorbed. The theory localizes the effect
+near the threshold, which is what `st-bspan-9443684` sweeps span to find.
