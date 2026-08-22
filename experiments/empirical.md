@@ -662,3 +662,129 @@ M3 - cost-exchange KPI (src/sandtable/metrics.py, output-only, byte-identical):
 - Pre-flight: PASS 5/5 (49/49 citations verified, 1 AI-vocab hit, 0 em-dashes, 7/7 contribution refs
   resolve incl. new item 6, compile clean). 28 pages (was 26). Cost-exchange reported as ratio of means
   (mean red value / mean blue cost), not the per-run mean-of-ratios (which gave a misleading 7.9 at n=3).
+
+## Autoresearch increment: the operator queue (`aug12` run, CR-10 through CR-15)
+
+Workflow 7, Mode I, unattended. Ledger of conjectures and verdicts: `doc/autoresearch-conjectures.md`.
+Experiment ledger: `results.tsv` (26 rows, exp 1--26). Contract: `.autoresearch/contract.json`, frozen
+scoring surface, `guard` run at the head of every job. Two tiers: proxy 16 blocks x 16 reps, full
+32 x 64 (noise floor MDE 0.0246 < MPE 0.03, exp 4). A "seed" is a BLOCK: block b at R reps runs
+mission seeds bR..bR+R-1, which turns the binary per-mission `success` into a continuous paired value
+and makes the gate a seed-matched paired test.
+
+### The mechanism (C8, the central finding)
+
+- Under the model as first published, an asset that waits past its patience P stops waiting, but the
+  operator does not find out. It works every request it receives, including requests whose answer
+  arrives after the requester has gone autonomous. The slot is spent either way, the queue lengthens,
+  the next answer is later still, and past a threshold the queue sustains its own overload.
+- CR-10 added `queue_policy` in {`blind` (published default), `refund` (frees the slot), `admit`
+  (frees the slot AND tells the requester after 2*lat)}. Opt-in: `blind` reproduces code hash
+  `90c4763ba205b9d8` byte-for-byte, verified on both laptop and Hopper.
+- Closed forms (`tools/queue_theory.py`, cross-checked against a standalone exact queue sim):
+  latency cut-off l* = (P - 1/mu)/2 = 6.67 steps; collapse span n* = c(P + tau)mu/d with
+  d = (1-p_drop)^2, giving 6.30 on one console and 12.60 on two at the published operating point.
+  The link enters ONLY through d, so jamming RAISES the threshold.
+
+### Gates that passed at full tier (32 x 64, seed-matched paired)
+
+| id | contrast | effect | t | blocks won |
+|----|----------|--------|---|-----------|
+| G1 | admit vs blind, n=8, C0, published physics | +0.2373 | 16.14 | 32/32 |
+| G2 | blind C2 vs C0 (jamming helps) | +0.1143 | 7.29 | 29/32 |
+| G3 | admit C0 vs C2 (sign reversal) | +0.0386 | 2.63 | 23/32 |
+| G4 | admit vs blind, teleop physics, n=8, C0 | +0.7451 | 57.39 | 32/32 |
+| G5 | teleop blind C2 vs C0 | +0.2817 | 26.34 | 32/32 |
+
+All five recomputed from the per-block `vals=` in the run logs by `tools/make_queue_numbers.py`, which
+emits `report/gen/tab_queue_gate.tex`, so the paper's statistics are generated, not transcribed.
+
+### Supporting results
+
+- P2a (2x2, full tier): `service_rate` creates and destroys the interior optimum exactly at n*. The
+  same span n=4 shows it with a slow operator and not the published one; n=8 shows it with the
+  published operator and not a fast one.
+- P2b (full tier): `patience` moves l* through three transitions. pat20 -> C4 and C5 both dead
+  (goodput 0.000); pat30 -> C4 resolves (0.416), C5 still dead; pat45 -> both resolve (C5 0.195).
+- C10 staffing curve (CR-14, multi-console, `st-gateB-9437187`): 1 console mid-transition at n=6
+  (goodput 0.759) and floored at n=8 (0.170), bracketing 6.30; 2 consoles 0.810 at n=12 and 0.045 at
+  n=16, bracketing 12.60; 3 consoles still 0.972 at n=16, below 18.90. Adding a console moves a
+  cliff rather than raising goodput uniformly. -> `report/gen/tab_staffing.tex`.
+- C9 fan-out (`st-searchC-9437188`): 1 + NT/IT is load-dependent (3.88 at n=2 to 2.13 at n=12), never
+  equals the true sustainable span at any load, and is nearly flat (2.18 -> 2.14) across the interval
+  where delivery fails. NEGATIVE result, promoted as such.
+- P3 latency/loss decoupling: latency monotone harmful (goodput 0.180 at lat0 -> 0.113 at lat6 ->
+  0.000 at lat8, all drops); loss hump-shaped, peaking at p_drop = 0.2 (0.539) and falling to 0.201
+  at 0.55. The C0--C5 ladder raises both together and therefore confounds two effects of opposite
+  sign. The `lat8` row is exactly 0.000 across every drop, which is l* = 6.67 being obeyed.
+- CR-15 terrain-correlated demand: coupling request rate to trafficability moves the collapse from
+  n=8 to n=6 (goodput 0.767 -> 0.255 at n=6). T3 route choice: direct control + terrain demand peaks
+  at route_bias 0.85 (0.902) and FALLS to 0.539 at full cover, while dir_flat (0.988), sup_terr
+  (1.000) and adm_terr (0.992) all still peak at 1.0. The interior optimum needs both halves of the
+  coupling; it is an artifact of the human in the loop, not of the ground.
+
+### Two readings retracted before promotion (both caught by cheap robustness checks)
+
+- CR-13. One seed suggested the collapse was a startup transient (goodput 0.013 -> 0.361 under a
+  staggered start). Sixteen blocks showed only +0.01--0.05. Refuted, exp 10.
+- The "throughput cliff." At the published 1800 s window, blind delivers 2.21 vehicles at n=6, 0.68
+  at n=8, and 0.00 at n>=10, which read as a capacity cliff peaking at the predicted n*=6.30. The
+  duration battery (`st-duration-9439929`, scenario variants at 3600 s and 7200 s sharing `id` so
+  common random numbers still pair) shows 3.89 at n=10 and 5.16 at n=12, and blind becomes monotone
+  increasing in span. Refuted, exp 26. What survives is a TEMPO penalty that a deadline converts into
+  failure, plus the fact that `admit` is byte-identical at all three windows. The window must be
+  named whenever the delivered-vehicle numbers are quoted; the paper does so in both the results
+  subsection and the limitations.
+
+### Infrastructure and artifacts
+
+- Compute moved to GMU Hopper (conda env `pol`) after the laptop overheated. `hopper/` holds
+  `sync.sh`, `ar_job.sbatch` (runs `guard`, stamps host/code-hash/tier), `submit.sh`, `watch.sh`,
+  `collect.sh`, `poll.sh`, and `batteries/*.sh`. Fairshare priority, not job size, was the queue
+  constraint (32-core/6h estimated next-day, 16-core/2h barely better); the fix was the `interactive`
+  partition with batteries chained per allocation. Job IDs: 9437166 (theory), 9437187 (gateB),
+  9437188 (searchC), 9439929 (duration).
+- Run logs staged for the paper at `report/data/queue/*.out`; the Hopper originals stay in
+  `runlogs/hopper/`.
+- `tools/queue_theory.py` (closed forms + exact standalone queue sim + `--scenario`),
+  `tools/ar_table.py` (renders AR_ROW logs as arm x sweep tables with paired gating markers),
+  `tools/make_queue_numbers.py` (54 macros -> `report/gen/queue_numbers.tex`, plus
+  `tab_queue_gate.tex` and `tab_staffing.tex`, plus an appended block in
+  `report/results/numbers.txt`), `tools/make_figures.py:fig_queue` -> `report/figures/queue.pdf`,
+  and `tools/byte_identity.py`. No queue number in the paper is typed by hand; the gate table's
+  paired t and blocks-won are recomputed from the per-block values, and the figure reads the same
+  logs, so text, table, and figure cannot drift apart.
+- New tests: `test_queue_policy.py`, `test_stagger.py`, `test_crew.py`, `test_terrain_demand.py`,
+  `test_queue_theory.py`. One pre-existing test asserted that `intervention_rate` RISES with jamming
+  under direct control; it falls, because jamming removes requests. The failing assertion was the
+  finding, and it is now asserted in the correct direction with `hold_fraction`.
+- `duration` is a Scenario field, not a `params` entry, and `tools/ar_eval.py` is frozen by the
+  contract, so the duration battery uses scenario variant files
+  (`experiments/ar_scenarios/sc_span_control_d{3600,7200}.json`) that deliberately keep `id` unchanged
+  so `make_rng(seed, scn.id)` still pairs across variants.
+
+### Verification at promotion
+
+- Full suite on Hopper (job 9441155's sibling 9441117, node amd043, 4 cores): **182 passed, 0
+  failed** in 175 s. Tamper guard OK, 2 frozen paths unchanged.
+- Byte identity is checked as a VALUE comparison, not a digest (`tools/byte_identity.py compare`
+  over 4 scenarios x 8 seeds). A digest over the whole metric dict necessarily moves when an
+  increment adds output-only diagnostics, and would have read as a failure while hiding the fact
+  that nothing measured changed. Against commit 75a5b3e: **all 15 pre-existing metrics identical,
+  13 new diagnostics added**.
+- Cross-platform determinism (laptop macOS/arm64 vs Hopper Linux/AMD, job 9441155): **all 28
+  metrics identical across 32 runs**.
+
+### Paper changes
+
+New Results subsection `subsec:queue` (Figure `fig:queue`, Tables `tab:queue_gate`, `tab:staffing`); a closed-form
+paragraph with `eq:nstar` and l* added to `subsec:command`; the ladder-confound sentences added to
+`subsec:comms`; abstract extended with the mechanism and the admission-control numbers; a seventh
+contribution item; a queueing-with-abandonment passage in related work
+(`garnett2002impatient`, `gans2003callcenters`, `cummings2008predicting`, and two added after a
+follow-up search: `ibrahim2018announcements` on staffing versus delay announcements as two controls
+on one congestion, and `humann2023multioperator` as the closest multi-operator simulation precedent); a Discussion paragraph on
+what the mechanism changes for design guidance; two limitations (abandonment semantics are a modeling
+choice; the 1800 s window is part of the claim); and the Extensions "network of servers" item rewritten
+now that multi-console is delivered. Pre-flight: PASS 5/5 (55/55 citations verified, 3 AI-vocabulary
+hits, 0 em-dashes, 8/8 contribution refs resolve, compile clean). 35 pages (was 28).

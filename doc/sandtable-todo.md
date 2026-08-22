@@ -656,3 +656,76 @@ stays qualitative. Both `metrics.py` and `behavior.py` docstrings now say this.
 `tests/test_terrain_demand.py`: off-path byte-identity, monotone in the coupling strength, pulls
 the collapse below the published span, admission control still recovers it, supervisory pays
 nothing for the same demand increase.
+
+---
+
+## CR-14 Multiple operator consoles  (IMPLEMENTED 2026-08-21)
+
+### Why
+
+The published model has exactly one operator, which turns "how many assets can a human supervise"
+into a fixed ratio. Real command posts staff several consoles, and the closed form from CR-12 says
+the collapse span is linear in the console count, `n* = c(P + tau)mu / d`. That makes staffing a
+testable prediction rather than a parameter: if the model is right, adding a console should move a
+cliff, not lift a curve.
+
+### Change
+
+`Operator` gains `crew_free_at`, an array of per-console next-free times, allocated only when
+`n_operators > 1`, so the single-console path keeps its scalar `operator_free_at` and its exact
+arithmetic. A request goes to `argmin(crew_free_at)`. With `n_operators = 1` the field is `None`
+and every branch reduces to the published code, which is what keeps the off-path byte-identical.
+`build_c2` validates `n_operators >= 1` and rejects a non-integer.
+
+### Result
+
+Measured goodput on a clear link (32 blocks x 64 reps, `st-gateB-9437187`):
+
+| assets | 1 console | 1 + admit | 2 consoles | 3 consoles |
+|--------|-----------|-----------|------------|------------|
+| 6      | 0.759     | 0.905     | 1.000      | 1.000      |
+| 8      | 0.170     | 0.734     | 0.990      | 1.000      |
+| 12     | 0.015     | 0.449     | 0.810      | 0.991      |
+| 16     | 0.007     | 0.300     | 0.045      | 0.972      |
+
+Each column's transition brackets its own prediction: 6.30, 12.60, 18.90. The two levers are not
+interchangeable. A second console doubles the span the queue carries and leaves the cliff shape
+intact; admission control on one console converts the cliff into a slope. That distinction is the
+one the call-center literature draws between staffing and delay announcements (Ibrahim 2018,
+`10.1111/poms.12796`, see `doc/lit-ideas.md` D4a).
+
+### Tests
+
+`tests/test_crew.py`: off-path byte-identity at `n_operators = 1`, per-console assignment picks the
+earliest free console, two consoles raise goodput at a span where one collapses, invalid counts
+rejected.
+
+### Still open
+
+The consoles are interchangeable and the discipline is first-come-first-served. Heterogeneous
+operators, handoff, dynamic span reallocation, and a triage rule that serves the request most
+likely to still be waited on are all unbuilt. `n*` sizes the bank; it does not tell it how to work.
+
+---
+
+## CR-16 (proposed, not built) Triage: serve the request most likely to still be waited on
+
+### Why
+
+`admit` fixes the wrong-work problem by refusing early. It does not fix the ordering problem. Under
+FCFS the operator can still spend its next slot on the request with the least remaining patience,
+which is the one most likely to abandon before the reply lands. A shortest-remaining-patience-first
+or largest-remaining-slack-first discipline is free (no new capability, no new hardware) and is the
+natural third policy alongside `blind`/`refund`/`admit`.
+
+### Prediction
+
+Triage should help most in the band just above `n*`, where the queue is congested but not yet
+hopeless, and should do nothing far below it (no queue) or far above it (nothing is serviceable).
+That is a falsifiable, shaped prediction, which makes it a good next conjecture rather than a
+guaranteed win.
+
+### Scope guard
+
+Opt-in as `queue_discipline` (default `fcfs`), byte-identical when off, and composable with
+`queue_policy` so the 2 x 3 grid is measurable.

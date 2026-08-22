@@ -25,6 +25,12 @@ FIG = Path("report/figures")
 FIG.mkdir(parents=True, exist_ok=True)
 NREP = 300  # reps per design (for binomial CIs)
 
+# The closed-form thresholds the queue figure annotates, read from the scenario rather than
+# typed, so the marked line and the equation in the paper cannot drift apart.
+_QP = __import__("json").loads((Path("scenarios") / "sc_span_control.json").read_text())["params"]
+N_STAR = (float(_QP["patience"]) + float(_QP["decision_interval"])) * float(_QP["service_rate"])
+LAT_CUT = (float(_QP["patience"]) - 1.0 / float(_QP["service_rate"])) / 2.0
+
 # Muted, print-friendly palette; diverging map reserved for the phase diagram.
 BLUE, RED, AMBER, GREEN = "#2f6fed", "#e5484d", "#e8912a", "#1f9d57"
 plt.rcParams.update({
@@ -370,6 +376,75 @@ def fig_drone() -> None:
           f"{on['success'].max()*100:.0f}%, oversized {on['success'].iloc[-1]*100:.0f}%")
 
 
+
+def fig_queue() -> None:
+    """The operator queue. (a) Staffing curve: goodput against span for one, two, and three consoles,
+    with the closed-form collapse spans marked; adding a console moves a cliff rather than lifting the
+    curve. (b) The C0--C5 ladder confounds two axes: latency is monotone harmful and dies at the
+    serviceable-latency ceiling, while message loss is hump-shaped because a dropped request is one the
+    operator never has to work. Rows are read from the autoresearch run logs, not from a CSV."""
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from make_queue_numbers import rows, pick
+
+    try:
+        gate, srch = rows("st-gateB-9437187.out"), rows("st-searchC-9437188.out")
+    except SystemExit:
+        print("[queue] run logs not present in report/data/queue - skipping")
+        return
+
+    fig, (a0, a1) = plt.subplots(1, 2, figsize=(7.6, 3.1))
+
+    # (a) staffing curve against the closed-form thresholds.
+    spans = [2, 4, 6, 8, 10, 12, 16]
+    sec = "STAFFING comms_level=0 metric=operator_goodput"
+    series = [("c1_blind", BLUE, "o", "-", "1 console, blind"),
+              ("c1_admit", GREEN, "s", "-", "1 console, admit"),
+              ("c2_blind", AMBER, "^", "--", "2 consoles, blind"),
+              ("c3_blind", RED, "d", ":", "3 consoles, blind")]
+    for arm, col, mk, ls, lab in series:
+        y = [100 * pick(gate, sec, arm, str(n)) for n in spans]
+        a0.plot(spans, y, color=col, marker=mk, ms=4, lw=1.7, ls=ls, label=lab)
+    for c, col in [(1, BLUE), (2, AMBER), (3, RED)]:
+        a0.axvline(c * N_STAR, color=col, ls=(0, (1, 2)), lw=1.0, alpha=0.55)
+    for lab, x, col in [("$n^{\\star}$", N_STAR, BLUE), ("$2n^{\\star}$", 2 * N_STAR, AMBER),
+                        ("$3n^{\\star}$", 3 * N_STAR, RED)]:
+        a0.annotate(lab, xy=(x, 0.015), xycoords=("data", "axes fraction"),
+                    color=col, fontsize=8, ha="center", va="bottom")
+    a0.set_xlabel("supervised assets $n$")
+    a0.set_ylabel("operator goodput (%)")
+    a0.set_ylim(0, 104); a0.set_xticks(spans)
+    a0.legend(loc="lower left", bbox_to_anchor=(0.0, 0.09))
+    a0.set_title("(a) staffing moves a cliff")
+
+    # (b) latency and loss do not act alike.
+    drops = ["0.0", "0.05", "0.1", "0.2", "0.35", "0.55"]
+    xs = [float(d) for d in drops]
+    lsec = "P3 metric=operator_goodput policy=blind"
+    lats = [("lat0", 0), ("lat2", 2), ("lat4", 4), ("lat6", 6), ("lat8", 8)]
+    cmap = plt.get_cmap("viridis")
+    for i, (arm, lat) in enumerate(lats):
+        y = [100 * pick(srch, lsec, arm, d) for d in drops]
+        col = cmap(i / (len(lats) - 1) * 0.85)
+        a1.plot(xs, y, color=col, marker="o", ms=3.5, lw=1.7,
+                label=f"latency {lat}" + (" (above $\\ell^{\\star}$)" if lat > LAT_CUT else ""))
+    a1.set_xlabel("per-message drop probability")
+    a1.set_ylabel("operator goodput (%)")
+    a1.set_ylim(0, 60)
+    a1.legend(loc="upper right", ncol=1)
+    a1.set_title("(b) loss helps, latency never does")
+
+    fig.savefig(FIG / "queue.pdf")
+    fig.savefig(FIG / "queue.png", dpi=170)
+    plt.close(fig)
+    peak = max(drops, key=lambda d: pick(srch, lsec, "lat0", d))
+    print(f"[queue] one console: goodput {100 * pick(gate, sec, 'c1_blind', '6'):.1f}% at n=6 -> "
+          f"{100 * pick(gate, sec, 'c1_blind', '8'):.1f}% at n=8 (n*={N_STAR:.2f})")
+    print(f"[queue] loss peak for lat0 at p_drop={peak} "
+          f"({100 * pick(srch, lsec, 'lat0', peak):.1f}%), lat8 flat at "
+          f"{100 * pick(srch, lsec, 'lat8', '0.2'):.1f}%")
+
+
 def main() -> None:
     fig_centerpiece_phase()
     fig_centerpiece_curves()
@@ -378,6 +453,7 @@ def main() -> None:
     fig_killweb_sweeps()
     fig_bayes_te()
     fig_drone()
+    fig_queue()
     print("figures ->", FIG)
 
 

@@ -1122,11 +1122,39 @@ operator tells a vehicle it cannot be helped, immediately, rather than leaving i
 full patience window. That is a concrete, testable interface requirement, and it is the kind of
 recommendation the sponsor can act on without buying a better radio.
 
-**To read next.** (i) Whether any UV-supervision study measures abandonment explicitly rather than
-folding it into "operator error"; (ii) Nehme's discrete-event operator models, which are the closest
-existing queueing treatment of multi-UV supervision and may already contain a reneging term; (iii)
-the call-center literature on *announcements* (telling the customer the expected wait), which is the
-direct analogue of the `admit` policy and has its own empirical effect sizes.
+**Follow-up search, 2026-08-22 (closes item iii, partially closes ii).**
+
+- **Ibrahim 2018** (`10.1111/poms.12796`, Prod. & Oper. Management 27(2):234-250, CrossRef-verified),
+  *Managing Queueing Systems Where Capacity is Random and Customers are Impatient*. This is the
+  announcements literature item (iii), and it is a better fit than expected: the paper's three
+  controls are **staffing, compensation, and delay announcements**, and it shows the announcement is
+  a lever on the *abandonment distribution* rather than on service capacity. That is exactly the
+  SandTable pairing: CR-14 (more consoles) and CR-10 `admit` (tell the requester) are two levers on
+  one congestion, and the staffing curve shows they act differently, one moving the cliff and the
+  other converting it into a slope. Now cited in the paper's related work and results.
+- **Humann, Fletcher and Gerdes 2023** (`10.1002/sys.21685`, Systems Engineering 26(5):627-640,
+  CrossRef-verified), *Modeling, Simulation, and Trade-off Analysis for Multirobot, Multioperator
+  Surveillance*. The closest simulation precedent for CR-14: a multi-agent surveillance model with
+  explicit human-operator submodels (fatigue, cognitive overload) used to optimize the *number and
+  mix* of operators and vehicle types against cost, speed, accuracy, and stealth. It sizes the team;
+  it does not ask where the operator queue breaks, which is the narrower question the staffing curve
+  answers. Now cited in related work.
+- Item (ii), Nehme's discrete-event operator models, did **not** surface in the Scholar Gateway
+  corpus (Wiley-weighted, so MIT/AIAA and IEEE HFES venues are thin). Still open; try IEEE Xplore or
+  the MIT HAL thesis series directly rather than re-running the same semantic query.
+- Item (i), whether any UV-supervision study measures abandonment explicitly rather than folding it
+  into "operator error", is still open and is the one that would most change the paper. Nothing in
+  either search measured a vehicle giving up on a request. The nearest empirical work is on human
+  reneging in service queues (De Vries, Roy and De Koster 2018, `10.1016/j.jom.2018.05.001`, which
+  finds longer waits raise reneging and, usefully for us, that in *offline* queues reneging is
+  discovered only when the customer fails to appear, which is precisely the `blind` operator). That
+  is a good analogy and a bad substitute; it is human customers, not supervised vehicles.
+
+**What the model settled, and what it cannot.** The abandonment mechanism is now measured, not
+conjectured: see `doc/autoresearch-conjectures.md` and the paper's `subsec:queue`. What the model
+cannot settle is which of `blind`, `refund`, and `admit` a fielded console resembles. That is an
+observation, and it is the single most useful thing a human-subject or field study could contribute
+to this line.
 
 ## D5: Contested electromagnetic environment
 
