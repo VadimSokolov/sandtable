@@ -180,6 +180,7 @@ def main() -> None:
     srch = rows("st-searchC-9437188.out")          # fan-out, decoupling, terrain
     thry = rows("st-theory-i-9437166.out")         # the closed-form tests
     dur  = rows("st-duration-9439929.out")         # the deadline robustness check
+    ref  = rows("st-refund-9442831.out")           # the three-way policy decomposition
 
     _book = fanout_bookings()
     m = {
@@ -236,6 +237,20 @@ def main() -> None:
         "qFanEight":  f"{pick(srch, 'C9 metric=fan_out', 'blind', '8'):.2f}",
         "qFanTen":    f"{pick(srch, 'C9 metric=fan_out', 'blind', '10'):.2f}",
         "qFanTwelve": f"{pick(srch, 'C9 metric=fan_out', 'blind', '12'):.2f}",
+        # --- the three-way decomposition: which half of admission control does the work? ------
+        "qRefundClear":     pct(pick(ref, "R1 published", "refund", "0")),
+        "qRefundJammed":    pct(pick(ref, "R1 published", "refund", "2")),
+        "qTeleRefundClear": pct(pick(ref, "R2 teleoperation", "refund", "0")),
+        "qRefundShare":      f"{100 * paired(row(ref, 'R1 published', 'refund', '0'), row(ref, 'R1 published', 'blind', '0'))[0] / paired(row(ref, 'R1 published', 'admit', '0'), row(ref, 'R1 published', 'blind', '0'))[0]:.0f}",
+        "qTeleRefundShare":  f"{100 * paired(row(ref, 'R2 teleoperation', 'refund', '0'), row(ref, 'R2 teleoperation', 'blind', '0'))[0] / paired(row(ref, 'R2 teleoperation', 'admit', '0'), row(ref, 'R2 teleoperation', 'blind', '0'))[0]:.0f}",
+        "qNotifyPub":        f"{100 * paired(row(ref, 'R1 published', 'admit', '0'), row(ref, 'R1 published', 'refund', '0'))[0]:+.1f}",
+        "qNotifyPubT":       f"{paired(row(ref, 'R1 published', 'admit', '0'), row(ref, 'R1 published', 'refund', '0'))[1]:.2f}",
+        "qNotifyTele":       f"{100 * paired(row(ref, 'R2 teleoperation', 'admit', '0'), row(ref, 'R2 teleoperation', 'refund', '0'))[0]:+.1f}",
+        "qNotifyTeleT":      f"{paired(row(ref, 'R2 teleoperation', 'admit', '0'), row(ref, 'R2 teleoperation', 'refund', '0'))[1]:.2f}",
+        "qGoodRefundEight":  pct(pick(ref, "R3 goodput", "refund", "8")),
+        "qGoodAdmitEight":   pct(pick(ref, "R3 goodput", "admit", "8")),
+        "qGoodRefundTwelve": pct(pick(ref, "R3 goodput", "refund", "12")),
+        "qGoodAdmitTwelve":  pct(pick(ref, "R3 goodput", "admit", "12")),
         "qFanClassic": f"{_book['classic']:.2f}",
         "qFanUtil":    f"{_book['util']:.2f}",
         # --- terrain-correlated demand ---------------------------------------------------
@@ -269,6 +284,16 @@ def main() -> None:
          row(gate, "G4 FULL TIER", "blind", "2"), row(gate, "G4 FULL TIER", "blind", "0")),
         ("Admission reverses the sign", "published", "$n{=}8$, C0 vs.\\ C2",
          row(full, "published physics", "admit", "0"), row(full, "published physics", "admit", "2")),
+        # Which half of admission control does the work: freeing the slot, or telling the
+        # requester? Reported because the answer is not the same at both request rates.
+        ("Freeing the slot alone", "published", "$n{=}8$, C0",
+         row(ref, "R1 published", "refund", "0"), row(ref, "R1 published", "blind", "0")),
+        ("Freeing the slot alone", "teleoperation", "$n{=}8$, C0",
+         row(ref, "R2 teleoperation", "refund", "0"), row(ref, "R2 teleoperation", "blind", "0")),
+        ("Notifying, on top of freeing", "published", "$n{=}8$, C0",
+         row(ref, "R1 published", "admit", "0"), row(ref, "R1 published", "refund", "0")),
+        ("Notifying, on top of freeing", "teleoperation", "$n{=}8$, C0",
+         row(ref, "R2 teleoperation", "admit", "0"), row(ref, "R2 teleoperation", "refund", "0")),
     ]
     lines = ["\\begin{tabular}{llrrrr}", "\\toprule",
              "claim & physics & setting & $\\Delta$ (pp) & $t$ & blocks won \\\\", "\\midrule"]

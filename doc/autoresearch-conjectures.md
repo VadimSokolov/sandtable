@@ -954,3 +954,55 @@ admission-control gain, which would mean the Discussion's recommendation ("tell 
 mis-attributed. Its numbers come from a non-gated probe. `hopper/batteries/refund.sh` is running
 the three-way decomposition at full tier at both physics settings. Nothing changes in the paper
 until that gates.
+
+## Review finding R1 gated: the decomposition, and where the reviewer was wrong
+
+`st-refund-9442831`, full tier (32 blocks x 64 reps), n=8, both physics settings.
+
+| physics | link | blind | refund | admit | refund share |
+| --- | --- | --- | --- | --- | --- |
+| published | C0 | 0.5625 | 0.7856 | 0.7998 | 94.0% |
+| published | C2 | 0.6768 | 0.7520 | 0.7612 | 89.0% |
+| teleop | C0 | 0.0083 | 0.6733 | 0.7534 | 89.3% |
+| teleop | C2 | 0.2900 | 0.6416 | 0.6738 | 91.6% |
+
+The reviewer's central claim is CONFIRMED: freeing the slot carries roughly nine tenths of the
+admission-control gain, and the manuscript's recommendation was attributed to the wrong half.
+`refund - blind` gates everywhere (published C0 +0.2231, t=14.65, 32/32; teleop C0 +0.6650,
+t=78.47, 32/32).
+
+**The reviewer's secondary claim is REFUTED.** Its probe reported that refund equals admit even
+under teleop physics (0.703 vs 0.695, admit slightly worse), and concluded the notification
+"measures approximately zero". At full tier the sign is the other way and the contrast gates:
+`admit - refund` is +0.0801 (t=4.97, 25/32) at teleop C0 and +0.0322 (t=2.43, 23/32) at teleop C2,
+against +0.0142 (t=1.37, 21/32, NOT gated) and +0.0093 (t=0.77, 16/32, NOT gated) at published
+physics. So the notification is worth nothing measurable at the published request rate and a real
+gated eight points under teleoperation. This is exactly why a reviewer's number is a conjecture
+until it is gated: the probe was directionally wrong on the arm that decides whether a design
+recommendation is made at all.
+
+### The mechanism, from R3 (goodput by span, same tier)
+
+| span | blind | refund | admit |
+| --- | --- | --- | --- |
+| 6 | 0.759 | 0.917 | 0.905 |
+| 8 | 0.170 | 0.800 | 0.734 |
+| 10 | 0.060 | 0.683 | 0.574 |
+| 12 | 0.015 | 0.579 | 0.449 |
+
+`refund` beats `admit` on operator goodput at EVERY span, which looks backwards until the direction
+of the favour is read. Freeing the slot helps the operator. Notifying helps the requester, and a
+requester returned to autonomy after one round trip instead of after its full patience also asks
+again sooner, so `admit` offers the operator strictly more load than `refund`. Notification buys
+requester tempo at the price of operator efficiency. That trade pays only when waiting is a large
+share of an asset's duty cycle, which is why it gates under teleoperation and not at the published
+rate, and it is a sharper statement than either the manuscript's original claim or the review's.
+
+### What changed in the paper
+
+New results paragraph "Which half of admission control does the work", four new rows in
+`tab:queue_gate` (freeing the slot alone, and notifying on top of freeing, at both physics
+settings), and the Discussion's recommendation rewritten from "a console that tells a requester it
+will not be answered in time" to "a console that does not spend service time on requests whose
+answers will arrive after the requester has given up", with the notification demoted to a second
+increment justified by tasking tempo.
