@@ -192,6 +192,8 @@ Operator-queue numbers (source: tools/make_queue_numbers.py over report/data/que
 \qFloorTwelve = +0.041
 \qFloorSixteen = +0.025
 \qFloorTwenty = +0.019
+\qDefileShort = -0.519
+\qDefileLong = -0.075
 \qBandBlind = +0.590
 \qBandRefund = +0.013
 \qBandAdmit = +0.030

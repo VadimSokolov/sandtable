@@ -52,6 +52,13 @@ The contributions of this paper are the following.
 span of control and a C0--C5 communications/EW ladder, that reproduces a \emph{moving optimum}: the communications level at which autonomy overtakes human control falls as span rises (Section~\ref{subsec:centerpiece}).
 \item The mechanism behind that optimum, stated in closed form and then measured: the operator is
 a server with client abandonment, and one that does not detect abandonment sustains its own overload above a collapse span $n^{\star} = c(P+\tau+1)\mu/d$ and a serviceable-latency ceiling $\ell^{\star} = (P - 1/\mu)/2$. Both thresholds are confirmed against staffing and patience sweeps; explicit admission control is worth \qAdmitClear\% against \qBlindClear\% mission success at the centerpiece operating point, and the same mechanism makes message loss beneficial to an undetecting operator, which separates the two axes an EW ladder normally conflates (Section~\ref{subsec:queue}).
+\item A bistability in span of control, derived and then gated: when a vehicle that went
+unanswered asks again sooner than one that was served, offered load depends on the state the queue
+is already in, and the collapse threshold splits into a band $(n_c, n_h)$ of width
+$c\mu\pi(\tau-\rho)(1-a_h)/d$ inside which a team has two self-sustaining states. At the one span
+the band covers, mission success moves by \qBandSuccess{} on the initial condition alone; a console
+that discards work it cannot finish shrinks that to \qBandRefund{}, and a backoff floor of
+\qBandFloor{} steps closes the band outright (Section~\ref{subsec:band}).
 \item Three decision-relevant findings for Army human-machine teaming, the moving control optimum,
 the speed-survivability frontier of route choice (Section~\ref{subsec:uc3}), and the EW-induced collapse of a sensor-to-shooter chain (Section~\ref{subsec:uc5}), each generated from \nRep{}-replication Monte-Carlo studies with confidence intervals.
 \item An analytic validation: \sandtable{}'s emergent attrition matches Lanchester's square law to
@@ -460,6 +467,18 @@ Methodologically, the results argue for the two-tier workflow. \sandtable{} ran 
 
 
 \sandtable{} is deliberately low-fidelity, and its conclusions inherit that. Movement is 2.5D kinematic, not physics-based; sensing and engagement are effect-based draws, not signal or signature models; terrain is a scalar trafficability-and-cover field, not a rendered environment; and line of sight is a flat-terrain stub. Tactical behavior is simplified too: red forces are static defenders that fire but neither maneuver nor react, so every finding is conditioned on a non-adaptive threat. The baseline scenarios model no air defense against the recon aircraft, so in them swarm size carries no survivability cost and the UC-5 upside is an upper bound; the opt-in counter-UAS layer of Section~\ref{subsec:drone} supplies that cost and the interior swarm optimum it implies, but its air defense is itself static, an addressed limit rather than a fully lifted one. Because that layer keys attrition to swarm size rather than to a finite-magazine defense, the interior optimum it produces should be read as a demonstrated mechanism, not a robust prediction of an optimal swarm size: a saturable defense that a large enough swarm can overwhelm would push the balance back toward mass, and which effect dominates in a given engagement is exactly the kind of question the high-fidelity tier exists to settle.
+
+The bistability of Section~\ref{subsec:band} sharpens the same recommendation and adds a
+second, cheaper one. A console that discards work it cannot finish does not merely raise the average;
+it removes a span at which the team has two possible outcomes and the parameters do not say which,
+which is the difference between a system that performs worse and a system that is not predictable
+from its design. Where that console cannot be built, the backoff floor is a software change on the
+vehicle rather than a change to the operator's station: hold a requester that went unanswered off
+for at least $\tau - 1/(c\mu\pi)$ steps, \qBandFloor{} here, and the band narrows below one vehicle.
+On difficult ground, where the model ties call-for-help rate to trafficability, lengthening the
+backoff past that floor cuts the terrain penalty from \qDefileShort{} to \qDefileLong{}. Neither
+recommendation asks for more operators. Adding a console scales both edges of the band by $c$, which
+relocates the problem at the cost of people; the discipline removes it at the cost of software.
 
 The admission-control recommendation is also narrower than it may read. It says the operator should refuse work it cannot finish in time, not that it should be clever about what it accepts. We tested the obvious next step, prioritizing by which requester needs help most, and found nothing, but the test was run on an operator supervising one formation on one route, where the vehicles stand on nearly the same ground by construction: the terrain difficulty spread across the supervised vehicles is \qTriageSeen{} on average against \qTriageMap{} available across the map, because the terrain's variation is almost entirely lateral and a formation samples one lane of it. Whether ordering pays for an operator whose clients are in genuinely different situations, on different routes or against different threats, is untested here and is a property of the command architecture rather than of the queue.
 

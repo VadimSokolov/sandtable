@@ -213,6 +213,7 @@ def main() -> None:
     wc = rows("st-waitcost-9443162.out")
     sf = rows("st-stopf-9443653.out")
     hy = rows("st-hyst-9443432.out")
+    df = rows("st-defile-9443710.out")
 
     def _did(sec: str, n: str) -> tuple:
         """[stag - burst | retry] - [stag - burst | no retry], paired on the shared block set.
@@ -339,6 +340,8 @@ def main() -> None:
         "qFloorTwelve":      f"{paired(row(hy, 'H4', 'stag', '12'), row(hy, 'H4', 'burst', '12'))[0]:+.3f}",
         "qFloorSixteen":     f"{paired(row(hy, 'H4', 'stag', '16'), row(hy, 'H4', 'burst', '16'))[0]:+.3f}",
         "qFloorTwenty":      f"{paired(row(hy, 'H4', 'stag', '20'), row(hy, 'H4', 'burst', '20'))[0]:+.3f}",
+        "qDefileShort":      f"{paired(row(df, 'D4', 'hard', '4'), row(df, 'D4', 'flat', '4'))[0]:+.3f}",
+        "qDefileLong":       f"{paired(row(df, 'D4', 'hard', '20'), row(df, 'D4', 'flat', '20'))[0]:+.3f}",
         "qBandBlind":        f"{paired(row(hy, 'H3', 'stag', 'blind'), row(hy, 'H3', 'burst', 'blind'))[0]:+.3f}",
         "qBandRefund":       f"{paired(row(hy, 'H3', 'stag', 'refund'), row(hy, 'H3', 'burst', 'refund'))[0]:+.3f}",
         "qBandAdmit":        f"{paired(row(hy, 'H3', 'stag', 'admit'), row(hy, 'H3', 'burst', 'admit'))[0]:+.3f}",
