@@ -2243,3 +2243,33 @@ expected.
 **CR-28 disposition.** Cut from the paper. Job `st-stall-9446094` was already running when the cut
 was made and is allowed to finish; its output enters the ledger as a labeled stress test to a named
 extreme, is not a section, and is not cited as evidence for the recommendation.
+
+## CR-29 AMENDMENT: it prices mobility, not exposure, and the mediator is partial
+
+*Written 2026-08-22 on Fable's Round 11, BEFORE `teleop_price.sh` was submitted. The battery had
+produced no data.*
+
+**The mechanism is renamed, and the old name was wrong in a way the pilot already showed.**
+`teleop_stop` does not price EXPOSURE. It prices MOBILITY. A stopped teleoperated vehicle is not
+more likely to be hit; it is less likely, because it never advances into contact, which is exactly
+why the rho = 4 arm in the pilot has the highest hold fraction (0.796) and the LOWEST blue losses
+(0.156). What re-asking costs under this physics is tempo, not casualties. Every sentence about
+CR-29 says mobility from here, and the phrase "where waiting is dangerous" is withdrawn: in this
+model waiting is safe and slow, which is a different objection to the recommendation and a weaker
+one than the one Fable raised.
+
+**Fable concedes its own Round 6 caveat in this quadrant, and the concession is recorded because it
+narrows what CR-29 can claim.** When asking is itself what stops the vehicle, attempt rate is the
+thing the physics charges for, and a short backoff maximizes attempts, so the recommendation was
+never at risk here. The caveat survives only in the untested quadrant where waiting is priced by
+QUALITY rather than by motion, and neither of us has a mechanism for that quadrant that was not
+authored for the test. It is deprioritized rather than run, which is a decision recorded here so
+that the CR-29 result is not later read as having answered more than it did.
+
+**A pre-registered limit on prediction 2.** The pilot's rho = 21 cell resists the mediator: its
+hold fraction is 0.456 against no-retry's 0.448, effectively matched, yet its success is 0.229
+against 0.333. If the tier run reproduces a gated success deficit at matched hold fraction, then
+hold fraction is a PARTIAL mediator and something else carries the remainder, with the
+deterministic re-consultation cadence the leading suspect. **Registered now: prediction 2 may not
+be reported as full mediation, whatever the tier data look like.** The most it can claim is that
+hold fraction accounts for the ordering across arms that differ in hold fraction.

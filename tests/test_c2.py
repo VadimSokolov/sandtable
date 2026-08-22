@@ -222,3 +222,34 @@ def test_duration_param_overrides_the_scenario_field(skirmish_scenario):
            run_mission(skirmish_scenario.with_params({"n_blue": 5, "duration": d}), seed=3)
     longer = run_mission(skirmish_scenario.with_params({"n_blue": 5, "duration": 2 * d}), seed=3)
     assert longer["mission_time"] >= 0.0
+
+
+def test_q_droop_defaults_to_the_oracle_operator(skirmish_scenario):
+    """CR-30. The published operator never degrades. `q_droop = 0` must reproduce it exactly, or
+    the sensitivity sweep moves the baseline it is measured against."""
+    from sandtable.sim import run_mission
+
+    p = {"control_mode": "direct", "comms_level": 0, "n_blue": 8}
+    assert run_mission(skirmish_scenario.with_params(p), seed=11) == \
+           run_mission(skirmish_scenario.with_params({**p, "q_droop": 0.0}), seed=11)
+
+
+def test_q_droop_never_takes_a_serviced_answer_below_the_autonomous_one(skirmish_scenario, rng):
+    """A degraded operator answer must stay at least as good as no operator at all. Otherwise the
+    sweep would make consulting actively harmful, which is a different model, not a sensitivity."""
+    from sandtable.c2 import build_c2
+    from sandtable.scenario import build_entities
+
+    scn = skirmish_scenario.with_params(
+        {"control_mode": "direct", "comms_level": 0, "n_blue": 8, "q_droop": 1.0})
+    op = build_c2(scn, build_entities(scn, rng))
+    for util in (0.0, 0.5, 1.0):
+        q = op.q_operator - op.q_droop * util * (op.q_operator - op.q_auto)
+        assert op.q_auto - 1e-12 <= q <= op.q_operator + 1e-12
+    for bad in (-0.1, 1.1):
+        try:
+            build_c2(skirmish_scenario.with_params({**scn.params, "q_droop": bad}),
+                     build_entities(scn, rng))
+        except ValueError:
+            continue
+        raise AssertionError(f"q_droop={bad} was accepted")

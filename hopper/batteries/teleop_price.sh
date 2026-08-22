@@ -1,4 +1,4 @@
-# CR-29. THE EXPOSURE TEST, PRICED BY A MECHANISM AUTHORED FOR SOMETHING ELSE.
+# CR-29. THE WAIT-PRICING TEST, PRICED BY A MECHANISM AUTHORED FOR SOMETHING ELSE.
 #
 # CR-28 asked whether "do not re-ask" survives pricing a wait by exposure, using a `stall_decay`
 # knob written for the purpose. A null on a self-authored knob with a self-chosen range is not
@@ -7,6 +7,14 @@
 # vehicle keep driving at 54.5% speed with its operator link severed. Under `teleop_stop = true` a
 # vehicle with no answer coming back STOPS. `teleop_stop = false` reproduces the published path
 # exactly, which is the control, and the pilot confirms the identity cell for cell.
+#
+# NAMING, corrected before submission. This prices MOBILITY, not exposure. A stopped vehicle is not
+# more likely to be hit, it is less likely, because it never advances into contact. What re-asking
+# costs here is tempo. See the CR-29 amendment in doc/autoresearch-conjectures.md, including the
+# pre-registered limit that prediction 2 may not be reported as full mediation: the pilot's
+# rho = 21 arm has a hold fraction matched to no-retry (0.456 against 0.448) and still loses
+# success (0.229 against 0.333), so if that survives at tier, hold fraction is partial and the
+# deterministic re-consultation cadence is the suspect for the remainder.
 #
 # REGISTERED (full text in doc/autoresearch-conjectures.md, CR-29).
 #   1. Confirmatory, pilot-suggested and declared as such: under stop-dead physics no-retry still

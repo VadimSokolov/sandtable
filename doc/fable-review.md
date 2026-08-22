@@ -1914,3 +1914,100 @@ the load rule is dead on both metrics, and its surviving limb (which spans are v
 corollary of the spine, not a standing rule. The machinery this round shipped (double, aimd,
 stagger, the guard) matches the asks from Rounds 7 through 9; the portfolio as submitted is the
 right one.
+
+## Round 11 (2026-08-22, the coordinator's round 11)
+
+### (1) Giachetti: the mapping is real one level up from where you wrote it
+
+The attack you asked for, made: their commander and your console are different queues, and their
+2x2 design cannot see the thing your paper is about. Two mechanisms produce "large centralized
+teams spend more time waiting": queue congestion (nonlinear in load, threshold, collapse) and
+serialized approval (every subteam takes its turn even at low commander utilization, linear in
+team size). Both predict their interaction sign. With two team sizes and F(1,12), their data
+cannot distinguish a knee from a slope, and their prose "has become a bottleneck" is
+interpretation over logs, not a utilization measurement. So the correspondence that is REAL: an
+independent human-team implementation observed the interaction's SIGN (size hurts only when a
+single decision-maker sits in the loop) and attributed the penalty to waiting on him. The
+correspondence that is OVER-written: "their vanishing size effect is our supervisory arm" as
+validation of the congestion mechanism. Their centralization may be a topology factor, their
+arrival process is a handful of sector allocations, and nothing in their design licenses the
+claim that their commander was saturated rather than serialized.
+
+The narrower sentence, which is also a better one: "Giachetti et al. independently observe the
+interaction's sign in an Army human-robot team: team size hurts only under high centralization,
+and their logs attribute the penalty to waiting on the commander. A two-level design cannot
+separate serialized approval from queue congestion, and cannot locate a threshold; the closed
+forms here do both, which is what turns their post-hoc log reading into an ex-ante design
+quantity." Keep the explicit disanalogy in the text (task-assignment queue at mission cadence
+against a consult queue at 22-step cadence, same load algebra, different processes), so the
+reviewer who knows the study finds the distinction already made rather than missing. Cite it as a
+sign observation with small n, bracketed by Barnes and MAGIC on the span axis; do not let it
+carry quantitative weight anywhere.
+
+### (2) The burst lever was never a third lever
+
+Fold it into admission control as that lever's burst-structure interaction and the demotion
+question dissolves. The headline is two levers (admission control; the backoff rule) and one
+interaction (admission control's value scales with burst structure). On that accounting the
+uneven gating is not an embarrassment to manage but a prediction to check: the mechanism says the
+mission-level consequence must concentrate where the operating point sits near the moving
+threshold (n = 8 against the GE-shifted n* near 8.2) and compress where both arms are past or
+short of it (n = 10 sits at the Bernoulli threshold itself). If the success sweep exists in the
+cells you already have, plot the interaction profile against that prediction; landing means the
+one-span gate is the mechanism speaking, not a weakness. If only two spans exist at mission
+level, your demotion is exactly right as written: throughput claim, mission consequence at one
+span, no third lever in the headline. Either way the abstract should say two levers, one
+interaction.
+
+### (3) CR-29: your decline is correct, and one cell in your pilot resists your mediator
+
+Endorsed without reservation: gating on blue_loss_frac alone inverts under stop-dead physics,
+lowest losses in the dead arm, which is the bloodless-day artifact in its third costume (goodput
+denominator, attrition demand valve, now losses-vs-advance). The joint reading with arrived_frac
+is the right repair, and my Round 10 instruction was under-specified on exactly this point; that
+one is mine.
+
+Two notes before tier. First, rename the mechanism: teleop_stop prices MOBILITY, not exposure.
+Your own pilot shows it (rho = 4: losses 0.156, the lowest, success 0.000): missions die of
+tempo, parked and safe, not of casualties. The tier claim should read "pricing the wait in
+mobility makes re-asking strictly worse," and my Round 8 caveat is answered opposite to how I
+posed it IN THIS QUADRANT: when asking itself stops the vehicle, attempt rate is what the physics
+charges for, and short backoff maximizes it. I concede that quadrant. The caveat survives only in
+the untested one (waiting priced through fallback quality and blundering exposure rather than
+through stopping), which I would deprioritize rather than run: the tested quadrant is the
+doctrinally relevant one for teleoperation. Second, the rho = 21 cell resists the hold-fraction
+mediator: hold 0.456 against no-retry's 0.448, statistically the same stopped time, yet success
+0.229 against 0.333. If tier reproduces a gated deficit at matched hold fraction, hold fraction
+is a partial mediator and something else (the deterministic cadence is the obvious suspect) is
+carrying real damage. Register that now so the tier write-up cannot claim full mediation if the
+cell recurs.
+
+### (4) The single largest threat: the thesis sentence proves too much
+
+"Span of control is a queueing outcome, not a psychological constant" invites the one review that
+kills: this model contains no psychology BY CONSTRUCTION. The operator never errs, never slows
+under load, never fatigues; q_operator = 0.95 is unconditional. A human-factors reviewer will
+write: you removed the psychological constant by assumption and then reported its absence as a
+discovery, and the utilization ceiling literature (trouble near 70 percent, long before queue
+saturation) is the phenomenon your abstract waves away. That review attacks the thesis sentence
+itself, not a battery, and no battery fixes it.
+
+The repair costs wording plus one small computation. (a) Scope the thesis to sufficiency:
+queueing effects ALONE, with a flawless operator, are sufficient to produce the observed span
+pathologies (Giachetti's interaction, collapse, bistability, the levers' gains); therefore span
+doctrine cannot be set by attention arguments alone. Sufficiency, not exclusivity. (b) Promote
+the oracle-operator limitation from the limitations pile into the mechanism section, one
+paragraph, with the co-option sentence: an operator whose quality droops with utilization moves
+every threshold LEFT and makes the levers more valuable, not less, because errors generate rework
+and rework is offered load. (c) The one cheap computation, not a battery: a 48-seed droop
+sensitivity sweep (q_operator falling linearly in measured utilization, two slopes) verifying the
+ORDERINGS the paper ships (refund over blind, adaptive tracking no-retry, supervisory crossover
+direction) are invariant. If the orderings hold under droop, the headline is armored against
+exactly this reviewer; if any flips, better to know this week.
+
+Secondary threats, one line each, in descending order: single-scenario magnitudes (answer: the
+mechanism and bench are scenario-free, the pricing is demonstrated on one scenario, say so);
+calibration promised in ratios but no retrodiction shown (ship the two-anchor mini-table, MAGIC
+and Giachetti/Barnes, even if crude); refund requires knowing the requester's deadline (answer:
+patience is protocol-declared between software, one sentence); and the retraction record read as
+instability (answer: present the ledger as the method, which it is).

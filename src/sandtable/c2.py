@@ -107,6 +107,7 @@ class Operator:
     # floor over the requester's own patience window, so a vehicle stopped in contact is worse off
     # the longer it is left there. Zero by default, and zero reproduces the published model
     # exactly (CR-28).
+    q_droop: float = 0.0           # serviced-decision quality lost at full utilization
     stall_decay: float = 0.0
     stall_floor: float = 0.0       # the quality a fully decayed waiter sits at
     admit_response: str = "none"       # "none" | "aimd"
@@ -204,6 +205,9 @@ def build_c2(scn: Scenario, ent: Entities,
     op.retry_streak = np.zeros(ent.n, dtype=int)
     op.admit_response = str(scn.params.get("admit_response", "none"))
     op.fano_window = int(scn.params.get("fano_window", 0))
+    op.q_droop = float(scn.params.get("q_droop", 0.0))
+    if not 0.0 <= op.q_droop <= 1.0:
+        raise ValueError(f"q_droop must lie in [0, 1], got {op.q_droop}")
     op.stall_decay = float(scn.params.get("stall_decay", 0.0))
     op.stall_floor = float(scn.params.get("stall_floor", 0.0))
     if not 0.0 <= op.stall_decay <= 1.0:
@@ -497,7 +501,18 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
             if wait <= op.patience:
                 _claim(op, console, done)
                 ent.await_until[i] = int(math.ceil(reply))
-                op.resolved_quality[i] = op.q_operator
+                # The published operator is an ORACLE: its answers never degrade, however hard
+                # it is working. That is a real limitation, and `q_droop` exists to test whether
+                # the results depend on it rather than to claim a psychology. It takes the
+                # serviced-decision quality down toward the autonomous baseline in proportion to
+                # the console's running utilization, which is the DESCENDING limb of the
+                # utilization-performance relation and not the full inverted U. Zero is exactly
+                # the published value, so the sweep nests the shipped model at its own baseline.
+                q = op.q_operator
+                if op.q_droop > 0.0:
+                    util = op.busy_steps / max(op.total_steps, 1)
+                    q = op.q_operator - op.q_droop * util * (op.q_operator - op.q_auto)
+                op.resolved_quality[i] = q
                 op.waits.append(float(wait))          # attention-switching wait, serviced only
                 op.n_serviced += 1
                 op.retry_streak[i] = 0        # answered, so the doubling rule resets
