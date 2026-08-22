@@ -27,6 +27,7 @@ viz = ["matplotlib>=3.7"]
 # Optimization driver (installed from git; not on PyPI). The [bo] extra of polarisopt pulls torch.
 opt = ["polarisopt"]
 dev = ["pytest>=7", "ruff", "matplotlib>=3.7", "networkx>=3.0"]
+rl = ["gym"]
 
 # polarisopt discovers these by importing the module (the module's import registers the plugin).
 [project.entry-points."polarisopt.simulators"]
@@ -43,3 +44,6 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
+
+[tool.pyright]
+extraPaths = ["studies/mc_rk_tags_claude"]
