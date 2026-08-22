@@ -1269,3 +1269,24 @@ even on difficult ground. The design rule works by restoring the good state, not
 Consistency check worth recording: E1 at terrain_demand = 0 reads +0.5722, which reproduces H2's
 five-vehicle cell to four decimals from an independent job. The block pairing is doing what it
 claims across submissions.
+
+### A second, physical reliance loop exists in the model and is too weak to matter
+
+`motion` reads `control_quality` as a speed multiplier and `terrain_demand` shortens the decision
+interval on difficult ground, so a vehicle that gets poor control moves slower, lingers in the
+defile, and asks for help more often. That is a closed loop with no retry in it at all. Reading the
+retry-OFF arms of E1 asks whether it is strong enough to produce two states on its own:
+
+| terrain_demand | 0.0 | 0.25 | 0.5 | 0.75 | 1.0 | 1.5 | 2.0 |
+|---|---|---|---|---|---|---|---|
+| stag - burst, retry off | +0.0178 | +0.0164 | +0.0175 | +0.0168 | +0.0163 | +0.0170 | +0.0102 |
+
+Flat, and below the MPE at every setting. The initial condition buys the same +0.017 whether the
+terrain coupling is off or at its strongest, which is the direct effect of desynchronizing the
+first decision events and nothing more. So the physical loop exists and its gain around the loop is
+below one; the behavioural loop's is above it.
+
+That sharpens CR-17 rather than merely controlling for it. The finding is not that feedback between
+failure and demand creates bistability, since this model contains such feedback already and it does
+not. The finding is that a loop closing on the DECISION timescale (a retry four steps after an
+abandonment) has enough gain and a loop closing on the MOVEMENT timescale does not.
