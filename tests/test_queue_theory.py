@@ -8,6 +8,7 @@ than only against itself.
 from __future__ import annotations
 
 import importlib.util
+import math
 import pathlib
 
 import pytest
@@ -306,3 +307,59 @@ def test_a_rarely_consulted_step_clocked_chain_forgets():
         assert a.mean() == pytest.approx(0.20, abs=0.01)
     assert runs[1] > 0.4, "consulted every step, the chain must be strongly correlated"
     assert abs(runs[100]) < 0.05, "consulted rarely, it must have forgotten"
+
+
+def test_coherence_ratio_matches_the_chain_it_describes():
+    """theta must equal the measured decorrelation time of the actual chain, not an approximation
+    of it. Build the chain the way `build_comms` does and read its second eigenvalue back."""
+    tau, p = 22.0, 0.20
+    for L in (4.0, 14.0, 28.0, 60.0, 120.0):
+        p_bg = 1.0 / L
+        p_gb = p * p_bg / (1.0 - p)
+        lam = 1.0 - p_gb - p_bg
+        want = (-1.0 / math.log(lam)) / tau
+        assert qt.coherence_ratio(p, L, tau) == pytest.approx(want, rel=1e-12)
+
+
+def test_the_crossover_sits_where_the_registration_says_it_does():
+    """theta = 1 at L = tau/(1-p), to first order. The exact chain puts it within a few percent,
+    which is the tolerance the registered crossover was stated at."""
+    p = 0.20
+    for tau in (11.0, 22.0, 44.0):
+        assert qt.coherence_ratio(p, qt.crossover_burst_len(p, tau), tau) == pytest.approx(1.0,
+                                                                                           abs=1e-9)
+    # the first-order reading tau/(1-p) is low, and increasingly so as the clock speeds up
+    assert qt.crossover_burst_len(p, 22.0) == pytest.approx(28.1, abs=0.1)
+    assert qt.crossover_burst_len(p, 11.0) == pytest.approx(14.4, abs=0.1)
+    # the falsifier, stated as an assertion: ONE radio, two clocks, opposite sides of the knee
+    assert qt.coherence_ratio(p, 14.0, 22.0) < 0.6
+    assert qt.coherence_ratio(p, 14.0, 11.0) > 0.9
+
+
+def test_coherence_excess_is_the_conditional_retry_failure_over_the_marginal_rate():
+    """e(theta) must equal (1-p) lam^tau computed directly from the chain."""
+    tau, p = 22.0, 0.20
+    for L in (4.0, 28.0, 120.0):
+        p_bg = 1.0 / L
+        p_gb = p * p_bg / (1.0 - p)
+        lam = 1.0 - p_gb - p_bg
+        direct = (1.0 - p) * lam ** tau
+        assert qt.coherence_excess(p, L, tau) == pytest.approx(direct, rel=0.02)
+
+
+def test_the_published_operating_point_is_deep_in_the_memoryless_regime():
+    """The null in K1 is not a power failure: at L=4 the excess is four orders of magnitude below
+    anything the harness could resolve."""
+    assert qt.coherence_ratio(0.20, 4.0, 22.0) < 0.15
+    assert qt.coherence_excess(0.20, 4.0, 22.0) < 1e-3
+    # while a channel whose outages last a decision cycle carries a third of the marginal rate
+    assert qt.coherence_excess(0.20, 27.5, 22.0) > 0.25
+
+
+def test_coherence_excess_is_monotone_and_bounded_by_the_marginal_survival():
+    tau, p = 22.0, 0.20
+    es = [qt.coherence_excess(p, L, tau) for L in (4, 14, 28, 60, 120, 1000)]
+    assert es == sorted(es)
+    assert all(0.0 <= e <= 1.0 - p for e in es)
+    # a channel with no memory at all (L at the memoryless point) carries no excess at long tau
+    assert qt.coherence_excess(p, 1.0 / (1.0 - p), tau) == pytest.approx(0.0, abs=1e-9)

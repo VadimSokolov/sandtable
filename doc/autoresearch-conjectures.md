@@ -1169,3 +1169,40 @@ outcome unless outage runs last about as long as the operator's decision cycle.
 
 **Falsifier:** if the contrast stays null at `L = 120` (`theta = 4.3`), the coherence ratio is not
 the controlling quantity and CR-19 is wrong.
+
+### CR-19 addendum: the closed form, registered 2026-08-22 while job 9444501 was still running
+
+No rows of `st-coherence-9444501` had been read when this was written; `hopper/collect.sh` reported
+0 rows. The addendum sharpens the prediction, it does not follow the data.
+
+A vehicle whose handshake fails retries at its next decision, `tau` steps later. For a two-state
+chain the probability it is still in the bad state then is `p + (1-p) lam^tau`, so the **excess**
+over the marginal rate is
+
+    e(theta) = (1 - p) lam^tau ~ (1 - p) exp(-1/theta).
+
+An exponential in the *inverse* coherence ratio: flat while `theta` is small, then steep. That is
+why `theta = 1` is a knee and not an arbitrary cut. Values for the arms submitted:
+
+| L | theta (tau=22) | e | theta (tau=11) | e |
+|---|---|---|---|---|
+| 4   | 0.12 | 2.0e-4 | 0.24 | 0.013 |
+| 14  | 0.49 | 0.104  | 0.98 | 0.30  |
+| 28  | 1.00 | 0.294  | 2.00 | 0.49  |
+| 60  | 2.16 | 0.500  | 4.33 | 0.63  |
+| 120 | 4.34 | 0.635  | 8.68 | 0.71  |
+
+The exact crossover is `L* = 1/[(1-p)(1 - exp(-1/tau))]`, which is 28.1 at `tau = 22` and 14.4 at
+`tau = 11`; the first-order reading `tau/(1-p)` is a few percent low and worsens as the clock
+speeds up. `tools/queue_theory.py:crossover_burst_len` computes it, with tests.
+
+**H(CR-19d):** the success deficit `bern - ge(L)` is monotone increasing in `e(theta)` and first
+gates between `theta = 0.5` and `theta = 1`. L4 is the falsifier in its purest form: `L = 14` sits
+at `theta = 0.49` under `tau = 22` and `theta = 0.98` under `tau = 11`, so the SAME radio must land
+on opposite sides of the knee when nothing changes but the operator's decision cycle. If `L = 14`
+behaves the same under both clocks, `theta` is not the controlling quantity and CR-19 is wrong.
+
+**What the closed form does not claim.** Mean throughput is untouched: the marginal drop rate is
+held fixed by construction, so `d` and `n* = c(P+tau+1)mu/d` are unchanged. `e` governs the
+DISPERSION of per-vehicle wait. Abandonment is a threshold on that wait, not a rate, which is the
+only reason dispersion can reach a mission metric at all. Burst structure enters through the tail.

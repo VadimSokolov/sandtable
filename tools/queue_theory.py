@@ -313,6 +313,79 @@ def queue_only_sim(n: int, latency: float, p_drop: float, service_rate: float = 
 _LADDER = [(0, 0.00), (1, 0.05), (2, 0.10), (4, 0.20), (8, 0.35), (16, 0.55)]
 
 
+def coherence_ratio(p_drop: float, burst_len: float, decision_interval: float) -> float:
+    """Channel coherence time measured in decision intervals.
+
+    A Gilbert-Elliot chain with mean bad-state dwell `L` and stationary drop rate `p` has
+    `p_bg = 1/L` and, from `pi_bad = p_gb/(p_gb + p_bg) = p`, `p_gb = p/(L(1-p))`. Its second
+    eigenvalue is therefore
+
+        lam = 1 - p_gb - p_bg = 1 - 1/(L(1-p)),
+
+    and the chain decorrelates on a timescale `tau_corr = -1/ln(lam)`, which is `L(1-p)` to first
+    order. The quantity that matters to a mission is not `tau_corr` but its ratio to the interval
+    at which the team consults the link:
+
+        theta = tau_corr / decision_interval.
+
+    Below one the chain is fully mixed between consecutive requests and the channel is memoryless
+    at the granularity the mission samples it, whatever its burst statistics. Returns `theta`.
+    """
+    if burst_len <= 0 or p_drop >= 1.0:
+        return 0.0
+    lam = 1.0 - 1.0 / (burst_len * (1.0 - p_drop))
+    if lam <= 0.0:
+        return 0.0
+    return (-1.0 / math.log(lam)) / decision_interval
+
+
+def coherence_excess(p_drop: float, burst_len: float, decision_interval: float) -> float:
+    """Excess probability that a retried request fails again, over the marginal rate.
+
+    A vehicle whose handshake failed retries at its next decision, `decision_interval` steps later.
+    For a two-state chain the probability it is still in the bad state then is
+
+        P(bad at t+tau | bad at t) = p + (1-p) lam^tau,
+
+    so the EXCESS over the marginal rate `p` is `(1-p) lam^tau`. With `lam^tau ~ exp(-1/theta)`
+    this is
+
+        e(theta) = (1 - p) exp(-1/theta),
+
+    an exponential in the INVERSE coherence ratio: flat while theta is small, then steep. That
+    shape is why `theta = 1` is a meaningful knee rather than an arbitrary cut. At the published
+    operating point (`L = 4`, `p = 0.20`, `tau = 22`) theta is 0.12 and the excess is 2e-4, which
+    is why burst structure is invisible there.
+
+    The mean throughput is untouched by any of this: the marginal drop rate is held fixed, so the
+    round-trip delivery `d` and the collapse span `n* = c(P+tau+1)mu/d` are unchanged. What `e`
+    governs is the DISPERSION of per-vehicle wait, and abandonment is a threshold on that wait,
+    not a rate. Burst structure reaches the mission through the tail, not the mean.
+    """
+    th = coherence_ratio(p_drop, burst_len, decision_interval)
+    if th <= 0.0:
+        return 0.0
+    return (1.0 - p_drop) * math.exp(-1.0 / th)
+
+
+def crossover_burst_len(p_drop: float, decision_interval: float) -> float:
+    """Mean bad-state dwell at which the coherence ratio is exactly one.
+
+    Solving `-1/ln(lam) = tau` for `lam` gives `lam = exp(-1/tau)`, and substituting
+    `lam = 1 - 1/(L(1-p))` gives
+
+        L* = 1 / [ (1-p) (1 - exp(-1/tau)) ].
+
+    The first-order reading `L* ~ tau/(1-p)` is a few percent low and gets worse as tau shrinks,
+    so the exact form is what the registered crossovers are stated at: `L* = 28.1` at `tau = 22`
+    and `L* = 14.4` at `tau = 11`, both at `p = 0.20`. The pair is the falsifier for the claim that
+    theta rather than L is the controlling quantity: a channel with `L = 14` sits at `theta = 0.49`
+    under the slower clock and `theta = 0.98` under the faster one, so the SAME radio crosses the
+    knee when only the operator's decision cycle changes.
+    """
+    return 1.0 / ((1.0 - p_drop) * (1.0 - math.exp(-1.0 / decision_interval)))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--scenario", help="read service_rate/patience/decision_interval from this "
