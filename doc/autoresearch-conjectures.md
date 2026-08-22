@@ -1206,3 +1206,32 @@ behaves the same under both clocks, `theta` is not the controlling quantity and 
 held fixed by construction, so `d` and `n* = c(P+tau+1)mu/d` are unchanged. `e` governs the
 DISPERSION of per-vehicle wait. Abandonment is a threshold on that wait, not a rate, which is the
 only reason dispersion can reach a mission metric at all. Burst structure enters through the tail.
+
+---
+
+## CR-20: two vehicles on one step are in one radio environment
+
+Found by reading the CR-18 code rather than by a run. Under the step clock the chain advanced by
+`max(1, k - last_k)`, so two vehicles transmitting on the SAME step were forced one transition
+apart. That is wrong in the direction that matters: simultaneous transmitters share a fade, and
+decorrelating them removes the cross-vehicle half of burst structure, which is the half a queue
+feels most, since a synchronized outage idles the operator and then floods the console.
+
+Fixed to `max(0, ...)`, at which a zero gap gives `decay = 1` and therefore `p_bad = 1` when the
+chain is BAD and `0` when it is GOOD: the second caller inherits the first caller's outcome
+deterministically while still consuming its own uniform, so the draw budget is unchanged. Byte
+identity verified by value across 4 scenarios x 8 seeds x 29 metrics; three tests added.
+
+**Expected magnitude: small, and smallest where CR-19 predicts an effect.** Measured on the live
+model at rung 3, `ge_burst_len = 4`: a same-step gap occurs on 8.8% of uplink draws at five
+vehicles, 10.3% at eight and 14.6% at twelve, with mean gaps of 12.2, 7.6 and 4.3 steps against a
+2.67-step coherence time. The floor changed the correlation of that ~10% from `lam` to 1, and
+`lam -> 1` as the burst lengthens, so at the long dwells where CR-19 expects a gated effect the
+floor was already nearly inert. This is recorded as a correctness fix with a registered
+expectation of **no gated effect**, and it is tested as a spare arm on the next battery rather
+than given a battery of its own.
+
+**It does not disturb CR-19.** The closed form `e(theta) = (1-p)exp(-1/theta)` describes a vehicle
+retrying `tau` steps later, a gap of 22, where the floor never applied. Job 9444501 therefore
+tests CR-19 correctly under the floored code, and CR-20 is a separate cross-vehicle mechanism the
+closed form does not cover.

@@ -131,7 +131,14 @@ class Comms:
             # is only consulted rarely has decayed toward stationarity by the time it is, which is
             # what a real fade does and what the message clock cannot represent.
             lam = max(0.0, 1.0 - self.p_gb - self.p_bg)
-            decay = lam ** max(1, self._k - self._last_k)
+            # Gap of zero is not floored to one (CR-20). Two vehicles that transmit on the SAME
+            # step are in one radio environment and must see one channel state: with `gap = 0` the
+            # decay is 1, so `p_bad` is 1 if the chain is BAD and 0 if it is GOOD, and the second
+            # caller inherits the first caller's outcome deterministically. Flooring the gap at one
+            # instead forced a transition between them and decorrelated vehicles that share a fade,
+            # which is the cross-vehicle half of burst structure and the half a queue feels most:
+            # a synchronized outage idles the operator and then floods the console.
+            decay = lam ** max(0, self._k - self._last_k)
             self._last_k = self._k
             p_bad = self.p_drop + (1.0 - self.p_drop) * decay if self._bad \
                 else self.p_drop * (1.0 - decay)

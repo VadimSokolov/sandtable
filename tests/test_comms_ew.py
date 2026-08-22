@@ -100,3 +100,58 @@ def test_comms_level_clips_to_range(skirmish_scenario):
     # and the clipped level pulls the matching ladder point
     assert (lo.latency, lo.p_drop) == (_LADDER[0][0], _LADDER[0][1])
     assert (hi.latency, hi.p_drop) == (_LADDER[5][0], _LADDER[5][1])
+
+
+def _ge(burst: float = 4.0, drop: float = 0.20) -> Comms:
+    """A step-clocked Gilbert-Elliot link at a chosen dwell and marginal rate."""
+    p_bg = 1.0 / burst
+    return Comms(level=3, latency=1, p_drop=drop, label="probe",
+                 channel="gilbert_elliot", clock="step",
+                 p_gb=drop * p_bg / (1.0 - drop), p_bg=p_bg)
+
+
+def test_same_step_transmissions_share_one_channel_state():
+    """CR-20. Two vehicles that transmit on the same step are in one radio environment, so the
+    second must inherit the first's outcome rather than draw against a chain that has been
+    advanced one transition on its behalf."""
+    for burst in (4.0, 28.0, 120.0):
+        for start_bad in (False, True):
+            c = _ge(burst)
+            c._bad = start_bad
+            c._k = c._last_k = 40
+            rng = np.random.default_rng(7)
+            first = c.delivered(rng)
+            # eight more callers on the very same step, each consuming its own uniform
+            assert all(c.delivered(rng) == first for _ in range(8))
+
+
+def test_a_gap_of_one_step_still_admits_a_transition():
+    """The fix must not freeze the chain: one step of separation restores the transition, so the
+    channel is shared only by callers that are genuinely simultaneous."""
+    c = _ge(4.0)
+    c._bad = True
+    c._k = c._last_k = 0
+    rng = np.random.default_rng(0)
+    c.delivered(rng)                     # gap 0, stays BAD
+    assert c._bad
+    flips = 0
+    for k in range(1, 400):
+        c._bad = True
+        c._last_k = k - 1
+        c._k = k
+        c.delivered(rng)
+        flips += not c._bad
+    # BAD -> GOOD at p_bg = 0.25 per step, so about a quarter of the single-step gaps recover
+    assert 0.15 < flips / 399 < 0.35
+
+
+def test_the_step_clock_leaves_a_memoryless_channel_untouched():
+    """K2 measured this at every rung on the full model; assert it here so a regression is caught
+    in milliseconds rather than in a two-hour battery."""
+    for drop in (0.05, 0.20, 0.55):
+        a = Comms(level=3, latency=1, p_drop=drop, label="p", clock="message")
+        b = Comms(level=3, latency=1, p_drop=drop, label="p", clock="step")
+        ra, rb = np.random.default_rng(3), np.random.default_rng(3)
+        for k in range(500):
+            a._k = b._k = k
+            assert a.delivered(ra) == b.delivered(rb)
