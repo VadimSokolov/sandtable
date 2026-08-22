@@ -45,12 +45,31 @@ def _did(fix_lo, fix_hi, held_lo, held_hi):
     return mean, t, sum(1 for x in d if x * mean > 0), n
 
 
+def _check_pairing(rs, held_sec, fix_sec) -> None:
+    """The difference in differences is paired blockwise, which is only legitimate if the two
+    experiments ran the same seed schedule. They must therefore COINCIDE at the pivot span, where
+    holding the force ratio and fixing the defenders describe the same design, and differ away from
+    it. Checked by value rather than assumed, because a paired t on unpaired blocks is not
+    conservative: it would understate the variance and inflate every t in this file."""
+    pivot = str(SPANS[1])
+    for pre in ("dir", "ref", "sup"):
+        a = row(rs, held_sec, f"{pre}{int(pivot):02d}")["vals"]
+        b = row(rs, fix_sec, pre, pivot)["vals"]
+        if a != b:
+            sys.exit(f"pairing broken: {pre} at n={pivot} differs between the two designs, so the "
+                     f"blockwise difference in differences is not paired")
+    lo = str(SPANS[0])
+    if row(rs, held_sec, f"{'dir'}{int(lo):02d}")["vals"] == row(rs, fix_sec, "dir", lo)["vals"]:
+        sys.exit(f"the two designs are identical at n={lo}; the contrast is empty")
+
+
 def main() -> None:
     rs = rows(LOG)
     m: dict[str, str] = {}
     for metric, tag in (("success", ""), ("arrived_frac", "Arr")):
         held_sec = f"T1 held force ratio, three control regimes ({metric})"
         fix_sec = f"T2 defenders fixed at four, the same three regimes ({metric})"
+        _check_pairing(rs, held_sec, fix_sec)
         steps = {}
         for reg, pre in (("Dir", "dir"), ("Ref", "ref"), ("Sup", "sup")):
             held = _series(rs, held_sec, pre, True)
