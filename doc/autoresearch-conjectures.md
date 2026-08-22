@@ -1557,3 +1557,58 @@ A link's burst statistics are invisible to a team that neither relies on its ope
 operator spend slots it cannot use. They become the largest effect in this model the moment a
 reliance loop closes, and they vanish again under refund. That is a claim about WHEN comms fidelity
 has to be modeled, and it is falsifiable in three places at once.
+
+---
+
+## CR-22: the interaction is multiplicative in the collapse formula
+
+### How I got here, including the wrong turn
+
+I refuted CR-19e on its registered falsifier, then wrote that the effect at five vehicles "must be
+structural" because the team is far below `n* = 10.08` and there is no cliff to walk toward. That
+was wrong, and it was wrong in a way the paper's own equation catches immediately.
+
+    n_c = c mu (P + rho + 1) / d.
+
+A retry cuts the NUMERATOR from 43 to 25. A long-dwell coherent channel raises the DENOMINATOR
+from 0.640 to about 0.780. **The retry moves the cliff down to meet the team.** At rung 3:
+
+| arm | cycle | d | n_c | five vehicles collapsed? |
+|---|---|---|---|---|
+| bern, no retry | 43 | 0.640 | 10.08 | no |
+| ge120, no retry | 43 | 0.780 | 8.27 | no |
+| bern, retry rho=4 | 25 | 0.640 | 5.86 | no |
+| ge120, retry rho=4 | 25 | 0.780 | **4.81** | **YES** |
+
+Five vehicles is the one cell where the two factors together carry the team across its own collapse
+span and neither does alone. That is exactly the pattern measured: `ge_off - bern_off` is null at
+every dwell, `ge_retry - bern_retry` is -0.1611, and `operator_goodput` falls from 0.495 under
+`bern_retry` to 0.148 under `ge_retry` while link abandonment goes DOWN, from 0.347 to 0.236,
+because the bursty channel delivers MORE round trips. More delivery is more offered load. The team
+drowns in its own answered requests.
+
+### Registered as `st-crossing-9445405`
+
+**H(CR-22a):** the DiD has an **interior maximum in SPAN** at five vehicles. Null at three and four,
+where both retry arms are healthy; maximal at five, where only the bursty one has crossed; decaying
+to null by seven or eight, where both are collapsed. **A DiD that grows monotonically in span
+refutes it.**
+
+**H(CR-22b):** with `reply_model="marginal"` pinning `d` at 0.640, both retry arms sit at
+`n_c = 5.86` and there is no state difference to find, so the DiD must vanish at every span in
+R3 and R4. **A DiD that survives there refutes the account and means structure is left over.**
+
+This is the third mechanism proposed for one contrast. The first, the coherence excess, was refuted
+on its own falsifier. The second, the retry cohort, is still running as `st-cohort-9445208` and is
+now the ALTERNATIVE rather than the leading candidate; if CR-22 holds, the cohort battery should
+come back flat in the backoff jitter. Both are registered before either result was read.
+
+### Why this one is worth more than the two it replaces
+
+It needs no new machinery. The interaction is a product of two terms the manuscript already derives
+and already reports, one in the numerator and one in the denominator of an equation that is already
+in the paper. And it converts the finding from "bursty links hurt reliant teams" into something a
+program can compute: **take your collapse span, divide by the round-trip delivery your radio
+actually achieves rather than its nominal drop rate, and check whether your reliance loop has moved
+it below your staffing.** The two design levers, backoff length and admission control, are the two
+terms of the same fraction.
