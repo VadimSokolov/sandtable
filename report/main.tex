@@ -17,6 +17,7 @@
 \input{gen/triage_numbers}
 \input{gen/provenance_numbers}
 \input{gen/attrib_numbers}
+\input{gen/burst_numbers}
 
 \newcommand{\sandtable}{\textsc{SandTable}}
 \captionsetup{font=small,labelfont=bf}
@@ -535,6 +536,10 @@ We stipulate the utilities here (mission value against per-run cost) rather than
 
 \section{Discussion}
 \label{sec:discussion}
+
+Three of this paper's findings are levers rather than observations, and they share a property worth stating before the rest of the discussion qualifies them: each is a change to software, none adds an operator, a console, or a radio, and each acts on the same mechanism. A console that refuses work it cannot finish in time takes mission success from \qBlindClear\% to \qAdmitClear\% at the centerpiece operating point. The same discard removes the bistable span outright, taking the initial-condition gap from \qBandBlind{} to \qBandRefund{}. And where the console cannot be changed at all, doubling the hold after each unanswered request reaches the band-closing floor from the vehicle side, without the vehicle knowing the span it will be flown at, the delivery rate, or the service rate.
+
+The first of those is worth more, not less, as the link gets worse, which is the opposite of how a mitigation usually behaves. Refunding is worth \buGoodBernEight{} of operator goodput at eight assets on a memoryless link and \buGoodGeEight{} on a link that fades in bursts of the same average delivery, a difference of \buDidGoodEight{} ($t = \buDidGoodEightT{}$, \buDidGoodEightBlocks{} of \buDidGoodEightN{} blocks). Both channels deliver at the same rate by construction, so what separates them is the arrival pattern: a fading link hands the console a cluster at each recovery edge, the back of the cluster waits past its requester's patience, and a console that cannot detect abandonment serves it anyway. On mission success the same difference is smaller and gates only at the span where the queue is already collapsing (\buDidSuccEight{}, $t = \buDidSuccEightT{}$ at eight assets), so the claim we make is about the console's throughput, with the mission-level consequence established at one span rather than across the sweep.
 
 The route, control, and swarm studies make the same point in different settings: the best design is not fixed but \emph{contingent} on the contested-conditions axis, and \sandtable{} locates where it flips. Route choice prices tempo against survivability so a planner can pick a point on the frontier to match the mission. The centerpiece turns span of control and communications state into a single rule: hand control to autonomy sooner as either span or degradation grows, and the phase diagram says exactly when. The swarm study shows that sensing capacity and link resilience must be bought together, because EW attacks the chain that connects them. None of these is a claim about a single design; each shows how the right choice shifts as conditions change, which is the question a mission engineer actually has to answer. The drone-war mechanics of Section~\ref{subsec:drone} carry the same contingency into the countermeasure environment: the EW-immune link changes the outcome only once the link is contested, and the recon swarm's payoff turns from monotone to interior only once an air defense can engage it, so a drone's value is set by the countermeasures it meets rather than fixed \citep{kunertova2023depends}.
 
