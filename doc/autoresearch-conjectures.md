@@ -1307,3 +1307,37 @@ window dominates the cycle and dilutes the `tau` dependence: `L*` moves 54.4 to 
 stays sub-critical under both clocks. L4 is therefore a weak test of the vehicle knee. It remains a
 real test of the console knee, whose lag scales with `tau` directly, and the honest reading is that
 the registered falsifier was mis-specified and the run will not settle what I said it would.
+
+### CR-19e registered in full, and the interior maximum that falsifies it
+
+Submitted as `st-retryburst-9444791` (n_blue = 5, rung 3, 32 blocks x 64 reps, three metrics).
+Four arms crossed with `ge_burst_len` in {4, 40, 120}: `bern_off`, `bern_retry`, `ge_off`,
+`ge_retry`, gated as the difference of differences
+
+    [ge_retry - bern_retry] - [ge_off - bern_off],
+
+so that the Bernoulli pair absorbs the retry's own effect on offered load and what remains is the
+retry's effect on EXPOSURE TO BURST STRUCTURE.
+
+`L = 40` is the straddle: `theta_v` is 0.73 with the standing cycle of 43 steps and 1.26 with the
+retry's cycle of 25, so the retry alone carries the arm across the knee while nothing else about
+the link changes. The predicted DiD in the excess `e_v = (1-p)exp(-1/theta_v)` is
+
+| L | e_v(off) | e_v(retry) | difference |
+|---|---|---|---|
+| 4   | 7e-6  | 9e-5  | 1e-4  |
+| 40  | 0.203 | 0.362 | **0.159** |
+| 120 | 0.510 | 0.620 | 0.111 |
+
+**an interior maximum near the straddle**, because at `L = 120` both cycles are already deep above
+the knee and the exponential has flattened. That non-monotonicity is the falsifier and it is the
+reason the arms are spaced this way: a DiD that rises monotonically in `L` refutes the mechanism as
+stated even if every cell gates, because monotone-in-`L` is what "longer outages are simply worse"
+predicts and it needs no coherence argument at all.
+
+Three metrics, chosen to separate the two knees the correction identified. `success` is the
+headline. `wait_p95` is a tail statistic and the theory says burst structure enters through the
+tail rather than the mean, so it should move first and by more. `queue_depth_mean` reads the
+console rather than the vehicle, and the cross-vehicle knee at this span sits at `L = 15.8`, so
+every arm at `L = 40` and above is already past it and the DiD there should be WEAKER than in
+`wait_p95`, since the retry changes the vehicle's cycle and not the console's aggregate gap.

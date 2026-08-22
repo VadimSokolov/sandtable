@@ -12,8 +12,11 @@ BLOCKS="${BLOCKS:-0-31}"
 REPS="${REPS:-64}"
 CPUS="${CPUS:-16}"
 TIME="${TIME:-02:00:00}"
+# `normal` is fairshare-starved for this account and a job can sit at Reason=Priority for hours;
+# `interactive` has seven nodes and clears immediately. Default there, override for long shapes.
+PART="${PART:-interactive}"
 for B in "$@"; do
   ssh hopper "cd /scratch/vsokolov/sandtable-ar && sbatch --job-name=st-$B \
-    --cpus-per-task=$CPUS --time=$TIME \
+    --partition=$PART --cpus-per-task=$CPUS --time=$TIME \
     --export=ALL,BATTERY=$B,BLOCKS=$BLOCKS,REPS=$REPS hopper/ar_job.sbatch"
 done

@@ -1156,3 +1156,205 @@ it is the only reading under which burst structure matters in this model at all.
   per message; under physical clocking the entire burstiness result shrinks 11x to 200x, so hold
   st-bspan and reframe as the (p, coherence/RTT) surface; burst structure currently IS scalar d,
   and the only route by which it could matter is step-clocked common-mode outages feeding retry.
+
+## Round 5 (2026-08-22, repo at 988c26c)
+
+Read for this round: the CR-18/CR-19/CR-20 code (comms_ew.py reply_survives and the step-clocked
+delivered, the c2.step reordering that prices the reply on done - k), K1/K2, and the CR-19
+registration. One probe run on the live Comms class, decisive for Q1: round-trip delivery d
+against burst length L at rung 3, empty-queue handshake lag (lat + S = 11 steps), 200k handshakes
+per point:
+
+| L | 4 | 14 | 28 | 60 | 120 |
+| --- | --- | --- | --- | --- | --- |
+| d measured | 0.642 | 0.698 | 0.740 | 0.767 | 0.776 |
+| d analytic (1-p)[1-p(1-lam^11)] | 0.643 | 0.699 | 0.738 | 0.768 | 0.783 |
+| n* = 6.45/d | 10.03 | 9.23 | 8.74 | 8.40 | 8.24 |
+
+Bernoulli reference: d = 0.640, n* = 10.08. Hold that table; three of the four answers run
+through it. Also noted for Q4: K1's message-clock column gated NEGATIVE at n=8 and n=9, which is
+the st-bspan sign-flip bracket (8.60, 10.08) landing exactly as registered, under the old clock,
+just before being retracted. That fact is an asset; use it (below).
+
+### Q1. e(theta) is decorative in its current role, for three separable reasons
+
+**First and largest: the premise "d and n* do not move" is false, and your own code comment says
+so.** The registration reads "mean throughput is untouched (marginal rate held fixed by
+construction, so d and n* do not move)". The reply_survives docstring you shipped in the same
+session reads "the round-trip delivery rate therefore runs from (1-p)(1-p_gb) down to (1-p)^2 as
+the service delay outruns the channel's coherence". Both cannot be true, and the second one is
+right: holding the per-message marginal p fixed does not hold the round-trip d fixed under the
+step clock, because the handshake correlation lam^(done-k) is itself a function of L. The table
+above is that sentence measured: across your own CR-19 sweep, d rises 21 percent and n* falls
+from 10.03 to 8.24, so at the registered operating point n=8 the system moves from a 25 percent
+margin below collapse to 3 percent. L1's success curve will be dominated by a FIRST-MOMENT drift
+toward the threshold, not by any dispersion statistic, and a negative result will be read as
+confirming e(theta) unless the mean channel is removed first. The fix is a design change, not an
+analysis change: add a d-MATCHED arm, retuning p per L so that
+(1-p)[1 - p(1 - lam^lag)] is held at 0.64 (one-dimensional root-find per L; lag = lat + S plus
+the mean queue delay if you want it exact). Hold d fixed, not p. The residual after d-matching is
+the dispersion story; before d-matching there is no dispersion story, only a confounded sweep.
+
+**Second: the within-vehicle lag is wrong, because the mechanism you priced does not exist in the
+code.** "A vehicle retries tau steps later" and "it retries repeatedly inside its patience
+window" both misdescribe c2.step: a dropped request sets await_until = k + P, the vehicle waits
+out its FULL patience with no further attempts, and the next attempt comes one adoption step plus
+a cooldown later. The gap between a failed attempt and the next attempt is Lambda = P + 1 + tau,
+about 43 steps, not tau = 22 (with CR-17 retry it is P + 1 + rho_eff, about 25). Rerunning your
+own crossover formula with the correct lag moves L* from 28.1 to about 54, and it breaks the L4
+falsifier: at L = 14, theta is 0.26 under tau = 22 and 0.35 under tau = 11, both far below the
+knee, so the one-radio-two-sides contrast you registered will read flat on both sides for the
+within-vehicle channel (whatever it shows will be the d(L) mean channel again). If you want a
+lag falsifier that works, use CR-17: retry-on halves the failure-to-attempt lag (43 to about 25)
+and should shift the within-vehicle knee from L of about 54 to about 31, a predicted knee
+MOVEMENT with everything else fixed.
+
+**Third, the question you actually asked: one-step conditional against run-length exceedance.**
+For this channel it is a distinction without a difference: Gilbert-Elliot dwells are geometric,
+so P(run >= T) and the lag-T conditional excess are the same exponential family with rates 1/L
+and 1/(L(1-p)); no functional form changes. The worry becomes real only if the dwell distribution
+is heavy-tailed (semi-Markov jamming with Pareto dwells, which real sweep jammers can resemble):
+then exceedance and conditional diverge and the knee structure changes qualitatively. That is a
+channel-realism question to flag in limitations, not an algebra error in CR-19.
+
+**And the channel your derivation does not contain at all, which knees first: the shared chain.**
+Every vehicle draws from one chain, and CR-20 made same-step transmitters share the fade, so a
+BAD dwell is a common-mode outage: every request inside it fails together, producing a
+synchronized cohort of P-waiters that re-enters together Lambda steps later. That channel turns
+on when tau_corr reaches the team's inter-request spacing, about cycle/n = 4 to 5 steps at n=8,
+i.e. L of about 6, material by L = 14: earlier than the handshake knee (about 14, where lam^11
+reaches 0.4) and far earlier than the within-vehicle knee (about 54). The right dispersion
+statistic for the queue is therefore not the within-vehicle e(theta) but the burstiness of the
+FAILURE process at the operator: registered check, the Fano factor of link-failure events on
+windows of order S rises above 1 by L = 14 while e(theta) still reads 1e-3. Ladder of knees, all
+computable in advance: cohort (about 6), handshake mean (about 14), within-vehicle (about 54,
+retry 31). e(theta) is the last and smallest term in the sweep you are running.
+
+### Q2. The registered sign will probably verify, for the wrong reason
+
+The mechanism you registered ("clustering puts several consecutive failures inside one patience
+window") is not expressible in this model: one failure consumes the whole window; there are no
+attempts inside it. What will actually drive L1 at n=8, rung 3: the d(L) mean channel (negative,
+because rung 3 sits at the interior optimum of the blind operator, so RAISING delivery walks the
+system back toward congestion: your own P3 surface shows goodput and success falling as drop
+relief is removed at this span), then the common-mode cohort channel (negative: synchronized
+abandonment raises arrival dispersion at a near-saturated blind server). The competing convexity
+argument you recorded (clustering concentrates failure on few vehicles, more get clean runs, and
+success at arrived >= n/2 is convex in clean runs) is real but attaches to the WITHIN-vehicle
+correlation, the last knee, and it is opposed by the cohort channel, which is anti-concentrating
+(everyone fails together) and knees first. So: negative through the sweep, dominated by a
+mechanism absent from the registration. The third mechanism you asked for is the shared-chain
+cohort; the fourth is the quenched limit: once dwells approach the effective mission length
+(L(1-p) of order the 600 to 900 live steps; the top of your sweep is approaching it), each
+mission samples roughly one channel state and success tends to the p-weighted mixture of a
+near-clean mission and a dead-link mission, which at this operating point computes to roughly the
+Bernoulli value again. Registered consequence: L1 is NON-monotone, effects growing to mid-L and
+fading toward the mixture at the top. If L1 is instead monotone through L = 120, the quenched
+reading is wrong and I will say so.
+
+Also register the correct reading of L3 now, before it lands: refund absorption is a CHANNEL
+DISCRIMINATOR, not a robustness check. Refund frees console slots; it cannot touch P-waits caused
+by link drops. If the L-effect survives refund, it is link-side (drops and cohorts); if refund
+absorbs it, it is queue-side (cohort congestion at the console). Either outcome is informative;
+neither is a null.
+
+### Q3. Not one timescale, and not a tautology: two composite timescales and one imposter
+
+Push on it as asked: as drafted, "tau is the design parameter" is half tautology and half wrong.
+Tautology half: tau is one of only three client timescales in a deliberately small model (P, tau,
+rho); its appearing in every formula is bookkeeping, not physics. Wrong half: the fourth formula
+(the coherence crossover) should not contain tau alone at all, per Q1: the sampling interval of
+the channel by a failed vehicle is Lambda = P + 1 + tau. But fixing that error UNCOVERS the real
+unification, which is better than the one you drafted:
+
+- Composite timescale one, the demand cycle Lambda = P + tau + 1. It sets the collapse span
+  (n* = c mu Lambda / d: load) and, corrected, the coherence crossover (L* = Lambda/(1-p):
+  sampling). One measured quantity, two superficially unrelated thresholds: a capacity limit and
+  a channel-modeling-fidelity limit. That is a genuine unification, and it is falsifiable on one
+  axis your formula says is inert: sweep P at fixed tau and measure where the burst effect turns
+  on. Your tau-form predicts L* does not move with P; the Lambda-form predicts proportionality;
+  n* moves with P either way. One run adjudicates the unification AND the Q1 lag correction
+  simultaneously. Register it before running.
+- Composite timescale two, the retry acceleration Delta = pi (tau - rho). The band width and the
+  backoff floor are not two results: width >= one span and floor violated are the SAME inequality
+  read in opposite directions. Count them as one or a referee will count them for you.
+- The imposter: "whether the radio's burst statistics are worth modeling at all" is NOT set by
+  tau or Lambda. The earliest knee is the handshake lag (lat + queue + S, about 11 steps here),
+  which is a link-plus-operator timescale, not a client one, and it controls the d(L) mean effect
+  that dominates everything (Q1). Burst statistics start mattering at L of about 6 to 14 via
+  cohorts and the handshake, long before the client cycle knee at 54.
+
+The Discussion frame that survives: the model has a short ladder of characteristic lags,
+handshake (lat + Wq + S), team inter-request spacing (Lambda/n), and client cycle (Lambda), every
+one computable from the same constants that set n*; burst structure matters exactly when the
+channel's coherence time crosses each lag, in order, and each crossing switches on a different
+mechanism (mean delivery, cohort synchronization, within-vehicle repetition). That is a real
+organizing principle, it subsumes your knee as the last rung, and it cannot be accused of
+symbol-counting because each rung pairs a lag with a distinct, separately testable mechanism.
+
+### Q4. The defense is good; here is the missing decisive test, the scope concession, and your best exhibit
+
+The consultation-rate argument is the right one and it can be upgraded from argument to
+measurement: the defining invariance of a physical channel is that its correlation structure in
+TIME does not depend on how often it is queried. That is testable inside the simulator in
+seconds: measure the autocorrelation of the channel state process (or of message failures) in
+sim-time at two offered loads (say n=4 and n=12) under both clocks. The message clock's ACF will
+visibly dilate and contract with load; the step clock's will not. That converts "I swapped
+conventions" into "one convention violates the defining property of a channel under measurement,
+the other satisfies it", which no reviewer can call taste. Run it and put one sentence in the
+paper.
+
+Second, concede scope rather than claiming universal correctness: per-message clocking is not
+wrong everywhere. It is approximately the right model when losses come from the network's own
+slotted contention (state per transmission opportunity), and wrong for fading and jamming, whose
+coherence is a property of the propagation environment. The ladder's story is jamming, so the
+step clock is right FOR THE LADDER'S CLAIM; a contention channel would be a different model with
+its own clock. One limitation sentence, and the "arbitrary convention" objection loses its
+footing.
+
+Third, your best exhibit against "kept whichever gave the cleaner story" is already in K1 and the
+ledger, and the round-5 message undersells it: under the message clock, the st-bspan sign-flip
+bracket was a REGISTERED, CONFIRMED, GATED positive result (K1 msg column: -0.0488 t=-3.23 and
+-0.0522 t=-3.82 at exactly the predicted spans 8 and 9). You retracted a confirmed, publishable
+effect in favor of a null. The incentive gradient ran opposite to the accusation, and the record
+shows it: registration first, confirmation under the old convention, retraction on physical
+grounds anyway. Cite the sequence explicitly in the retraction paragraph; it is the strongest
+sentence available to it. K2 belongs beside it as the necessary control (the switch acts only
+through correlations), with the caveat that K2 is necessary, not sufficient: inertness on a
+memoryless channel cannot certify the step clock's correctness, only its containment. The last
+honest residue: burst_len is now denominated in ticks whose physical duration is scenario fiat,
+so L is a swept axis, not a measured radio property. That is fine, CR-19 treats it as an axis,
+but the paper should say it, and the (p, coherence/RTT) surface framing from round 4 remains the
+right destination.
+
+### CR-20 expectation: concur, with the reason made quantitative
+
+The old floor's bite is bounded by incidence times (1 - lam): the forced extra transition matters
+only where lam is far from 1, i.e. small L, which is exactly where all correlations are near dead
+anyway; at large L, where correlations matter, lam is near 1 and one forced transition was nearly
+free. The product is second-order everywhere: 0.15 x 0.31 of affected draws decorrelated at L=4
+(where nothing downstream cares), 0.15 x 0.01 at L=60 (where something would). No gated effect is
+the right expectation, spare-arm treatment is the right disposal, and the fix still matters
+because the cohort channel (Q1/Q2) is carried precisely by same-step shared fades: the bug's
+cost was never in the cells run so far, it was in the cells CR-19 is about to run.
+
+### Round 5 in one line each
+
+- Q1: e(theta) is third of three channels and mispriced: the registration's fixed-d premise is
+  contradicted by your own docstring and by measurement (d 0.642 to 0.776, n* 10.03 to 8.24
+  across the sweep), the within-vehicle lag is Lambda = P+tau+1 not tau (L* about 54, the L4
+  falsifier lands both-flat), and the earliest real channel is shared-chain cohorts; add the
+  d-matched arm or L1 is unattributable.
+- Q2: the registered negative will likely verify via mechanisms absent from the registration
+  (d(L) mean drift at an interior-optimum operating point, plus cohorts); the convexity counter
+  attaches to the last knee and loses; register non-monotonicity toward the quenched mixture at
+  the top of the sweep, and read L3 as a link-side/queue-side discriminator.
+- Q3: reorganize around two composite timescales (Lambda = P+tau+1 unifying n* and the corrected
+  L*, testable by a P-sweep of the knee; Delta = pi(tau-rho) as one inequality, not two results)
+  plus the non-client handshake lag that actually decides whether bursts matter; "tau is the
+  design parameter" as drafted is the tautology you feared.
+- Q4: keep the consultation-rate argument, add the load-invariance ACF measurement (decisive,
+  seconds to run), concede the contention-channel scope, and lead with the record: the old clock's
+  bracket prediction GATED and was retracted anyway, which is the opposite of story-shopping.
+- CR-20: expectation right, bound is incidence times (1-lam), uniformly second-order in the cells
+  run so far; its real payload is the cohort channel in the cells about to run.
