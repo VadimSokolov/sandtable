@@ -7,6 +7,7 @@ report/figures/*.pdf. Every number the paper cites is also printed here so it ca
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -445,6 +446,71 @@ def fig_queue() -> None:
           f"{100 * pick(srch, lsec, 'lat8', '0.2'):.1f}%")
 
 
+def fig_band() -> None:
+    """The fold band. (a) Both branches across span: with the reliance loop closed, a synchronized
+    start and a staggered one separate over an interval and agree outside it, which is the band the
+    closed form predicts; with the loop open there is one branch and the start does not matter.
+    (b) The band closes as the retry backoff lengthens, against the predicted floor. Rows come from
+    the run logs, not from a CSV."""
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from make_queue_numbers import ROOT, pick, rows
+
+    import queue_theory as qt
+
+    try:
+        bf, hy = rows("st-bandfig-9444298.out"), rows("st-hyst-9443432.out")
+    except SystemExit:
+        print("[band] run logs not present in report/data/queue - skipping")
+        return
+
+    scn = json.loads((ROOT / "scenarios" / "sc_span_control.json").read_text())["params"]
+    sr, pat, di = (float(scn["service_rate"]), float(scn["patience"]),
+                   float(scn["decision_interval"]))
+    spans = [3, 4, 5, 6, 7, 8, 9]
+    a_h = 1.0 - pick(bf, "B1", "burst_off", "6")
+    lo, hi = qt.fold_band(0.0, sr, pat, di, retry_prob=1.0, retry_backoff=4.0,
+                          abandon_healthy=a_h)
+
+    fig, (a0, a1) = plt.subplots(1, 2, figsize=(7.6, 3.1))
+
+    a0.axvspan(lo, hi, color=AMBER, alpha=0.16, lw=0,
+               label=f"predicted band ({lo:.2f}, {hi:.2f})")
+    for arm, col, mk, ls, lab in (
+            ("stag_retry", GREEN, "o", "-", "retry, staggered start"),
+            ("burst_retry", RED, "s", "-", "retry, synchronized start"),
+            ("stag_off", BLUE, "^", "--", "no retry, staggered"),
+            ("burst_off", BLUE, "v", ":", "no retry, synchronized")):
+        y = [100 * pick(bf, "B1", arm, str(n)) for n in spans]
+        a0.plot(spans, y, color=col, marker=mk, ls=ls, ms=4, lw=1.4, label=lab)
+    a0.set_xlabel("supervised assets")
+    a0.set_ylabel("operator goodput (%)")
+    a0.set_title("(a) two branches, and only inside the band", loc="left")
+    a0.legend(frameon=False, fontsize=6.4)
+    a0.set_ylim(0, 104)
+
+    backoffs = [4, 8, 12, 16, 20]
+    gap = [100 * (pick(hy, "H4", "stag", str(b)) - pick(hy, "H4", "burst", str(b)))
+           for b in backoffs]
+    floor = qt.backoff_floor(sr, di, 1.0)
+    a1.plot(backoffs, gap, color=GREEN, marker="o", ms=4, lw=1.4,
+            label="initial-condition gap")
+    a1.axvline(floor, color=RED, ls="--", lw=1.2,
+               label=f"predicted floor {floor:.2f}")
+    a1.axhline(3.0, color="0.55", ls=":", lw=1.0, label="reportable effect (3 points)")
+    a1.set_xlabel(r"retry backoff $\rho$ (steps)")
+    a1.set_ylabel("gap between starts (points)")
+    a1.set_title("(b) a backoff floor closes it", loc="left")
+    a1.legend(frameon=False, fontsize=6.4)
+
+    fig.tight_layout()
+    fig.savefig(FIG / "band.pdf")
+    fig.savefig(FIG / "band.png", dpi=170)
+    plt.close(fig)
+    print(f"[band] a_h={a_h:.3f} band=({lo:.2f},{hi:.2f}) floor={floor:.2f}; "
+          f"gap at rho=4 {gap[0]:.1f} pts, at rho=20 {gap[-1]:.1f} pts")
+
+
 def main() -> None:
     fig_centerpiece_phase()
     fig_centerpiece_curves()
@@ -454,6 +520,7 @@ def main() -> None:
     fig_bayes_te()
     fig_drone()
     fig_queue()
+    fig_band()
     print("figures ->", FIG)
 
 
