@@ -1054,3 +1054,39 @@ initial condition that lands on the collapsed branch.
 `jam_level`) on the Bernoulli channel. It was the first perturbation tried and it pushes the wrong
 way, which is itself worth recording: a jam DROPS requests, and a dropped request is one the
 operator never has to work, so a transient jam *unloads* the queue rather than tipping it over.
+
+## C1 The ladder's drop rate is not a sufficient statistic for the link
+
+**Status: closed form derived and tested against the live channel; gate running (`st-burst-9443645`,
+`st-bspan-9443684`).**
+
+`comms_ew` already carries a Gilbert-Elliot channel calibrated so its stationary drop rate equals
+the ladder value at every rung (verified: 0.050 / 0.099 / 0.199 / 0.351 / 0.551 against nominal,
+mean loss-run 4.0 against Bernoulli's 1.05 to 2.23). The recorded backlog question was whether the
+modality crossover rung moves. It does not: supervisory control does not use the link for decisions
+and is flat at 0.771 across the whole ladder, so at six vehicles there is no crossover to move.
+
+The interesting result is a different one. A request-reply handshake needs TWO messages, and
+`two_way_delivery` squares the marginal rate because a memoryless channel makes their fates
+independent. A bursty channel does not. `c2.step` draws them consecutively, so conditioning on the
+first surviving leaves the chain in GOOD and the second is lost only on a fresh transition:
+
+    d = (1 - p)(1 - p_gb),    p_gb = p*p_bg/(1-p),    p_bg = 1/burst_len.
+
+**Correlation helps the handshake.** Measured against the live channel: 0.876 against 0.811 at the
+degraded rung, 0.312 against 0.203 at the denied one, closed form matching each to three decimals.
+For this model that is bad news, because the operator is the bottleneck and a round trip that
+completes is work that arrives. Substituting into `n* = c(P+tau+1)mu/d` moves the cliff LEFT by
+3.7% at the nominal rung and 35.2% at the denied one.
+
+Registered prediction: the sign of the burstiness effect must FLIP with span, inside the bracket
+between the two thresholds (8.60, 10.08) at rung 3 and (7.37, 7.96) at rung 2. Below the bursty
+threshold the extra completed round trips are answers a vehicle wanted; above it they are load the
+operator cannot absorb. Local probe is consistent: at rung 2, n=5 GE beats Bernoulli on success
+(0.479 against 0.354) and n=6 loses to it (0.521 against 0.667).
+
+**Refuted along the way:** I first explained the burst-times-retry interaction as synchronized
+return, vehicles abandoning together during a loss run and coming back together after it. Measured
+Fano factor of request arrivals on 10-step bins says otherwise: 0.878 with retry under
+Gilbert-Elliot against 0.876 under Bernoulli, and every cell under-dispersed rather than clustered.
+Arrivals are not more bursty. The effect is a rate effect through `d`, not a clustering effect.

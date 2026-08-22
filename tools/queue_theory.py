@@ -52,13 +52,44 @@ def two_way_delivery(p_drop: float) -> float:
     return (1.0 - p_drop) ** 2
 
 
+def two_way_delivery_bursty(p_drop: float, burst_len: float) -> float:
+    """Round-trip delivery on a Gilbert-Elliot channel whose stationary drop rate is `p_drop`.
+
+    A request-reply handshake needs TWO messages to survive, and `two_way_delivery` squares the
+    marginal rate because a memoryless channel makes their fates independent. A bursty channel does
+    not. `c2.step` draws the two consecutively, so conditioning on the first surviving leaves the
+    chain in GOOD, and the second is lost only on a fresh GOOD-to-BAD transition:
+
+        d = (1 - p) * (1 - p_gb),      p_gb = p * p_bg / (1 - p),   p_bg = 1 / burst_len.
+
+    Correlation therefore HELPS the handshake: at a matched mean drop rate the bursty channel
+    completes more round trips than the memoryless one, measured 0.876 against 0.811 at the
+    degraded rung and 0.312 against 0.203 at the denied one, and the closed form matches each to
+    three decimals. That is the opposite of the usual reading of burstiness, and for this model it
+    is bad news rather than good: the operator is the bottleneck, so a round trip that completes is
+    work that arrives. Substituting into `collapse_span` moves the cliff LEFT by 3.6% at the
+    nominal rung and 35.1% at the denied one.
+
+    The consequence for the ladder is that `p_drop` is not a sufficient statistic for a link. Two
+    channels with the same mean loss put different loads on the same operator.
+    """
+    if burst_len <= 0.0:
+        raise ValueError(f"burst_len must be positive, got {burst_len}")
+    if p_drop >= 1.0:
+        return 0.0
+    p_bg = 1.0 / max(1.0, burst_len)
+    p_gb = p_drop * p_bg / (1.0 - p_drop)
+    return (1.0 - p_drop) * (1.0 - p_gb)
+
+
 def serviceable(latency: float, service_rate: float, patience: float) -> bool:
     """Can a reply return inside `patience` even with an idle operator?"""
     return 2.0 * latency + 1.0 / service_rate <= patience
 
 
 def collapse_span(p_drop: float, service_rate: float, patience: float,
-                  decision_interval: float, n_operators: int = 1) -> float:
+                  decision_interval: float, n_operators: int = 1,
+                  burst_len: float | None = None) -> float:
     """Span above which the abandonment cycle sustains its own overload.
 
     In the collapsed state every request abandons, so an agent's cycle is `patience` steps waiting
@@ -70,8 +101,11 @@ def collapse_span(p_drop: float, service_rate: float, patience: float,
 
     Linear in crew size: `c` consoles each serving at `service_rate` carry `c` times the load,
     so the staffing question and the span question are the same question.
+
+    Passing `burst_len` prices a Gilbert-Elliot channel at the same mean drop rate instead of a
+    memoryless one, which raises `d` and so lowers the threshold.
     """
-    d = two_way_delivery(p_drop)
+    d = two_way_delivery_bursty(p_drop, burst_len) if burst_len else two_way_delivery(p_drop)
     if d <= 0.0:
         return float("inf")
     return n_operators * (patience + decision_interval + 1.0) * service_rate / d

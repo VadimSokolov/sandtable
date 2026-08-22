@@ -128,3 +128,63 @@ def test_a_second_console_rescues_the_collapsed_queue():
     solo = qt.queue_only_sim(8, 0, 0.0, **OP, policy="blind", n_operators=1)["goodput"]
     pair = qt.queue_only_sim(8, 0, 0.0, **OP, policy="blind", n_operators=2)["goodput"]
     assert solo < 0.2 and pair > 0.9, f"solo={solo:.3f} pair={pair:.3f}"
+
+
+# ---------------------------------------------------------------- bursty round trip (C1)
+
+
+def test_bursty_round_trip_matches_the_simulator_channel():
+    """The closed form is checked against the channel `c2.step` actually draws from.
+
+    `comms_ew.delivered` advances a shared two-state chain, and the request and the reply are two
+    consecutive draws on it. Asserting the formula alone would not catch a change in that draw
+    order, so the channel is run.
+    """
+    import sys
+
+    import numpy as np
+
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
+    from sandtable.comms_ew import build_comms
+    from sandtable.scenario import Scenario, load_scenario
+
+    root = pathlib.Path(__file__).resolve().parents[1]
+    base = load_scenario(root / "scenarios" / "sc_span_control.json")
+    for level in (1, 2, 3, 4, 5):
+        prm = dict(base.params, comms_level=level, channel="gilbert_elliot")
+        c = build_comms(Scenario(**{**base.__dict__, "params": prm}))
+        rng = np.random.default_rng(11)
+        ok = 0
+        n = 120000
+        for _ in range(n):
+            up = c.delivered(rng)
+            down = c.delivered(rng)
+            ok += up and down
+        predicted = qt.two_way_delivery_bursty(c.p_drop, 4.0)
+        assert ok / n == pytest.approx(predicted, abs=0.006), f"rung {level}"
+
+
+def test_burstiness_helps_the_handshake_and_so_lowers_the_threshold():
+    """The counterintuitive direction, asserted so it cannot silently flip.
+
+    Correlated loss makes a two-message handshake MORE likely to complete than independent loss at
+    the same mean, which delivers more work to the bottleneck and moves the cliff left.
+    """
+    for p in (0.05, 0.10, 0.20, 0.35, 0.55):
+        assert qt.two_way_delivery_bursty(p, 4.0) > qt.two_way_delivery(p)
+        assert qt.collapse_span(p, 0.15, 20, 22, burst_len=4.0) < \
+            qt.collapse_span(p, 0.15, 20, 22)
+
+
+def test_the_memoryless_point_of_the_burst_family_is_not_burst_length_one():
+    """Pins the parameterization, which is easy to get wrong by inspection.
+
+    A chain is memoryless when the next state does not depend on the current one, `p_gb + p_bg = 1`,
+    which puts the mean bad-state dwell at `1 / (1 - p)` and not at 1. `burst_len = 1` is the
+    ANTI-correlated corner (the bad state never repeats), and it delivers WORSE round trips than
+    the memoryless channel, not the same.
+    """
+    for p in (0.05, 0.20, 0.55):
+        assert qt.two_way_delivery_bursty(p, 1.0 / (1.0 - p)) == \
+            pytest.approx(qt.two_way_delivery(p))
+        assert qt.two_way_delivery_bursty(p, 1.0) < qt.two_way_delivery(p)

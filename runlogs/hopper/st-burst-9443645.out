@@ -1,0 +1,6 @@
+# host=hop043.orc.gmu.edu job=9443645 battery=burst jobs=16 blocks=0-31 reps=64
+# code=b0c5c68ee3c1712c
+OK   tamper guard: 2 frozen path(s) unchanged, 32 seeds fixed at [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+# start 2026-08-22T17:43:02Z
+### BATTERY burst START
+### C1 does burstiness move the modality crossover, at matched mean drop rate?
