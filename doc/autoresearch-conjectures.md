@@ -1090,3 +1090,82 @@ return, vehicles abandoning together during a loss run and coming back together 
 Fano factor of request arrivals on 10-step bins says otherwise: 0.878 with retry under
 Gilbert-Elliot against 0.876 under Bernoulli, and every cell under-dispersed rather than clustered.
 Arrivals are not more bursty. The effect is a rate effect through `d`, not a clustering effect.
+
+---
+
+## CR-19: the coherence ratio decides whether burst structure is visible at all
+
+**Registered 2026-08-22, before any full-tier run.**
+
+### What K1 established
+
+`st-clockfull-9444130`, section K1, span 5 through 12 at rung 3, 32 blocks x 64 reps. Against a
+Bernoulli channel at the same marginal drop rate:
+
+| span | ge_step - bern | ge_msg - bern |
+|---|---|---|
+| 5  | -0.0156 (t=-1.04) | +0.0288 (t= 1.85) |
+| 6  | +0.0137 (t= 0.92) | +0.0039 (t= 0.27) |
+| 7  | +0.0029 (t= 0.17) | -0.0171 (t=-1.09) |
+| 8  | +0.0044 (t= 0.34) | **-0.0488 (t=-3.23) GATED** |
+| 9  | -0.0078 (t=-0.44) | **-0.0522 (t=-3.82) GATED** |
+| 10 | -0.0020 (t=-0.18) | -0.0293 (t=-2.32) |
+| 11 | +0.0273 (t= 2.62) | +0.0186 (t= 1.79) |
+| 12 | +0.0034 (t= 0.41) | +0.0005 (t= 0.06) |
+
+Under the time-clocked chain the Gilbert-Elliot channel is indistinguishable from a memoryless one
+at **every** span. Under the message-clocked chain it is not, and the deviation concentrates at
+mid-span, where it costs about five points of mission success. That deviation was an artifact of
+the clock, and every burst result this loop produced before CR-18 inherited it.
+
+### The mechanism, and why the null is the interesting half
+
+The chain's second eigenvalue is `lam = 1 - p_gb - p_bg`. With mean bad-state dwell `L` and
+marginal drop `p`, `p_bg = 1/L` and `p_gb = p/(L(1-p))`, so
+
+    lam = 1 - 1/(L(1-p))      and      tau_corr = -1/ln(lam) ~ L(1-p).
+
+At the published operating point `L = 4` and `p = 0.20`, so `tau_corr = 2.67` steps against a
+decision interval of `tau = 22`. Between two consecutive requests from the same vehicle the chain
+mixes `lam^22 = 2.6e-4` of the way from stationarity: it is fully mixed. A channel consulted far
+less often than it decorrelates **is** memoryless at the timescale the mission samples it, and no
+amount of burst structure in the underlying link can reach the mission metric except through the
+scalar delivery probability `d`.
+
+Define the **coherence ratio**
+
+    theta = tau_corr / tau = L(1-p) / tau.
+
+### Registered prediction
+
+**H(CR-19a):** `ge_step - bern` at `n_blue = 8`, rung 3, is null for `theta << 1` and gates for
+`theta >= 1`. The crossover sits at `L = tau/(1-p) = 27.5`. Measured coherence ratios for the arms
+to be run: `L = 4 -> 0.12`, `14 -> 0.49`, `28 -> 1.00`, `60 -> 2.16`, `120 -> 4.34`. Marginal drop
+rate confirmed held at 0.20 +/- 0.01 across all five (400k-step chain probe, 2026-08-22).
+
+**H(CR-19b):** where it gates, the sign is **negative**: burst structure hurts at a fixed marginal
+rate. The mechanism is the paper's own. Abandonment is a threshold, not a rate: a vehicle quits
+after `P = 20` steps unserved, and clustering is exactly what puts several consecutive failures
+inside one patience window. Spread loss lengthens everyone's wait a little; clustered loss pushes a
+few vehicles past `P`, and under the published `blind` policy their abandonment is unrefunded.
+
+The competing argument, recorded because it may win: clustering concentrates failure on fewer
+vehicles, so more vehicles get a clean run, and if per-mission success is convex in the handshake
+count that helps. I am registering negative because the abandonment threshold is the sharper
+nonlinearity, but the sign is the part of this prediction I hold least confidently.
+
+**H(CR-19c):** the effect is a `blind`-policy effect. Under `refund` the gated contrast at
+`theta >= 1` should fall below the MPE, because refunding removes the unpriced cost of the
+abandonment that clustering induces.
+
+### Why this matters beyond the model
+
+`tau` already appears in this paper as the term that sets where congestion collapses,
+`n* = c(P + tau + 1)mu / d`. CR-19 makes it appear a second time, as the clock against which
+channel memory is measured. The same interval that decides *how many vehicles one operator can
+hold* also decides *whether the radio's burst statistics are worth modeling at all*. For a sponsor
+choosing between radios, that is a purchasing criterion: burst statistics are irrelevant to mission
+outcome unless outage runs last about as long as the operator's decision cycle.
+
+**Falsifier:** if the contrast stays null at `L = 120` (`theta = 4.3`), the coherence ratio is not
+the controlling quantity and CR-19 is wrong.
