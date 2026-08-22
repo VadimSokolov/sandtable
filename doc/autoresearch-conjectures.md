@@ -503,3 +503,142 @@ patience above 38.67.
 Three separate on-off transitions, all three where the arithmetic says. Conjecture C2 moves from
 observed to **proved**: the C0-C5 ladder does not have six distinguishable rungs for direct control,
 it has as many as the operator's patience buys, and the formula says how many.
+
+
+### Correction: the zeros are a tempo failure crossing a deadline, not paralysis
+
+The throughput table above was first read as "the vehicles do not move". `hold_fraction` says
+otherwise and the correction matters for how the result is stated.
+
+| span | 2 | 4 | 6 | 8 | 10 | 12 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `blind` hold fraction | 0.258 | 0.298 | 0.388 | 0.458 | 0.468 | **0.469** |
+| `blind` mean hold length | 7.7 | 9.5 | 14.3 | 19.0 | 19.8 | **19.8** |
+| `admit` hold fraction | 0.258 | 0.291 | 0.329 | 0.320 | 0.296 | 0.267 |
+
+At n>=8 every hold runs to almost exactly `patience` (19.8 against 20), because every request times
+out. The duty cycle is then 20 steps held against a 22-step cooldown, so the held share saturates at
+20/42 = 0.476, and the measured 0.469 is that number. The vehicles are stopped about half the time,
+not all of it.
+
+What produces the zero is the combination with speed. `motion.py` scales speed by
+`0.35 + 0.65 q`, and a timed-out vehicle drives at `q_fallback` 0.50, so it makes
+`0.53 x 0.675 = 0.36` of its maximum. Over the 5.5 km to the objective at roughly 8 m/s of
+terrain-limited speed, that is about 1900 s of travel against a mission window of 1800 s. **The
+formation is not paralysed; it is too slow to finish before the clock expires.**
+
+So the cliff is real and the mechanism is the queue, but "exactly zero" is partly a property of
+this scenario's deadline. A longer mission window would deliver vehicles late rather than not at
+all. The claim that survives without qualification is the non-monotonicity and its location: peak
+throughput at n=6 against a predicted threshold of 6.30. The claim that needs the deadline stated
+is the zero. **Queued: a duration-sensitivity check, so the paper says which is which.**
+
+The policy arms also read the threshold directly. `blind` and `admit` are bit-identical at n=2 and
+n=3, within noise at n=4 and n=5, separate at n=6, and diverge catastrophically at n=8. That is
+n\* = 6.30 visible in the data without being fitted to it.
+
+
+---
+
+## C10 the staffing curve, confirmed at full tier (Hopper, `st-gateB-9437187`)
+
+Operator goodput at C0, 32 blocks x 64 reps. The closed form puts the collapse span at
+`n* = c x 6.30` on a clean link: **6.30** for one console, **12.60** for two, **18.90** for three.
+
+| span | 2 | 4 | 6 | 8 | 10 | 12 | 16 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 console, published | 1.000 | 0.985 | **0.759** | 0.170 | 0.060 | 0.015 | 0.007 |
+| 1 console + admission control | 1.000 | 0.985 | 0.905 | 0.734 | 0.574 | 0.449 | 0.300 |
+| 2 consoles | 1.000 | 1.000 | 1.000 | 0.990 | 0.980 | **0.810** | 0.045 |
+| 3 consoles | 1.000 | 1.000 | 1.000 | 1.000 | 0.996 | 0.991 | 0.972 |
+
+Both thresholds are visible in the data at the predicted spans and nowhere else. The one-console
+arm is at 0.985 at n=4, mid-transition at n=6, and collapsed at n=8, bracketing 6.30. The two-console
+arm is at 0.980 at n=10, mid-transition at n=12, and collapsed at n=16, bracketing 12.60. The three-
+console arm is still at 0.972 at n=16, below its threshold of 18.90. A formula with three timing
+parameters in it locates two separate cliffs, a factor of two apart, without being fitted to either.
+
+**The staffing rule this supports:** one operator per 6.3 vehicles under a clean link, or
+`ceil(n / (6.30 / (1 - p_drop)^2))` in general. Admission control does not raise the threshold, it
+removes the cliff: the one-console arm degrades gracefully from 1.000 to 0.300 across the whole
+sweep instead of falling off at six.
+
+Read `success` on this grid with care. It rises with span in every arm because red strength is held
+fixed while blue grows, so at n=12 and n=16 the published operator recovers on numbers alone
+(0.847, 0.961) despite goodput near zero. Goodput and `arrived` are the honest discriminators here.
+
+## P3 the ladder confounds two variables that behave differently
+
+Proxy tier, n=8, latency and drop swept independently. Operator goodput.
+
+Published operator:
+
+| latency \ drop | 0.0 | 0.05 | 0.1 | 0.2 | 0.35 | 0.55 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 0 | 0.180 | 0.237 | 0.360 | **0.539** | 0.412 | 0.201 |
+| 2 | 0.150 | 0.207 | 0.337 | **0.495** | 0.393 | 0.202 |
+| 4 | 0.126 | 0.177 | 0.267 | **0.397** | 0.343 | 0.187 |
+| 6 | 0.113 | 0.152 | 0.201 | **0.289** | 0.274 | 0.168 |
+| 8 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+
+With admission control:
+
+| latency \ drop | 0.0 | 0.05 | 0.1 | 0.2 | 0.35 | 0.55 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 0 | **0.730** | 0.731 | 0.694 | 0.597 | 0.413 | 0.202 |
+| 4 | **0.654** | 0.620 | 0.584 | 0.505 | 0.361 | 0.189 |
+| 8 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+
+The two axes do not behave alike. **Latency only ever hurts**, monotonically, at every drop level.
+**Loss is hump-shaped** under the published operator, peaking near drop 0.2 at every latency, and
+monotone under admission control. The C0-C5 ladder raises both together, so its one-dimensional path
+cuts diagonally across a surface that is monotone in one direction and humped in the other, and the
+interior optimum seen on the ladder is that projection.
+
+The predicted peak location holds too. The queue becomes stable when `(1-p)^2 <= 6.30/8 = 0.7875`,
+that is `p >= 0.113`. The sampled points bracket it: drop 0.1 is still collapsed (0.360), drop 0.2
+is stable (0.539).
+
+The `lat8` row is conjecture C2 as an entire flat line. At latency 8 no request can be answered
+inside patience, so goodput is exactly 0.000 at every drop rate, and mission success is constant at
+0.598 across the whole row. The drop rate is not merely a weak factor there; it is inert.
+
+## CR-15 confirmed: correlated demand puts the published scenario over the cliff
+
+Operator goodput, C0, proxy tier.
+
+| span | 2 | 4 | 6 | 8 | 10 | 12 |
+| --- | --- | --- | --- | --- | --- | --- |
+| stationary demand | 1.000 | 0.985 | **0.767** | 0.180 | 0.055 | 0.016 |
+| terrain-driven demand | 1.000 | 0.989 | **0.255** | 0.085 | 0.023 | 0.009 |
+| terrain-driven + admission control | 1.000 | 0.990 | 0.767 | 0.563 | 0.412 | 0.307 |
+| terrain-driven + 2 consoles | 1.000 | 1.000 | 1.000 | 0.993 | 0.733 | 0.158 |
+
+The collapse moves from between n=6 and n=8 to between n=4 and n=6. The closed form assumes
+stationary arrivals and is therefore an optimistic bound, exactly as expected: a column entering
+a defile calls for help together, and a queue sized for the average rate meets a burst. **The
+centerpiece scenario as shipped, at its span of six, is on the wrong side of the cliff once demand
+follows the ground.** Coupling strength at n=6 runs 0.767, 0.538, 0.380, 0.255, 0.160 for
+`terrain_demand` 0, 0.5, 1, 2, 4, against 0.906 down to 0.655 with admission control.
+
+## T3: route selection is an operator-attention decision
+
+Mission success against `route_bias`, which slides the lane from the fast exposed corridor into the
+slow covered band. Terrain-driven demand, n=6, clean link.
+
+| route_bias | 0.0 | 0.2 | 0.4 | 0.65 | 0.85 | 1.0 |
+| --- | --- | --- | --- | --- | --- | --- |
+| direct, stationary demand | 0.312 | 0.281 | 0.344 | 0.617 | 0.973 | **0.988** |
+| direct, terrain-driven demand | 0.207 | 0.172 | 0.176 | 0.332 | **0.902** | 0.539 |
+| direct + admission control | 0.348 | 0.316 | 0.336 | 0.605 | 0.973 | **0.992** |
+| supervisory | 0.336 | 0.344 | 0.484 | 0.777 | 0.977 | **1.000** |
+
+Three arms out of four are best in deepest cover. The human-in-the-loop arm with terrain-driven
+demand is not: it peaks at 0.85 and then **falls from 0.902 to 0.539** at full cover. The covered
+lane is the hardest ground, the hardest ground generates the most operator demand, and at full
+cover that demand collapses the queue faster than the cover repays it.
+
+So the covered route, which every other configuration should take, is actively harmful under direct
+control. Route planning under contested communications has to budget the operator's attention
+alongside exposure and tempo, and this is the first result in the study that couples the route-choice
+scenario to the command scenario rather than running them side by side.
