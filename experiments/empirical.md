@@ -788,3 +788,92 @@ what the mechanism changes for design guidance; two limitations (abandonment sem
 choice; the 1800 s window is part of the claim); and the Extensions "network of servers" item rewritten
 now that multi-console is delivered. Pre-flight: PASS 5/5 (55/55 citations verified, 3 AI-vocabulary
 hits, 0 em-dashes, 8/8 contribution refs resolve, compile clean). 35 pages (was 28).
+
+## CR-16, service order: a null, and why the null is the useful part
+
+Workflow 7 continued. Ledger entries 28-30 in `results.tsv`; full write-up in
+`doc/autoresearch-conjectures.md`.
+
+### The design was scrapped before it was written
+
+The proposal was "serve the request with the least remaining patience." Reading `c2.py` first
+showed that rule is a no-op here. There is no queue object: a request's whole future is fixed at
+arrival (`start = max(operator_free_at, k+lat)`, `done = start + 1/mu`, `reply = done + lat`), and
+the queue is the scalar reservation horizon. Every requester carries the same patience `P`, so all
+requests competing at a given moment have identical slack, and reordering two feasible requests
+swaps WHICH vehicle is served, never HOW MANY. Ordering can therefore only bite through
+heterogeneity in what the help is worth.
+
+### What was built
+
+`params["queue_discipline"]` (default `fcfs`, byte-identical off) with the order computed by the
+pure helper `c2.service_order`. Four arms, two of which are controls rather than treatments:
+
+| arm | role |
+|-----|------|
+| `fcfs` | default |
+| `random` | NULL CONTROL. Reordering the loop also reassigns which entity draws which random number, so a priority arm moves two things at once; this moves only the RNG assignment |
+| `hard_first` | treatment (descending terrain difficulty) |
+| `easy_first` | ADVERSARIAL CONTROL. A real priority effect has to be two-sided |
+
+Priority sorts are stable, so on uniform ground they degenerate to `fcfs` rather than to an
+arbitrary permutation, which is what makes a flat result mean "ordering did nothing."
+
+### Result
+
+Proxy (`st-triage-9442644`, 16x16, 74 gated comparisons against `random`): 5 marked, 69 unmarked,
+a ~7% marking rate consistent with the gate's own false-positive rate. The five are incoherent as a
+priority story: the one X2 marker favors the ADVERSARIAL arm, and the three X3 markers are all
+three deterministic arms losing to `random` at one span, which is the RNG-reassignment signature
+the `random` control exists to expose. X4 (one span, sweeping the driving heterogeneity) marks
+nothing and shows no dose-response.
+
+Full tier (`st-triagefull-9442679`, 32x64), run because a 16x16 null only rules out an effect
+larger than its MDE of roughly 0.05-0.06 against an MPE of 0.03:
+
+- Y1, the cell where the effect had to be (strongest coupling, congested span): `random` 0.504,
+  `hard` 0.503, `easy` 0.506. Spread 0.003.
+- Y2, the one proxy cell that gated: the 0.121 gap shrinks to 0.031 and no longer gates.
+  Multiple-comparison artifact.
+- Y3, throughput invariance: goodput 0.084/0.084/0.081/0.085 at `terrain_demand=2` and
+  0.049/0.049/0.049/0.050 at 4, across fcfs/random/hard/easy.
+
+### Why, which is what makes it publishable
+
+The obvious worry about a null is that the arms never reordered. Instrumenting a live run says they
+did: `hard_first` displaces 4.8 of 8 vehicles on average and leaves the order unchanged on only 11%
+of steps. What is missing is the signal. The difficulty spread ACROSS THE SUPERVISED VEHICLES is
+0.044 on average (`tools/make_triage_numbers.py`, 8 seeds), against 0.650 available across the map.
+The terrain is not flat; its variation is almost entirely LATERAL (0.601 across the lateral profile
+at mid-map, against 0.066 along the open corridor and 0.135 along the covered band), and a
+formation heading down one lane to one objective samples 8-20% of the range.
+
+A power probe confirmed this is structural: raising `spawn_spread` from 40 to 700 moved the
+observed spread only 0.054 -> 0.059, because the vehicles converge onto the same route within a few
+hundred steps. The variant was discarded rather than kept.
+
+So: triage by need is throughput-neutral by construction and value-neutral in practice, because an
+operator supervising one formation on one route has almost no need dispersion to exploit. That is a
+statement about the command architecture, not about queue discipline in general, and it points at
+the heterogeneous-operator/handoff work still open under CR-14.
+
+### A test failure worth recording
+
+The first `tests/test_triage.py` asserted that the two priority arms bracket the null on 12 seeds.
+It failed. The cause was sample size, not mechanism: a binary metric over 12 seeds moves in steps
+of 0.083, so the "effect" was 1-3 seeds. Rewritten as deterministic mechanism checks on the
+extracted helper; effect sizes belong to the gated battery, pytest asserts mechanism.
+
+### Paper
+
+No results subsection. `queue_discipline` stays in the model because the null should be
+reproducible. Two additions only: a passage in the Discussion (ordering is not on the list of
+fixes, with the \qTriageSpread{} number and the structural reason) and a Limitations paragraph
+bounding what the admission-control recommendation claims, with \qTriageSeen{} against
+\qTriageMap{}. The Discussion's earlier phrase "fix the queue discipline" was changed to "fix the
+admission policy" to avoid colliding with the new parameter name. Numbers generated by
+`tools/make_triage_numbers.py` -> `report/gen/triage_numbers.tex`.
+
+Pre-flight: PASS 5/5 (55/55 citations, 3 AI-vocabulary hits, 0 em-dashes, 8/8 contribution refs,
+compile clean). Full suite on Hopper (job 9442696): 192 passed, 0 failed (was 182; +10 triage).
+Byte identity re-verified after the `service_order` extraction: 28/28 metrics unchanged.

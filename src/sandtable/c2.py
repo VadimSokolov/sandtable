@@ -37,6 +37,9 @@ reproduces the published single server exactly.
 The server also has *abandonment*: a requester that has waited longer than
 ``patience`` stops caring about the answer. Whether the operator finds that out,
 and what it does about it, is the ``queue_policy`` knob documented in `step`.
+``queue_discipline`` is the separate question of what *order* it works its arrivals in; because
+every requester carries the same patience, order can change which vehicle is helped but never how
+many are, so the priority arms key on terrain rather than on the request itself.
 
 Deterministic given (rng, state); no globals. Only living blue agents are managed;
 red and air agents keep the neutral control_quality 1.0.
@@ -51,6 +54,13 @@ import numpy as np
 from sandtable.comms_ew import Comms
 from sandtable.entities import BLUE, Entities
 from sandtable.scenario import Scenario
+
+
+# Service orders the operator can work its arrivals in (CR-16). `fcfs` is the published behavior
+# and the default. `random` exists as the NULL CONTROL: reordering the loop also reassigns which
+# entity draws which random number, so a priority arm moves two things at once; `random` moves only
+# the RNG assignment. `easy_first` is the adversarial control for `hard_first`.
+DISCIPLINES = ("fcfs", "random", "hard_first", "easy_first")
 
 
 @dataclass
@@ -70,6 +80,7 @@ class Operator:
     immune_latency: int = 1        # fixed one-way latency of the immune link, off the comms ladder
     queue_policy: str = "blind"    # "blind" | "refund" | "admit"; see `step`
     terrain_demand: float = 0.0    # >0 makes difficult ground raise the call-for-help rate (CR-15)
+    queue_discipline: str = "fcfs"  # "fcfs" | "random" | "hard_first" | "easy_first"; see `step`
     # Request accounting (CR-10). Counts only, no RNG, so the OFF path stays byte-identical.
     n_request: int = 0             # direct-mode decision events that reached the link
     n_serviced: int = 0            # ... that came back with an operator decision
@@ -119,9 +130,13 @@ def build_c2(scn: Scenario, ent: Entities,
         immune_latency=int(scn.params.get("immune_latency", 1)),
         queue_policy=str(scn.params.get("queue_policy", "blind")),
         terrain_demand=float(scn.params.get("terrain_demand", 0.0)),
+        queue_discipline=str(scn.params.get("queue_discipline", "fcfs")),
     )
     if op.queue_policy not in ("blind", "refund", "admit"):
         raise ValueError(f"queue_policy must be blind|refund|admit, got {op.queue_policy!r}")
+    if op.queue_discipline not in DISCIPLINES:
+        raise ValueError(f"queue_discipline must be one of {sorted(DISCIPLINES)}, "
+                         f"got {op.queue_discipline!r}")
     n_operators = int(scn.params.get("n_operators", 1))
     if n_operators < 1:
         raise ValueError(f"n_operators must be at least 1, got {n_operators}")
@@ -165,22 +180,53 @@ def _reset_cooldown(op: Operator, rng: np.random.Generator, difficulty: float = 
     return c
 
 
+def service_order(op: Operator, blue: np.ndarray, difficulty: dict,
+                  rng: np.random.Generator) -> np.ndarray:
+    """The order the operator works this tick's arrivals in (CR-16).
+
+    `fcfs` returns `blue` untouched, which is what keeps the default path byte-identical.
+
+    Ordering cannot change how MANY requests the operator serves. Every requester carries the same
+    patience and a request's completion time is fixed at arrival, so reordering two feasible
+    requests only swaps which vehicle is served. What ordering can change is whether the vehicle
+    that gets helped is one for which operator quality is worth much, which is why the priority
+    arms key on the ground under the vehicle rather than on anything intrinsic to the request.
+
+    The priority sorts are stable, so vehicles on identical ground keep their index order and the
+    discipline degenerates to `fcfs` rather than to an arbitrary permutation. That is what makes a
+    null result on uniform terrain interpretable instead of merely noisy.
+    """
+    if op.queue_discipline == "random":
+        return rng.permutation(blue)
+    if op.queue_discipline in ("hard_first", "easy_first") and difficulty:
+        sign = -1.0 if op.queue_discipline == "hard_first" else 1.0
+        keys = np.array([sign * difficulty.get(int(i), 0.0) for i in blue])
+        return blue[np.argsort(keys, kind="stable")]
+    return blue
+
+
 def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
          rng: np.random.Generator, world=None) -> None:
     """Advance the C2 queue/latency model one tick and write ent.control_quality in place.
 
-    `world` is read only when the scenario opts into `terrain_demand`; without it the demand
-    process is the stationary one this model has always had.
+    `world` is read only when the scenario opts into `terrain_demand` or into a terrain-keyed
+    `queue_discipline`; without it the demand process is the stationary one this model has always
+    had and the service order is arrival order.
     """
     blue = np.nonzero((ent.side == BLUE) & ent.alive)[0]
 
-    # Terrain difficulty, when demand is terrain-driven. `speed` is a trafficability multiplier in
-    # [0, 1], so 1 - speed is how hard the ground is under each vehicle right now.
-    if op.terrain_demand > 0.0 and world is not None and blue.size:
+    # Terrain difficulty, when demand is terrain-driven or the service order keys on it. `speed`
+    # is a trafficability multiplier in [0, 1], so 1 - speed is how hard the ground is under each
+    # vehicle right now. Reading the terrain draws no random numbers, so widening the condition
+    # cannot perturb the RNG stream of any arm that does not use the result.
+    needs_difficulty = op.terrain_demand > 0.0 or op.queue_discipline in ("hard_first", "easy_first")
+    if needs_difficulty and world is not None and blue.size:
         diff = np.clip(1.0 - world.speed_at(ent.x[blue], ent.y[blue]), 0.0, 1.0)
         difficulty = dict(zip(blue.tolist(), diff.tolist()))
     else:
         difficulty = {}
+
+    blue = service_order(op, blue, difficulty, rng)
 
     # Operator-load sampling (CR-7), taken before this tick's decisions are resolved.
     op.total_steps += 1

@@ -752,3 +752,133 @@ Which of `blind`, `refund`, and `admit` a fielded console resembles is an observ
 cannot supply, and the paper says so rather than assuming the pessimistic default is realistic.
 The `blind` default is retained as the model's shipping behavior because it is what was published,
 not because it is believed to be right.
+
+---
+
+## CR-16 redesigned before implementation: shortest-remaining-patience-first is a no-op here
+
+The proposal in `doc/sandtable-todo.md` was "serve the request with the least remaining patience."
+Reading `c2.py` before writing any code shows that rule cannot do anything in this model, and the
+reason is worth recording because it constrains what triage can mean here at all.
+
+There is no queue object. A request's whole future is computed at the instant it arrives:
+
+    start = max(operator_free_at, k + lat);  done = start + 1/mu;  reply = done + lat
+
+The queue is the scalar `operator_free_at`, a reservation horizon. Requests reserve in arrival
+order and never sit anywhere that could be reordered later. Two consequences:
+
+1. Every requester has the same patience `P`, and every request is fresh at its own arrival, so
+   all requests competing at a given moment have **identical slack**. Sorting by remaining patience
+   sorts by nothing.
+2. Reordering two feasible requests swaps *which* vehicle is served, not *how many* are. Throughput
+   is invariant to order when the requesters are homogeneous.
+
+So the only triage that can bite is one that exploits **heterogeneity in what the help is worth**,
+and the model already has a source of it: with `terrain_demand` on, vehicles in difficult ground
+request more often, so under first-come-first-served they crowd the queue; and because
+`control_quality` enters motion and engagement multiplicatively, a quality point buys a different
+amount depending on the ground the vehicle is standing on. That is a real asymmetry, not a
+stipulated priority.
+
+### CR-16 as it will actually be built: `queue_discipline`, with its own controls
+
+Four arms, so the experiment carries its own null and its own adversary rather than only a
+treatment:
+
+| arm | order | role |
+| --- | --- | --- |
+| `fcfs` | entity index (unchanged) | default, byte-identical |
+| `random` | permutation each step | **null control.** Reordering the loop also reassigns the RNG draws, so a treatment arm changes two things at once. `random` changes only the RNG assignment, with no priority signal in it. Any gap between a priority arm and `random` is priority. |
+| `hard_first` | descending terrain difficulty | treatment |
+| `easy_first` | ascending terrain difficulty | **adversarial control.** If `hard_first` helps, `easy_first` must hurt by a comparable amount; if both look like `random`, ordering is inert and the result is a clean negative. |
+
+### Prediction, stated before the run
+
+Ordering is inert without heterogeneity, so with `terrain_demand = 0` all four arms should agree
+within noise. With `terrain_demand > 0` and a span in the congested band just above `n*`,
+`hard_first` and `easy_first` should separate from `random` in opposite directions. Below `n*`
+there is no queue to order and above it nothing is serviceable, so the effect should be
+band-limited rather than monotone in span. A flat result across all three conditions is a
+publishable negative: it would say that once admission control exists, *who* the operator serves
+does not matter, only *whether* it refuses in time.
+
+---
+
+## CR-16 refuted, and the diagnosis is more useful than the null
+
+Prediction, registered before the run: flat with no heterogeneity, band-limited separation of
+`hard_first` and `easy_first` around `n*` with heterogeneity, flat again under `admit`.
+
+### What the proxy tier said (`st-triage-9442644`, 16 blocks x 16 reps)
+
+74 gated comparisons against the `random` null. Five marked: two better, three worse, 69 unmarked.
+A 7% marking rate is what the gate produces under a true null, and the five are incoherent as a
+priority story:
+
+- The one marked cell in X2 favors `easy_first`, the **adversarial control**, not the treatment.
+- The three marked cells in X3 are all three deterministic arms losing to `random` at the same
+  span, which is the signature of a favorable RNG reassignment rather than of priority. This is
+  precisely what the `random` arm was put in the design to expose.
+- X4, the cleanest test (one span, sweeping the heterogeneity that is supposed to drive the
+  effect), marks nothing and shows no dose-response: `hard` runs 0.605, 0.539, 0.520, 0.480 against
+  `random` 0.547, 0.547, 0.555, 0.504 as `terrain_demand` goes 0, 1, 2, 4.
+
+Throughput invariance held everywhere. Operator goodput agrees across all four arms at every span
+in both X1 and X2, to three decimals in most cells, which is the model-structure claim confirmed.
+
+### What the full tier said (`st-triagefull-9442679`, 32 blocks x 64 reps)
+
+Y1 is the cell where the effect had to be if it existed, the strongest coupling at the congested
+span: `random` 0.504, `hard` 0.503, `easy` 0.506. A spread of 0.003 against an MPE of 0.03. The
+proxy spread of 0.024 at the same cell was noise, and it collapses when the tier is right.
+
+Y2 re-ran the one proxy cell that gated (n=10, terrain_demand=2). The proxy gap of 0.121 in favour
+of `easy_first` shrinks to 0.031 (`random` 0.685, `hard` 0.692, `easy` 0.716, `fcfs` 0.683) and no
+longer gates. Confirmed as a multiple-comparison artifact.
+
+Y3 put throughput invariance on the full tier. Goodput at n=8: 0.084 / 0.084 / 0.081 / 0.085 at
+`terrain_demand=2`, and 0.049 / 0.049 / 0.049 / 0.050 at `terrain_demand=4`, across
+fcfs / random / hard / easy. Three decimals, four arms, both couplings.
+
+**Verdict: refuted.** Service order does not move mission outcomes in this model.
+
+### Why, which is the part worth keeping
+
+A null is only interesting if the test had power, so the obvious worry is that the priority arms
+never actually reordered anything. Instrumenting a live run says they did: `hard_first` displaces
+4.8 of 8 vehicles on average and leaves the order unchanged on only 11% of steps. Mechanically the
+arms are doing their job.
+
+The signal they sort on is what is missing. Measured over live running by `tools/make_triage_numbers.py` (8 seeds), the spread in terrain
+difficulty **across the vehicles the operator is supervising** is mean **0.044**; an exploratory
+4-seed probe over 5,569 observed steps gave mean 0.054, median 0.050, p90 0.090. Both are small. The map itself is not flat: difficulty ranges over 0.650 end to end, and the
+lateral profile at mid-map spans 0.601. But almost all of that variation is **lateral**. Along the
+open corridor the spread is 0.066 and along the covered band 0.135, so a formation moving down one
+lane toward one objective samples about 8 to 20 percent of the range the terrain actually offers.
+
+A power probe confirmed this is structural rather than a spawn artifact: a variant with
+`spawn_spread` raised from 40 to 700 moved the observed spread only from 0.054 to 0.059 on the
+same 4-seed probe, because
+the vehicles converge onto the same route within a few hundred steps regardless of where they
+start. The variant was discarded.
+
+### The finding, stated so it survives
+
+Triage by need is throughput-neutral by construction here, and value-neutral in practice, because
+**an operator supervising one formation on one route has almost no need dispersion to exploit**.
+The vehicles are in the same place by design; that is what a formation is.
+
+This is a statement about the C2 architecture, not about queue discipline in general. Ordering
+would only pay for an operator whose clients are in genuinely different situations, different
+routes, different missions, different threat exposure, which is the heterogeneous-operator and
+handoff architecture listed as still-open under CR-14. That makes the negative result a pointer
+rather than a dead end, and it sharpens the paper's existing claim: once the operator can refuse in
+time, *whether* it refuses is the whole lever, and *who* it serves is not one.
+
+### Reporting obligation
+
+`queue_discipline` stays in the model, opt-in and byte-identical off, because the null is worth
+being able to reproduce. It does not earn a results subsection. One sentence belongs in the
+discussion of the queue subsection, and the ordering-vs-refusal distinction belongs in the
+limitations, since it bounds what the admission-control recommendation is claiming.

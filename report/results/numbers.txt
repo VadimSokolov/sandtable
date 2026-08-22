@@ -175,3 +175,10 @@ Operator-queue numbers (source: tools/make_queue_numbers.py over report/data/que
 \qFastJammed = 62.7
 \qSlowClear = 12.2
 \qSlowJammed = 22.5
+
+
+Service-order numbers (source: tools/make_triage_numbers.py)
+==============================================================================
+\qTriageSpread = 0.3
+\qTriageSeen = 0.044
+\qTriageMap = 0.650

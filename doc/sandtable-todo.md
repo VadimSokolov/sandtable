@@ -708,24 +708,58 @@ likely to still be waited on are all unbuilt. `n*` sizes the bank; it does not t
 
 ---
 
-## CR-16 (proposed, not built) Triage: serve the request most likely to still be waited on
+## CR-16 Service order: `queue_discipline`  (IMPLEMENTED 2026-08-22)
 
-### Why
+### Why the first design was scrapped before it was written
 
-`admit` fixes the wrong-work problem by refusing early. It does not fix the ordering problem. Under
-FCFS the operator can still spend its next slot on the request with the least remaining patience,
-which is the one most likely to abandon before the reply lands. A shortest-remaining-patience-first
-or largest-remaining-slack-first discipline is free (no new capability, no new hardware) and is the
-natural third policy alongside `blind`/`refund`/`admit`.
+The proposal was "serve the request with the least remaining patience." Reading `c2.py` shows that
+rule is a no-op here, and the reason bounds what triage can mean in this model at all. There is no
+queue object: a request's whole future is fixed at arrival (`start = max(operator_free_at, k+lat)`,
+`done = start + 1/mu`, `reply = done + lat`), and the queue is the scalar reservation horizon
+`operator_free_at`. Requests reserve in arrival order and never sit anywhere that could be
+reordered later. Every requester carries the same patience `P`, so all requests competing at a
+given moment have identical slack, and reordering two feasible requests swaps *which* vehicle is
+served without changing *how many* are.
 
-### Prediction
+So ordering can only bite through heterogeneity in what the help is worth. The model already has a
+source: with `terrain_demand` on, vehicles in difficult ground request more often and therefore
+crowd the queue, and because `control_quality` enters motion and engagement multiplicatively, a
+quality point buys a different amount depending on the ground the vehicle is standing on.
 
-Triage should help most in the band just above `n*`, where the queue is congested but not yet
-hopeless, and should do nothing far below it (no queue) or far above it (nothing is serviceable).
-That is a falsifiable, shaped prediction, which makes it a good next conjecture rather than a
-guaranteed win.
+### Change
 
-### Scope guard
+`params["queue_discipline"]`, default `fcfs`, validated against `c2.DISCIPLINES`. The order is
+computed by the pure helper `c2.service_order(op, blue, difficulty, rng)`, extracted so the sort is
+testable without running a mission.
 
-Opt-in as `queue_discipline` (default `fcfs`), byte-identical when off, and composable with
-`queue_policy` so the 2 x 3 grid is measurable.
+| arm | order | role |
+| --- | --- | --- |
+| `fcfs` | entity index, untouched | default, byte-identical |
+| `random` | `rng.permutation` each step | **null control** for the RNG-reassignment confound: reordering the loop also changes which entity draws which random number, so a priority arm moves two things at once |
+| `hard_first` | descending terrain difficulty | treatment |
+| `easy_first` | ascending terrain difficulty | **adversarial control**; a real priority effect has to be two-sided |
+
+The priority sorts are stable, so on uniform ground they degenerate to `fcfs` rather than to an
+arbitrary permutation. That is what makes a flat result interpretable as "ordering did nothing"
+instead of "the order was scrambled." Terrain is read whenever the discipline needs it, which draws
+no random numbers, so widening that condition cannot perturb any arm that ignores the result.
+
+### Tests
+
+`tests/test_triage.py` (10): off-path byte-identity; the sort is correct in both directions with
+ties in index order; both priority arms degenerate to `fcfs` on uniform ground and with no
+difficulty map at all; `random` actually perturbs the run; every discipline runs and keeps its
+rates in [0,1]; an unknown discipline is rejected; and the model-level claim that ordering moves
+goodput by less than 0.10 across all four arms.
+
+The effect-size question is deliberately **not** a unit test. A first attempt asserted that the two
+priority arms bracket the null on 12 seeds; it failed on noise (means of a binary metric over 12
+seeds move in steps of 0.083), which is a sample-size artifact rather than a finding. Effect sizes
+belong to the gated battery at the full tier; pytest asserts mechanism.
+
+### Battery
+
+`hopper/batteries/triage.sh`: X1 no heterogeneity (all four arms should agree), X2 heterogeneity
+across span (band-limited around `n*` if anything), X3 the same contrast with admission control on
+(flat if ordering only ever mattered because `blind` wastes slots), X4 coupling strength at the
+congested span.
