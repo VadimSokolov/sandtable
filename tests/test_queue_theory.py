@@ -234,7 +234,13 @@ def test_step_clocking_returns_the_handshake_to_independence():
             c = build_comms(Scenario(**{**base.__dict__, "params": prm}))
             rng = np.random.default_rng(7)
             n, ok = 60000, 0
-            for _ in range(n):
+            for h in range(n):
+                # The clock must be advanced between handshakes, because these are 60000 SEPARATE
+                # requests and separate requests happen at separate steps. Since CR-20 a step
+                # clock left standing still returns the same state to every caller, which is
+                # correct for two vehicles transmitting together and wrong as a stand-in for
+                # 60000 handshakes; the failure cycle is the physical spacing.
+                c._k = h * 43
                 # Both draws always taken, as `c2.step` takes them. A short-circuiting `and` would
                 # skip the second on a failed first and leave the chain a transition behind.
                 up = c.delivered(rng)
@@ -309,57 +315,74 @@ def test_a_rarely_consulted_step_clocked_chain_forgets():
     assert abs(runs[100]) < 0.05, "consulted rarely, it must have forgotten"
 
 
+def test_failure_cycle_is_the_same_quantity_the_collapse_span_uses():
+    """C = P + tau + 1 must be exactly the numerator of n* = c mu C / d, so that the queue result
+    and the channel result are stated in one quantity rather than two that happen to agree."""
+    P, tau, mu, c, p = 20.0, 22.0, 0.15, 1, 0.20
+    C = qt.failure_cycle(P, tau)
+    assert C == 43.0
+    d = qt.two_way_delivery(p)
+    assert qt.collapse_span(p, mu, P, tau, c) == pytest.approx(c * mu * C / d, rel=1e-12)
+    # a CR-17 retry substitutes rho for tau in the same cycle
+    assert qt.failure_cycle(P, tau, backoff=4.0) == 25.0
+
+
 def test_coherence_ratio_matches_the_chain_it_describes():
     """theta must equal the measured decorrelation time of the actual chain, not an approximation
     of it. Build the chain the way `build_comms` does and read its second eigenvalue back."""
-    tau, p = 22.0, 0.20
+    lag, p = 43.0, 0.20
     for L in (4.0, 14.0, 28.0, 60.0, 120.0):
         p_bg = 1.0 / L
         p_gb = p * p_bg / (1.0 - p)
         lam = 1.0 - p_gb - p_bg
-        want = (-1.0 / math.log(lam)) / tau
-        assert qt.coherence_ratio(p, L, tau) == pytest.approx(want, rel=1e-12)
+        want = (-1.0 / math.log(lam)) / lag
+        assert qt.coherence_ratio(p, L, lag) == pytest.approx(want, rel=1e-12)
 
 
 def test_the_crossover_sits_where_the_registration_says_it_does():
     """theta = 1 at L = tau/(1-p), to first order. The exact chain puts it within a few percent,
     which is the tolerance the registered crossover was stated at."""
     p = 0.20
-    for tau in (11.0, 22.0, 44.0):
-        assert qt.coherence_ratio(p, qt.crossover_burst_len(p, tau), tau) == pytest.approx(1.0,
-                                                                                           abs=1e-9)
-    # the first-order reading tau/(1-p) is low, and increasingly so as the clock speeds up
-    assert qt.crossover_burst_len(p, 22.0) == pytest.approx(28.1, abs=0.1)
-    assert qt.crossover_burst_len(p, 11.0) == pytest.approx(14.4, abs=0.1)
-    # the falsifier, stated as an assertion: ONE radio, two clocks, opposite sides of the knee
-    assert qt.coherence_ratio(p, 14.0, 22.0) < 0.6
-    assert qt.coherence_ratio(p, 14.0, 11.0) > 0.9
+    for lag in (7.56, 25.0, 43.0):
+        assert qt.coherence_ratio(p, qt.crossover_burst_len(p, lag), lag) == pytest.approx(
+            1.0, abs=1e-9)
+    # the two knees of the published operating point, stated at the exact form
+    assert qt.crossover_burst_len(p, qt.failure_cycle(20, 22)) == pytest.approx(54.4, abs=0.1)
+    assert qt.crossover_burst_len(p, 7.56) == pytest.approx(10.1, abs=0.1)
+    # the console knee sits at a far shorter dwell than the vehicle knee, so as outages lengthen
+    # the cross-vehicle effect must appear first
+    assert qt.crossover_burst_len(p, 7.56) < qt.crossover_burst_len(p, qt.failure_cycle(20, 22))
+    # and shortening the backoff moves the vehicle knee DOWN: a faster reliance loop is more
+    # exposed to burst structure, not less
+    assert (qt.crossover_burst_len(p, qt.failure_cycle(20, 22, backoff=4))
+            < qt.crossover_burst_len(p, qt.failure_cycle(20, 22)))
 
 
 def test_coherence_excess_is_the_conditional_retry_failure_over_the_marginal_rate():
     """e(theta) must equal (1-p) lam^tau computed directly from the chain."""
-    tau, p = 22.0, 0.20
+    lag, p = 43.0, 0.20
     for L in (4.0, 28.0, 120.0):
         p_bg = 1.0 / L
         p_gb = p * p_bg / (1.0 - p)
         lam = 1.0 - p_gb - p_bg
-        direct = (1.0 - p) * lam ** tau
-        assert qt.coherence_excess(p, L, tau) == pytest.approx(direct, rel=0.02)
+        direct = (1.0 - p) * lam ** lag
+        assert qt.coherence_excess(p, L, lag) == pytest.approx(direct, rel=0.02)
 
 
 def test_the_published_operating_point_is_deep_in_the_memoryless_regime():
     """The null in K1 is not a power failure: at L=4 the excess is four orders of magnitude below
     anything the harness could resolve."""
-    assert qt.coherence_ratio(0.20, 4.0, 22.0) < 0.15
-    assert qt.coherence_excess(0.20, 4.0, 22.0) < 1e-3
-    # while a channel whose outages last a decision cycle carries a third of the marginal rate
-    assert qt.coherence_excess(0.20, 27.5, 22.0) > 0.25
+    C = qt.failure_cycle(20, 22)
+    assert qt.coherence_ratio(0.20, 4.0, C) < 0.10
+    assert qt.coherence_excess(0.20, 4.0, C) < 1e-6
+    # while a channel whose outages last a whole failure cycle carries a third of the marginal rate
+    assert qt.coherence_excess(0.20, qt.crossover_burst_len(0.20, C), C) > 0.25
 
 
 def test_coherence_excess_is_monotone_and_bounded_by_the_marginal_survival():
-    tau, p = 22.0, 0.20
-    es = [qt.coherence_excess(p, L, tau) for L in (4, 14, 28, 60, 120, 1000)]
+    lag, p = 43.0, 0.20
+    es = [qt.coherence_excess(p, L, lag) for L in (4, 14, 28, 60, 120, 1000)]
     assert es == sorted(es)
     assert all(0.0 <= e <= 1.0 - p for e in es)
-    # a channel with no memory at all (L at the memoryless point) carries no excess at long tau
-    assert qt.coherence_excess(p, 1.0 / (1.0 - p), tau) == pytest.approx(0.0, abs=1e-9)
+    # a channel with no memory at all (L at the memoryless point) carries no excess at any lag
+    assert qt.coherence_excess(p, 1.0 / (1.0 - p), lag) == pytest.approx(0.0, abs=1e-9)

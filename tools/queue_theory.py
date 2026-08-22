@@ -313,8 +313,22 @@ def queue_only_sim(n: int, latency: float, p_drop: float, service_rate: float = 
 _LADDER = [(0, 0.00), (1, 0.05), (2, 0.10), (4, 0.20), (8, 0.35), (16, 0.55)]
 
 
-def coherence_ratio(p_drop: float, burst_len: float, decision_interval: float) -> float:
-    """Channel coherence time measured in decision intervals.
+def failure_cycle(patience: float, decision_interval: float,
+                  backoff: float | None = None) -> float:
+    """Steps between one unanswered request and the same vehicle's next one.
+
+    A vehicle whose request is dropped or abandoned waits out `patience`, then serves a cooldown,
+    then fires on the following step, so the cycle is `P + tau + 1` and, under a CR-17 retry that
+    returns after `rho` instead, `P + rho + 1`. This is the SAME quantity that sets the collapse
+    span: `n* = c mu (P + tau + 1) / d` is `c mu C / d`, and the fold band is the gap between the
+    cycle in the collapsed state and the cycle in the healthy one. It is written once here because
+    it turns out to govern the channel as well as the queue (see `coherence_ratio`).
+    """
+    return patience + (decision_interval if backoff is None else backoff) + 1.0
+
+
+def coherence_ratio(p_drop: float, burst_len: float, lag: float) -> float:
+    """Channel coherence time measured in units of the interval at which the chain is re-consulted.
 
     A Gilbert-Elliot chain with mean bad-state dwell `L` and stationary drop rate `p` has
     `p_bg = 1/L` and, from `pi_bad = p_gb/(p_gb + p_bg) = p`, `p_gb = p/(L(1-p))`. Its second
@@ -323,67 +337,79 @@ def coherence_ratio(p_drop: float, burst_len: float, decision_interval: float) -
         lam = 1 - p_gb - p_bg = 1 - 1/(L(1-p)),
 
     and the chain decorrelates on a timescale `tau_corr = -1/ln(lam)`, which is `L(1-p)` to first
-    order. The quantity that matters to a mission is not `tau_corr` but its ratio to the interval
-    at which the team consults the link:
+    order. What decides whether that memory can reach a mission metric is not `tau_corr` but its
+    ratio to `lag`, the interval after which the chain is consulted again:
 
-        theta = tau_corr / decision_interval.
+        theta = tau_corr / lag.
 
-    Below one the chain is fully mixed between consecutive requests and the channel is memoryless
-    at the granularity the mission samples it, whatever its burst statistics. Returns `theta`.
+    Below one the chain has mixed by the time it is next read, and the channel is memoryless at
+    the granularity that reader samples it, whatever its burst statistics.
+
+    **`lag` is not one number, and picking the wrong one is the easy mistake.** Two readers
+    consult this chain at two very different intervals, so a burst channel has two knees:
+
+    * A vehicle re-consults it after a full failure cycle, `failure_cycle(P, tau)` = 43 steps at
+      the published operating point, because a dropped request costs it `P` steps of waiting and
+      `tau` of cooldown before it can ask again. This governs how long one vehicle stays degraded.
+    * The console re-consults it at the aggregate inter-request gap, measured at 12.2 steps for
+      five vehicles, 7.6 for eight and 4.3 for twelve. This governs whether the vehicles' failures
+      arrive together, which is what idles an operator and then floods the console.
+
+    The second knee sits at a much shorter dwell than the first, so as a link's outages lengthen
+    the cross-vehicle effect appears well before the within-vehicle one.
     """
     if burst_len <= 0 or p_drop >= 1.0:
         return 0.0
     lam = 1.0 - 1.0 / (burst_len * (1.0 - p_drop))
     if lam <= 0.0:
         return 0.0
-    return (-1.0 / math.log(lam)) / decision_interval
+    return (-1.0 / math.log(lam)) / lag
 
 
-def coherence_excess(p_drop: float, burst_len: float, decision_interval: float) -> float:
-    """Excess probability that a retried request fails again, over the marginal rate.
+def coherence_excess(p_drop: float, burst_len: float, lag: float) -> float:
+    """Excess probability that the chain is still BAD when next read, over the marginal rate.
 
-    A vehicle whose handshake failed retries at its next decision, `decision_interval` steps later.
-    For a two-state chain the probability it is still in the bad state then is
-
-        P(bad at t+tau | bad at t) = p + (1-p) lam^tau,
-
-    so the EXCESS over the marginal rate `p` is `(1-p) lam^tau`. With `lam^tau ~ exp(-1/theta)`
-    this is
+    For a two-state chain the probability of being bad `lag` steps after being bad is
+    `p + (1-p) lam^lag`, so the EXCESS over the marginal rate `p` is `(1-p) lam^lag`. With
+    `lam^lag ~ exp(-1/theta)` this is
 
         e(theta) = (1 - p) exp(-1/theta),
 
-    an exponential in the INVERSE coherence ratio: flat while theta is small, then steep. That
-    shape is why `theta = 1` is a meaningful knee rather than an arbitrary cut. At the published
-    operating point (`L = 4`, `p = 0.20`, `tau = 22`) theta is 0.12 and the excess is 2e-4, which
-    is why burst structure is invisible there.
+    an exponential in the INVERSE coherence ratio: flat while `theta` is small, then steep. That
+    shape is why `theta = 1` is a knee rather than an arbitrary cut.
 
-    The mean throughput is untouched by any of this: the marginal drop rate is held fixed, so the
-    round-trip delivery `d` and the collapse span `n* = c(P+tau+1)mu/d` are unchanged. What `e`
-    governs is the DISPERSION of per-vehicle wait, and abandonment is a threshold on that wait,
-    not a rate. Burst structure reaches the mission through the tail, not the mean.
+    The mean throughput is untouched by any of this. The marginal drop rate is held fixed by
+    construction, so the round-trip delivery `d` and the collapse span `n* = c mu C / d` do not
+    move. What `e` governs is the DISPERSION of per-vehicle wait, and abandonment is a threshold on
+    that wait rather than a rate, which is the only reason dispersion can reach a mission metric at
+    all. Burst structure enters through the tail.
     """
-    th = coherence_ratio(p_drop, burst_len, decision_interval)
+    th = coherence_ratio(p_drop, burst_len, lag)
     if th <= 0.0:
         return 0.0
     return (1.0 - p_drop) * math.exp(-1.0 / th)
 
 
-def crossover_burst_len(p_drop: float, decision_interval: float) -> float:
+def crossover_burst_len(p_drop: float, lag: float) -> float:
     """Mean bad-state dwell at which the coherence ratio is exactly one.
 
-    Solving `-1/ln(lam) = tau` for `lam` gives `lam = exp(-1/tau)`, and substituting
+    Solving `-1/ln(lam) = lag` for `lam` gives `lam = exp(-1/lag)`, and substituting
     `lam = 1 - 1/(L(1-p))` gives
 
-        L* = 1 / [ (1-p) (1 - exp(-1/tau)) ].
+        L* = 1 / [ (1-p) (1 - exp(-1/lag)) ].
 
-    The first-order reading `L* ~ tau/(1-p)` is a few percent low and gets worse as tau shrinks,
-    so the exact form is what the registered crossovers are stated at: `L* = 28.1` at `tau = 22`
-    and `L* = 14.4` at `tau = 11`, both at `p = 0.20`. The pair is the falsifier for the claim that
-    theta rather than L is the controlling quantity: a channel with `L = 14` sits at `theta = 0.49`
-    under the slower clock and `theta = 0.98` under the faster one, so the SAME radio crosses the
-    knee when only the operator's decision cycle changes.
+    The first-order reading `L* ~ lag/(1-p)` is a few percent low and worsens as `lag` shrinks, so
+    the exact form is what the registered crossovers are stated at. At `p = 0.20` the two knees of
+    the published operating point are `L* = 54.4` for a vehicle's own failure cycle of 43 steps and
+    `L* = 10.1` for the console's 7.6-step aggregate gap at eight vehicles.
+
+    Note what shortening the backoff does. A CR-17 retry with `rho = 4` cuts the failure cycle from
+    43 to 25 and the within-vehicle knee from 54.4 to 31.9, so a team that closes its reliance loop
+    faster is MORE exposed to the link's burst structure, not less. The mechanism that opens a fold
+    band and the mechanism that makes channel memory visible are the same shortened cycle.
     """
-    return 1.0 / ((1.0 - p_drop) * (1.0 - math.exp(-1.0 / decision_interval)))
+    return 1.0 / ((1.0 - p_drop) * (1.0 - math.exp(-1.0 / lag)))
+
 
 
 def main() -> None:

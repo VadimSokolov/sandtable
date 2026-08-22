@@ -1235,3 +1235,75 @@ than given a battery of its own.
 retrying `tau` steps later, a gap of 22, where the floor never applied. Job 9444501 therefore
 tests CR-19 correctly under the floored code, and CR-20 is a separate cross-vehicle mechanism the
 closed form does not cover.
+
+### CR-19 correction: the lag is the failure cycle, not the decision interval
+
+**Written 2026-08-22 while 9444501 was still running; `hopper/collect.sh` had not yet produced a
+local copy of the log, so no row of it had been read.** This corrects the registration in the
+direction that makes it harder to satisfy, and it was found by reading `c2.py`, not by looking at
+output.
+
+The first registration used `lag = tau = 22`, on the reasoning that a vehicle retries at its next
+decision. That is wrong about this model. Reading the request path: a vehicle whose link fails gets
+`await_until = k + patience` and only then serves its cooldown, so the interval between one
+unanswered request and the same vehicle's next one is
+
+    C = P + tau + 1 = 43 steps,
+
+not 22. And `C` is not a new symbol. It is exactly the numerator of the paper's own collapse span,
+`n* = c mu (P + tau + 1) / d = c mu C / d`, and the fold band of CR-17 is the gap between the
+cycle in the collapsed state and the cycle in the healthy one. **The quantity that governs the
+queue also governs the channel.**
+
+That is a stronger claim than the one it replaces. "`tau` appears in four formulas" invites the
+answer that `tau` is the only timescale in the model, so of course it does. "The failed-request
+cycle `C` sets the collapse span, the width of the bistable region, the backoff floor, and the
+dwell at which a link's burst structure becomes visible" survives that objection, because `C` is a
+derived and physically meaningful quantity, how long a vehicle is out of contact after an
+unanswered request, and each appearance is a different functional role.
+
+**Two knees, not one.** The chain has two readers consulting it at two very different intervals:
+
+| reader | lag | L* at p = 0.20 |
+|---|---|---|
+| a vehicle, blind, no retry | `C = P + tau + 1` = 43 | **54.4** |
+| a vehicle, CR-17 retry at `rho = 4` | `P + rho + 1` = 25 | 31.9 |
+| a vehicle, `tau = 11` | `P + 12` = 32 | 40.6 |
+| the console, eight vehicles | measured mean gap 7.56 | **10.1** |
+| the console, five vehicles | measured mean gap 12.17 | 15.8 |
+| the console, twelve vehicles | measured mean gap 4.32 | 6.0 |
+
+The console knee sits at a far shorter dwell than the vehicle knee, so **as a link's outages
+lengthen the cross-vehicle effect must appear first**. Excesses for the arms submitted:
+
+| L | theta_v (lag 43) | e_v | theta_o (lag 7.56) | e_o |
+|---|---|---|---|---|
+| 4   | 0.062 | 0.0000 | 0.35  | 0.047 |
+| 14  | 0.249 | 0.0143 | 1.41  | 0.395 |
+| 28  | 0.509 | 0.1123 | 2.90  | 0.566 |
+| 60  | 1.105 | 0.3235 | 6.28  | 0.682 |
+| 120 | 2.221 | 0.5100 | 12.63 | 0.739 |
+
+**Amended predictions.**
+
+**H(CR-19a'):** L1 gates somewhere in `L >= 14`, and the first gated arm is driven by the console
+knee (10.1), not the vehicle knee (54.4). Under the old registration the first gated arm was
+predicted at `L = 28`; under the correction it should be `L = 14`.
+
+**H(CR-19d'):** the two knees separate the metrics. Console synchrony bunches arrivals, so it
+should show first in `abandon_queue_frac` (L2). Within-vehicle persistence keeps one vehicle
+degraded across cycles, so it should show in mission success only once `L >= 60`.
+
+**H(CR-19e), new, and the sharpest thing in this correction:** a CR-17 retry at `rho = 4` cuts the
+failure cycle from 43 to 25 and the within-vehicle knee from 54.4 to 31.9, so **a team that closes
+its reliance loop faster is more exposed to the link's burst structure, not less.** The mechanism
+that opens a fold band and the mechanism that makes channel memory visible are the same shortened
+cycle. This is a prediction the running job does not test and a battery is owed.
+
+**What the correction costs me.** The L4 falsifier is weaker than registered. I predicted `L = 14`
+would flip sides of the knee when `tau` halved, on the strength of `theta = tau_corr/tau`. Under
+the correct lag `tau` halving takes `C` from 43 to 32, only a 26% change, because the patience
+window dominates the cycle and dilutes the `tau` dependence: `L*` moves 54.4 to 40.6 and `L = 14`
+stays sub-critical under both clocks. L4 is therefore a weak test of the vehicle knee. It remains a
+real test of the console knee, whose lag scales with `tau` directly, and the honest reading is that
+the registered falsifier was mis-specified and the run will not settle what I said it would.
