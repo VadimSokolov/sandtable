@@ -214,6 +214,14 @@ def main() -> None:
     sf = rows("st-stopf-9443653.out")
     hy = rows("st-hyst-9443432.out")
     df = rows("st-defile-9443710.out")
+    d2 = rows("st-defile2-9443773.out")
+
+    def _e1(td: str) -> float:
+        """The initial-condition interaction at one terrain setting."""
+        a, b, c, d = (row(d2, "E1", arm, td)["vals"] for arm in
+                      ("stag_retry", "burst_retry", "stag_off", "burst_off"))
+        diff = [(w - x) - (y - z) for w, x, y, z in zip(a, b, c, d)]
+        return sum(diff) / len(diff)
 
     def _did(sec: str, n: str) -> tuple:
         """[stag - burst | retry] - [stag - burst | no retry], paired on the shared block set.
@@ -340,6 +348,7 @@ def main() -> None:
         "qFloorTwelve":      f"{paired(row(hy, 'H4', 'stag', '12'), row(hy, 'H4', 'burst', '12'))[0]:+.3f}",
         "qFloorSixteen":     f"{paired(row(hy, 'H4', 'stag', '16'), row(hy, 'H4', 'burst', '16'))[0]:+.3f}",
         "qFloorTwenty":      f"{paired(row(hy, 'H4', 'stag', '20'), row(hy, 'H4', 'burst', '20'))[0]:+.3f}",
+        "qBandGoodHard":     f"{_e1('2.0'):+.3f}",
         "qDefileShort":      f"{paired(row(df, 'D4', 'hard', '4'), row(df, 'D4', 'flat', '4'))[0]:+.3f}",
         "qDefileLong":       f"{paired(row(df, 'D4', 'hard', '20'), row(df, 'D4', 'flat', '20'))[0]:+.3f}",
         "qBandBlind":        f"{paired(row(hy, 'H3', 'stag', 'blind'), row(hy, 'H3', 'burst', 'blind'))[0]:+.3f}",
