@@ -590,6 +590,22 @@ The absolute success rates should therefore be read as comparative, not predicti
 
 We built \sandtable{}, a fast, reproducible, pure-Python mission-level testbed, as the inner-loop companion to the Army's high-fidelity ProjectGL, and used it to produce three decision-relevant maps for human-machine teaming under contested communications: a moving direct-to-supervisory control optimum, a speed-survivability frontier for route choice, and the EW-induced collapse of a sensor-to-shooter chain. Tracing the first of those maps to its cause gave the sharpest result: the operator is a queue with impatient clients, an operator blind to abandonment sustains its own overload past a collapse span given in closed form, and admission control at the console recovers most of what high span costs direct control. On the same core we added an opt-in kill web, suppression, finite munitions, and a belief state that jamming and decoys corrupt, so attrition emerges from the engagement stream and deception and sustainment are first-order effects, with the fixed-Pk baseline recovered exactly when the mechanics are off. Drawing on the Russo-Ukrainian war, we further added an EW-immune command link that holds direct control under jamming, a counter-UAS layer that turns the sensor swarm's monotone upside into an interior optimum in swarm size, and a cost-exchange metric that prices attritable mass, again recovering the prior model exactly when off. The tool obeys a recognized attrition law, runs a full mission in about a tenth of a second, and plugs directly into a Bayesian-optimization and DOE orchestrator, so the next step is to search these design spaces with optimization rather than grids, and to confirm the flagged designs in ProjectGL.
 
+\subsection{The registered-claim ledger}
+\label{subsec:ledger}
+
+Every quantitative claim in Sections~\ref{subsec:queue} through \ref{subsec:attrib} was produced by an unattended search loop under one discipline: a conjecture and a falsifier are written down before the run that tests them, the gate is a paired blockwise contrast at a fixed tier, and a claim that meets its falsifier is retracted rather than salvaged. A reader has no way to tell that loop from a post-hoc one by looking at the results that survived, because both produce surviving results. What distinguishes them is the denominator. Table~\ref{tab:ledger} is the denominator.
+
+Of the ten entries, three thresholds held against falsifiers that could have fired and did not. One mechanism was retracted on its own falsifier while the shape it predicted survived, and is reported that way rather than restated to fit. One rule was refuted on both the metric it was derived for and the metric a sponsor reads, and its revival clause was written in advance and then closed. One dominance claim died and ships as the weaker claim it can support. One conjecture was cut before it ran at all, on the ground that a null on a knob we wrote ourselves, with a range we chose, is not evidence. The last two rows are instruments rather than claims: both were found by adversarial review, one of them in a guard we had written specifically to prevent the error it failed to catch, and they are in the table because an instrument caught by review is the strongest available evidence that the review has teeth.
+
+The point of the table is not that the loop was mostly right. It is that the loop was sometimes wrong, in public, on record, and before the numbers were seen. Nothing in Sections~\ref{subsec:queue} through \ref{subsec:attrib} would look different if we had quietly dropped the four entries that failed.
+
+\begin{table}[H]
+\centering
+\caption{Registered claims, the falsifier declared for each before its run, and what happened. The last two rows are instruments rather than claims. Full text of every registration, including the ones not listed here, is in the repository's conjecture ledger.}
+\label{tab:ledger}
+\input{gen/tab_ledger}
+\end{table}
+
 \subsection{Extensions}
 \label{subsec:extensions}
 
