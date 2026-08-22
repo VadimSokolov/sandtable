@@ -1483,3 +1483,77 @@ decimals, so making same-step transmitters share a fade STRENGTHENS the interact
 registration of "no gated effect" looks wrong, and wrong in the direction Fable predicted when it
 said the floor's real payload was the cohort channel. Every arm in the new batteries carries the
 fix, so the comparison is within-log.
+
+---
+
+## CR-19e REFUTED, and CR-19's core claim survives in half the size I thought
+
+### The refutation, on the falsifier I registered
+
+`st-retryburst-9444791`, n = 5, rung 3, 32 blocks x 64 reps. DiD
+`[ge_retry - bern_retry] - [ge_off - bern_off]` on mission success:
+
+| L | predicted from e(theta_v) | measured | t |
+|---|---|---|---|
+| 4   | -0.000 | -0.0112 | -0.60 |
+| 40  | **-0.159** | -0.1206 | -6.86 GATED |
+| 120 | -0.111 | **-0.1655** | -7.58 GATED |
+
+I registered an INTERIOR MAXIMUM at the straddle and wrote that "a DiD rising monotonically in L
+refutes the mechanism as stated even if every cell gates". It rises monotonically. The
+coherence-excess functional form is the wrong description of this contrast, and I am recording that
+rather than reaching for the reading in which two of three cells agree.
+
+What survives is not nothing. The effect is real and it is the largest in the project:
+`ge_retry - bern_retry` is -0.0996 and -0.1611 at L = 40 and 120, both gated at |t| near 7 and 12,
+while `ge_off - bern_off` is +0.0210 and +0.0044, neither gated. **A team that closes a reliance
+loop loses sixteen points of mission success to a long-dwell link; a team that does not loses
+nothing.** On the tail statistic it is larger still and gates even at the published dwell:
+`wait_p95` moves -0.07, -1.04, -2.44 steps with |t| of 2.1, 24 and 42.
+
+And the first-moment explanation does not reach here. At five vehicles the team is far below
+`n* = 10.08`, so the `d` walk has no cliff to walk toward, and `ge_off - bern_off` confirms it by
+being null at every dwell. **At this span the effect must be structural.**
+
+### CR-19 core claim, decomposed and confirmed at half the size
+
+`st-coherence2-9445040` section N-success, n = 8, rung 3. The `co - bern` column reproduces
+`st-coherence-9444790` L1 to four decimals at all five dwells, which is a cross-job check on the
+block pairing passing exactly.
+
+| L | theta_v | structure (mg - bern) | round-trip bonus (co - mg) | total (co - bern) |
+|---|---|---|---|---|
+| 4   | 0.06 | -0.0024 | -0.0171 | -0.0195 |
+| 14  | 0.25 | -0.0156 | +0.0103 | -0.0054 |
+| 28  | 0.51 | -0.0283 | +0.0024 | -0.0259 |
+| 60  | 1.11 | -0.0225 | **-0.0322** | **-0.0547** |
+| 120 | 2.22 | **-0.0391** | **-0.0352** | **-0.0742** |
+
+The decomposition is additive to the fourth decimal. Both halves are negative and roughly equal at
+the longest dwell, so the confound did not eat the effect, it DOUBLED it.
+
+**I had the bonus's sign backwards.** I predicted `co - mg` positive because a coherent channel
+delivers more round trips. It is negative, and the paper already explains why: `n* = c mu Lambda/d`
+falls as `d` rises, so at a span near the cliff more delivery is more offered load. This is the
+manuscript's own sentence, "jamming raises the threshold, because a dropped request is one the
+operator never has to work", read in the other direction. I should have seen it.
+
+**H(CR-19b) confirmed for the structure half.** With `d` pinned, structure alone is -0.002 at
+`theta_v = 0.06` and -0.039 gated at `theta_v = 2.22`, negative as registered and monotone in
+`theta_v` apart from the L = 60 cell. The observable knee sits above the theoretical `theta_v = 1`:
+L = 60 gives -0.023, below the MPE. So the closed form gets the direction and the ordering and is
+optimistic about where the effect becomes measurable.
+
+### The picture the four batteries make together
+
+| condition | burst effect on mission success |
+|---|---|
+| structure alone, no reliance, away from the cliff | null at every span 5 to 12 (K1) |
+| plus a blind operator near the cliff | -0.039 structure, -0.035 first moment, gated |
+| plus a reliance loop, far below the cliff | **-0.166**, gated at |t| = 11.7 |
+| plus admission control (refund) | **+0.008**, null |
+
+A link's burst statistics are invisible to a team that neither relies on its operator nor lets that
+operator spend slots it cannot use. They become the largest effect in this model the moment a
+reliance loop closes, and they vanish again under refund. That is a claim about WHEN comms fidelity
+has to be modeled, and it is falsifiable in three places at once.
