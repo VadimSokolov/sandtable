@@ -1150,3 +1150,30 @@ the loop open it is unimodal at every terrain setting, 48 of 48 seeds above 0.9 
 none below 0.7 even at 1.0. So the mean moving smoothly is the average of a fraction migrating
 between two branches, not each mission degrading. That is the tipping evidence, and it is stronger
 than the mean contrast that motivated it.
+
+### st-hyst-9443432 H4: the backoff floor confirmed as a measured design rule
+
+Initial-condition gap at five vehicles, retry on, sweeping the backoff:
+
+| retry_backoff | 4 | 8 | 12 | 16 | 20 |
+|---|---|---|---|---|---|
+| gap | **+0.5900** | **+0.2644** | **+0.0413** | +0.0251 | +0.0186 |
+| t | 63.01 | 36.49 | 32.30 | 42.21 | 34.87 |
+
+Bold = gated (the last two fall below the MPE). The band stays reportable through a backoff of
+twelve and stops being reportable by sixteen, and **the predicted floor of 15.33 falls inside that
+interval.** The reviewer registered "open at 4/8/12 and closed at 16/20" before the run, which is
+exactly what happened. This is the one place in the queue thread where a closed form yields an
+actionable setting rather than a description, so its confirmation matters more than its size.
+
+### st-burst-9443645 C2: gated, and quarantined pending the clock check
+
+The difference of differences (bursty minus memoryless, with the reliance loop minus without) is
+-0.2009 / -0.2869 / -0.2114 on operator goodput at rungs 1 / 2 / 3, all gated at 32 of 32 blocks.
+
+**Not reported as a finding.** These are message-clocked runs, and CR-18 shows that clocking
+inflates round-trip delivery, which is extra offered load, which is exactly what pushes five
+vehicles across the fold band. The interaction may be entirely the artifact acting through the
+band that H1 established. `st-bclock-9443926` re-runs it under `channel_clock="step"`; registered
+prediction is a null at every rung. If it survives, burst structure has a channel into this model
+that is not the scalar `d`, and the Fano evidence says it should not.

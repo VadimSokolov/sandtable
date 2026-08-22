@@ -188,6 +188,10 @@ Operator-queue numbers (source: tools/make_queue_numbers.py over report/data/que
 \qBandGoodT = 61.12
 \qBandBelow = -0.008
 \qBandAbove = +0.001
+\qFloorFour = +0.590
+\qFloorTwelve = +0.041
+\qFloorSixteen = +0.025
+\qFloorTwenty = +0.019
 \qBandBlind = +0.590
 \qBandRefund = +0.013
 \qBandAdmit = +0.030
