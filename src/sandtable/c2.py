@@ -89,6 +89,7 @@ class Operator:
     # mean loss into a bistable one. Off by default: retry_prob = 0 draws nothing.
     retry_prob: float = 0.0
     retry_backoff: int = 0         # resolved to decision_interval in `build_c2` when unset
+    retry_spread: int = -1         # <0 keeps the rescale; >=0 sets the backoff jitter in steps
     retry_pending: np.ndarray = None   # set at abandonment, read when the hold expires
     n_retry: int = 0
     # Late-window request accounting (CR-17). Whole-mission goodput averages over the transient,
@@ -160,6 +161,10 @@ def build_c2(scn: Scenario, ent: Entities,
         raise ValueError(f"retry_prob must lie in [0, 1], got {op.retry_prob}")
     if op.retry_backoff < 1:
         raise ValueError(f"retry_backoff must be at least 1 step, got {op.retry_backoff}")
+    op.retry_spread = int(scn.params.get("retry_spread", -1))
+    if op.retry_spread > op.retry_backoff + op.decision_interval:
+        raise ValueError(f"retry_spread {op.retry_spread} exceeds anything the standing interval "
+                         f"could produce; the floor at one step would shift the mean")
     if op.queue_policy not in ("blind", "refund", "admit"):
         raise ValueError(f"queue_policy must be blind|refund|admit, got {op.queue_policy!r}")
     if op.queue_discipline not in DISCIPLINES:
@@ -190,6 +195,33 @@ def _claim(op: Operator, console: int, done: float) -> None:
         op.operator_free_at = done
     else:
         op.crew_free_at[console] = done
+
+
+def _backoff(op: "Operator", cool: int) -> int:
+    """Map the standing jittered interval onto the shorter backoff, without a second draw.
+
+    The default rescales, which is what CR-17 shipped. Rescaling shrinks the ABSOLUTE jitter by
+    `rho/tau` along with the mean: a backoff of 4 against an interval of 22 leaves a spread of
+    about 4 steps where the standing cycle had 22. So a retry does two things at once and the
+    published result cannot tell them apart. It shortens the cycle, which is what opens the fold
+    band, and it also strips out five sixths of the jitter that keeps vehicles a common outage
+    dropped together from coming back together.
+
+    `retry_spread` separates them. Set it and the backoff is `rho + s*u`, with `u` the same drawn
+    integer mapped onto [-1, 1], so the MEAN is held at `rho` while the jitter width is set
+    independently. `s = 0` returns every retrying vehicle after exactly `rho` steps, the strongest
+    possible cohort; `s = tau/2` gives the retry the same absolute spread as the standing cycle.
+    Exactly one integer is drawn either way, so the arms stay paired on a shared seed.
+
+    With `terrain_demand` on, `_reset_cooldown` may compress `cool` below `lo`, which puts `u`
+    under -1. The floor at one step absorbs it; no cell reported here runs both at once.
+    """
+    if op.retry_spread < 0:
+        return max(1, int(round(cool * op.retry_backoff / op.decision_interval)))
+    lo = max(1, op.decision_interval // 2)
+    hi = max(lo + 1, op.decision_interval * 3 // 2)
+    u = 2.0 * (cool - lo) / (hi - lo) - 1.0
+    return max(1, int(round(op.retry_backoff + op.retry_spread * u)))
 
 
 def _reset_cooldown(op: Operator, rng: np.random.Generator, difficulty: float = 0.0) -> int:
@@ -287,10 +319,7 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
             ent.await_until[i] = -1
             cool = _reset_cooldown(op, rng, difficulty.get(i, 0.0))
             if op.retry_pending[i]:
-                # Same jittered integer, rescaled to the shorter backoff: one draw either way, so
-                # the retry and no-retry arms stay paired on a shared seed and the jitter keeps
-                # retrying vehicles from re-synchronizing into a second burst.
-                cool = max(1, int(round(cool * op.retry_backoff / op.decision_interval)))
+                cool = _backoff(op, cool)
                 op.retry_pending[i] = False
             ent.decision_cooldown[i] = cool
             continue

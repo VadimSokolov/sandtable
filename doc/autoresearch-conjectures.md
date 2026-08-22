@@ -1419,3 +1419,67 @@ same thing: under the message clock it is 0.90 at every separation from 0 to 40 
 with unbounded coherence time; under the step clock it decays 1.00, 0.87, 0.77, 0.69 to the chance
 level 0.694 by about ten steps, which is a fade. Both are load-invariant, so the sharper statement
 is the dwell, not the autocorrelation. Captured as a unit test.
+
+---
+
+## CR-21: the retry does two things, and only one of them was named
+
+### The result that forced this
+
+`st-clockfull-9444130` section J1, `operator_goodput`, five vehicles, 32 blocks x 64 reps. The
+difference of differences `[ge_retry - bern_retry] - [ge_off - bern_off]`:
+
+| rung | DiD | t | sign |
+|---|---|---|---|
+| 1 | -0.0617 | -7.59 | 88% negative |
+| 2 | -0.0509 | -7.41 | 91% |
+| 3 | -0.0356 | -13.21 | 100% |
+
+All three gate. The component contrasts say the retry is the whole story: `ge_off - bern_off` is
++0.0008, -0.0037, -0.0079, none of which reaches the MPE, while `ge_retry - bern_retry` is -0.0609,
+-0.0546, -0.0436, all gated. **A bursty link costs a reliant team six points of operator goodput
+and costs a non-reliant team nothing.** J2 says it does not reach mission success (-0.027, -0.028,
+-0.012, t at most 1.57), so this is a queue-level effect that the mission absorbs.
+
+### Why the CR-19 closed form does not explain it
+
+At the published dwell of four steps the within-vehicle excess is `e_v = 9e-5` with the retry and
+`7e-6` without. Six points of goodput cannot come from that. The round-trip bonus works the wrong
+way: it RAISES delivery under a coherent channel, so it would push the contrast positive. There is
+a third mechanism.
+
+### The candidate, and why it was invisible
+
+A retry does two things at once and the published parameterization cannot separate them. It
+shortens the cycle from `P + tau + 1 = 43` to `P + rho + 1 = 25`, which is what opens the fold
+band. And it computes the backoff by RESCALING the standing jittered interval, `cool * rho / tau`,
+which shrinks the absolute jitter by the same factor: the standing cycle draws from a 22-step
+window and the rescaled backoff from a 4-step one. A common-mode outage drops several vehicles at
+once. With the standing cycle they disperse over the next 22 steps; with the rescaled backoff they
+return inside 4 and hit one console as a block.
+
+The comment on that line claimed the opposite, that "the jitter keeps retrying vehicles from
+re-synchronizing into a second burst". It does not. Rescaling a jitter is not preserving it.
+
+`retry_spread` separates them: the backoff becomes `rho + s*u` with `u` the same drawn integer
+mapped onto [-1, 1], so the MEAN is held at `rho` while the width is set independently. Verified to
+machine precision at every width used, and `s = 2` at `rho = 4` reproduces the shipped rescale
+exactly, range [2, 6], so the control nests the published behaviour rather than replacing it. One
+draw either way; byte identity holds; three tests.
+
+### Registered, as `st-cohort-9445208`
+
+**H(CR-21a):** `|DiD|` falls monotonically as `s` widens, and is largest at `s = 0`, where every
+retrying vehicle returns after exactly `rho` steps. Flat in `s` refutes the cohort and means I am
+still missing a mechanism.
+
+**H(CR-21b):** with round-trip delivery pinned by `reply_model="marginal"`, the contrast gets MORE
+negative, not less, because the bonus it removes was working against the measured sign. If instead
+the contrast vanishes, J1 was a first-moment effect all along and the cohort story is unnecessary.
+
+**Standing caveat.** J1 ran before CR-20. Re-running its four arms under the current code moves
+`ge_retry` down by about 0.023 on the first four blocks while `bern_retry` reproduces to six
+decimals, so making same-step transmitters share a fade STRENGTHENS the interaction. My CR-20
+registration of "no gated effect" looks wrong, and wrong in the direction Fable predicted when it
+said the floor's real payload was the cohort channel. Every arm in the new batteries carries the
+fix, so the comparison is within-log.

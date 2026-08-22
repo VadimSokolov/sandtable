@@ -161,3 +161,52 @@ def test_simulator_is_bistable_inside_the_band_and_not_outside_it():
     above = gap(8, True) - gap(8, False)
     assert inside > 0.4                       # two steady states at the same span
     assert abs(below) < 0.05 and abs(above) < 0.05
+
+
+def test_retry_spread_holds_the_backoff_mean_and_sets_only_its_width():
+    """CR-21. The published rescale shrinks the backoff's MEAN and its JITTER by the same factor,
+    so a retry that shortens the cycle also strips out the desynchronization. The control must
+    separate them: identical mean at every width."""
+    from sandtable import c2
+
+    class Op:
+        decision_interval = 22
+        retry_backoff = 4
+        retry_spread = -1
+
+    op = Op()
+    draws = list(range(11, 34))          # the full support of _reset_cooldown at tau = 22
+    rescaled = [c2._backoff(op, c) for c in draws]
+    assert (min(rescaled), max(rescaled)) == (2, 6)
+    base = sum(rescaled) / len(rescaled)
+    for spread in (0, 1, 2, 3):
+        op.retry_spread = spread
+        v = [c2._backoff(op, c) for c in draws]
+        assert abs(sum(v) / len(v) - base) < 1e-9
+        assert max(v) - min(v) == 2 * spread
+    # spread = 2 at rho = 4 IS the published rescale, so the control nests the shipped behaviour
+    op.retry_spread = 2
+    assert [c2._backoff(op, c) for c in draws] == rescaled
+    # and at rho = 12 the width can reach the standing cycle's own 22 steps without moving the mean
+    op.retry_backoff, op.retry_spread = 12, 11
+    wide = [c2._backoff(op, c) for c in draws]
+    assert (min(wide), max(wide)) == (1, 23)
+    assert abs(sum(wide) / len(wide) - 12.0) < 1e-9
+
+
+def test_retry_spread_defaults_off_and_costs_no_extra_draw(skirmish_scenario):
+    """Off by default, and the transform reuses the interval's own draw, so a spread arm and a
+    rescale arm stay paired on a shared seed."""
+    from sandtable.c2 import build_c2
+    from sandtable.scenario import build_entities
+    import numpy as np
+
+    scn = skirmish_scenario.with_params({"control_mode": "direct", "retry_prob": 1.0,
+                                         "retry_backoff": 4})
+    rng = np.random.default_rng(0)
+    op = build_c2(scn, build_entities(scn, rng), rng)
+    assert op.retry_spread == -1
+    scn2 = scn.with_params({"retry_spread": 3})
+    op2 = build_c2(scn2, build_entities(scn2, np.random.default_rng(0)),
+                   np.random.default_rng(0))
+    assert op2.retry_spread == 3
