@@ -73,6 +73,8 @@ class Comms:
     # over the elapsed lag instead. `message` is the default and leaves every recorded number
     # unchanged.
     clock: str = "message"
+    _k: int = 0            # current mission step, set by `set_step`
+    _last_k: int = 0       # step at which the chain was last resolved
 
     def reply_survives(self, rng: np.random.Generator, lag: float) -> bool:
         """Draw the reply's survival, given the request survived and `lag` steps have passed.
@@ -97,6 +99,7 @@ class Comms:
 
     def set_step(self, k: int) -> None:
         """Put the link on its jammed or its standing parameters for step `k`."""
+        self._k = k
         if self.jam_start < 0:
             return
         on = self.jam_start <= k < self.jam_end
@@ -121,6 +124,19 @@ class Comms:
         u = rng.random()
         if self.channel != "gilbert_elliot":
             return bool(u >= self.p_drop)
+        if self.clock == "step":
+            # Time-indexed chain (CR-18). Advance by the number of STEPS since the chain was last
+            # resolved, not by one transition per message. Two requests four steps apart are then
+            # four transitions apart however many other vehicles asked in between, and a chain that
+            # is only consulted rarely has decayed toward stationarity by the time it is, which is
+            # what a real fade does and what the message clock cannot represent.
+            lam = max(0.0, 1.0 - self.p_gb - self.p_bg)
+            decay = lam ** max(1, self._k - self._last_k)
+            self._last_k = self._k
+            p_bad = self.p_drop + (1.0 - self.p_drop) * decay if self._bad \
+                else self.p_drop * (1.0 - decay)
+            self._bad = u < p_bad
+            return not self._bad
         self._bad = (u >= self.p_bg) if self._bad else (u < self.p_gb)
         return not self._bad
 

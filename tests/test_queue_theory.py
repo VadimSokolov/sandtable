@@ -243,3 +243,66 @@ def test_step_clocking_returns_the_handshake_to_independence():
         assert rates["message"] == pytest.approx(qt.two_way_delivery_bursty(p, 4.0), abs=0.01)
         assert rates["step"] == pytest.approx(qt.two_way_delivery(p), abs=0.01)
         assert rates["step"] < rates["message"]
+
+
+def test_the_step_clock_preserves_the_ladder_drop_rate():
+    """A clock change must not become a calibration change.
+
+    The whole Bernoulli-against-bursty comparison rests on the two channels having the SAME mean
+    loss, so time-indexing the chain has to leave the marginal rate on the ladder value. Run the
+    chain one message per step, which is the sparse limit the mission actually operates in.
+    """
+    import sys
+
+    import numpy as np
+
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
+    from sandtable.comms_ew import build_comms
+    from sandtable.scenario import Scenario, load_scenario
+
+    base = load_scenario(pathlib.Path(__file__).resolve().parents[1]
+                         / "scenarios" / "sc_span_control.json")
+    for level, nominal in ((1, 0.05), (3, 0.20), (5, 0.55)):
+        prm = dict(base.params, comms_level=level, channel="gilbert_elliot",
+                   channel_clock="step")
+        c = build_comms(Scenario(**{**base.__dict__, "params": prm}))
+        rng = np.random.default_rng(4)
+        n, lost = 80000, 0
+        for i in range(n):
+            c.set_step(i)
+            lost += not c.delivered(rng)
+        assert lost / n == pytest.approx(nominal, abs=0.01), f"rung {level}"
+
+
+def test_a_rarely_consulted_step_clocked_chain_forgets():
+    """The property the message clock cannot have: a long gap decays toward stationarity.
+
+    Consulted every step the chain is correlated; consulted once every hundred steps it is not, and
+    the loss rate is the same either way. That is the difference between coherence measured in
+    messages and coherence measured in time.
+    """
+    import sys
+
+    import numpy as np
+
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
+    from sandtable.comms_ew import build_comms
+    from sandtable.scenario import Scenario, load_scenario
+
+    base = load_scenario(pathlib.Path(__file__).resolve().parents[1]
+                         / "scenarios" / "sc_span_control.json")
+    prm = dict(base.params, comms_level=3, channel="gilbert_elliot", channel_clock="step")
+    runs = {}
+    for gap in (1, 100):
+        c = build_comms(Scenario(**{**base.__dict__, "params": prm}))
+        rng = np.random.default_rng(9)
+        seq = []
+        for i in range(40000):
+            c.set_step(i * gap)
+            seq.append(not c.delivered(rng))
+        a = np.array(seq, float)
+        # Lag-one autocorrelation of the loss indicator.
+        runs[gap] = float(np.corrcoef(a[:-1], a[1:])[0, 1])
+        assert a.mean() == pytest.approx(0.20, abs=0.01)
+    assert runs[1] > 0.4, "consulted every step, the chain must be strongly correlated"
+    assert abs(runs[100]) < 0.05, "consulted rarely, it must have forgotten"

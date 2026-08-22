@@ -1210,3 +1210,32 @@ the channel.
 ### st-burst-9443645 C3: the interaction on mission outcome, quarantined with C2
 
 -0.0630 / -0.1572 / -0.1191 at rungs 1 / 2 / 3, all gated. Held back for the same reason as C2.
+
+### CR-18 completed: the request draw was still message-clocked
+
+The first repair priced only the reply by its lag. `delivered` still advanced the chain one
+transition per MESSAGE, so two requests from the same vehicle four steps apart were adjacent in
+chain time no matter how much simulated time separated them. The completed repair indexes the chain
+by TIME: `delivered` advances it by the steps elapsed since it was last resolved, so a chain
+consulted rarely has decayed toward stationarity by the time it is consulted. Marginal drop rate is
+unchanged (0.0495 / 0.0995 / 0.2016 / 0.3511 / 0.5494 against nominal), so the two channels still
+differ only in structure, and the default clock is byte-identical across 29 metrics and 32 runs.
+
+**`st-bclock-9443926` J1 refuted the null I registered**, and it ran the half repair. Interaction
+(bursty minus memoryless, with the loop minus without), operator goodput at five vehicles:
+
+| rung | message clock (C2) | half repair (J1) | full repair, 64-seed probe |
+|---|---|---|---|
+| 1 | -0.2009 | **-0.0793** | +0.0131 |
+| 2 | -0.2869 | **-0.0960** | -0.0863 |
+| 3 | -0.2114 | **-0.0560** | -0.0319 |
+
+Bold = gated at full tier. Under the half repair, burstiness alone does nothing (-0.0011 / -0.0074 /
+-0.0136, none gated) while burstiness with the reliance loop is gated at every rung. So burst
+structure does reach this model through something other than the scalar `d`, and it only reaches it
+when reliance closes the loop, which is what the reviewer registered as the one route back.
+
+The 64-seed full-repair column is a probe and nothing more; the C1 lesson applies. `st-clock-9443902`
+and `st-bclock-9443926` were cancelled and superseded by `st-clockfull-9444130`, which runs K1, K2,
+J1 and J2 against the completed model. Registration this time, having been refuted once: the
+interaction SURVIVES at rung 2 and is null at rung 1.
