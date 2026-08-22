@@ -1971,3 +1971,43 @@ non-teleop modes still price a wait flat, so between the two extremes the litera
 is not represented. The honest statement is that the recommendation is measured at both ends of the
 range the literature brackets, flat and full stop, and holds at both, which is a stronger claim
 than measuring it at one interpolated rate that nobody has estimated.
+
+## I28. Giachetti et al. 2012 found this paper's interaction, and called it counterintuitive
+
+**Strong, and it is the best external validation this project has.** It closes the retrodiction
+target opened at line 1257 of this file, though not in the numerical form that was expected there.
+
+Giachetti, Marcelli, Cifuentes and Rojas 2012 (`10.1002/sys.21216`, verified via CrossRef
+2026-08-22; Section 5 read in full text via Scholar Gateway) build an agent-based model of an Army
+human-robot team searching an urban area. It shares nothing with SandTable but its subject: a
+different scenario, a different implementation, a different metric, and a decade earlier. They
+cross team size with how centralized the team's decision authority is, and report
+
+- a significant interaction, `F(1,12) = 9.18, p = 0.010`;
+- under HIGH centralization small teams beat large ones;
+- under LOW centralization the size difference vanishes;
+- the explanation, recovered from their output logs after the fact: large centralized teams "spend
+  more time waiting" and "the subteams are waiting on the commander who has become a bottleneck";
+- and, separately, "given the modeled values of robot neglect time and interaction time, the
+  operator can effectively control only a single robot", which they note agrees with Barnes et al.
+  2006 on a second UGV being at best marginally useful.
+
+**That is CR-25's result and the queue mechanism, obtained independently.** High centralization is
+one server for every decision, which is our direct arm; low centralization removes the server,
+which is our supervisory arm; and their vanishing size effect is our supervisory -0.171 against
+direct control's -0.676. They report the sign, name the mechanism as waiting on a bottleneck, and
+have no way to say where it starts. The closed forms say where.
+
+**What it is not.** It is not a numerical retrodiction, because they publish neither NT nor IT in
+seconds, and the earlier note in this file expected one. The honest statement, which is what the
+manuscript now makes, is that the SIGN of the interaction, the MECHANISM named for it, and the
+DIRECTION of the capacity bound agree, and that no value does.
+
+**Why it matters more than the MAGIC retrodiction.** MAGIC is a capacity number the formula
+reproduces, which tests the arithmetic. This tests the claim: that the span effect is a property of
+a server with abandoning clients rather than of the scenario, the interface, or the operator. An
+independent model with none of our choices produced the same interaction and had to explain it the
+same way. Together the two bracket the span axis from one robot to fourteen.
+
+**Remaining target.** Lewis et al. 2010 (`10.1177/0018720810366859`), 4/8/12 robots with navigation
+binding, still needs source text and is still open.
