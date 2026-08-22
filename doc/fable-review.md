@@ -722,3 +722,227 @@ d-invariant and P-invariant width, the pi and rho edge flips above, and admit's 
   cycle-shortening retry, detectable when pi (tau - rho) >= S/c = 6.67 steps; sane defaults are
   deep inside it; backoff floor tau - S/(c pi) or a console discard rule removes it; verified in
   replica at three (pi, rho) points; build it.
+
+## Round 3 (2026-08-22, repo at 7d53cef)
+
+Read for this round: the CR-17 ledger entry, the st-waitcost-9443162 record in
+experiments/empirical.md, the st-hyst-9443432 registration, and the round-2 resolution notes. No
+new simulator probes were needed this round; the analysis below is worked from the gated tables,
+the levels already sitting in the run logs, and the fold algebra.
+
+### Scorekeeping first, because the record matters
+
+The message says "Your prediction was a null at q_stall=0.50. It is not a null." My registered
+prediction (round 2, section A, cell 1) was scoped: "Published physics, q_stall = 0.50, n = 8 or
+12, C0, admit vs refund. My account: zero within the MDE." The published-physics column gates at
+no q_stall (+0.0093, t=0.89 at 0.50), so that registered cell CONFIRMED. I also wrote "teleop:
+stays gated positive regardless of q_stall," and it did (+0.0459, t=3.72). Both registered
+predictions held. What the sweep refuted is something I implied without registering: my mechanism
+account attributed the teleop margin to stopped motion alone ("the moving-time conversion... is
+why the same mechanism is worth about one point in one setting and eight in the other"), which
+predicts a FLAT teleop profile in q_stall. The profile halves. The channel I missed: a stopped
+vehicle still fights. control_quality feeds engagement on both sides (shooter effectiveness q,
+target exposure 2 - q), so q_stall prices the combat and survivability of a vehicle that is
+stopped inside weapon range, and refund's vehicles spend P steps per refusal in that state where
+admit's spend one. My round-2 sentence "the exposure and effectiveness part can be nulled by
+q_stall, the motion part cannot" had the pieces and I still dropped the first one when I summed
+the teleop margin. Half credit, and the sweep design that caught it was better than my cell.
+
+One registration-hygiene note that cuts at both of us: the empirical.md registration framed the
+alternatives as "monotone decline to zero (wait-cost reading) or flat (artifact reading)."
+That is a false dichotomy as registered; the hypothesis family always included "declines to a
+positive floor set by a second channel," which is what happened. Register the lattice, not the
+poles, or the outcome gets narrated as refuting a reading nobody fully held.
+
+### 1. The three-way decomposition: directionally sound, not yet gateable, and the quality term is mislabeled
+
+The inference chain has three specific defects.
+
+First, the middle term (stopped motion, 0.0459 - 0.0093 = 0.037) subtracts across two different
+response surfaces. The two physics settings differ in baseline success (published sits near 0.83
+against teleop near 0.70), and a bounded metric compresses margins differently at different
+operating points, so a cross-physics difference at matched q_stall is not the stop channel alone
+even if the behavior layer were otherwise inert. Second, the residual (0.0093, t=0.89) is not
+gated, and a decomposition that presents an ungated quantity as a 12 percent component launders
+noise into structure. Third, the quality term (0.0801 - 0.0459 = 0.034) is a difference of two
+gated numbers, which is not itself gated: from the reported t values the unpaired combination
+gives se about 0.020 and t about 1.68, just under the contract's 1.70. The arms share block
+seeds, so the paired difference-of-differences will do better than that, but it has to be
+computed from the per-block values, not asserted from the headline subtraction.
+
+The direct design, which fixes all three at once: a 2x2 factorial INSIDE the teleop stack, using
+the knob that already exists for exactly this purpose. behavior.py takes teleop_stop, and False
+reproduces the pre-CR-2 waiting-means-driving behavior while keeping everything else of the
+teleop configuration. Arms: {stop=True, stop=False} x {q_stall=0.30, 0.50}, each measured as
+admit minus refund on shared block seeds; st-waitcost already supplies the two stop=True cells,
+so this is two new full-tier runs. Gate three contrasts by paired difference of differences: the
+stop main effect at q_stall=0.50, the quality main effect at stop=False, and the interaction.
+
+Registered predictions for that factorial, from the four cells already known, assuming the
+stop=False column reproduces the published column (which is itself the consistency check that
+CR-2's layer has no second live channel):
+
+    base (stop=False, q=0.50):     +0.009   not gated
+    quality main (stop=False):     +0.005   not gated
+    stop main (q=0.50):            +0.037   gated
+    quality x stop interaction:    +0.029   gated
+    sum:                            0.080   (reconstructs the +0.0801 cell exactly)
+
+If those land, the correct labels are: the notification increment under teleoperation is about
+half stopped motion and about a third quality-of-waiting-WHILE-STOPPED. There is almost no
+standalone quality-of-waiting channel (the published-physics sweep already says so: +0.016 to
++0.009, never gated). The current three-way split books the interaction silently into the quality
+term, and "quality of waiting, 43 percent" overstates what a moving vehicle's stall quality is
+worth by roughly a factor of seven. Same arithmetic, different ontology, and the factorial gates
+every piece of it.
+
+### 2. The opposite-sign sweep is floor-pinning, and it dissolves when you print the levels
+
+refund - blind rises with q_stall under teleop (0.596, 0.665, 0.750) and falls under published
+physics (0.306, 0.223, 0.177). The resolution: a difference of bounded metrics inherits the slope
+of whichever arm has headroom.
+
+Under teleoperation, blind is deadline-pinned. Its tempo is set by holding (binary stopped, not
+quality-scaled), the formation cannot finish inside 1800 s no matter what quality its waits carry,
+and its success sits near 0.01 to 0.03 at every q_stall; the only thing q_stall buys a pinned arm
+is marginal combat while stopped. So the teleop difference tracks the refund LEVEL, and refund's
+level rises with q_stall because its vehicles spend roughly a third of the mission stopped inside
+red weapon range, where q_stall prices both their fire (q) and their exposure (2 - q). Under
+published physics both arms are interior, and the arm with more stall time (blind waits about 46
+percent of live steps against refund's roughly 33) gains more when waiting gets cheaper, so the
+gap compresses as q_stall rises. Opposite signs, one mechanism apiece, no paradox.
+
+The zero-compute check, from logs you already have: print the six levels behind each difference.
+Predictions: blind-teleop spans at most about 0.03 across the whole sweep (pinned); refund-teleop
+spans about 0.15; blind-published spans about 0.19 and more than refund-published spans. If
+blind-teleop instead moves substantially with q_stall, my explanation is wrong. And the general
+rule this buys the paper: never publish a contrast sweep without its level curves; near a floor or
+ceiling the contrast's slope belongs to the unpinned arm, which is also why "refund - blind falls
+with q_stall" under published physics is not evidence against the queue mechanism, just the
+familiar fact from round 1 that stall pricing carries part of blind's penalty.
+
+### 3. CR-17's a_h correction: accepted, and here is the tightening it still needs
+
+You are right that my round-2 healthy edge was the fluid a -> 0 limit and overstates the observed
+edge; at C0 it predicted retry-invariant n_h = 6.45 and the simulator kills the healthy branch at
+n=6. The correction direction is right. Three tightenings before it goes anywhere near the paper:
+
+1. a_h is endogenous, and the 0.222 you fed in is the retry-OFF abandonment at n=6. With retry
+   on, near-edge abandonment triggers retries, which raise load, which raises abandonment: the
+   healthy branch's true state solves a = A(n, a), and the branch dies where the stable root of
+   that map vanishes (a saddle-node in a at fixed n), which is generally BELOW the frozen-a_h
+   estimate. So publish the edges as a bracket: n_c exact (the collapsed branch has a = 1 by
+   definition, no approximation), n_h in [measured, frozen-a_h estimate, fluid bound] with 5.85
+   the middle member, not "the" value.
+2. "Jamming moves the band but does not widen it" holds only at the a_h floor. With endogenous
+   a_h(n, d) the width picks the link back up. State it as a floor property or the first
+   independent-drop sweep will falsify the sentence as written.
+3. The 15.33 backoff floor is conservative under the correction (a_h > 1 - d shrinks the width,
+   so the true floor is lower). That is the safe direction for a design rule, and worth saying:
+   the rule as published cannot under-protect.
+
+One ABM-specific channel neither formula contains: attrition is load shedding. A dead vehicle
+leaves the queue, so inside the band the collapsed branch must survive its own casualties to stay
+locked. At n=4 (formally inside (3.75, 5.85)) a single loss drops the team below n_c = 3.75 and
+the queue heals; at n=5 it takes two. Registered prediction for st-hyst H1: the
+difference-of-differences at n=4 is smaller than at n=5, even though both spans are inside the
+deterministic band. If H1 instead shows n=4 as bistable as n=5, the attrition-healing channel is
+weaker than I think. Also registered: H3's refund cell gates as band-closed (the local -0.078 is
+noise; refund never claims infeasible work, its backlog is bounded, same argument that made admit
+retry-proof in my round-2 replica), and H4 opens at rho = 4, 8, 12 and closes at 16, 20, with the
+transition between 12 and 16 exactly where pi(tau - rho) crosses one service time.
+
+### 4. Question 1: a finding, not a retraction, but do not enthrone the synchronized start either
+
+The retraction worry is mechanical, and it closes mechanically. Every published gated cell ran
+retry-off. Retry-off is monostable: proved by the round-1 drift argument (abandonment lengthens
+cycles, the backlog field is monotone, one attractor per n), tested by CR-13 (stagger moved n=8
+goodput 0.01 to 0.05), re-tested by your own retry-off row this round (n=5: 0.960 burst against
+0.978 staggered). In a monostable system the initial condition cannot select a branch, so no
+published number is an artifact of the start; the start only shaded transients, which CR-13
+already priced. CR-17 is therefore a new finding about a new, opt-in feedback loop, not a
+retraction. If you want that bulletproof rather than argued, one full-tier stagger replication of
+G1 and G4 closes it forever; the proxy-tier version in the round-1 ledger already points the
+right way. What must NOT happen: the ledger sentence "the published configuration uses the
+synchronized start; inside the band, that is the initial condition that lands on the collapsed
+branch" migrating into the paper without the retry-off qualifier attached, because as a bare
+sentence it insinuates exactly the artifact reading you are worried about, for cells where no
+band exists.
+
+But the question "is the synchronized start the defensible default" is the wrong question, and
+answering it either way loses. Zero-dispersion phase lock (every cooldown initialized to zero) is
+a numerical artifact; a formation crossing the line of departure together is real but has
+seconds-to-minutes of natural spread; neither makes a principled default INSIDE a fold, where
+there is no single number to publish at all. The move that survives review: stop treating the
+burst as an initial condition and model it as what it physically is, a correlated demand event
+with a size, a contact, a phase line, a defile entry, an obstacle. The onset arithmetic is
+already in the model's constants: k simultaneous requests serialize on the console, the j-th
+reply lands at jS + 2*ell, so abandonment begins at bursts of k > (P - 2*ell)/S, which is 3 at
+the operating point, and inside the band the retry cascade locks anything much past onset. A
+fire-team-sized subset of an eight-vehicle formation asking together is enough, which is the
+strongest form of the finding, and it converts the arbitrary-IC objection into a measured basin
+boundary (critical burst size against span), which is a deliverable, not an embarrassment.
+Inside the band, report branch-conditional pairs plus that boundary, never one number.
+
+And the demonstration that ends the argument, because it has no artificial initial condition in
+it at all: terrain_demand plus retry, staggered start, n=5. The column starts healthy, enters the
+defile, the ground itself generates the correlated burst (CR-15 already showed the defile is a
+burst generator), and the team either locks into collapse and does not recover after the ground
+eases, or it does not. If that runs the way the band says, it is the manuscript figure: endogenous
+hysteresis, terrain in, no knob touched mid-run.
+
+### 5. Question 2: subsection yes, under four conditions, and one clause to fix
+
+The fold earns a subsection IF st-hyst gates, for three reasons that are about the paper and not
+about the simulator: it is the paper's first genuinely dynamical result (everything else is
+steady-state); its remedies are closed-form interface requirements (a backoff floor, a discard
+rule) in exactly the genre the paper already trades in; and it is the first crisp qualitative
+handoff to the high-fidelity tier: "same burst, two outcomes, which branch does ProjectGL land
+on" is precisely the kind of cheap, sharp prediction the two-tier workflow exists to hand over.
+
+The conditions. First, scope the disturbance. Your own negative result shows the most obvious
+military disturbance, a transient jam, UNLOADS the queue and cannot tip it; publish that
+alongside, because it kills the likeliest misreading and it is independently interesting ("EW
+cannot tip you into locked collapse; your own tasking discipline can"). "Brief disturbance" as
+written invites the jam reading; say demand burst. Second, fix "the fix is a backoff floor rather
+than more operators": staffing DOES fix it, both edges scale with c, so a second console moves
+the whole band above the operating span; discipline removes the band at software cost while
+staffing relocates it at people cost. "Before," not "rather than," and it then slots into the
+paper's existing ordered guidance without contradiction. Third, the realism limitation must
+mirror the queue_policy one: which retry behavior fielded clients implement (firmware for UGVs,
+procedure for crews) is an observation this model cannot supply; the claim is conditional on an
+undisciplined loop existing. Fourth, the phenomenon has a literature: bistability from retrials
+and reattempts is known in retrial-queue and random-access work (the redial-storm and ALOHA
+family). Cite it and claim the placement (span-of-control terms, closed-form edges, interface
+remedies, HMT reading), not the fold itself; a queueing referee will find the lineage in minutes.
+
+On "explains why a team that was working can stop working after a brief disturbance and not come
+back": scoped to demand bursts and stated as a candidate mechanism, that is not overreach,
+because it comes with a falsifiable telemetry fingerprint that distinguishes locked congestion
+from the rival explanations (fatigue, damage, degraded comms): console utilization pinned near
+one, goodput near zero, and per-vehicle request rate ELEVATED at roughly d/(P + 1 + rho) against
+the healthy d/(W + 1 + tau). A team that stopped because it is overwhelmed asks more often, not
+less, while accomplishing nothing, and that signature is checkable in any exercise log that
+records requests. Put the fingerprint in the subsection and the operational reading is a
+hypothesis with a test, not a metaphor.
+
+### Round 3 in one line each
+
+- Scorekeeping: both of my registered cells confirmed; what failed was an unregistered implication
+  (flat teleop profile), and the miss was the combat channel of q_stall for stopped vehicles.
+- Decomposition: directionally sound, not gateable as built; run the 2x2 teleop_stop factorial
+  (two new runs), predicted split: base +0.009, quality main +0.005, stop main +0.037,
+  interaction +0.029; the real channel is quality-of-waiting-while-stopped.
+- Opposite signs: floor-pinning; teleop blind is deadline-pinned so the contrast inherits
+  refund's positive q_stall slope, published physics compresses toward the arm that waits more;
+  print the six levels and it dissolves.
+- CR-17 algebra: a_h correction accepted; a_h is endogenous so publish n_h as a bracket, scope
+  the jamming-width claim to the floor, note 15.33 is conservative; attrition heals the band from
+  below, predict weaker bistability at n=4 than n=5.
+- Q1: finding, not retraction (published cells are retry-off and monostable, mechanically
+  closed); but recast the burst as a sized demand event with onset k > (P - 2*ell)/S = 3, and run
+  the defile-tips-the-team demo for an IC-free demonstration.
+- Q2: subsection yes if st-hyst gates, with the jam-unloads negative published alongside,
+  "before more operators" not "rather than," the retry-realism limitation, the retrial-queue
+  lineage cited, and the utilization-high/goodput-zero/request-rate-elevated fingerprint that
+  makes the operational reading falsifiable.

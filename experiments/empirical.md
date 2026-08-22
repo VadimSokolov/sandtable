@@ -968,3 +968,18 @@ both arms, and the arm with more waiting (blind, +0.281) gains slightly more tha
 less (refund, +0.250), so the gap narrows. Note also that refund's goodput is flat across the
 sweep (0.801 / 0.797 / 0.792) while its success rises by 0.19: `q_stall` prices the consequence
 of waiting, not the amount of it.
+
+**Correction (same day).** The three-way split of the notification increment (quality of waiting
+0.034, stopped motion 0.037, residual 0.0093) was published to the manuscript and then withdrawn
+from it. Review found it is not gateable as built: the stopped-motion term subtracts the
+published-physics arm from the teleoperation arm at matched `q_stall`, but those arms differ in
+two things at once (the behavior layer is absent under published physics AND `teleop_stop` is
+off), so the difference crosses two response surfaces and isolates neither factor. The residual
+was ungated noise reported as a 12% component. The manuscript now reports the sweep and the
+conditional it supports, and no decomposition.
+
+The clean design is a 2x2 factorial inside the teleoperation stack (`teleop_stop` x `q_stall`,
+with `blue_behavior="auto"` throughout), submitted as `st-stopf-9443653`. Registered predictions,
+from the reviewer, before the run: base +0.009, quality main +0.005, stop main +0.037, interaction
++0.029, the substantive claim being that the interaction is the largest single term, so the channel
+is quality-of-waiting-while-stopped rather than quality of waiting.

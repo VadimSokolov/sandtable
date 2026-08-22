@@ -293,8 +293,6 @@ def main() -> None:
         "qNotifyTeleFreeT":  f"{_wc('W2', '0.5')[1]:.2f}",
         "qNotifyPubFree":    f"{100 * _wc('W1', '0.5')[0]:+.1f}",
         "qNotifyPubFreeT":   f"{_wc('W1', '0.5')[1]:.2f}",
-        "qWaitQuality":      f"{100 * (_wc('W2', '0.3')[0] - _wc('W2', '0.5')[0]):.1f}",
-        "qWaitMotion":       f"{100 * (_wc('W2', '0.5')[0] - _wc('W1', '0.5')[0]):.1f}",
         "qServedRefund":     f"{_sps['refund']:.4f}",
         "qServedAdmit":      f"{_sps['admit']:.4f}",
         "qFanClassic": f"{_book['classic']:.2f}",
