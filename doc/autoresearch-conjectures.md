@@ -2313,3 +2313,44 @@ quality. Saying why is what stops it reading as too good to be true.
 **Scope, not error.** The 48-seed pilot at C3 showed the refund ordering wobbling in sign. The
 shipped claim is at C0 and n = 8, where it does not. That stays in the ledger as a scope boundary:
 the invariance is asserted at the operating points the paper quotes, and not swept.
+
+## CR-26 VERDICT: prediction 1 refuted, and the truth is sharper than the prediction
+
+*Read 2026-08-22 from `st-aimd-9446095`, full tier, 32 blocks of 64.*
+
+**Prediction 1 is REFUTED as written.** I predicted the notification's share,
+`(aimd - refund)/(aimd - blind)`, would exceed 0.5 at the collapsed spans. On goodput at rung 0 it
+runs 0.097, 0.087, 0.139, 0.195 at n = 6, 8, 10, 12. Nowhere near. The share statistic was the
+wrong instrument and the run says why: at those spans the no-response share is NEGATIVE, running
+-0.082, -0.117, -0.213, -0.301, because `admit` is WORSE than `refund` there. A ratio whose
+numerator changes sign cannot measure a share, and I should have seen that before registering it.
+
+**What the negative share means is the actual result, and it is better than the one I predicted.**
+Telling the requester is not a small positive increment over freeing the slot. Without a response
+rule it is **actively harmful** at every span past collapse: on goodput at rung 0, `refund` gives
+0.917, 0.800, 0.683, 0.579 at n = 6, 8, 10, 12 while `admit` gives 0.905, 0.734, 0.574, 0.449. The
+mechanism is the one CR-26 was registered on: a refused vehicle goes autonomous sooner and then
+returns on exactly the same standing cadence, so the notification manufactures requests faster
+without changing the rate at which they can be served. The console is telling vehicles to come back
+sooner and calling it admission control.
+
+**Prediction 2 HOLDS, and it is what ships.** `aimd` beats plain `admit` on goodput at every span
+past collapse: +0.126 at n = 8 (t = 111.9), +0.210 at n = 10 (t = 117.9), +0.268 at n = 12
+(t = 166.1), all 32/32. Below collapse it costs nothing: at n = 4 the difference is -0.0003
+(t = -1.3, 13/32) on goodput and -0.012 (t = -0.7, 13/32) on success. A vehicle that is never
+refused never halves anything, exactly as registered. At n = 6, on the threshold itself, the gain
+is +0.029 at t = 42.5, which sits at the minimum practical effect and is reported as the boundary
+case it is. On mission success the gain gates at n = 10 rung 0 (+0.044, t = 4.0, 24/32) and at
+n = 8 and 10 on rung 2 (+0.033 and +0.035), and falls below the minimum effect at n = 12 where
+every arm is already near ceiling.
+
+**Neither falsifier fires.** (i) `aimd` is gated-better than `admit` at many spans. (ii) `aimd` is
+not gated-worse than `admit` below the collapse span on any of the four metric-by-rung cells.
+
+**What this does to the paper.** The manuscript currently says admission control has two halves and
+that telling the requester is the smaller one. That sentence is wrong in a way that matters: the
+second half is not smaller, it is negative, unless the vehicle has a rule for consuming it. The
+correct statement is that a congestion signal is worth nothing until something responds to it and
+worth a great deal once something does, which is the Floyd and Fall reading the conjecture was
+registered on. This is the first mechanism added to the model because a literature said something
+was missing, and it is now also the one that changed a published claim.
