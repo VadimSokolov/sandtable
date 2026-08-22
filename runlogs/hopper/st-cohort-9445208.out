@@ -1,0 +1,6 @@
+# host=hop044.orc.gmu.edu job=9445208 battery=cohort jobs=16 blocks=0-31 reps=64
+# code=df745f44e48afdd1
+OK   tamper guard: 2 frozen path(s) unchanged, 32 seeds fixed at [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+# start 2026-08-22T19:32:15Z
+### BATTERY cohort START
+### P1 does widening the backoff jitter dissolve the interaction? (rho=4, queue)

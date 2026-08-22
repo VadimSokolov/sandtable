@@ -1306,3 +1306,80 @@ E1 did for H2.
 `hopper/collect.sh` rsyncs on a schedule and can copy a file a job is still writing. A partial log
 is indistinguishable from a complete one by inspection: a half-written section just has fewer rows.
 `tools/ar_contrast.py` now warns when a log lacks the runner's completion marker.
+
+## 2026-08-22 (cont.) CR-18 settled, CR-19 registered and twice corrected, CR-21 opened
+
+### `st-clockfull-9444130` (32 blocks x 64 reps, sc_span_control) SETTLES CR-18
+
+**K1**, rung 3, direct, spans 5-12, mission success. Against Bernoulli at the same marginal rate:
+
+| span | ge_step - bern | ge_msg - bern |
+|---|---|---|
+| 5  | -0.0156 (t=-1.04) | +0.0288 (t= 1.85) |
+| 6  | +0.0137 (t= 0.92) | +0.0039 (t= 0.27) |
+| 7  | +0.0029 (t= 0.17) | -0.0171 (t=-1.09) |
+| 8  | +0.0044 (t= 0.34) | **-0.0488 (t=-3.23) GATED** |
+| 9  | -0.0078 (t=-0.44) | **-0.0522 (t=-3.82) GATED** |
+| 10 | -0.0020 (t=-0.18) | -0.0293 (t=-2.32) |
+| 11 | +0.0273 (t= 2.62) | +0.0186 (t= 1.79) |
+| 12 | +0.0034 (t= 0.41) | +0.0005 (t= 0.06) |
+
+Under the time-clocked chain the burst channel is indistinguishable from a memoryless one at every
+span. Every burst result this loop produced before CR-18 was a clocking artifact.
+
+**K2**: switching the clock on a memoryless channel is 0.0000 at every rung, 32 of 32 blocks.
+
+**J1** `operator_goodput`, n=5, DiD `[ge_retry - bern_retry] - [ge_off - bern_off]`: -0.0617
+(t=-7.59), -0.0509 (t=-7.41), -0.0356 (t=-13.21) at rungs 1, 2, 3. All gate. Components:
+`ge_off - bern_off` = +0.0008, -0.0037, -0.0079 (none reaches the MPE); `ge_retry - bern_retry` =
+-0.0609, -0.0546, -0.0436 (all gate). **J2** on success: -0.027, -0.028, -0.012, none gates. A
+queue-level effect the mission absorbs. Opened CR-21.
+
+Ran before CR-20. Re-running the four arms under current code reproduces `bern_retry` to six
+decimals (0.368844, 0.441091, 0.400771, 0.426927) and moves `ge_retry` DOWN by about 0.023, so
+sharing a fade between same-step transmitters strengthens the interaction.
+
+### `st-bandfig-9444298` COMPLETE, spans 3-9 at full resolution
+
+DiD `[stag - burst | retry] - [stag - burst | no retry]`, gated only at five vehicles:
+goodput +0.5722 (t=61.12, 32/32), success +0.3130 (t=18.22, 32/32). Seven vehicles, never measured
+before and only interpolated, is -0.0034 on success and -0.0195 on goodput. Nine is +0.0000. The
+band is narrower than Equation~\ref{eq:band} predicts, not wider. Figure `band.pdf` and
+`\label{fig:band}` added; pre-flight PASS 5 of 5.
+
+### `st-coherence-9444790` (n=8, rung 3) PARTLY CONFOUNDED, one strong cell
+
+L1 `ge(L) - bern` on success: -0.020, -0.005, -0.026, **-0.055**, **-0.074** at L = 4, 14, 28, 60,
+120; the last two gate. L2 on `abandon_queue_frac`: +0.049, +0.123, +0.195, +0.276, +0.334, ALL
+gate with t from 22 to 101 and 32 of 32 blocks.
+
+**These are not attributable to structure.** The coherent reply raises round-trip delivery from
+0.640 to 0.789 across the sweep, so `n* = c mu Lambda / d` falls from 10.08 to 8.17 and eight
+vehicles walk from 0.79 to 0.98 of the collapse span. The sweep moves the first moment.
+
+**L3 is the exception and the strongest cell of the day.** At L = 120:
+
+| contrast | value | t | gate |
+|---|---|---|---|
+| `ge120_blind - bern_blind` | -0.0742 | -5.43 | GATED |
+| `ge120_ref - bern_ref` | +0.0083 | 0.59 | no |
+| `ge4_ref - bern_ref` | -0.0039 | -0.34 | no |
+| `bern_ref - bern_blind` | +0.0229 | 1.45 | no |
+| **policy interaction (DiD)** | **-0.0825** | **-3.87** | **GATED** |
+
+A long-dwell bursty link costs a blind operator seven points of mission success and a refunding
+operator nothing. Refunding on a memoryless link buys 2.3 points and does not gate. **The value of
+refund is not a constant; it is a function of how bursty the link is.** The DiD differences the
+`d` shift out to first order, since it is common to both policies, but an alternative survives:
+refund sits further from the cliff and is less sensitive to the same shift. `st-policyburst-9445271`
+settles it with a d-pinned arm and a span sweep.
+
+L4 (tau = 11, n = 6, matched at 0.80 n*) gates at L = 28 (-0.032) and L = 60 (-0.057). It does not
+discriminate the two stories, as registered: the relative position n/n* is within 0.01 of the
+tau = 22 cells at every dwell.
+
+### In flight
+`st-coherence2-9445040` (structure against round-trip bonus, decomposed; plus the patience sweep
+that separates the Lambda-form knee from a tau-form one), `st-retryburst-9444791` (CR-19e, the
+interior maximum), `st-cohort-9445208` (CR-21, the backoff-jitter dose response),
+`st-policyburst-9445271`.
