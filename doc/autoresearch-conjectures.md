@@ -1612,3 +1612,54 @@ program can compute: **take your collapse span, divide by the round-trip deliver
 actually achieves rather than its nominal drop rate, and check whether your reliance loop has moved
 it below your staffing.** The two design levers, backoff length and admission control, are the two
 terms of the same fraction.
+
+---
+
+## CR-22 CONFIRMED, and it yields a sign flip rather than a penalty
+
+`st-crossing-9445405` section R1, mission success, rung 3, 32 blocks x 64 reps.
+
+| n | ge_retry - bern_retry | ge_off - bern_off |
+|---|---|---|
+| 3  | +0.0103 | +0.0327 (t=2.39) |
+| 4  | +0.0103 | **+0.0371 GATED** |
+| 5  | **-0.1611 GATED** (t=-11.68, 32/32) | +0.0044 |
+| 6  | **-0.1343 GATED** (t=-9.24) | +0.0039 |
+| 7  | **-0.0327 GATED** | **-0.0654 GATED** |
+| 8  | +0.0098 | **-0.0742 GATED** |
+| 10 | +0.0020 | -0.0283 |
+
+**The registered shape holds.** I registered "an interior maximum in span at five, null at three and
+four, decaying to null by seven or eight, refuted by monotone growth in span." The retry arm is
++0.010, +0.010, -0.161, -0.134, -0.033, +0.010, +0.002. That is the interior maximum, at the span
+the closed form named before the run.
+
+**And the result is better than the one I registered.** Both arms show a SIGN FLIP, not a penalty.
+A bursty link **helps** a team below its collapse span and **hurts** one above it, because the only
+thing burst structure does to the first moment is raise round-trip delivery, and delivery is a
+benefit when the console has slack and a cost when it does not. This is the manuscript's own
+sentence about jamming raising the threshold, run in reverse and measured across a span sweep.
+
+The two arms cross at different spans, and the offset is the whole mechanism:
+
+    n_c = c mu (P + rho + 1) / d,     bern 5.86 against ge 4.81 with a retry,
+                                      bern 10.08 against ge 8.27 without one.
+
+The measured crossings are between 4 and 5 with the retry and between 6 and 7 without it. The
+retry's arithmetic is close (4.81 to 5.86 predicted, 4 to 5 measured, and the self-consistent
+`d` puts it at 5.07); the no-retry arm crosses about two vehicles earlier than 8.27 predicts, which
+is the approximation in the queueing delay showing itself and is the honest size of the error.
+
+**What it is worth saying to a sponsor.** Not "bursty links are bad". Rather: a link whose outages
+are long relative to your handshake **raises** the fraction of requests that complete, and whether
+that helps or hurts depends entirely on which side of your own collapse span you are staffed. And
+closing a reliance loop moves that crossover **down by about three vehicles**, so the same radio
+that was an asset at six vehicles becomes a liability at five once the crew starts re-asking.
+
+### What this cost, recorded
+
+Three mechanisms were proposed for one contrast. Two were refuted on their own registered
+falsifiers, the coherence excess by a monotone rise where it predicted an interior maximum in
+DWELL, and the retry cohort by a flat dose response where it predicted a decline. The third was
+registered before its run and confirmed on the shape it predicted in a variable never swept before.
+The two refutations are the reason to believe the third: it was not the first story that fit.

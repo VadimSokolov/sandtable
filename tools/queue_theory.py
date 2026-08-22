@@ -213,7 +213,7 @@ def backoff_floor(service_rate: float, decision_interval: float, retry_prob: flo
 
 def solve(n: int, latency: float, p_drop: float, service_rate: float = 0.15,
           patience: float = 20.0, decision_interval: float = 30.0,
-          refund: bool = False, iters: int = 400) -> dict:
+          refund: bool = False, iters: int = 400, burst_len: float | None = None) -> dict:
     """Fixed point for goodput and mean reply time at one operating point.
 
     The cycle length depends on the wait, the wait depends on the arrival rate, and the arrival
@@ -225,6 +225,21 @@ def solve(n: int, latency: float, p_drop: float, service_rate: float = 0.15,
     predicted goodput is conservative near the threshold and exact away from it. The collapse
     threshold itself, which is the object of interest, involves only mean rates and is not
     approximate. `queue_only_sim` is the exact check.
+
+    `burst_len` closes a second loop, and it turns the other way from the first. On a coherent
+    channel the round-trip delivery is `d = (1-p)[1 - p(1 - lam^lag)]`, which depends on the reply
+    lag, which depends on the load. So `d` is not a constant of the operating point: as a team
+    slides toward collapse its waits lengthen, `lam^lag` falls, `d` slides back toward `(1-p)^2`,
+    and `n_c = c mu Lambda / d` RISES away from the team. That is negative feedback, and it is the
+    opposite sign to the reliance loop of CR-17, where collapse shortens the cycle, which lowers
+    `n_c` and deepens collapse. Two loops through one threshold, one opening a fold band and one
+    damping it. Measured on the live model at rung 3, a 120-step dwell and a 4-step backoff: the
+    mean reply lag runs 13, 51, 95 and 247 steps at four, five, six and eight vehicles, so the
+    realized `d` runs 0.780, 0.740, 0.715, 0.679 and `n_c` runs 4.81, 5.07, 5.24, 5.52 instead of
+    sitting at the 4.81 a static reading gives.
+
+    Leave it `None` for a memoryless channel, where `d` has no lag dependence and the loop does
+    not exist.
     """
     S = 1.0 / service_rate
     d = two_way_delivery(p_drop)
@@ -254,6 +269,11 @@ def solve(n: int, latency: float, p_drop: float, service_rate: float = 0.15,
         served_wait = min(reply, patience)
         cycle_new = d * (p_s_new * served_wait + (1.0 - p_s_new) * patience) \
             + (1.0 - d) * patience + decision_interval
+        if burst_len is not None:
+            # The coherent-channel loop, damped like the other two so the map cannot ring.
+            lam = max(0.0, 1.0 - 1.0 / (burst_len * (1.0 - p_drop)))
+            d_new = (1.0 - p_drop) * (1.0 - p_drop * (1.0 - lam ** max(1.0, reply)))
+            d = 0.5 * d + 0.5 * d_new
         p_s = 0.5 * p_s + 0.5 * p_s_new
         cycle = 0.5 * cycle + 0.5 * cycle_new       # damped, so the map cannot ring
     return {"regime": "stable", "goodput": d * p_s, "rho": rho, "reply": reply,
