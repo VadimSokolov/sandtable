@@ -82,6 +82,7 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     cov_sum = 0.0
     cov_steps = 0
     for k in range(n_steps):
+        comms.set_step(k)                       # no-op unless the scenario declares a jam window
         if op is not None:
             c2.step(ent, op, comms, scn, k, rng, world)
         if bhv is not None:

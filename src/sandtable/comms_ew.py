@@ -55,6 +55,25 @@ class Comms:
     p_gb: float = 0.0            # GOOD -> BAD transition probability
     p_bg: float = 0.0            # BAD  -> GOOD transition probability
     _bad: bool = False           # per-run chain state; never module level
+    # Transient jam window (CR-17). The ladder is a STANDING condition: a scenario picks a rung
+    # and lives on it for the whole mission. A jammer that sweeps through and lifts is a different
+    # question, and it is the one that separates a system which recovers from one which does not.
+    # `jam_start < 0` disables the window and `set_step` becomes a no-op, so every previously
+    # recorded number is reproduced exactly.
+    jam_start: int = -1
+    jam_end: int = -1
+    jam_latency: int = 0
+    jam_p_drop: float = 0.0
+    base_latency: int = 0
+    base_p_drop: float = 0.0
+
+    def set_step(self, k: int) -> None:
+        """Put the link on its jammed or its standing parameters for step `k`."""
+        if self.jam_start < 0:
+            return
+        on = self.jam_start <= k < self.jam_end
+        self.latency = self.jam_latency if on else self.base_latency
+        self.p_drop = self.jam_p_drop if on else self.base_p_drop
 
     def round_trip(self) -> int:
         """Steps for a request to reach the operator and the reply to return."""
@@ -96,5 +115,26 @@ def build_comms(scn: Scenario) -> Comms:
         burst = max(1.0, float(scn.params.get("ge_burst_len", 4.0)))
         p_bg = 1.0 / burst
         p_gb = 0.0 if drop >= 1.0 else drop * p_bg / (1.0 - drop)
+    # Transient jam: `jam_window` = [start, end) in steps, `jam_level` the ladder rung to sit on
+    # while it is open. The window is a Bernoulli-channel feature; a Gilbert-Elliot chain is
+    # calibrated to a single stationary drop rate, so swapping that rate mid-run would leave the
+    # chain's transition probabilities describing a channel it is no longer on.
+    win = scn.params.get("jam_window")
+    j_start = j_end = -1
+    j_lat, j_drop = lat, drop
+    if win is not None:
+        if channel != "bernoulli":
+            raise ValueError("jam_window requires the bernoulli channel; "
+                             f"got channel={channel!r}")
+        j_start, j_end = int(win[0]), int(win[1])
+        if j_end <= j_start:
+            raise ValueError(f"jam_window must be [start, end) with end > start, got {win!r}")
+        j_level = int(np.clip(scn.params.get("jam_level", 5), 0, 5))
+        j_lat, j_drop, _ = _LADDER[j_level]
+        j_lat = int(scn.params.get("jam_latency", j_lat))
+        j_drop = float(scn.params.get("jam_p_drop", j_drop))
     return Comms(level=level, latency=lat, p_drop=drop, label=label,
-                 channel=channel, p_gb=p_gb, p_bg=p_bg)
+                 channel=channel, p_gb=p_gb, p_bg=p_bg,
+                 jam_start=j_start, jam_end=j_end,
+                 jam_latency=j_lat, jam_p_drop=j_drop,
+                 base_latency=lat, base_p_drop=drop)

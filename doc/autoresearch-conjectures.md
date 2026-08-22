@@ -1006,3 +1006,51 @@ settings), and the Discussion's recommendation rewritten from "a console that te
 will not be answered in time" to "a console that does not spend service time on requests whose
 answers will arrive after the requester has given up", with the notification demoted to a second
 increment justified by tasking tempo.
+
+## CR-17 Closed-loop reliance opens a fold band in span-of-control
+
+**Status: mechanism built, closed form derived, gate submitted (`st-hyst-9443432`).**
+
+Every earlier queue result assumed a vehicle's request cycle is independent of whether its last
+request was answered. That is what makes the M/D/1+D model have one threshold. Drop it, and the
+model becomes bistable.
+
+`retry_prob` (pi) is the fraction of abandoned requests that come back after `retry_backoff` (rho)
+steps instead of the standing `decision_interval` (tau). Offered load then depends on the state
+the queue is in, and `tools/queue_theory.py:fold_band` gives
+
+    n_c = c*mu*(P + 1 + tau - pi*(tau - rho)) / d          collapsed state sustains itself above
+    n_h = c*mu*(P + 1 + tau - a_h*pi*(tau - rho)) / d      healthy state survives below
+    n_h - n_c = c*mu*pi*(tau - rho)*(1 - a_h)/d
+
+with `a_h` the healthy-state abandonment fraction. At its floor (`a_h = 1 - d`, link drops only)
+the `d` cancels from the width: **jamming moves the band but does not widen it.**
+
+Three consequences, none of them specific to this retry rule:
+
+1. The band is empty exactly when retry does not shorten the cycle, so any reliance loop that
+   closes faster after a failure opens one.
+2. At the floor it spans a whole vehicle only when `pi*(tau - rho) >= 1/(c*mu)`, one service time
+   per console. That inverts into a **backoff floor**, `rho >= tau - 1/(c*mu*pi)`, which is 15.33
+   steps at the published operating point: hold a failed requester off that long and the band
+   closes. This is a design rule an integrator can actually apply.
+3. Under `refund` or `admit` the operator stops spending service time on requests that will
+   expire, which is what sustains the collapsed branch, so both slot-freeing policies should
+   close the band. Local probe at n=5, pi=1, rho=4: the initial-condition gap is +0.250 under
+   `blind`, +0.047 under `admit`, -0.078 under `refund`.
+
+Feeding the measured healthy abandonment in puts the band at (3.75, 5.85) for pi=1, rho=4, so
+five vehicles are inside it and six are not. The simulator agrees: at five vehicles a synchronized
+start collapses (goodput 0.229) and a staggered start does not (0.836), while at six both collapse
+and at three and eight both survive. Staggering also perturbs the RNG stream, so the quantity that
+isolates the loop is the difference of differences against the retry-off arm, computed by the new
+`tools/ar_contrast.py`. Local, 24 seeds: **+0.391 at five vehicles, 0.000 at three, -0.063 at
+eight.**
+
+Note that the published configuration uses the synchronized start. Inside the band, that is the
+initial condition that lands on the collapsed branch.
+
+**Also built for this conjecture, and reusable:** a transient jam window (`jam_window`,
+`jam_level`) on the Bernoulli channel. It was the first perturbation tried and it pushes the wrong
+way, which is itself worth recording: a jam DROPS requests, and a dropped request is one the
+operator never has to work, so a transient jam *unloads* the queue rather than tipping it over.

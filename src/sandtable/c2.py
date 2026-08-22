@@ -81,6 +81,24 @@ class Operator:
     queue_policy: str = "blind"    # "blind" | "refund" | "admit"; see `step`
     terrain_demand: float = 0.0    # >0 makes difficult ground raise the call-for-help rate (CR-15)
     queue_discipline: str = "fcfs"  # "fcfs" | "random" | "hard_first" | "easy_first"; see `step`
+    # Closed-loop reliance (CR-17). A vehicle that asked for help and did not get it does not
+    # necessarily settle into autonomy for a full decision interval: an operator-reliant one asks
+    # again sooner. `retry_prob` is the fraction of abandoned requests that come back on the short
+    # `retry_backoff` instead of the standing `decision_interval`. This is the only mechanism in
+    # the model whose demand depends on its own recent failures, and it is what turns the queue's
+    # mean loss into a bistable one. Off by default: retry_prob = 0 draws nothing.
+    retry_prob: float = 0.0
+    retry_backoff: int = 0         # resolved to decision_interval in `build_c2` when unset
+    retry_pending: np.ndarray = None   # set at abandonment, read when the hold expires
+    n_retry: int = 0
+    # Late-window request accounting (CR-17). Whole-mission goodput averages over the transient,
+    # which is exactly the thing a hysteresis question is about: it cannot tell "the jam hurt while
+    # it was on" from "the jam left the team somewhere else". These count only the final quarter of
+    # the mission, after any declared jam window has closed. Counters, no RNG, nothing reads them
+    # back, so the OFF path is untouched.
+    late_from: int = 1 << 30       # first step counted as late; set in `build_c2`
+    n_request_late: int = 0
+    n_serviced_late: int = 0
     # Request accounting (CR-10). Counts only, no RNG, so the OFF path stays byte-identical.
     n_request: int = 0             # direct-mode decision events that reached the link
     n_serviced: int = 0            # ... that came back with an operator decision
@@ -131,7 +149,17 @@ def build_c2(scn: Scenario, ent: Entities,
         queue_policy=str(scn.params.get("queue_policy", "blind")),
         terrain_demand=float(scn.params.get("terrain_demand", 0.0)),
         queue_discipline=str(scn.params.get("queue_discipline", "fcfs")),
+        retry_prob=float(scn.params.get("retry_prob", 0.0)),
+        retry_pending=np.zeros(ent.n, dtype=bool),
     )
+    _dt = float(scn.params.get("dt", 1.0))
+    op.late_from = int(0.75 * max(int(scn.duration / _dt), 1))
+    _rb = int(scn.params.get("retry_backoff", -1))
+    op.retry_backoff = op.decision_interval if _rb < 0 else _rb
+    if not 0.0 <= op.retry_prob <= 1.0:
+        raise ValueError(f"retry_prob must lie in [0, 1], got {op.retry_prob}")
+    if op.retry_backoff < 1:
+        raise ValueError(f"retry_backoff must be at least 1 step, got {op.retry_backoff}")
     if op.queue_policy not in ("blind", "refund", "admit"):
         raise ValueError(f"queue_policy must be blind|refund|admit, got {op.queue_policy!r}")
     if op.queue_discipline not in DISCIPLINES:
@@ -178,6 +206,20 @@ def _reset_cooldown(op: Operator, rng: np.random.Generator, difficulty: float = 
     if op.terrain_demand > 0.0 and difficulty > 0.0:
         c = max(1, int(round(c / (1.0 + op.terrain_demand * difficulty))))
     return c
+
+
+def _arm_retry(op: Operator, rng: np.random.Generator, i: int) -> None:
+    """Mark an abandoned requester to come back on the short backoff (CR-17).
+
+    The coin is drawn at ABANDONMENT rather than at re-arm so that a request which is still
+    outstanding carries no pending draw, and so that `retry_prob = 0` draws nothing at all and
+    leaves the stream where it was.
+    """
+    if op.retry_prob <= 0.0:
+        return
+    if rng.random() < op.retry_prob:
+        op.retry_pending[i] = True
+        op.n_retry += 1
 
 
 def service_order(op: Operator, blue: np.ndarray, difficulty: dict,
@@ -243,7 +285,14 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
         if ent.await_until[i] >= 0 and k >= ent.await_until[i]:
             ent.control_quality[i] = op.resolved_quality[i]
             ent.await_until[i] = -1
-            ent.decision_cooldown[i] = _reset_cooldown(op, rng, difficulty.get(i, 0.0))
+            cool = _reset_cooldown(op, rng, difficulty.get(i, 0.0))
+            if op.retry_pending[i]:
+                # Same jittered integer, rescaled to the shorter backoff: one draw either way, so
+                # the retry and no-retry arms stay paired on a shared seed and the jitter keeps
+                # retrying vehicles from re-synchronizing into a second burst.
+                cool = max(1, int(round(cool * op.retry_backoff / op.decision_interval)))
+                op.retry_pending[i] = False
+            ent.decision_cooldown[i] = cool
             continue
 
         # 2) Still awaiting a reply: sit at the low stall quality (hesitating without guidance).
@@ -273,6 +322,9 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
         link_ok = op.ew_immune or (up_ok and down_ok)
         lat = op.immune_latency if op.ew_immune else comms.latency
         op.n_request += 1
+        late = k >= op.late_from
+        if late:
+            op.n_request_late += 1
         if link_ok:
             recv = k + lat                                    # request reaches operator
             if op.crew_free_at is None:
@@ -290,6 +342,8 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 op.resolved_quality[i] = op.q_operator
                 op.waits.append(float(wait))          # attention-switching wait, serviced only
                 op.n_serviced += 1
+                if late:
+                    op.n_serviced_late += 1
             else:
                 # The request cannot come back inside the requester's patience, so its answer
                 # will be thrown away. What the operator does with the slot, and whether the
@@ -314,9 +368,11 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 ent.await_until[i] = k + hold                 # gives up waiting -> poor autonomy
                 op.resolved_quality[i] = op.q_fallback
                 op.n_abandon_queue += 1
+                _arm_retry(op, rng, i)
         else:
             ent.await_until[i] = k + op.patience              # message dropped -> poor autonomy
             op.resolved_quality[i] = op.q_fallback
             op.n_abandon_link += 1
+            _arm_retry(op, rng, i)
 
         ent.control_quality[i] = op.q_stall                   # now awaiting

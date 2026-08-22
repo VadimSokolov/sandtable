@@ -110,7 +110,8 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
     out = {"interventions": 0.0, "intervention_rate": 0.0,
            "operator_utilization": 0.0, "mean_wait": 0.0,
            "wait_p95": 0.0, "queue_depth_mean": 0.0,
-           "operator_goodput": 0.0, "abandon_queue_frac": 0.0, "abandon_link_frac": 0.0,
+           "operator_goodput": 0.0, "operator_goodput_late": 0.0,
+           "abandon_queue_frac": 0.0, "abandon_link_frac": 0.0,
            "hold_fraction": 0.0, "interaction_steps": 0.0, "neglect_steps": 0.0, "fan_out": 0.0}
 
     if bhv is not None:
@@ -140,4 +141,8 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
             out["operator_goodput"] = op.n_serviced / op.n_request
             out["abandon_queue_frac"] = op.n_abandon_queue / op.n_request
             out["abandon_link_frac"] = op.n_abandon_link / op.n_request
+        if op.n_request_late > 0:
+            # Final quarter only: whether the team ENDED the mission serving requests, which is a
+            # different question from how many it served on average (CR-17).
+            out["operator_goodput_late"] = op.n_serviced_late / op.n_request_late
     return out

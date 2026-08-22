@@ -32,7 +32,7 @@ EXPECTED_KEYS = {
     "mean_wait",
     "wait_p95",
     "queue_depth_mean",
-    "operator_goodput",
+    "operator_goodput", "operator_goodput_late",
     "abandon_queue_frac",
     "abandon_link_frac",
 }

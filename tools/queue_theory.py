@@ -77,6 +77,76 @@ def collapse_span(p_drop: float, service_rate: float, patience: float,
     return n_operators * (patience + decision_interval + 1.0) * service_rate / d
 
 
+def fold_band(p_drop: float, service_rate: float, patience: float,
+              decision_interval: float, retry_prob: float = 0.0,
+              retry_backoff: float | None = None,
+              n_operators: int = 1,
+              abandon_healthy: float | None = None) -> tuple[float, float]:
+    """The span interval over which BOTH the healthy and the collapsed state are self-sustaining.
+
+    `collapse_span` above assumes a vehicle's request cycle does not depend on whether its last
+    request was answered. Closed-loop reliance (CR-17) breaks that: a fraction `pi` of abandoned
+    requests come back after `rho` steps instead of `tau`, so the cycle is SHORTER in the state
+    where requests are being abandoned. Demand then depends on the state the system is already in,
+    and the threshold splits in two.
+
+    Deep in collapse every request abandons, so the mean cycle is `P + 1 + pi*rho + (1-pi)*tau`
+    and the collapsed state sustains itself above
+
+        n_c = c*mu*(P + 1 + tau - pi*(tau - rho)) / d.
+
+    In the healthy state a smaller fraction `a_h` abandons, so only that fraction retries early
+    and the mean cycle is `P + 1 + tau - a_h*pi*(tau - rho)`. The healthy state survives up to
+
+        n_h = c*mu*(P + 1 + tau - a_h*pi*(tau - rho)) / d,
+
+    and the gap is
+
+        n_h - n_c = c * mu * pi * (tau - rho) * (1 - a_h) / d.
+
+    `a_h` defaults to the link-dropped fraction `1 - d`, which is its FLOOR: a request can also
+    abandon because the queue was busy, and at C0 that is the only way it can. Taking the floor
+    therefore gives the widest band the parameters allow, an upper bound on `n_h` rather than a
+    prediction of it; passing the measured no-retry abandonment fraction sharpens it. At the
+    published operating point the bound puts `n_h` at the no-retry threshold 6.45, while feeding
+    in the measured healthy abandonment at six vehicles (0.222) moves it to 5.85, which is what
+    the simulator does: six vehicles collapse from both initial conditions and five do not.
+
+    Two consequences follow, and both are operational rather than decorative. The band is empty
+    exactly when retry does not shorten the cycle (`pi = 0` or `rho = tau`), so it is not a
+    property of this particular retry rule but of any reliance loop that closes faster after a
+    failure. And at the floor it spans a whole vehicle only when `pi*(tau - rho) >= 1/(c*mu)`,
+    one service time per console, which is a backoff floor: hold a failed requester off for at
+    least `tau - 1/(c*mu*pi)` steps and the band closes.
+
+    Under `queue_policy = "admit"` the requester is told on arrival instead of abandoning, so the
+    retry branch is never taken and the band does not exist. Admission control is retry-proof.
+    """
+    d = two_way_delivery(p_drop)
+    if d <= 0.0:
+        return float("inf"), float("inf")
+    rho = decision_interval if retry_backoff is None else retry_backoff
+    shortening = retry_prob * (decision_interval - rho)
+    a_h = (1.0 - d) if abandon_healthy is None else float(abandon_healthy)
+    base = patience + decision_interval + 1.0
+    n_c = n_operators * service_rate * (base - shortening) / d
+    n_h = n_operators * service_rate * (base - a_h * shortening) / d
+    return n_c, n_h
+
+
+def backoff_floor(service_rate: float, decision_interval: float, retry_prob: float,
+                  n_operators: int = 1) -> float:
+    """Shortest retry backoff that leaves the fold band narrower than one vehicle.
+
+    Solves `n_h - n_c = c*mu*pi*(tau - rho) < 1` for `rho`. Below this floor an eager retry buys
+    a vehicle a faster second attempt at the cost of a span at which the team has two stable
+    states and only one of them is the one anybody wants.
+    """
+    if retry_prob <= 0.0:
+        return 0.0
+    return decision_interval - 1.0 / (n_operators * service_rate * retry_prob)
+
+
 def solve(n: int, latency: float, p_drop: float, service_rate: float = 0.15,
           patience: float = 20.0, decision_interval: float = 30.0,
           refund: bool = False, iters: int = 400) -> dict:
