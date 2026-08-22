@@ -72,6 +72,7 @@ class Entities:
     # multiplier, infinite ammo never gates fire).
     suppression: np.ndarray = None       # float in [0, 1]: incoming-fire suppression; degrades fire and acquisition
     ammo: np.ndarray = None              # float: rounds remaining (inf = unlimited)
+    fatigue: np.ndarray = None           # float in [0, 1]: tracks movement fatigue
 
     def __post_init__(self) -> None:
         n = self.x.shape[0]
@@ -85,6 +86,8 @@ class Entities:
             self.suppression = np.zeros(n)
         if self.ammo is None:
             self.ammo = np.full(n, np.inf)
+        if self.fatigue is None:
+            self.fatigue = np.zeros(n)
 
     @property
     def n(self) -> int:
