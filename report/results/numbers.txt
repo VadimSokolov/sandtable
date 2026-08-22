@@ -178,6 +178,8 @@ Operator-queue numbers (source: tools/make_queue_numbers.py over report/data/que
 \qGoodAdmitEight = 73.4
 \qGoodRefundTwelve = 57.9
 \qGoodAdmitTwelve = 44.9
+\qServedRefund = 0.1295
+\qServedAdmit = 0.1328
 \qFanClassic = 4.61
 \qFanUtil = 6.69
 \qTerrainFlatSix = 76.7

@@ -161,6 +161,32 @@ def fanout_bookings(n_blue: int = 8, seeds: int = 32) -> dict:
             "util": float(np.mean(util))}
 
 
+def served_per_step(n_blue: int = 8, seeds: int = 32) -> dict:
+    """Useful service completions per step, for the two slot-freeing policies.
+
+    `operator_goodput` is a RATIO (serviced / requested), so it falls when a policy raises the
+    request rate even if the operator is completing more work. Under `refund` and `admit` the
+    console is never claimed for a request it cannot finish, so utilization times service rate is
+    the rate of completions that actually reach someone. Reporting it stops the goodput ordering
+    from being read as an efficiency loss, which it is not.
+    """
+    import numpy as np
+    sys.path.insert(0, str(ROOT / "src"))
+    from sandtable import sim
+    from sandtable.scenario import Scenario, load_scenario
+
+    base = load_scenario(ROOT / "scenarios" / "sc_span_control.json")
+    mu = float(base.params["service_rate"])
+    out = {}
+    for pol in ("refund", "admit"):
+        prm = dict(base.params, control_mode="direct", comms_level=0,
+                   n_blue=n_blue, queue_policy=pol)
+        scn = Scenario(**{**base.__dict__, "params": prm})
+        ms = [sim.run_mission(scn, seed=sd) for sd in range(seeds)]
+        out[pol] = float(np.mean([m["operator_utilization"] for m in ms])) * mu
+    return out
+
+
 def pct(x: float) -> str:
     return f"{100 * x:.1f}"
 
@@ -183,6 +209,7 @@ def main() -> None:
     ref  = rows("st-refund-9442831.out")           # the three-way policy decomposition
 
     _book = fanout_bookings()
+    _sps = served_per_step()
     m = {
         # --- closed form, computed from the scenario file -------------------------------
         "qNStar":            f"{n_star:.2f}",
@@ -251,6 +278,8 @@ def main() -> None:
         "qGoodAdmitEight":   pct(pick(ref, "R3 goodput", "admit", "8")),
         "qGoodRefundTwelve": pct(pick(ref, "R3 goodput", "refund", "12")),
         "qGoodAdmitTwelve":  pct(pick(ref, "R3 goodput", "admit", "12")),
+        "qServedRefund":     f"{_sps['refund']:.4f}",
+        "qServedAdmit":      f"{_sps['admit']:.4f}",
         "qFanClassic": f"{_book['classic']:.2f}",
         "qFanUtil":    f"{_book['util']:.2f}",
         # --- terrain-correlated demand ---------------------------------------------------

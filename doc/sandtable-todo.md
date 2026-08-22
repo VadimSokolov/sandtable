@@ -517,7 +517,7 @@ if done + lat - k <= op.patience: ...serviced...
 else: ...the requester gave up, and the slot was spent anyway...
 ```
 
-At spans above `n* = (patience + decision_interval) * service_rate` this is self-sustaining:
+At spans above `n* = (patience + decision_interval + 1) * service_rate` this is self-sustaining:
 every vehicle abandons, every abandonment still consumes the operator, the queue never drains.
 Only 18% of requests get an answer at n=8 on a clean link. Packet loss is then the only thing
 shedding load, which is why mission success *rose* with jamming in the published model.

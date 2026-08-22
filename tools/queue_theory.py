@@ -15,18 +15,24 @@ empty queue, so `2*latency + S <= patience` where `S = 1/service_rate`. Above th
 request can ever be answered and the drop rate stops mattering, which is why the C0-C5 ladder
 has fewer distinguishable rungs than it has levels.
 
-**Stable.** In the collapsed regime every request abandons, so each vehicle cycles
-`patience + decision_interval` steps between requests. Requests arrive at the operator at
-`n * d / (patience + decision_interval)` where `d = (1 - p_drop)^2` is the two-way delivery
+**Stable.** In the collapsed regime every request abandons, so each vehicle runs a fixed cycle:
+`patience` steps waiting the request out, `decision_interval` steps of cooldown, and one step on
+which the next decision fires (the counter is decremented on each of `decision_interval` steps and
+the event fires on the step AFTER it reaches zero). Requests therefore arrive at the operator at
+`n * d / (patience + decision_interval + 1)` where `d = (1 - p_drop)^2` is the two-way delivery
 probability, and each costs `S` of server time *whether or not anyone is still waiting for the
 answer*. That last clause is the published `queue_policy="blind"` operator, and it makes the
 collapsed regime self-sustaining once
 
-    n * d * S / (patience + decision_interval)  >=  1,
+    n * d * S / (patience + decision_interval + 1)  >=  1,
 
 that is, once the span exceeds
 
-    n_collapse = (patience + decision_interval) * service_rate / d.
+    n_collapse = (patience + decision_interval + 1) * service_rate / d.
+
+The trailing step is not cosmetic: dropping it understates the threshold by about 2.4 percent
+(6.30 against the correct 6.45 at the published operating point). The measured cycle deep in
+collapse is 42.84 steps against this formula's 43.00.
 
 Below the threshold the queue drains and the fixed point below solves for the achieved goodput.
 The threshold is the interesting object: it says the span at which direct control collapses is

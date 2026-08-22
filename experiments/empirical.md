@@ -877,3 +877,38 @@ admission policy" to avoid colliding with the new parameter name. Numbers genera
 Pre-flight: PASS 5/5 (55/55 citations, 3 AI-vocabulary hits, 0 em-dashes, 8/8 contribution refs,
 compile clean). Full suite on Hopper (job 9442696): 192 passed, 0 failed (was 182; +10 triage).
 Byte identity re-verified after the `service_order` extraction: 28/28 metrics unchanged.
+
+## 2026-08-22 R3 mechanism: notification and the price of waiting
+
+**Local probe (32 seeds, sc_span_control, published physics, direct/C0).** Served useful
+decisions per step = `operator_utilization * service_rate`. Neither `refund` nor `admit` ever
+claims a console for a request it cannot finish, so for those two arms utilization counts only
+work that reaches someone.
+
+| n_blue | policy | goodput | utilization | served/step |
+|---|---|---|---|---|
+| 6 | refund | 0.9201 | 0.7378 | 0.11068 |
+| 6 | admit | 0.9089 | 0.7789 | 0.11683 |
+| 8 | refund | 0.8029 | 0.8635 | 0.12953 |
+| 8 | admit | 0.7378 | 0.8856 | 0.13285 |
+| 10 | refund | 0.6851 | 0.9400 | 0.14100 |
+| 10 | admit | 0.5948 | 0.9491 | 0.14236 |
+| 12 | refund | 0.5987 | 0.9695 | 0.14543 |
+| 12 | admit | 0.4509 | 0.9923 | 0.14885 |
+
+`admit` completes MORE useful decisions per step at every span while its goodput is lower at
+every span. R3's goodput ordering is therefore a ratio effect (notification raises the request
+rate, so the denominator moves more than the numerator), not a throughput loss. The manuscript
+clause "notification buys requester tempo at the price of operator efficiency" was wrong and is
+replaced; the n=8 pair is now generated as `\qServedAdmit` / `\qServedRefund` by
+`tools/make_queue_numbers.py:served_per_step`.
+
+**Decisive cell submitted: `st-waitcost-9443162`** (full tier, 32 blocks x 64 reps, interactive
+partition, 3h). `q_stall` (quality while awaiting a decision, default 0.30) swept over
+0.10 / 0.30 / 0.50 against `q_fallback` = 0.50, arms blind/refund/admit, at published physics
+(W1) and teleoperation physics (W2), n=8, C0. Waiting is free at q_stall = 0.50. Competing
+predictions registered BEFORE the run: if notification's only job is ending a wait, the
+admit-refund increment falls monotonically in q_stall and vanishes at 0.50, at both physics
+settings; if the teleop-only increment is instead an artifact of that physics, the increment is
+flat in q_stall. `blind` rides along as the control against the whole queue effect scaling with
+q_stall.

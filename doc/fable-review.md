@@ -439,3 +439,286 @@ not the "tell the vehicle immediately" notification the text currently foregroun
 straw-man attack on blind (the paper visibly quantifies the realistic-baseline gap instead of
 hiding it), corrects the one operational claim the evidence does not support, and costs one
 proxy-tier table row plus two sentences.
+
+## Round 2 (2026-08-22, repo at 8aa7170)
+
+Read for this round: the ledger from "Review round 1 (Fable)" to end, the current queue subsection,
+decomposition paragraph, fan-out paragraph, and Discussion in report/main.tex, and the corrected
+tools/queue_theory.py. Two new probes were run (specified inline below; neither is a gated
+experiment): a utilization-versus-goodput probe on the full simulator (64 seeds per cell, n in
+{6, 8, 12}, C0, published physics), and a retry-on-abandon extension of the round-1 pure-queue
+replica that tests the fold closed form of question D at three (retry probability, backoff) points.
+
+Up front, the round-1 error, owned: my claim that notification "measures approximately zero" was
+wrong as a general statement. The full tier gates admit minus refund at +0.0801 (t=4.97) under
+teleoperation. The post-mortem of how I got there is in section C; the mechanism of why the effect
+is regime-dependent is in section A, and my corrected account predicts the regime structure rather
+than merely absorbing it.
+
+### A. The R3 reading is half right, and the wrong half changes the prediction
+
+Verdict: the favour-direction reading (freeing the slot helps the operator, notifying helps the
+requester, and a notified requester asks again sooner) is correct and nicely put. The clause "at
+the price of operator efficiency" is wrong as written, and because it is wrong, the crossover it
+predicts does not exist: there is no request rate or patience at which admit and refund swap on
+mission success. The variable that closes the admit-refund gap is the cost of waiting, not the
+rate of asking.
+
+The competing explanation, and the measurement that separates them. Goodput is served divided by
+requests. Refund and admit have identical server-side rules (both claim only feasible work, c2.py
+lines 305-306), so they can differ only through the arrival process, and admit's refused requester
+re-enters the cycle after about tau + 2 steps instead of P + tau + 1. More requests, same server.
+If "operator efficiency" meant delivered decisions per unit time, it would have to be measured as
+served per step, which for refund and admit is exactly service_rate times operator_utilization
+(their busy time is serviced work only). Probe (64 seeds per cell, published physics, C0):
+
+| n | policy | goodput | utilization | served/step | mean wait | success |
+| --- | --- | --- | --- | --- | --- | --- |
+| 6 | refund | 0.919 | 0.746 | 0.1120 | 11.18 | 0.656 |
+| 6 | admit | 0.908 | 0.783 | 0.1175 | 11.64 | 0.750 |
+| 8 | refund | 0.795 | 0.877 | 0.1315 | 13.10 | 0.812 |
+| 8 | admit | 0.730 | 0.904 | 0.1355 | 13.86 | 0.812 |
+| 12 | refund | 0.585 | 0.975 | 0.1462 | 15.50 | 0.922 |
+| 12 | admit | 0.444 | 0.991 | 0.1486 | 16.89 | 0.953 |
+
+The operator under admit delivers MORE decisions per step at every span, not fewer. The goodput
+ordering that R3 shows is the denominator carrying the tempo channel: at n=12 admit generates
+roughly 30 percent more requests and serves slightly more of them in absolute terms. Nothing the
+operator produces is lost. Two real costs do exist and are visible above, and both are small: the
+accepted-wait inflation (admit's extra load lengthens the waits of the requests that are accepted,
++0.5 to +1.4 steps here) and, off a clean link, extra link exposure (more asks means more drops,
+each costing a full patience window, which is why the teleop margin falls from +8.0 at C0 to +3.2
+at C2). So the corrected reading: notification buys requester tempo at the price of per-request
+goodput and slightly longer accepted waits; operator output is unchanged or better. I would
+rewrite the paragraph's sentence accordingly and print served-per-step (or utilization) beside
+goodput wherever R3 appears, because as published the goodput column invites exactly the
+misreading the current prose makes.
+
+Where the margin comes from, in closed form. At saturation both policies deliver the same
+q_operator time share (c mu / n serviced completions per agent-step times tau + 1). The margin
+lives in how a non-serviced request spends the rest of its cycle. Under refund every non-serviced
+request (dropped or refused) waits the full P at q_stall; under admit a refused one waits
+h = min(2 ell, P) + 1 and a dropped one still waits P. Per unit of non-serviced time, the
+admit-minus-refund quality difference is
+
+    (q_fallback - q_stall) x (tau + 1) x [ 1/(h + tau + 1) - 1/(P + tau + 1) ]
+
+weighted by the share d(1 - s) of refusals among non-serviced outcomes, and the whole thing scales
+with the non-serviced time fraction F. At the operating point (h = 1, tau + 1 = 23) the bracket is
+1/24 - 1/43, giving about +0.085 mean quality per unit of refused time under published physics, and
+a stopped-versus-moving conversion of 0.958 against 0.535 under teleoperation, which is why the
+same mechanism is worth about one point in one setting and eight in the other. Every factor in
+that expression is nonnegative, and the two adverse channels (wait inflation, drop exposure) scale
+with the same F that the gain scales with, at a fixed ratio well below one. Hence: no crossover in
+n, tau, mu, or P anywhere in the reachable range. The margin has closed-form zeros instead: F -> 0
+(span at or below the collapse onset, the bit-identical regime the ledger already documents),
+h -> P + 1 (2 ell >= P, the C5 end, where the refusal arrives no sooner than giving up unaided),
+d -> 0 (nothing is delivered to refuse), and, under published physics only, q_stall -> q_fallback
+(waiting costs nothing, so ending it early buys nothing).
+
+Three pre-registerable cells that separate my account from the tempo-versus-efficiency reading:
+
+1. Published physics, q_stall = 0.50, n = 8 or 12, C0, admit vs refund. My account: zero within
+   the MDE (the tempo channel is nulled and there is no efficiency price to pay). The efficiency
+   reading: refund gated better (the price remains, the benefit is gone). This is the cheapest
+   decisive cell.
+2. Teleoperation, n = 12, C0, admit vs refund. My account: the margin GROWS with span (F grows;
+   the moving-time conversion applies to more of the mission), so expect clearly more than the
+   +0.0801 measured at n=8. The efficiency reading, taken at face value, says the price is largest
+   exactly there (the goodput gap is widest, 0.579 vs 0.449), so the margin should shrink or flip.
+3. Low-F regime with waiting still expensive: teleop physics, service_rate 0.30 (threshold 12.9),
+   n = 8. My account: both channels are small together, null within MDE. The efficiency reading:
+   refund measurably better, since tempo is worthless but the extra load is still offered.
+
+If cell 1 or 3 gates in refund's favour, the efficiency reading wins and I am wrong twice; my
+derivation says neither will.
+
+### B. What to lead with now
+
+Verdict: yes, re-center, and the gated split makes the case stronger than my round-1 version of
+it. The right lead is the mechanism plus the two-lever decomposition, with the sign reversal as
+the qualitative punchline. The bundled +23.7 should not lead, because it is now a documented sum
+of two levers with different owners (a discard rule that is doctrine and software, and a
+notification that is an interface feature justified by tasking tempo), different evidence grades
+(always-gated versus teleop-only), and different rebuttals. A bundled number invites the reviewer
+to price the whole against the cheapest realistic baseline and call the remainder a bug fix; the
+split preempts that, and the teleop-gated notification is now the paper's honest answer to "you
+fixed your own defect": the second lever is not a defect repair relative to refund, it is a design
+choice with a mechanism and a regime.
+
+Concretely, the abstract's queue passage. Keep its current mechanism sentence ("The operator is a
+server whose clients abandon it, and an operator that never learns it has been abandoned spends
+service time producing answers nobody is waiting for, so congestion rather than attention dilution
+is what defeats direct control at high span."). That is the right first claim. Replace the single
+admission-control sentence that follows with the split, in this shape: "Two closed forms predict
+where the collapse begins and the simulator obeys both. The remedy decomposes: a console that
+discards requests whose answers will expire recovers \qRefundClear\% against \qBlindClear\%
+mission success at the centerpiece operating point, about nine tenths of the full
+admission-control gain, and telling the requester adds a further gated \qNotifyTele{} points only
+under teleoperation, where waiting dominates an asset's duty cycle." Then the existing jamming
+sentence follows unchanged, and the teleop bundle number (\qTeleBlindClear\% to
+\qTeleAdmitClear\%) can survive as the magnitude exhibit inside the results section rather than
+the abstract.
+
+Two defects to fix while editing there, both found this round:
+
+1. Contribution 3 (main.tex line 54) still displays the OLD formula, $n^{\star} = c(P+\tau)\mu/d$,
+   while Equation eq:nstar now says $c(P+\tau+1)\mu/d$. The paper currently states two different
+   closed forms for the same threshold. The same contribution item also still sells the bundled
+   "explicit admission control is worth \qAdmitClear\% against \qBlindClear\%"; it should carry
+   the split in one clause ("a discard rule recovers most of it; notification gates only under
+   teleoperation").
+2. The decomposition paragraph's clause "Notification therefore buys requester tempo at the price
+   of operator efficiency" should become "at the price of per-request goodput and slightly longer
+   accepted waits; the operator's delivered decisions per step are unchanged or slightly higher
+   under admit". With that correction the paragraph's regime conclusion (pays when waiting
+   dominates the duty cycle) stands on the tempo channel alone, which is the part the full tier
+   actually gated. The clause "which is a good trade only when" should likewise become "which
+   buys anything only when": my derivation and the probe above find no regime where the trade
+   goes net negative, so the current wording concedes a downside the data does not show.
+
+### C. Post-mortem: how I detected the off-by-one and still failed to report it as an error
+
+What actually happened, verbatim from round 1, Q2: "(the +1 is the adoption step in c2.step
+branch 1; the exact mean cycle at saturation is P + tau + 1 = 43, so n* as coded is mu(P+tau+1) =
+6.45 rather than the paper's 6.30; the sweeps bracket 6-7 either way, but the +1 belongs in a
+footnote)". I detected the discrepancy, re-derived the correct form, used 6.45 for everything
+downstream (the replica threshold, and the fan-out booking where I wrote "6.52 against n* = 6.45"
+while the paper's own n* was 6.30), and then filed the difference as a footnote suggestion instead
+of as what it was: a published equation that is wrong. Three process failures, named:
+
+1. Severity anchored to the container, not the object. Findings that answered one of the five
+   commissioned questions got verdict-level treatment; a finding discovered en route inherited the
+   prominence of the parenthesis it happened to be born in. The classification rule I actually
+   applied was "how central is this to the question I am answering", when the correct rule is
+   "what kind of artifact does this contradict". An exact equation in a published paper admits no
+   footnote-grade discrepancies.
+2. The empirical-indistinguishability fallacy. I reasoned that the sweeps bracket the threshold
+   between 6 and 7, both 6.30 and 6.45 sit in the bracket, therefore the difference is immaterial.
+   But a closed form claims exactness, so the standard of comparison is derivation against
+   derivation, not derivation against noisy data. Materiality to current measurements is the wrong
+   test for the correctness of an equation.
+3. Silent local resolution. When my algebra disagreed with the artifact, I resolved the
+   disagreement privately (adopted my value, moved on) rather than surfacing the disagreement
+   itself as a first-class finding with a proposed adjudicating measurement. You then did exactly
+   the adjudication I should have demanded (instrument fresh cycles: 42.840 measured, 43.00
+   predicted), which is what settles it.
+
+The notification-null overreach in R1 has the same root plus a fourth failure: asserting a null
+without stating its power. Back-computing from your full-tier t: block sd of the paired difference
+at 64 reps is 0.0801 x sqrt(32)/4.97, about 0.091, so per-seed paired sd is about 0.73 and my
+256-seed probe resolved the admit-refund contrast to about +/-0.046 at one sigma... my observed
+-0.008 was under two sigma from the true +0.080. Not a freak draw: an ordinary one, converted into
+the categorical phrase "measures approximately zero" because I never wrote down what my probe
+could and could not exclude. Had I been required to attach "cannot exclude effects up to +/-0.09"
+to that sentence, the overreach dies in draft.
+
+What to put in front of me next round, concretely:
+
+- A standing discrepancy register: instruct me that every point where my derivation, the code, and
+  the paper disagree, however small I judge it, must appear as its own numbered finding with a
+  proposed measurement that would settle it. No materiality filter; materiality is your call.
+- An explicit claim inventory when you want equations audited: list the displayed equations and
+  generated macros and require a verified / refuted / unchecked mark on each. I audited mechanisms
+  in round 1 because mechanisms were what the five questions named; I never treated the equations
+  as enumerated claims under review.
+- A power statement attached to any null I assert: the sentence "X measures zero" is banned in
+  favour of "X is a null at resolution +/-r".
+
+And the fresh instance proving the lesson generalizes: this round I grepped for the stale form and
+the round-1 correction missed three sites. main.tex line 54 (the live inconsistency flagged in B),
+the module docstring of tools/queue_theory.py (lines 19-29 still derive n_collapse without the +1
+while the code at line 71 is corrected; the docstring is the first thing a reader of that tool
+sees), and doc/sandtable-todo.md line 520 (historical CR rationale; your left-as-written policy
+may cover it, but it should be a decision, not an accident). Fixes propagate along the paths the
+fixer remembers; a mechanical sweep catches the rest. The one-liner:
+grep -rn "patience + decision_interval" --include="*.py" --include="*.tex" --include="*.md" . | grep -v "+ 1"
+
+### D. The retry fold, in closed form, and verified in replica before you build it
+
+Setup, matching the Q5 proposal: after an abandonment (queue-refused or link-dropped), with
+probability pi the agent re-requests after a fixed backoff rho instead of drawing its normal
+cooldown (mean tau); serviced requests always draw the normal cooldown. Blind server, c consoles,
+two-way delivery d, service time S = 1/mu, adoption step included as before.
+
+The two thresholds. The healthy branch sees abandonment only through link drops, so its saturation
+cycle is P + 1 + tau - (1-d) pi (tau - rho), and the collapsed cycle is P + 1 + pi rho +
+(1-pi) tau. Hence
+
+    n_c = c mu (P + 1 + pi rho + (1 - pi) tau) / d      (collapse becomes self-sustaining)
+    n_h = c mu (P + 1 + tau - (1-d) pi (tau - rho)) / d (healthy equilibrium ceases to exist)
+
+and the fold (bistable band) is n_c < n < n_h, with width
+
+    n_h - n_c = c mu pi (tau - rho),
+
+which is independent of both d and P: jamming shifts the band's location by 1/d but never its
+width, and patience moves both edges together. Both are falsifiable regularities the build can
+test. The band is nonempty for ANY pi > 0 with rho < tau, so the fold exists for every retry
+policy that shortens the mean re-ask gap at all; what has a threshold is detectability at integer
+spans: the band spans at least one whole vehicle iff
+
+    pi (tau - rho) >= 1/(c mu) = S/c,
+
+which at the operating point is 6.67 steps. So the answer to "does the fold require an insane
+policy" is no, emphatically: a single immediate re-ask after a full patience wait (pi = 1, rho =
+0), which is the naive default of any unmanaged client and of most humans, gives a band 3.3
+vehicles wide, (3.15, 6.45). Even pi = 0.3 with no backoff sits at the detectability edge. The
+design rule that restores effective monostability is a backoff floor:
+
+    rho >= tau - S/(c pi)        (pi = 1: rho >= 15.3 steps at the operating point),
+
+and for exponential backoff the same condition applies to the expected deferral. Note this retry
+is the mild kind (re-ask only after waiting out P); a client that re-asks before its patience
+expires folds sooner.
+
+Replica verification (round-1 replica plus the retry rule; C0, blind, late-window goodput over the
+last 10,000 of 20,000 steps, preload 0 vs 200, two seeds per cell):
+
+| policy, pi, rho | predicted band | n=2 | n=3 | n=4 | n=5 | n=6 | n=7 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| blind, 1.0, 0 | (3.15, 6.45) | 1.00/1.00 | 1.00/1.00 | 0.99/0.00 | 0.00/0.00 | 0.00/0.00 | 0.00/0.00 |
+| blind, 0.5, 0 | (4.80, 6.45) | | | 0.99/0.99 | 0.95 and 0.61/0.00 | 0.00/0.00 | |
+| blind, 1.0, 15 | (5.40, 6.45) | | | | 0.96/0.96 | 0.00/0.00 | |
+
+(cells are unpreloaded/preloaded goodput; blanks not run). Read the three quantitative hits:
+at pi = 1, rho = 0, n=4 is textbook hysteresis (healthy from a cold start, permanently collapsed
+from a preload) while n=2 and n=3 recover from the same preload, bracketing n_c = 3.15. Halving pi
+moves n_c to 4.80 and the SAME n=4 cell flips to monostable (preloaded run recovers), while n=5
+becomes the hysteretic cell, and one unpreloaded n=5 seed shows a mid-window escape (0.61): the
+fold's stochastic signature, a metastable healthy branch with finite escape time. Backing off to
+rho = 15 moves n_c to 5.40 and n=5 flips back to monostable. All three edges land where the
+formula puts them. One honesty note: inside the band but near its upper edge (n=5, 6 at pi=1) both
+starts collapse within 20,000 steps, because the healthy basin is shallow there and jittered
+cooldowns kick the backlog over B_c early; the deterministic band is where the fold exists, and
+the OBSERVED hysteresis band at horizon T shrinks from above as escape times fall below T. At
+mission length (1800 steps) the observable band in SandTable will be wider than in this replica.
+
+Admit is retry-proof, as predicted: with pi = 1, rho = 0, admit shows no preload sensitivity at
+any span (n=5: 0.96/0.96; n=6: 0.67/0.67; n=8: 0.16/0.16) because the backlog stays bounded at the
+admission boundary; retry under admit degrades per-request goodput smoothly (the denominator
+again) and nothing folds. That yields the paper-grade sentence the build would earn: the collapse
+becomes path-dependent only when BOTH sides lack discipline, a server that works expired requests
+and a client that re-asks without backoff; discipline on either side (a discard rule at the
+console, or a backoff floor of tau - S/(c pi) at the client) removes the fold. And inside the
+band, CR-13's synchronized start stops being a cosmetic transient and becomes a genuine lock-in
+mechanism (the opening burst is a preload past B_c), so stagger_decisions turns from a
+reproducibility knob into a design variable. Verdict: build it; pre-register n_c, n_h, the
+d-invariant and P-invariant width, the pi and rho edge flips above, and admit's immunity.
+
+### Round 2 in one line each
+
+- A: favour-direction right, "price of operator efficiency" wrong (admit's operator delivers more
+  per step at every span; the goodput ordering is the denominator); no admit-refund crossover in
+  rate or patience; the closing variable is the cost of waiting; three decisive cells named.
+- B: lead with mechanism plus the two-lever split (discard \qRefundClear\% always-gated,
+  notification teleop-only), sign reversal as the punchline; fix the stale c(P+tau)mu/d in
+  contribution 3 and the "operator efficiency" clause.
+- C: I detected the off-by-one and misfiled it as a footnote: severity anchored to the container,
+  exactness judged by empirical indistinguishability, disagreement resolved silently, and a null
+  asserted without power; the fixes are a discrepancy register, a claim inventory, and a mandatory
+  resolution statement on every null; the stale-formula grep found three more sites this round.
+- D: fold band (n_c, n_h) with width c mu pi (tau - rho), independent of d and P; exists for any
+  cycle-shortening retry, detectable when pi (tau - rho) >= S/c = 6.67 steps; sane defaults are
+  deep inside it; backoff floor tau - S/(c pi) or a console discard rule removes it; verified in
+  replica at three (pi, rho) points; build it.
