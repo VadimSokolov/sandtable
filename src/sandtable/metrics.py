@@ -59,6 +59,11 @@ def compute(scn: Scenario, init_counts: dict, ent: Entities,
         "red_losses": float(red_losses),
         "blue_survivors": float(blue_alive),
         "arrived": float(arrived),
+        # The continuous companion to `success`, which is a one-bit readout of this same
+        # quantity against `survive_fraction`. Any sweep that moves the assault force size
+        # moves the threshold too, so a shift in `success` can be a shift in the fraction or
+        # a shift across the cut, and only reporting both separates them.
+        "arrived_frac": arrived / max(assault, 1),
         "blue_loss_frac": blue_losses / blue0,
         "red_loss_frac": red_losses / red0,
         "loss_exchange": red_losses / max(blue_losses, 1),    # MOP: exchange ratio (count-based)
@@ -112,6 +117,9 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "wait_p95": 0.0, "queue_depth_mean": 0.0,
            "operator_goodput": 0.0, "operator_goodput_late": 0.0,
            "abandon_queue_frac": 0.0, "abandon_link_frac": 0.0,
+           "served_per_step": 0.0, "requests_per_step": 0.0,
+           "arrival_fano": 0.0,
+           "supervised_mean": 0.0, "supervised_frac": 0.0, "demand_norm_goodput": 0.0,
            "hold_fraction": 0.0, "interaction_steps": 0.0, "neglect_steps": 0.0, "fan_out": 0.0}
 
     if bhv is not None:
@@ -133,6 +141,16 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
     if op is not None and op.total_steps > 0:
         out["operator_utilization"] = op.busy_steps / op.total_steps
         out["queue_depth_mean"] = op.queue_depth_sum / op.total_steps
+        # The demand the goodput was earned against. `operator_goodput` is endogenous to attrition:
+        # a mission that destroys half the force halves the offered load and the console looks
+        # better for it. Reading the two together is what stops a staffing number taken from a
+        # costly trial being applied to a cheap one.
+        out["supervised_mean"] = op.supervised_sum / op.total_steps
+        out["supervised_frac"] = out["supervised_mean"] / max(op.supervised_n0, 1)
+        if op.fano_window > 0 and op._fano_n > 1 and op._fano_sum > 0.0:
+            mean = op._fano_sum / op._fano_n
+            var = op._fano_sumsq / op._fano_n - mean * mean
+            out["arrival_fano"] = var / mean
         if op.waits:
             w = np.asarray(op.waits, float)
             out["mean_wait"] = float(w.mean())
@@ -141,6 +159,16 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
             out["operator_goodput"] = op.n_serviced / op.n_request
             out["abandon_queue_frac"] = op.n_abandon_queue / op.n_request
             out["abandon_link_frac"] = op.n_abandon_link / op.n_request
+            # Goodput discounted by the demand that survived to offer it, so a share earned in a
+            # costly mission is not read as capacity available in a cheap one.
+            out["demand_norm_goodput"] = out["operator_goodput"] * out["supervised_frac"]
+        # Absolute service RATES, which a treatment that changes the request cadence cannot
+        # inflate. `operator_goodput` is serviced over requested, and a retry manufactures
+        # requests: the failure cycle falls from `P + tau + 1` to `P + rho + 1`, so a short backoff
+        # nearly doubles the denominator on its own. Any contrast between arms whose request rates
+        # differ has to be read here as well, or congestion and denominator inflation are mixed.
+        out["served_per_step"] = op.n_serviced / op.total_steps
+        out["requests_per_step"] = op.n_request / op.total_steps
         if op.n_request_late > 0:
             # Final quarter only: whether the team ENDED the mission serving requests, which is a
             # different question from how many it served on average (CR-17).

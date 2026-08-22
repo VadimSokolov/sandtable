@@ -173,6 +173,7 @@ def test_retry_spread_holds_the_backoff_mean_and_sets_only_its_width():
         decision_interval = 22
         retry_backoff = 4
         retry_spread = -1
+        retry_mode = "fixed"
 
     op = Op()
     draws = list(range(11, 34))          # the full support of _reset_cooldown at tau = 22
@@ -210,3 +211,114 @@ def test_retry_spread_defaults_off_and_costs_no_extra_draw(skirmish_scenario):
     op2 = build_c2(scn2, build_entities(scn2, np.random.default_rng(0)),
                    np.random.default_rng(0))
     assert op2.retry_spread == 3
+
+
+def test_adaptive_backoff_doubles_and_caps_at_the_standing_interval():
+    """CR-23. The doubling rule must reach the floor on its own and never hold a vehicle longer
+    than not retrying would, so a retry can never be worse than no retry."""
+    import numpy as np
+    from sandtable import c2
+
+    class Op:
+        decision_interval = 22
+        retry_backoff = 4
+        retry_spread = -1
+        retry_mode = "double"
+        retry_streak = np.arange(8)
+
+    op = Op()
+    holds = [c2._backoff(op, 22, i) for i in range(8)]
+    assert holds[:5] == [4, 4, 8, 16, 22]
+    assert all(h <= op.decision_interval for h in holds)
+    assert holds == sorted(holds)
+    # it passes the band-closing floor of 15.33 by the fourth unanswered request
+    assert holds[3] >= 15.33
+
+
+def test_the_streak_resets_on_service(skirmish_scenario):
+    """A vehicle that gets an answer must start again from the base hold, or the rule ratchets and
+    an unlucky early patch would punish a vehicle for the rest of the mission."""
+    import numpy as np
+    from sandtable.c2 import build_c2
+    from sandtable.scenario import build_entities
+
+    scn = skirmish_scenario.with_params({"control_mode": "direct", "retry_prob": 1.0,
+                                         "retry_backoff": 4, "retry_mode": "double"})
+    rng = np.random.default_rng(0)
+    op = build_c2(scn, build_entities(scn, rng), rng)
+    assert op.retry_mode == "double"
+    assert op.retry_streak is not None and int(op.retry_streak.sum()) == 0
+
+
+def test_retry_mode_rejects_an_unknown_rule(skirmish_scenario):
+    import numpy as np
+    import pytest as _pytest
+    from sandtable.c2 import build_c2
+    from sandtable.scenario import build_entities
+
+    scn = skirmish_scenario.with_params({"control_mode": "direct", "retry_mode": "exponential"})
+    rng = np.random.default_rng(0)
+    with _pytest.raises(ValueError, match="retry_mode"):
+        build_c2(scn, build_entities(scn, rng), rng)
+
+
+def test_cadence_aimd_needs_a_signal_to_consume(skirmish_scenario):
+    """CR-26. AIMD is a response to an explicit refusal, so it is only defined under `admit`.
+    Allowing it under `blind` would let a vehicle react to a message the operator never sent."""
+    import numpy as np
+    import pytest as _pytest
+    from sandtable.c2 import build_c2
+    from sandtable.scenario import build_entities
+
+    rng = np.random.default_rng(0)
+    for policy in ("blind", "refund"):
+        scn = skirmish_scenario.with_params({"control_mode": "direct", "queue_policy": policy,
+                                             "admit_response": "aimd"})
+        with _pytest.raises(ValueError, match="admit"):
+            build_c2(scn, build_entities(scn, rng), rng)
+    scn = skirmish_scenario.with_params({"control_mode": "direct", "queue_policy": "admit",
+                                         "admit_response": "aimd"})
+    op = build_c2(scn, build_entities(scn, rng), rng)
+    assert op.admit_response == "aimd"
+    assert float(op.cadence_rate.min()) == 1.0    # everyone starts at the standing cadence
+
+
+def test_cadence_aimd_halves_on_refusal_and_recovers_in_eight(skirmish_scenario):
+    """The schedule is TCP's: multiplicative decrease on the congestion signal, additive increase
+    on the acknowledgement, floored so the cadence never stretches past four standing intervals."""
+    import numpy as np
+    from sandtable import c2
+    from sandtable.c2 import build_c2
+    from sandtable.scenario import build_entities
+
+    scn = skirmish_scenario.with_params({"control_mode": "direct", "queue_policy": "admit",
+                                         "admit_response": "aimd"})
+    rng = np.random.default_rng(0)
+    op = build_c2(scn, build_entities(scn, rng), rng)
+    r = 1.0
+    for _ in range(4):                                   # four refusals in a row
+        r = max(c2._AIMD_FLOOR, r * c2._AIMD_BETA)
+    assert r == c2._AIMD_FLOOR                           # floored, not driven to zero
+    n = 0
+    while r < 1.0:                                       # and it climbs back additively
+        r = min(1.0, r + c2._AIMD_ALPHA)
+        n += 1
+    assert n == 6                                        # 0.25 -> 1.0 at an eighth a time
+
+
+def test_cadence_aimd_stretches_the_interval_it_scales(skirmish_scenario):
+    """A halved request rate must double the drawn interval, and only for the vehicle that was
+    refused: AIMD is per-vehicle, not a global dial."""
+    import numpy as np
+    from sandtable import c2
+    from sandtable.c2 import build_c2
+    from sandtable.scenario import build_entities
+
+    scn = skirmish_scenario.with_params({"control_mode": "direct", "queue_policy": "admit",
+                                         "admit_response": "aimd", "decision_interval": 22})
+    op = build_c2(scn, build_entities(scn, np.random.default_rng(0)), np.random.default_rng(0))
+    op.cadence_rate[0] = 0.5
+    base = [c2._reset_cooldown(op, np.random.default_rng(s), 0.0, 1) for s in range(40)]
+    slow = [c2._reset_cooldown(op, np.random.default_rng(s), 0.0, 0) for s in range(40)]
+    assert all(b * 2 - 1 <= t <= b * 2 + 1 for b, t in zip(base, slow))
+    assert sum(slow) > sum(base)

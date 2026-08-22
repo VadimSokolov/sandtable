@@ -536,6 +536,79 @@ def fig_band() -> None:
           f"gap at rho=4 {gap[0]:.1f} pts, at rho=20 {gap[-1]:.1f} pts")
 
 
+def fig_nomogram() -> None:
+    """The decision aid the closed forms actually are: read your own span off your own two numbers.
+
+    Everything in the queue section reduces to `n* = c(P + tau + 1)/(IT d)` and `l* = (P - IT)/2`,
+    and the scenario's timestep is one second, so both are readable in the units the
+    supervisory-control literature already reports. A program that knows its operators' interaction
+    time and its vehicles' neglect time locates itself on the left panel without running anything.
+    The right panel is the decision the ladder forces: how many assets one console can carry at each
+    rung, which is zero above the latency ceiling however many consoles are bought.
+    """
+    P = float(_QP["patience"])
+    it_pt, nt_pt = 1.0 / float(_QP["service_rate"]), float(_QP["decision_interval"])
+    base = (P + nt_pt + 1.0) / it_pt
+    cut = (P - it_pt) / 2.0
+    magic_nt = 14.0 / (4.25 / 60.0)      # 14 robots at 4.25 task-operator interactions/min
+    magic_it = magic_nt / 13.0           # the bound their own non-saturation implies
+
+    fig, (a0, a1) = plt.subplots(1, 2, figsize=(7.0, 3.2))
+
+    it = np.linspace(2.0, 30.0, 400)
+    nt = np.linspace(10.0, 320.0, 400)
+    IT, NT = np.meshgrid(it, nt)
+    n_star = (P + NT + 1.0) / IT
+    cs = a0.contour(IT, NT, n_star, levels=[2, 4, 8, 12, 16, 24, 32, 48],
+                    colors=BLUE, linewidths=0.8)
+    a0.clabel(cs, fmt="%d", fontsize=6.5, inline_spacing=3)
+    a0.plot([it_pt], [nt_pt], "o", color=RED, ms=5.5, zorder=6)
+    a0.annotate(f"SandTable\n$n^{{\\star}}$ = {base:.1f}", (it_pt, nt_pt),
+                textcoords="offset points", xytext=(9, -4), fontsize=7, color=RED)
+    a0.plot([2.0, magic_it], [magic_nt, magic_nt], "-", color=GREEN, lw=1.8, zorder=6)
+    a0.plot([magic_it], [magic_nt], "|", color=GREEN, ms=10, mew=1.8, zorder=6)
+    a0.annotate(f"MAGIC 2010: 14 robots, one operator.\nInteraction time never published; their\n"
+                f"own unsaturated operator bounds it\nbelow {magic_it:.0f} s.",
+                (29.5, 118), ha="right", va="top", fontsize=6.4, color=GREEN,
+                bbox=dict(fc="white", ec="none", alpha=0.85, pad=1.5))
+    a0.set_xlabel("interaction time $1/\\mu$ (s)")
+    a0.set_ylabel("neglect time $\\tau$ (s)")
+    a0.set_title("(a) what one console can carry", loc="left")
+    a0.set_xlim(2, 30)
+    a0.set_ylim(10, 320)
+    a0.grid(alpha=0.15)
+
+    drop = np.array([0.0, 0.05, 0.10, 0.20, 0.35, 0.55])
+    lat = np.array([0, 1, 2, 4, 8, 16], float)
+    d = (1.0 - drop) ** 2
+    live = lat <= cut
+    x = np.arange(6)
+    for c, col, mk, dx in ((1, BLUE, "o", -0.12), (2, AMBER, "s", 0.0), (3, GREEN, "^", 0.12)):
+        usable = np.where(live, c * base / d, 0.0)
+        a1.plot(x[live], usable[live], "-", color=col, lw=1.3, marker=mk, ms=4.5,
+                label=f"{c} console" + ("s" if c > 1 else ""))
+        a1.plot(x[~live] + dx, usable[~live], color=col, marker="x", ms=6, mew=1.6, ls="none")
+    a1.axvspan(float(np.argmax(~live)) - 0.5, 5.5, color=RED, alpha=0.09, lw=0)
+    a1.annotate(f"one-way latency exceeds\n$\\ell^{{\\star}}$ = {cut:.1f} s, so no request\n"
+                f"can be answered at all.\nBuying consoles does nothing.",
+                (float(np.argmax(~live)) - 0.35, 34), fontsize=6.4, color=RED, va="top")
+    a1.set_xticks(x)
+    a1.set_xticklabels([f"C{i}" for i in range(6)])
+    a1.set_xlabel("communications degradation")
+    a1.set_ylabel("assets the consoles can carry")
+    a1.set_title("(b) and what the link does to that", loc="left")
+    a1.set_ylim(-2, 52)
+    a1.legend(loc="upper left")
+    a1.grid(alpha=0.15)
+
+    fig.tight_layout()
+    fig.savefig(FIG / "nomogram.pdf")
+    fig.savefig(FIG / "nomogram.png", dpi=170)
+    plt.close(fig)
+    print(f"[nomogram] SandTable n*={base:.2f}, MAGIC cadence={magic_nt:.0f}s, "
+          f"IT bound={magic_it:.1f}s, latency ceiling={cut:.1f}s, dead from C{int(np.argmax(~live))}")
+
+
 def main() -> None:
     fig_centerpiece_phase()
     fig_centerpiece_curves()
@@ -546,6 +619,7 @@ def main() -> None:
     fig_drone()
     fig_queue()
     fig_band()
+    fig_nomogram()
     print("figures ->", FIG)
 
 

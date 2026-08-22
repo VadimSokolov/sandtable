@@ -12,6 +12,7 @@ EXPECTED_KEYS = {
     "red_losses",
     "blue_survivors",
     "arrived",
+    "arrived_frac",
     "blue_loss_frac",
     "red_loss_frac",
     "loss_exchange",
@@ -24,6 +25,15 @@ EXPECTED_KEYS = {
     # when its layer is absent, which `test_teaming_keys_are_zero_without_their_layers` pins.
     "interventions",
     "intervention_rate",
+    # Demand readouts (CR-25). Goodput is a share of the requests that arrived, and requests come
+    # from vehicles that are still alive, so attrition relieves the console. These report the
+    # demand the goodput was earned against.
+    "served_per_step",
+    "requests_per_step",
+    "arrival_fano",
+    "supervised_mean",
+    "supervised_frac",
+    "demand_norm_goodput",
     "hold_fraction",
     "interaction_steps",
     "neglect_steps",

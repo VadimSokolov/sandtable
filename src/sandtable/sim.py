@@ -68,7 +68,9 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
 
     tempo = float(scn.params.get("tempo", 1.0))
     dt = scn.dt
-    n_steps = max(int(scn.duration / dt), 1)
+    # `duration` is a scenario field, but the mission-length audit has to vary it without
+    # editing scenario files, so a param of the same name overrides it when present.
+    n_steps = max(int(float(scn.params.get("duration", scn.duration)) / dt), 1)
     # The assault force is the GROUND blue; UAS recon assets (air) do not advance to the objective,
     # so the success threshold and time-to-objective are judged over ground blue only. For the
     # ground-core scenarios (no air) this equals init_counts[BLUE], so they are unchanged.

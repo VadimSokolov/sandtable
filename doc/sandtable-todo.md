@@ -875,6 +875,49 @@ that the assets stop needing the operator, and the worst place to stand is on th
 is a U-shaped design curve with its trough at `n*`, and "if you must exceed n*, exceed it by a
 lot" is a sharper recommendation than anything currently in the paper.
 
+### A1 VERDICT (2026-08-22, `st-forceratio-9445778`, full tier, 32 blocks at 64 reps)
+
+**The confound is real, it is the largest effect measured anywhere in this project, and the
+conjecture I attached to it is refuted.**
+
+Success against span, `sc_span_control`, rung 0, `blind`, holding everything else fixed:
+
+| n_blue | 3 | 6 | 9 | 12 | 15 |
+|---|---|---|---|---|---|
+| defenders fixed at four | .360 | .656 | .577 | .847 | **.915** |
+| force ratio held at 1.5 | .763 | .656 | .215 | .179 | **.087** |
+
+Every successive step is gated in both arms. The fixed arm rises +0.555 from three to fifteen
+(t=+44.4, 32/32); the held-ratio arm falls -0.676 over the same span (t=-58.1, 32/32). The
+difference of differences is **+1.231, t=+75.9, 32/32**. One simulator, one sweep, one metric, and
+the sign of the answer is set entirely by whether the opposing force scales with the team.
+
+**The U-shape conjecture is REFUTED on its own falsifier.** I predicted a trough at `n*` with a
+recovery beyond it, and the recommendation "if you must exceed n*, exceed it by a lot". At held
+force ratio there is no recovery: -0.107, -0.440, -0.036, -0.092 across successive spans, every one
+gated, monotone down. The escape route exists only in the fixed-threat design, where it is mass
+beating a static defender rather than a team outgrowing its operator. The dip at nine in the fixed
+arm is real (-0.079, t=-4.52) and sits where the queue collapses, but it is a dip in a rising
+curve, and the rise is the confound.
+
+**And there is a mechanism underneath, which is the part worth keeping.** Holding the ratio puts
+more red on the field, red kills blue, and dead vehicles do not file requests. At nine vehicles the
+held-ratio arm loses 26 more percentage points of the force (t=+35.8) and the operator's goodput is
+4.3 points *higher* for it (t=+10.3); at twelve, 46 points of extra loss buys 4.2 points of goodput.
+**Attrition is a demand valve on the console.** That is a coupling the queue model cannot produce,
+because it has no combat in it, and it is the sharpest instance so far of A3's point that the
+agent-based layer is not redundant. It is also grim in a way worth saying plainly to a sponsor: a
+console that looks adequate in a costly fight is being relieved by its own casualties.
+
+**What this touches in the manuscript.** Nothing that is a within-cell contrast, which is almost
+everything: every arm comparison at fixed span shares the identical force ratio and it cancels
+exactly in the difference. Nothing on `operator_goodput`, which falls with span in both designs.
+The published centerpiece grid scales `n_red` with `n_blue` at 1:1, so it is in the held-ratio
+family and is unaffected. What it touches is any reading of a **success-versus-span shape** taken
+from a fixed-defender sweep, and the honest correction is that span of control cannot be evaluated
+without declaring what happens to the threat. That belongs in the paper as a result, not only as a
+limitation.
+
 ### A2. Half the force dies during the mission, so "span of control" is not a constant
 
 `blue_loss_frac` runs 0.64 down to 0.20 across the sweep. At the centerpiece operating point it is
@@ -902,3 +945,31 @@ instead of left as an unexplained gap between two numbers that are presented as 
   configuration, which looked like the manuscript reporting zeros. It is not: the reported values
   come from `st-searchC` C9, where the behaviour layer is active, and they are 3.88 at two assets
   against a 2.15 floor. No error.
+
+### A4. Two instruments were broken, and both were found by asking what they could have shown
+
+Recorded 2026-08-22, because the pattern matters more than either instance.
+
+1. **The Fano window.** The probe characterizing the console's arrival process counted in windows of
+   1, 2, 4 and 10 steps against a channel dwell of 120. It could not have detected correlation at
+   the scale that mattered, it reported the bursty arm as the LESS bursty one, and that reading was
+   believed and used. Repaired, calibrated against the offline probe, and now built into the model
+   as `fano_window` with its floor stated (1.76, not 1.00, from within-mission demand trend).
+2. **The backoff jitter.** `retry_backoff` does not set a fixed hold: `retry_spread` defaults to a
+   rescale, so `rho = 20` delivers holds on [10,30]. A knee sweep on that instrument would have
+   fired its own falsifier regardless of the physics. Caught by Fable before the run was read.
+   The same defect makes a jitter arm beat a fixed control through the MEAN alone (spread 30, 60,
+   120 at rho=4 give means 10.4, 18.2, 33.9), which is why every jitter arm in `desync.sh` now
+   carries a mean-matched fixed control.
+
+**And it reaches a published number.** `hysteresis.sh` H4, the source of the manuscript's band-floor
+sentence, swept `retry_backoff = 4,8,12,16,20` at the default spread. The rho=12 arm therefore ran
+holds on [6,18], straddling the predicted floor of 15.33, and rho=16 ran [8,24]. The rescale
+preserves the mean so a smooth response is barely affected, but a transition LOCATION is not
+something a smeared instrument can place. `desync.sh` D3 remeasures it with deterministic holds,
+registered as a check with the falsifier that the transition moves outside [12,16].
+
+**The general rule this is now under.** Before reading a sweep, ask what the instrument could have
+shown given its resolution and its support, and check that the registered falsifier is not one the
+instrument would fire on its own. Both defects here were invisible in the results and obvious in
+the parameter's own support, which is three lines of code away.

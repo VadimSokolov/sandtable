@@ -144,9 +144,21 @@ def extract_contribution_block(tex_text):
         m = re.search(pattern, tex_text)
         if m:
             start = m.end()
-            tail = tex_text[start:start + 4000]
+            # The block ends at the next sectioning command, not at a fixed character count. A
+            # contribution list long enough to overrun a fixed window would have its last items
+            # silently dropped, and those are exactly the newest ones, so an unresolved pointer
+            # added today would pass a check written to catch it. The cap is a runaway guard only.
+            tail = tex_text[start:start + 40000]
             stop = re.search(r'\\(section|subsection|paragraph)\b', tail)
-            return tail[: stop.start()] if stop else tail
+            block = tail[: stop.start()] if stop else tail
+            # A list environment opened inside the block is part of it even if the sectioning
+            # command that ends the block sits inside the environment for some reason.
+            for env in ('enumerate', 'itemize', 'description'):
+                if f'\\begin{{{env}}}' in block and f'\\end{{{env}}}' not in block:
+                    close = tail.find(f'\\end{{{env}}}')
+                    if close != -1:
+                        block = tail[: close + len(f'\\end{{{env}}}')]
+            return block
     return None
 
 

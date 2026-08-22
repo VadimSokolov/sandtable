@@ -243,3 +243,82 @@ Operator-queue numbers (source: tools/make_queue_numbers.py over report/data/que
 \qFastJammed = 62.7
 \qSlowClear = 12.2
 \qSlowJammed = 22.5
+
+
+Parameter provenance and the MAGIC retrodiction (source: tools/make_provenance.py)
+==============================================================================
+\provStep = 1
+\provIT = 6.67
+\provNT = 22
+\provPatience = 20
+\provFanout = 4.3
+\provNstarClear = 6.45
+\provMagicN = 14
+\provMagicRate = 4.25
+\provMagicNT = 198
+\provMagicFanout = 31
+\provMagicNstar = 33
+\provMagicUtil = 47
+\provMagicHeadroom = 46
+\provMagicITBound = 15
+\provAutonomyDividend = 9
+
+
+Span attribution numbers (source: tools/make_attrib_numbers.py over report/data/queue/st-attrib-9445987.out)
+==============================================================================
+\atHeldDir = -0.676
+\atHeldDirT = -58.1
+\atFixDir = +0.555
+\atFixDirT = 44.4
+\atDid = +1.231
+\atDidT = 75.9
+\atDidBlocks = 32
+\atDidN = 32
+\atBlocks = 32
+\atMono = yes
+\atHeldRef = -0.614
+\atHeldRefT = -45.1
+\atFixRef = +0.603
+\atFixRefT = 52.8
+\atHeldSup = -0.171
+\atHeldSupT = -13.7
+\atFixSup = +0.692
+\atFixSupT = 66.3
+\atConsoleShare = 75
+\atScenarioShare = 25
+\atRefundShare = 9
+\atDirLo = 0.763
+\atDirHi = 0.087
+\atRefLo = 0.763
+\atRefHi = 0.149
+\atSupLo = 0.716
+\atSupHi = 0.545
+\atArrHeldDir = -0.385
+\atArrHeldDirT = -68.5
+\atArrFixDir = +0.169
+\atArrFixDirT = 29.3
+\atArrDid = +0.554
+\atArrDidT = 72.0
+\atArrDidBlocks = 32
+\atArrDidN = 32
+\atArrBlocks = 32
+\atArrMono = yes
+\atArrHeldRef = -0.301
+\atArrHeldRefT = -55.8
+\atArrFixRef = +0.178
+\atArrFixRefT = 30.4
+\atArrHeldSup = -0.109
+\atArrHeldSupT = -20.3
+\atArrFixSup = +0.224
+\atArrFixSupT = 38.9
+\atArrConsoleShare = 72
+\atArrScenarioShare = 28
+\atArrRefundShare = 22
+\atArrDirLo = 0.571
+\atArrDirHi = 0.186
+\atArrRefLo = 0.571
+\atArrRefHi = 0.269
+\atArrSupLo = 0.546
+\atArrSupHi = 0.437
+\atSpanLo = 3
+\atSpanHi = 15

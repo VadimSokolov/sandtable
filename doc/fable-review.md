@@ -1358,3 +1358,459 @@ cost was never in the cells run so far, it was in the cells CR-19 is about to ru
   bracket prediction GATED and was retracted anyway, which is the opposite of story-shopping.
 - CR-20: expectation right, bound is incidence times (1-lam), uniformly second-order in the cells
   run so far; its real payload is the cohort channel in the cells about to run.
+
+## Round 7 (2026-08-22, the coordinator's batch 6)
+
+New this round: st-forceratio-9445778 at full tier (held force ratio versus fixed defenders), the
+Floyd-Fall framing now in the manuscript, CR-23/CR-24 registered and running, and one datum from
+the crossing battery's control (reply pin at n = 6 leaves the burst-times-retry contrast
+untouched). Predictions below are blind: I have not read backoff.sh, adaptive.sh, or st-crossing
+outputs. Placement facts checked in `scenarios/sc_span_control.json` and `scenario.py`: red scales
+by deepening a column (30 m spacing, same anchor, same lane), and mission success is the
+`survive_fraction >= 0.5` threshold readout.
+
+Ranked verdicts, most important first: Q4 (do not stop; the fourth account is already registered
+and two of its three pin-ladder points are confirmed), Q1 (a result, but a methods result, and
+currently over-crowned until one attribution arm runs), CR-23 (falsifier mis-calibrated against
+the code's own backoff jitter, and the GE knee locations discriminate my two accounts, so fix the
+registration now), Q2 (ship the caution, not the claim), Q3 (structural, and the disanalogy
+sharpens it; the papered-over one is signal observability), CR-24 (one predictable failure cell;
+pre-commit its interpretation).
+
+### Q4. The pin datum, and when to stop proposing mechanisms
+
+The n = 6 result is not an early warning of a third burned mechanism. It is the second confirmed
+point of the account registered in the foundations round (F5 and the r6_crossing probe): the jam
+is sustained by good-dwell booking load, and `reply_model="marginal"` pins only the reply leg,
+leaving the forward path's conditioning (request legs are lossless inside a good dwell) untouched.
+The good-dwell loads at Lambda_r = 25 are:
+
+| n | marginal reply | coherent reply | pin prediction |
+| --- | --- | --- | --- |
+| 4 | 0.853 | 1.044 | pin kills the effect |
+| 5 | 1.067 | 1.305 | pin bites partially |
+| 6 | 1.280 | 1.566 | pin does nothing |
+
+Measured so far: n = 6, pin does nothing (co 0.440, mg 0.437, bern 0.493); n = 5, my 128-seed
+probe, pin removes about a third (co -0.125, mg -0.086). Two of three points match before the
+registered control lands. So when st-crossing refutes H(CR-22b), what dies is the round-trip-d
+channel and its falsifier, not the crossing arithmetic: the numerator shortening (43 to 25)
+survives, and the denominator's operative d is the conditional forward-path booking rate during
+good dwells, not the stationary 0.780.
+
+The decisive arm not yet run is the mirror control: `request_model="marginal"` (draw the up leg at
+the stationary rate whatever the chain state, keep the reply coherent). Registered predictions:
+the request pin kills at least 80 percent of the DiD at n = 5 and n = 6; the reply pin (existing)
+kills roughly none at 6 and at most 40 percent at 5. If BOTH pins leave the contrast standing,
+then stop: report an unexplained regularity with the refutation record attached.
+
+The stop rule you asked for, stated generally: stop proposing mechanisms when you can no longer
+state, before the run, a cell where the new account and "unexplained regularity" disagree.
+Mechanism count is the wrong meter; free-parameter count is the right one. This sequence has added
+zero free parameters across four accounts, each successive account contained strictly less
+machinery, and every death was on a registered cell. That is refinement. Story-fitting is when the
+mechanism space grows faster than the falsifier space, and here the falsifier space has grown
+faster (pin arms, jitter arms, rho knees, span ladders). One more discriminating run is earned;
+after a double-pin survival, none is.
+
+### Q1. Force ratio: result, but a methods result, and not yet attributed
+
+The finding is real and the U-shape retraction is clean process. But "span of control cannot be
+evaluated without declaring what happens to the threat" is currently carrying three channels, and
+only one of them is the console:
+
+1. Console congestion: goodput falls with span in both arms, gated. Real.
+2. Geometry: held ratio deepens a red column at one chokepoint on one lane (checked: 30 m spacing,
+   fixed anchor, no re-laydown, no frontage change). "More red" is "wade through a deeper column,"
+   which is a difficulty knob wearing an adversary's clothes. The monotone decline could be partly
+   the column, not the console.
+3. MOE concentration: success is survive_fraction >= 0.5. At held ratio the Lanchester square law
+   makes the mean survivor fraction approximately scale-free while its variance shrinks with
+   force size, so once queue degradation pushes the mean fraction below 0.5 (near n* = 6.45 at
+   rung 0), concentration converts slightly-below-the-bar into near-certain failure. The -0.440
+   cliff at 6 to 9 and the +1.231 DiD are threshold-amplified. The fixed arm is amplified the
+   other way (mean above bar, concentration pushes toward 1). This is F4 item 3 doing live damage
+   inside your biggest new number.
+
+Attribution costs one cheap battery and one readout: (a) refund at held ratio, n = 9; registered
+prediction if the console owns the decline: most of the -0.440 step recovers. A supervisory
+held-ratio arm bounds the geometry term (its decline has no console in it). (b) Report mean
+survivor fraction and advance distance next to success; if the means move gently while success
+cliffs, the text must say threshold-amplified and show both.
+
+Verdict: a result, and worth prominence after attribution, framed as identification: the span
+estimand is undefined until the threat-scaling rule is declared; under the two natural rules the
+sign reverses; most simulation studies choose silently; the published grid already uses the
+conservative rule. Note also that lit-ideas I14 announced this in kind (a static red force is a
+structural bias); the quantitative confirmation strengthens the result reading. One scope wrinkle
+missed: cross-cell comparisons of effect MAGNITUDES are attrition-confounded even where
+within-cell signs are safe, because the demand valve depresses offered load in lethal cells. One
+sentence in the paper covers it.
+
+### Q2. The grim reading: ship the caution, not the claim
+
+Two sentences with different fates live in this result. The measurement caution is robust: console
+adequacy metrics read from high-attrition trials overstate capacity, because goodput is
+demand-endogenous. That transfers regardless of model fidelity; it is a confound statement, and
+T&E audiences receive instrumentation cautions as gifts. The operational claim (casualties relieve
+the console) is model-contingent and plausibly sign-reversed in the field: real casualty events
+spike coordination demand (casevac, reassignment, reporting), and this model's demand is open-loop
+with no casualty-triggered surge. Publishing the claim invites the correct rebuttal and taints the
+caution standing next to it.
+
+Constructive versions to ship: (1) a demand-normalized goodput (serviced against requests from
+surviving requesters, or offered-load-corrected) reported wherever attrition differs across cells,
+one line in metrics.py, immunizes every cross-scenario comparison including Q1's; (2) the sizing
+rule in its forwardable form: the console's worst day is a bloodless day, so size staffing to
+low-attrition operations. Same fact, pointed the useful direction.
+
+### Q3. Floyd-Fall: structural, and the disanalogy sharpens it
+
+Keep the identification. Its invariant is abandonment invisibility: Erlang-A's server sees the
+hang-up instantly, so waste is a footnote; Floyd-Fall's upstream router cannot see the downstream
+drop, so waste is a regime; the blind console cannot see expired patience, same regime. The policy
+triple is a visibility ladder (never, at dequeue, at arrival plus signaled), which is tighter than
+an analogy.
+
+Your specific question: responsive-but-abandoning vehicles SHARPEN it. Floyd-Fall need senders
+unresponsive on the rate axis. Abandonment is a response on the deadline axis (stop waiting), not
+the rate axis (stop offering), and retry converts the deadline response into a rate increase
+(cycle 43 to 25). Abandonment-with-retry is anti-responsive: worse per unit of offered load than
+Floyd-Fall's senders. The model's addition to their story is exactly this two-axis decomposition
+of "responsiveness," and it is why the fix lives on the vehicle.
+
+The second disanalogy you are papering over is signal observability and use. TCP's remedies are
+signal-consuming: Jacobson is loss-as-congestion-signal plus RTT estimation plus AIMD. Under blind
+and refund your vehicle observes only its own silence, and at rung 3 over a third of round trips
+die by link, so silence cannot distinguish link loss from queue death from slow service. Two
+consequences. Citation precision: the doubling rule is Metcalfe-Boggs BEB, signal-free by
+construction; cite Jacobson only where a signal exists, which is admit. And a falsifiable
+completion: your own decomposition says the notification half of admit is worth almost nothing in
+published physics, against everything TCP believes about signals, and the resolution is that no
+vehicle policy CONSUMES the signal (fallback is identical told or untold). Register the missing
+cell: admit plus cadence-AIMD (halve request cadence on refusal, additive recovery on service).
+Prediction: the notification share of admit's value grows from single digits to a majority. If it
+does not, the observability half of the identification is decorative and should be cut down to the
+waste-regime half. An analogy that generates a cell is structural; one that only generates
+citations is flattering.
+
+### CR-23. Fix the registration before the data lands
+
+Three problems, all repairable today.
+
+1. The falsifier "the decline is gradual" is mis-calibrated against the implementation. With
+   `retry_spread` unset, the effective backoff is cool times rho over tau with cool jittered
+   plus-minus 50 percent, so the knee at nominal rho is convolved with a U[rho/2, 3rho/2] kernel.
+   At n = 5 that smear is survivable; at n = 8 a knee at 20.6 smears across [10, 31] and is also
+   capped near the standing interval, so it will read as gradual whatever the mechanism. Run the
+   battery at `retry_spread = 0` (the knob exists for exactly this) or register the knee in
+   effective-backoff units.
+2. The registered knee locations assume stationary d, and my own F5 numbers share that
+   assumption, so one of my two accounts is wrong and this battery arbitrates. Under the
+   conditional forward path, the operative booking rate during good dwells is kappa around 0.98,
+   not 0.78, and the clean-past-rho point moves right: at n = 5 the damage shoulder runs from
+   about rho = 5 (stationary edge, jam persistent across bad dwells) to about rho = 11.6
+   (conditional edge, jam dies within good dwells); at n = 6 the shoulder is about 10 to 18; at
+   n = 8 the conditional edge is 31, PAST the cap, while Bernoulli clears at 13. Registered
+   discriminator, jitter-robust and binary: if n = 8 GE-120 damage never fully clears below the
+   cap while n = 8 Bernoulli clears near 13, the conditional account wins and CR-23 doubles as
+   the request-pin experiment for free. If GE clears at 20 as your table says, stationary d wins
+   and my foundations shoulder was a phantom.
+3. The n = 4 falsifier ("gated at any rho refutes") is over-strong at long dwell: the conditional
+   forward path gives n = 4 a good-dwell load of 1.044, entry rare but a 1800-step mission crosses
+   several dwells, so a small L = 120-only effect at n = 4 is the forward-path term, not a
+   refutation. Keep the clean refuter: n = 4 Bernoulli null at every rho (load 0.853, nothing to
+   exploit).
+
+### CR-24. One predictable failure cell; pre-commit its reading
+
+The dominance claim should fail, if anywhere, in healthy-but-lossy cells: Bernoulli rung 3 at low
+span, where over a third of round trips die by link noise and BEB doubles on silence it cannot
+diagnose. Cadence stretches, consultation quality sags a hair, and adaptive lands between fixed-4
+and fixed-20 instead of matching fixed-4. That is the classical loss-cause blindness of loss-driven
+backoff on lossy links, not a dead rule, and its fix is the Q3 cell (double on refusal under
+admit, never on silence). Pre-commit now: a small gated shortfall against fixed-4 confined to
+healthy-lossy cells confirms the mechanism reading; treating it as refuting the doubling rule
+would be the fourth mis-aimed falsifier this month. Also check the reset semantics before reading
+tempo metrics: reset-to-base on service, or the leftover long backoff after a fade drags recovery
+and dominance leaks in wait statistics while success holds.
+
+### Scorecard
+
+Mine to own: my F5 jam floor rho*(n, d) used stationary d; the conditional forward-path account,
+also mine, moves the GE knees right and at n = 8 past the cap. Both cannot be right. CR-23 with
+spread = 0 settles it, and I have committed above to which observation kills which. Also for the
+F1 ledger: the attrition demand valve is the fifth instance of the pricing engine producing a
+result the queue cannot (dead vehicles file no requests), and it landed at t = 35.8.
+
+### Round 7 addendum (same day): CR-22 retracted, the pump account, Q4a to Q4c
+
+Scorecard first, since the control landed on my registered numbers. The pin ladder held in kind:
+pin bites partially at n = 5, none at n = 6, CR-22b fired as predicted. My quantitative bound did
+not: I wrote "reply pin kills at most 40 percent at 5" without qualifying the metric, and on
+goodput it killed 57 percent (my success-metric probe had shown 31 percent). The split is
+metric-dependent and operating-point-dependent, and my bound was sloppy. Consequence for my own
+registration: with the reply leg carrying 57 percent on goodput, my "request pin kills at least 80
+percent" is wrong under additivity. Revised: request pin retains roughly the reply share (40 to 70
+percent), and the DOUBLE pin is the real test: under channel additivity it retains under 15
+percent; if it retains more, a third interaction channel exists. Also recorded: the new Fano table
+confirms a check my account required (mg and ge share the clustering, 6.48 vs 6.13, because the
+pin cannot touch the request-leg synchronizer).
+
+**Q4c first, because it constrains the other two.** Three parts of that Fano rise are separable
+and only one is your mechanism. (1) Mechanical on-off thinning: any arrival stream thinned by a
+long-dwell channel shows a Fano rise at windows straddling the dwell; ge_off's +1.05 over bern_off
+is this, no retry involved. (2) Loop echo: the retry arms add another +2.6 to +3.9, but arrivals
+there include retries of the queue's own casualties, so the intermediate variable is endogenous;
+clusters are co-produced by console state, and Fano cannot tell echo from cause. (3) Instrument
+residue: bern_off at F(300) = 5.4 on a memoryless channel is trend variance (attrition and mission
+phase), the same genus of bias as the window bug, smaller. So: the clustering DESCRIPTION is
+established; the clustering EXPLANATION is not, yet. And one of your own gated results already
+falsifies the clustering-only reading: under refund the same clusters arrive and goodput goes UP
+(+0.047 at n = 8). Clusters are not damage; clusters times blind booking is damage. On a
+disciplined console the bursty link is BETTER than the steady-loss link at equal average loss,
+because fades bunch failures into windows where the queue drains and the post-fade cohort meets an
+empty console. The mechanism sentence must therefore carry two clauses with independent switches:
+the pump (retry synchronizes re-offers to the recovery edge; switch: backoff/jitter at the dwell
+scale) and the valve (blind books the cluster's dead tail; switch: refund, already gated). Written
+that way it is a mechanism. Written as "the console gets a cluster it cannot absorb," it
+mislocates agency and a reviewer will use your policyburst table against you.
+
+**Q4a.** Measurement plus switch-off is ALMOST enough, and after three failures the bar is
+rightly higher: promotion needs (i) every clause of the mechanism sentence to have its own
+manipulation (you have the valve switch gated; CR-23/24 and the Q4b battery give the pump switch),
+(ii) the intermediate exogenized, because yours is endogenous, and (iii) the instrument validated,
+because your last one was silently broken. One battery does all three: synthetic arrivals. Drive
+the console with generated request streams (Markov-modulated arrivals), a 2x2x2: {clustered at
+the dwell scale, smooth} x {rate matched to ge_retry, rate matched to bern_retry} x {blind,
+refund}, with retry and abandonment feedback OFF so the arrival process is exogenous by
+construction. Predictions that promote the mechanism: damage appears only in clustered x blind
+and grows with rate; refund flips the sign in the same cells; the synthetic rate/clustering split
+lands near the observational 57/43 at n = 5 (if it lands far away, the loop echo was doing work
+the story credits to the channel). Feeding the Fano probe a known generated stream also calibrates
+the instrument on ground truth, which after one broken instrument is not optional. Detrend the
+mission-phase and attrition nonstationarity before quoting any long-window Fano in the paper, and
+prefer w = dwell over w = 300 (four windows per mission is trend, not statistics).
+
+**Q4b.** The mechanism test is right; the design rule as drafted is wrong twice, and the battery
+as drafted has a confound that will produce a false confirmation.
+
+The confound: `retry_spread = s` draws backoff rho + s u with u uniform in [0,1], so the jitter
+arm raises the MEAN backoff by s/2. At s comparable to a 120-step dwell that is +60 steps of mean
+backoff, which dissolves the effect through the load floor (CR-23's own axis) whether or not any
+desynchronization happens. Every jitter arm needs a mean-matched fixed control at rho + s/2, or a
+symmetric jitter at fixed mean, or the dissolution confirms nothing about the synchronizer.
+
+The design rule: "scale the backoff to the outage length" is un-fieldable as stated (no vehicle
+knows L) and it is also only half the requirement. Two floors bind independently: the load floor
+(Lambda_r must cover team demand, n d/(c mu) - (P+1), n-dependent, binds even on clear channels)
+and the outage floor (re-entry spread must cover the recovery edge, L-dependent, binds even at
+subcritical sustained load because the post-fade spike n d/mu is about 26 booked steps against
+P = 20 at n = 5, a transient stall wave per fade). The fieldable rule that satisfies both without
+knowing n, d, mu, or L is the one CR-24 is already running: doubling reaches the outage scale
+online (by fade end the backoff has doubled up to about L) and its geometric phase history
+desynchronizes the cohort as a side effect, which is the classical reason BEB works. So spend the
+battery as the mechanism test that also prices the design space, n = 5, rung 3, blind, L in
+{40, 120}: A fixed rho = 4 (pump baseline); B rho = 4 with spread s = L PLUS its mean-matched
+control at fixed rho = 4 + L/2 (the desync test proper); C fixed rho tuned to L but run at BOTH
+dwells (shows any fixed scaling fails off-design); D adaptive doubling; Bernoulli references. Add
+one readout: arrival Fano at w = L per arm, so the intermediate collapses under the same
+manipulations inside one battery (Q4a's requirement, partially met for free). Registered
+expectations: B beats its mean-matched control (desync is real over and above load) or it does
+not (pump clause dies, load explains all); D matches the best of B/C at both dwells and pays no
+healthy-cell tax. The sponsor sentence that survives every branch: "the backoff must cover the
+larger of the team's service demand and the channel's outage scale, and an adaptive doubling
+backoff finds both online; under admission control the same bursty link is not a threat but a
+scheduling gift." The second half is the policyburst reversal, and it is the most transferable
+sentence this project has produced.
+
+**The span shape, one paragraph.** The positive tail at n = 7 to 10 is the link-side demand valve
+appearing in a DiD: above the Bernoulli arm's own collapse, fades shed load and the bursty arm
+wins. Free registered prediction: the zero crossing tracks the BERNOULLI collapse span (5.86), so
+it moves with d and rho by that formula and vanishes under refund. If the crossing instead tracks
+the GE arm's threshold, the valve reading is wrong. Costs nothing: the cells exist.
+
+## Round 8 (2026-08-22, the coordinator's batch 7)
+
+### Scorecard first, two deaths of mine
+
+1. The load-threshold account is dead as registered, in both variants. CR-23 v2's falsifier (ii)
+   fired on the shape: no knee at any span, smooth decline everywhere, damage gated at n = 4 where
+   rho* is negative. I own that; the switch prediction was the account's content and it is gone.
+   Two footnotes before burial, neither a rescue: the binary discriminator I registered went the
+   conditional account's way (n = 8 GE does not clear by rho = 21), and its other half was not
+   reported: does n = 8 BERNOULLI clear near 13? One existing-run readout; if bern also fails to
+   clear, the conditional account is fully dead rather than half dead, and I want it buried on the
+   full record. Second footnote below, because it is bigger than a footnote.
+2. My CR-24 failure-cell prediction was wrong: I named healthy-lossy Bernoulli; the dominance
+   claim died on GE goodput at n = 4, 5, 6. The cause was sitting in my own Round 2 lesson, which
+   makes the miss worse, not better.
+
+### The cross-cutting catch: goodput's denominator is treatment-inflated in every retry contrast
+
+`operator_goodput = n_serviced / n_request`, and retry is a treatment that manufactures requests:
+the failure cycle shortens from about 43 to P + 1 + rho, so in failure-heavy regimes the retry arm
+inflates its own denominator by up to 1.7x at rho = 4. Two receipts from CR-23 v2's own table:
+
+- The n = 4 plateau is arithmetic. At n = 4 failures are mostly fade-borne (about 20 percent of
+  attempts), so attempt inflation is roughly 0.8 + 0.2 (43/25) = 1.14, which on an off-arm goodput
+  near 0.65 predicts about -0.08. Measured plateau: -0.075 to -0.090 across rho = 4 to 14. The
+  gated-everywhere row at n = 4 is largely the ratio, not the queue.
+- At n = 5, rho = 2, inflation alone predicts roughly -0.23 of the measured -0.51: half
+  arithmetic, half real congestion. The table is a mixture at every cell, in proportions that vary
+  with rho, which is exactly what a smooth no-knee decline looks like.
+
+What survives cleanly is the rho-insensitive stratum at rho = 21 (-0.032 to -0.056 across spans,
+attempts nearly matched there since P + 1 + 21 = 42 against the standing 43). Its candidate is
+determinism itself: deterministic holds freeze cohort phases where the jittered standing cycle
+diffuses them. That is precisely CR-27's matched-mean fixed-versus-jitter contrast, so the battery
+you already registered doubles as the test of this stratum. Convenient, and not designed for it,
+which makes it better.
+
+Actions, all cheap: add a `serviced_per_step` export (one line, `op.n_serviced / op.total_steps`)
+and re-extract CR-23 v2 and CR-24 on it, or gate on success. Registered predictions for the
+re-read: the n = 4 row collapses toward the determinism stratum for rho >= 4; the n = 5 half-point
+moves left; CR-24's goodput dominance failure mostly disappears (adaptive tracks fixed20 on
+serviced/step). If a knee re-emerges near rho = 10 to 12 at n = 5, the load rule revives on the
+metric it was actually derived for (service loss, not the ratio); if the decline is still smooth,
+it is dead honestly and I will not raise it again. Do not ledger the half-damage walk (3, 10, 16)
+until this re-read; those numbers are mixture statistics. Ledger rule going forward, third
+appearance of this lesson (refund/admit ordering in Round 2, the attrition demand valve in Round
+7, retry now): any contrast whose treatment changes request cadence gates on treatment-invariant
+denominators only.
+
+### Q5. Ship it; bound the residual, do not decompose it further
+
+The identification result (span has no defined effect until the threat-scaling rule is declared)
+was licensed by the sign reversal alone and is untouched by any of this. What 75/25 adds is the
+stronger sentence: the held-ratio decline is mostly console. The -0.171 gated residual needs one
+naming sentence (force-scaling geometry plus the threshold readout), not another battery: the
+arrived_frac readout already running splits concentration out of that bundle for free, so the
+supervisory-at-fixed-defenders run is not worth its slot unless (c) comes back ambiguous. Report
+(b) as the near-miss it is (45 percent against a registered half). And take the free consistency
+check sitting in your own table: refund recovers 45 percent of the step while the console owns 75,
+and the 30-point gap is the console's non-booking costs, attention dilution (0.95 to 0.825 at
+n = 9) and stall time, which the model prices independently. One sentence turns the near-miss
+falsifier into a decomposition that hangs together.
+
+### Q6. The registered claim died; the salvage is real but must be labeled salvage
+
+Say plainly: dominance as registered failed on goodput. Then say why that metric was the wrong
+gate for this treatment (denominator, above) and that on the mission metric the claim held
+(adaptive matches fixed20 everywhere, beats fixed4 by 0.14 to 0.20, gated). Note also that
+"fixed20 is indistinguishable from not retrying" is an identity, not a finding: P + 1 + 20 = 42
+against the standing 43; it validates the harness cadence arithmetic and nothing else.
+
+The shippable recommendation, in the model's own scope: the reliance loop has no measured upside
+and a large measured downside; if a loop must exist for reasons outside the model, exponential
+doubling makes it approximately as harmless as not having one, without knowing the channel, the
+team size, or rho; fixed-short backoff is the only catastrophic policy in the swept space. That is
+"the rule instead of the number" surviving as an insurance claim rather than a performance claim,
+and insurance is what a fielded default is. The caveat that keeps it honest: this model prices
+unanswered waiting at a flat q_fallback with no exposure escalation, so "close the loop as slowly
+as you can" is partly an artifact of guidance being cheap to live without here (F4 item 2). Where
+waiting is dangerous, the optimum shifts back toward re-asking, and only the adaptive rule tracks
+that shift without retuning. Ship the rule with that sentence attached.
+
+### Q7. Sequence the two moves; pre-commit the order today
+
+The options are not exclusive and the order is the whole answer. Five registered deaths on one
+contrast raise the posterior that the CONTRAST is mis-constructed relative to the posterior that a
+sixth mechanism exists, and this project's own history votes with that: three of its resolved
+mysteries were instrument or metric artifacts (message-clock adjacency, the Fano window, and now
+the goodput denominator). So if CR-27's P1 or P2 fails, the correct move is a pre-committed
+artifact audit of the contrast itself, in this order, before any conclusion:
+
+1. Denominator re-read (owed already, above).
+2. Instrument-on-bench: inject jittered and unjittered retry-like streams into `bench_sim` and
+   verify the in-sim `fano_window` would have seen P1's predicted reduction on ground truth.
+3. Synchronized-start dependence: stagger initial phases (Round 3 machinery exists); if the
+   contrast moves materially, the phenomenon is partly initial-condition sculpture.
+4. Dwell-mission quantization: 1800 steps is 15 dwells at L = 120; vary duration and confirm the
+   contrast is not a small-multiple artifact of how many fades fit in a mission.
+
+Only after those four: report the regularity, and it is worth being precise about what that report
+would say, because it is stronger than "unexplained". The bench already reproduces the damage
+ordering with arrivals that cannot hear the console, so the console physics is established
+exogenously; the refund reversal is gated, so the valve clause is established; what a CR-27
+failure would kill is only the in-sim generative path (retry as the synchronizer). The residue
+would be: damage real and portable, valve real, in-sim clustering source unattributed, five
+registered refutations attached. That is a publishable negative-space finding, not a failure
+report. And name the structural choice a skeptic would reach for, as scope rather than artifact:
+the entire phenomenon lives under `blind` booking semantics, which is a modeling bracket for
+console software nobody is obliged to field, and the paper has said so since Round 1. The
+discipline point for the record: elimination under registered falsifiers is just sequential
+testing; the thing to hold fixed now is the survivor's bar, set before this batch. Do not let a
+P1/P2 failure move it, and do not let a P1/P2 pass lower it either.
+
+### Bench notes, for the ledger
+
+The bench is clean exactly where the sim was not: offered rate is fixed by construction, so its
+goodput carries no denominator artifact, and the clustering effect at matched rate (-0.32 to
+-0.43) is the first uncontaminated measurement of the pump's damage. Two sentences belong next to
+it. The symmetric ON/OFF geometry (duty 0.5, peak-to-mean 2.0) differs from the channel's 80/20
+(peak-to-mean 1.25) even though the Fano is matched, so magnitudes are existence-grade, not
+transport-grade. And the corrected apportionment (the reply leg does about twice what a pure rate
+step explains, residual unidentified) is the right way to have written it; the observational 57/43
+should not reappear anywhere as a rate/clustering split.
+
+## Round 9 (2026-08-22, the coordinator's batch 8)
+
+Scorecard housekeeping first. The Bernoulli ladder completes my kill sheet: n = 8 does not clear
+at 13.1 on the memoryless channel either, so both halves of my clearing prediction are dead, and
+the rewritten burial (the rule ranks WHICH spans are vulnerable and misses WHERE vulnerability
+ends, on both channels) is the correct verdict; I accept it as written. The denominator
+quantification matches my receipts (large at n = 4, proportional at n = 5), rate.sh carries my
+four predictions verbatim, and the estimator ground-truth tests discharge item (2) of the Q7
+audit order. Falsifier (iii) not firing at n = 4 Bernoulli is the load rule's one surviving limb:
+ungated at every rho exactly where rho* said nothing should happen.
+
+### The n = 4 cell, read precisely before it becomes a poster
+
+- It is a within-channel DiD (retry minus no-retry per channel), so channel-alone effects are
+  already netted. Good construction, worth stating in the ledger.
+- The Bernoulli floor (-0.024 at t = -12.8) is REAL and sub-MPE, not zero, and most of it is
+  cadence arithmetic: a deterministic 21-step hold gives cycle 42 against the jittered standing
+  43, about 2.4 percent more attempts, roughly -0.017 on a 0.688 baseline, before any phase
+  effect. Do not let "not gated" become "zero" anywhere. The ladder is also missing its exact
+  identity point: rho = 22 makes the cycles equal at 43, and that one cheap cell separates
+  cadence arithmetic from determinism proper. Add it to rate.sh.
+- The pump-clause quantity at n = 4 is therefore the cross-channel DiD, about -0.028, not the
+  -0.052 headline.
+- Sustained load is provably off at n = 4; TRANSIENT load is not. The post-fade re-arrival spike
+  books about n d / mu = 20.8 steps against P = 20, so the pump at four vehicles lives exactly at
+  that coincidence, and the coincidence supplies a free falsifier: at n = 3 the spike is 15.6,
+  well under patience, so the pump predicts the n = 3, rho = 21, GE cell is null or much smaller.
+  If n = 3 gates at similar size, the spike arithmetic is wrong and the candidate list reopens
+  (channel-made clustering times the valve, no pump needed). Register it before running it.
+
+### Q8: keep the battery, slim it, and let the audits ride along
+
+The either/or is mostly false: the two audits cost a fraction of a battery slot (paired cells at
+48 to 64 seeds, not 32x64 ladders), so the real decision is what CR-27 spends its arms on.
+
+1. CR-27 keeps its slot and its bar. The n = 4 cell is pass-shaped observational evidence with
+   exactly the two alternative explanations you named still live; it cannot carry the pump clause
+   alone. The bar was one manipulation per clause, set before this datum existed, and Round 8
+   said in both directions that data must not move it. A pass-shaped datum lowering the bar is
+   the same sin as a failure raising it.
+2. Slim the battery: drop the rho = 34 mean-matched tier. Its effective cycle sits past the
+   standing interval, where even the mean predicts nothing; it is the lowest-information arm in
+   the set. Keep 10 and 18, the memoryless null, and P3's dose response.
+3. Spend the savings on the best P2 cell in the project, which the unplanned result just created:
+   GE-120, n = 4, fixed rho = 21 against matched-mean jitter (rho = 10, s = 22). Sustained load
+   is off for every d in [0, 1] there, so the mean-shift confound is unavailable IN PRINCIPLE,
+   not merely controlled. Registered readings: if jitter at matched mean erases the gated -0.052
+   down to the Bernoulli floor, the pump clause is confirmed at a load-free operating point with
+   nothing else in the room; if the damage survives jitter, the pump is not phase compression,
+   and the determinism stratum inherits the file.
+4. The audits ride along at the two poster cells (n = 4 rho = 21, n = 5 rho = 4), both channels:
+   staggered start, predicting the n = 4 DiD shrinks by at most about 40 percent and survives
+   (the synchronized start is one extra compression event against roughly three fades per
+   mission); and duration in {1200, 3600}, predicting per-step damage stable (15 dwells is a
+   small multiple, but paired seeds carry most of it). If either audit kills the cell, it was
+   initial-condition or quantization sculpture, and the ledger says so before any poster ships.
+
+One more sentence for the ledger when the n = 4 cell is written up: it decides against LOAD, not
+for CLUSTERING; the affirmative half still belongs to CR-27's P1/P2, and the write-up should not
+borrow tomorrow's conclusion today.

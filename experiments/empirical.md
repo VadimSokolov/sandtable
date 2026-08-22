@@ -1383,3 +1383,129 @@ tau = 22 cells at every dwell.
 that separates the Lambda-form knee from a tau-form one), `st-retryburst-9444791` (CR-19e, the
 interior maximum), `st-cohort-9445208` (CR-21, the backoff-jitter dose response),
 `st-policyburst-9445271`.
+
+## 2026-08-22 `st-forceratio-9445778`, the A1 audit: span and force ratio confounded
+
+Full tier, 32 blocks x 64 reps, `sc_span_control`, rung 0, `blind`, paired by block.
+S1 sweeps `n_blue` with `n_red` fixed at four, the design every prior battery in this project used.
+S2 sweeps `n_blue` with `n_red = n_blue/1.5`, holding the published 6:4 force ratio.
+
+| n_blue | 3 | 6 | 9 | 12 | 15 |
+|---|---|---|---|---|---|
+| success, defenders fixed at four | .360 | .656 | .577 | .847 | .915 |
+| success, force ratio held at 1.5 | .763 | .656 | .215 | .179 | .087 |
+| operator goodput, fixed | .9999 | .759 | .117 | .0147 | .0077 |
+| operator goodput, held ratio | .9999 | .759 | .160 | .0563 | .0189 |
+| blue loss fraction, fixed | .616 | .467 | .458 | .304 | .230 |
+| blue loss fraction, held ratio | .288 | .467 | .718 | .764 | .807 |
+
+| contrast | value | t | sign | gate |
+|---|---|---|---|---|
+| held ratio, n=6 minus n=3 | -0.1074 | -7.65 | 32/32 | GATED |
+| held ratio, n=9 minus n=6 | -0.4404 | -31.18 | 32/32 | GATED |
+| held ratio, n=12 minus n=9 | -0.0361 | -3.02 | 24/32 | GATED |
+| held ratio, n=15 minus n=12 | -0.0923 | -7.22 | 29/32 | GATED |
+| fixed defenders, n=15 minus n=3 | +0.5547 | +44.41 | 32/32 | GATED |
+| held ratio, n=15 minus n=3 | -0.6763 | -58.10 | 32/32 | GATED |
+| **the confound itself (DiD)** | **+1.2310** | **+75.87** | **32/32** | **GATED** |
+| goodput, ratio minus fixed at n=9 | +0.0428 | +10.26 | 31/32 | GATED |
+| blue loss, ratio minus fixed at n=9 | +0.2602 | +35.83 | 32/32 | GATED |
+| goodput, ratio minus fixed at n=12 | +0.0416 | +36.16 | 32/32 | GATED |
+| blue loss, ratio minus fixed at n=12 | +0.4601 | +66.51 | 32/32 | GATED |
+
+The registered U-shape conjecture is REFUTED on its own falsifier: at held force ratio the success
+curve is monotone down with every step gated, so there is no recovery beyond `n*` and the
+recommendation "exceed it by a lot" does not survive. Verdict and scope in
+`doc/sandtable-todo.md` A1 VERDICT.
+
+### In flight
+`st-crossing-9445405` (CR-22's R3/R4, the d-pinned control at n=4,5,6),
+`st-backoff-9445864` (CR-23, the two floors), `st-adaptive-9445865` (CR-24, the doubling rule).
+
+## 2026-08-22 parameter provenance and the MAGIC 2010 retrodiction
+
+`tools/make_provenance.py`, no simulation run: the numbers come from `scenarios/sc_span_control.json`
+and from Olson et al. 2012 (`10.1002/rob.21426`). Writes `report/gen/provenance_numbers.tex` and
+`report/gen/tab_provenance.tex`.
+
+The scenario timestep is 1 s, so the three queue parameters convert into the fan-out literature's
+own units: interaction time 6.67 s, neglect time 22 s, patience 20 s. Interaction time and neglect
+time are that literature's measured quantities. **Patience is not measured anywhere**, and the
+provenance table now carries that as an empty row.
+
+MAGIC 2010: 14 robots, one task operator, 4.25 interactions/minute. Per-robot cadence 198 s.
+At SandTable's interaction time, fan-out predicts 31 and Equation nstar predicts 33, so 14 robots
+is 46% of capacity at 47% operator utilization, which matches their report of a busy but
+unsaturated operator. Their own non-saturation requires an interaction time below 15 s, a
+constraint the closed form extracts from their prose. The gap between SandTable's direct-control
+collapse span of 6.45 and MAGIC's 14 is the cadence ratio, 198/22 = 9, and n* is linear in it.
+
+## 2026-08-22 the retry batteries, and two broken instruments
+
+**Instrument 1, the Fano window.** The offline probe characterizing the console's arrival process
+used counting windows of 1, 2, 4 and 10 steps against a requested channel dwell of 120, so every
+window sat inside one channel state. It reported the bursty arm as LESS bursty at the console and
+that reading was believed. Rerun at n=5, rung 3, dwell 120 with windows straddling the dwell:
+
+| arm | F(1) | F(10) | F(40) | F(120) | F(300) | rate/step | goodput |
+|---|---|---|---|---|---|---|---|
+| bern_off | 1.161 | 1.105 | 1.103 | 2.435 | 5.373 | 0.0677 | 0.538 |
+| ge_off | 1.227 | 1.209 | 1.489 | 3.487 | 6.859 | 0.0746 | 0.620 |
+| bern_retry | 1.134 | 1.136 | 1.474 | 3.553 | 7.629 | 0.0882 | 0.490 |
+| mg_retry | 1.231 | 1.488 | 2.638 | 6.484 | 13.594 | 0.1035 | 0.276 |
+| ge_retry | 1.228 | 1.499 | 2.484 | 6.129 | 13.064 | 0.1187 | 0.141 |
+
+Now built into the simulator as `fano_window` (binned, byte-identical when off) and calibrated
+against the offline probe: 1.76 / 2.86 / 2.54 / 5.77 for the four arms above, same ordering and
+scale. Its floor is 1.76 rather than 1.00 because a memoryless channel still carries a
+within-mission demand trend from attrition, so only matched-control differences are meaningful.
+
+**Instrument 2, the backoff jitter.** `retry_backoff` does not set a fixed hold by default:
+`retry_spread` defaults to -1, which rescales the cooldown draw. Verified by value at tau=22,
+rho=20 delivers holds on [10,30] and rho=6 delivers [3,9]. `st-backoff-9445864` was cancelled unrun
+and resubmitted as 9445984 with `retry_spread=0` on every arm. The same defect makes a jitter arm
+beat a fixed control through the mean alone: at rho=4 a spread of 30, 60 or 120 delivers a MEAN of
+10.4, 18.2 or 33.9, which is why `desync.sh` carries mean-matched controls at rho = 10, 18, 34.
+
+### `st-backoff-9445984` (CR-23): no knee at any span
+
+Goodput damage against no-retry, GE-120, rung 3, deterministic holds, every cell gated:
+
+| rho | 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16 | 18 | 21 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| n=4 | -0.217 | -0.082 | -0.080 | -0.078 | -0.087 | -0.090 | -0.083 | -0.075 | -0.066 | -0.052 |
+| n=5 | -0.510 | -0.470 | -0.436 | -0.357 | -0.247 | -0.174 | -0.135 | -0.118 | -0.090 | -0.056 |
+| n=6 | -0.404 | -0.387 | -0.368 | -0.343 | -0.317 | -0.297 | -0.248 | -0.206 | -0.137 | -0.043 |
+| n=8 | -0.163 | -0.153 | -0.138 | -0.128 | -0.120 | -0.106 | -0.090 | -0.077 | -0.062 | -0.032 |
+
+Falsifier (ii) fires: at n=5 the rho=8 damage is 70% of the rho=2 damage. The registered
+discriminator answers against the load rule as well, n=8 GE not clearing by rho=21
+(-0.032, t=-8.36). Verdict in `doc/autoresearch-conjectures.md`.
+
+### `st-adaptive-9445865` (CR-24): the best fixed policy is not retrying
+
+GE-120 goodput at n = 4/5/6/8: noretry .676/.612/.474/.192, fixed4 .595/.155/.094/.040,
+fixed20 .666/.596/.427/.169, adaptive .628/.460/.310/.159. Bernoulli goodput:
+noretry .569/.546/.511/.398, fixed4 .553/.493/.290/.054, fixed20 .570/.543/.505/.375,
+adaptive .559/.513/.446/.291. Mission success, GE-120: adaptive is not separable from fixed20 at
+any span and beats fixed4 by +0.153/+0.197/+0.135 at n=5/6/8, all gated.
+
+### `st-attrib-9445987` (CR-25): the console carries three quarters of the sign reversal
+
+Success at held force ratio, rung 0, all contrasts gated:
+
+| arm | n=3 | n=6 | n=9 | n=12 | n=15 | n=6 to 9 | n=3 to 15 |
+|---|---|---|---|---|---|---|---|
+| direct | .763 | .656 | .215 | .179 | .087 | -0.440 | -0.676 |
+| refund | .763 | .701 | .413 | .307 | .149 | -0.288 | -0.614 |
+| supervisory | .716 | .733 | .617 | .652 | .545 | -0.117 | -0.171 |
+
+Prediction (a) holds well clear of its falsifier (27% against the 68% that would refute);
+(b) partial, refund recovering +0.198 at n=9, 45% of the step, above the 0.10 falsifier and just
+under the registered half. Supervisory falls -0.171 over the sweep, so about a quarter of the
+reversal is scenario geometry plus threshold concentration and three quarters is the console.
+
+**Note on synchronization.** `arrived_frac` was added to the metric set and synced to Hopper while
+`st-backoff-9445984` was still running. Byte identity was verified first (29 pre-existing metrics
+identical across 32 runs), and that battery reports only `operator_goodput` and `success`, so no
+value it wrote can have moved. The `# code=` line in its header is the pre-change hash.

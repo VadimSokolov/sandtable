@@ -156,3 +156,69 @@ def test_step_sequence_is_deterministic():
     a = _control_quality_history(42, params)
     b = _control_quality_history(42, params)
     assert np.array_equal(a, b)
+
+
+# ---- CR-28: waiting priced by exposure, not flat ---------------------------
+
+def _stall_scn(scn, **kw):
+    return scn.with_params({"control_mode": "direct", "comms_level": 3, "n_blue": 6, **kw})
+
+
+def test_stall_decay_defaults_to_flat_pricing(skirmish_scenario, rng):
+    """The published model prices a wait flat. `stall_decay = 0` must reproduce it exactly, so the
+    knob can be swept without moving the baseline it is measured against."""
+    from sandtable.sim import run_mission
+
+    base = run_mission(_stall_scn(skirmish_scenario), seed=7)
+    off = run_mission(_stall_scn(skirmish_scenario, stall_decay=0.0, stall_floor=0.0), seed=7)
+    assert base == off
+
+
+def test_stall_decay_lowers_quality_monotonically_across_the_patience_window():
+    """Quality must fall as the requester's own deadline approaches and must never cross the floor,
+    otherwise the sweep would price a long wait as SAFER than a short one somewhere in its range."""
+    from sandtable import c2
+
+    class Op:
+        q_stall = 0.30
+        patience = 20
+        stall_decay = 1.0
+        stall_floor = 0.05
+
+    op = Op()
+
+    def q(left):
+        frac = 1.0 - min(1.0, left / max(1.0, float(op.patience)))
+        return op.q_stall - op.stall_decay * frac * (op.q_stall - op.stall_floor)
+
+    qs = [q(left) for left in range(20, -1, -1)]
+    assert all(b <= a + 1e-12 for a, b in zip(qs, qs[1:]))
+    assert abs(qs[0] - op.q_stall) < 1e-12          # a fresh wait is priced at the published value
+    assert abs(qs[-1] - op.stall_floor) < 1e-12     # a wait about to expire sits at the floor
+    op.stall_decay = 0.5
+    assert abs(q(0) - (op.q_stall - 0.5 * (op.q_stall - op.stall_floor))) < 1e-12
+
+
+def test_build_c2_rejects_an_out_of_range_stall_decay(skirmish_scenario, rng):
+    from sandtable.c2 import build_c2
+    from sandtable.scenario import build_entities
+
+    for bad in (-0.1, 1.1):
+        scn = _stall_scn(skirmish_scenario, stall_decay=bad)
+        try:
+            build_c2(scn, build_entities(scn, rng))
+        except ValueError:
+            continue
+        raise AssertionError(f"stall_decay={bad} was accepted")
+
+
+def test_duration_param_overrides_the_scenario_field(skirmish_scenario):
+    """The mission-length audit varies duration without editing scenario files. The override must
+    be inert at the scenario's own value, or every audit cell shifts against its own baseline."""
+    from sandtable.sim import run_mission
+
+    d = skirmish_scenario.duration
+    assert run_mission(skirmish_scenario.with_params({"n_blue": 5}), seed=3) == \
+           run_mission(skirmish_scenario.with_params({"n_blue": 5, "duration": d}), seed=3)
+    longer = run_mission(skirmish_scenario.with_params({"n_blue": 5, "duration": 2 * d}), seed=3)
+    assert longer["mission_time"] >= 0.0

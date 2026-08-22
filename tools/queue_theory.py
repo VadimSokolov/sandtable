@@ -330,6 +330,62 @@ def queue_only_sim(n: int, latency: float, p_drop: float, service_rate: float = 
             "abandon_link_frac": dropped / total, "requests": total}
 
 
+def bench_sim(rate: float, cluster_len: float = 0.0, latency: float = 0.0,
+              service_rate: float = 0.15, patience: float = 20.0, policy: str = "blind",
+              steps: int = 200000, seed: int = 0, window: int = 120) -> dict:
+    """The console driven by an EXOGENOUS arrival process, with the feedback loop cut.
+
+    `queue_only_sim` still lets the console shape its own demand: a vehicle that is refused waits
+    out its patience and so arrives later, which means arrival clustering is co-produced by console
+    state and cannot be manipulated independently of it. Every observational contrast in this
+    project inherits that. This bench replaces the vehicles with a stationary arrival process whose
+    RATE and BURSTINESS are set separately and neither of which can hear the console, so the two
+    can be crossed.
+
+    The process is a Markov-modulated Poisson process with symmetric ON and OFF states of mean
+    dwell `cluster_len` and an ON rate of `2*rate`, so the mean arrival rate is `rate` at every
+    `cluster_len` by construction. `cluster_len = 0` degenerates to a homogeneous Poisson stream at
+    the same rate, which is the smooth control. Nothing else differs between the two.
+
+    Returns the goodput, the realized arrival rate (a check that the rate match held), and the
+    Fano factor of the arrival stream at `window`, which is the intermediate variable the
+    observational probe could only measure endogenously.
+    """
+    import numpy as np
+    rng = np.random.default_rng(seed)
+    S = 1.0 / service_rate
+    on_rate = 2.0 * rate
+    p_switch = 0.0 if cluster_len <= 0 else 1.0 / cluster_len
+    on = True
+    free_at = 0.0
+    served = abandoned = 0
+    counts = np.zeros(steps)
+    for k in range(steps):
+        if p_switch > 0.0:
+            lam = on_rate if on else 0.0
+            if rng.random() < p_switch:
+                on = not on
+        else:
+            lam = rate
+        n_arr = rng.poisson(lam)
+        counts[k] = n_arr
+        for _ in range(n_arr):
+            done = max(free_at, k + latency) + S
+            if done + latency - k <= patience:
+                free_at = done
+                served += 1
+            else:
+                if policy == "blind":
+                    free_at = done          # the slot is spent on an answer nobody waits for
+                abandoned += 1
+    total = max(served + abandoned, 1)
+    w = max(1, int(window))
+    binned = counts[:len(counts) // w * w].reshape(-1, w).sum(1)
+    fano = float(binned.var() / binned.mean()) if binned.mean() > 0 else float("nan")
+    return {"goodput": served / total, "arrivals": total, "rate": total / steps,
+            "fano": fano, "abandon_frac": abandoned / total}
+
+
 _LADDER = [(0, 0.00), (1, 0.05), (2, 0.10), (4, 0.20), (8, 0.35), (16, 0.55)]
 
 

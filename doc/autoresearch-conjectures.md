@@ -1663,3 +1663,489 @@ falsifiers, the coherence excess by a monotone rise where it predicted an interi
 DWELL, and the retry cohort by a flat dose response where it predicted a decline. The third was
 registered before its run and confirmed on the shape it predicted in a variable never swept before.
 The two refutations are the reason to believe the third: it was not the first story that fit.
+
+## CR-23: two floors, and only one of them moves with the team
+
+*Registered 2026-08-22, before the run. Prompted by Fable's F5, which caught the paper conflating
+two thresholds that happen to be near each other in the published cell and are near nothing like
+each other anywhere else.*
+
+The retry lever has two floors and the manuscript has been quoting the wrong one as a
+recommendation.
+
+**(a) The band-closing floor.** The CR-17 fold band has width `c mu pi (tau - rho)(1 - a_h)/d`, so
+it shuts at `rho >= tau - 1/(c mu pi)` = 15.33 steps. This number contains no `n`. It is a property
+of the lever.
+
+**(b) The jam floor.** A retry shortens the failure cycle from `P + tau + 1` to `P + rho + 1` and so
+drags the collapse span down to `n_c = c mu (P + rho + 1)/d`. A team of `n` is jammed by its own
+retry exactly when `n > n_c`, that is when
+
+    rho < rho*(n, d) = n d / (c mu) - (P + 1).
+
+This one contains both `n` and `d`. It is a property of the team on its channel.
+
+At `P = 20`, `c = 1`, `mu = 0.15` the two accounts are cleanly separable, because (a) is one number
+for the whole model and (b) is a different number in every cell:
+
+| n | rho* at d = 0.780 (GE-120) | rho* at d = 0.640 (Bernoulli) |
+|---|---|---|
+| 4 | -0.2, never jammed | -3.9, never jammed |
+| 5 | 5.0 | 0.3, never jammed |
+| 6 | 10.2 | 4.6 |
+| 8 | 20.6 | 13.1 |
+
+**Registered predictions.** Sweeping `rho` in {2,4,6,8,10,12,16,20} against a no-retry baseline at
+each span, on both channels:
+
+1. the damage **knees** rather than sliding: at n = 5 on GE-120 it is large for rho <= 4 and gone
+   by rho = 8;
+2. the knee **walks right with span**: absent at n = 4, near 5 at n = 5, near 10 at n = 6, near 20
+   at n = 8;
+3. the knee **shifts with the channel**: the Bernoulli ladder sits one span later throughout,
+   because a worse channel is a smaller `d` and a smaller `d` is a larger `n_c`.
+
+**Falsifier**, any one of which retracts the load rule and hands the credit to the band-closing
+floor or to something not yet named: (i) the knee sits at the same rho for n = 5, 6 and 8;
+(ii) the decline is gradual, with the damage at rho = 8 still more than half the damage at rho = 2
+at n = 5; (iii) the damage at n = 4 is gated at any rho.
+
+Prediction 2 is the one that cannot be had by accident, and it is the reason to run this rather
+than argue it. The band-closing floor is a single number. If the measured floor moves with the
+span, then the number was never the recommendation and the rule is.
+
+Battery `backoff.sh`, full tier, 32 blocks at 64 reps, paired by block.
+
+## CR-24: the rule instead of the number
+
+*Registered 2026-08-22, before the run. This is Fable's F5 recommendation taken literally: "it
+finds the floor without knowing n, d, mu, or c, pays no latency when the system is healthy, and is
+the form real systems field."*
+
+A console cannot use `rho*(n, d)`. It does not know `n` at design time, it certainly does not know
+`d`, and both move during a mission. The fielded form of this fix is the one Ethernet and TCP have
+used for forty years: double the hold on consecutive unanswered requests, reset it the moment a
+request is served. The schedule, base `rho = 4`, capped at the standing interval `tau = 22`:
+
+    streak  0  1  2  3  4+
+    hold    4  4  8 16 22
+
+which clears rho* = 5 on the second unanswered request, rho* = 10 on the third and rho* = 20 on the
+fourth. That is exactly the ladder CR-23 predicts for n = 5, 6 and 8, reached from below without
+measuring anything.
+
+**Registered predictions**, as a dominance claim, which is the only kind worth shipping:
+
+1. at every span and on both channels the adaptive arm is at least as good as the **better** of
+   fixed rho = 4 and fixed rho = 20, to within the gate;
+2. it arrives there from opposite directions: it beats fixed-4 where the team is jammed (n >= 6)
+   and matches fixed-4, not fixed-20, where the team is healthy (n = 4, and the whole of rung 0);
+3. at rung 0 it is indistinguishable from fixed-4, because a served vehicle never accumulates a
+   streak.
+
+**Falsifier**: the adaptive arm is gated-worse than `max(fixed-4, fixed-20)` at any cell; or it
+fails to separate from fixed-20 in the healthy cells, which would mean it is a slow retry wearing a
+costume and the sponsor should be given the number after all.
+
+Battery `adaptive.sh`, full tier, 32 blocks at 64 reps, paired by block.
+
+## CR-22 RETRACTED on its registered falsifier, and the shape it predicted survives
+
+*`st-crossing-9445405`, full tier, 32 blocks at 64 reps, sections R3 and R4, read 2026-08-22.*
+
+CR-22 registered two things and they came apart. The SHAPE prediction, an interior maximum in span,
+is confirmed and is sharper at full span resolution than the earlier reading. On operator goodput,
+`(ge_retry - bern_retry) - (ge_off - bern_off)`:
+
+| n | 3 | 4 | 5 | 6 | 7 | 8 | 10 |
+|---|---|---|---|---|---|---|---|
+| DiD | -0.031 | -0.065 | **-0.405** | -0.160 | **+0.144** | **+0.191** | +0.117 |
+| t | -6.2 | -12.7 | -99.9 | -38.4 | +38.5 | +59.0 | +37.6 |
+
+Every cell gated, a sharp minimum at five, and a clean sign flip between six and seven. On mission
+success the same profile appears at the cells the gate accepts: -0.166 at five, -0.138 at six,
++0.084 at eight.
+
+The MECHANISM prediction is refuted, on the falsifier I wrote for it. I registered that pinning the
+reply leg with `reply_model=marginal` puts both retry arms at the same `n_c = 5.86`, leaves no state
+difference to find, and therefore must dissolve the interaction; and that a DiD surviving there
+refutes the account. It survives, and not marginally:
+
+| n | 4 | 5 | 6 |
+|---|---|---|---|
+| pinned DiD, goodput | -0.028 (not gated) | **-0.174**, t=-36.1 | **-0.132**, t=-31.3 |
+| pinned DiD, success | -0.033, t=-2.10 | -0.056, t=-2.43 | -0.110, t=-4.58 |
+
+**So the account is retracted.** What is left is a measurement rather than a mechanism, and it is
+worth stating exactly because it is the useful part. At five vehicles the full interaction is
+-0.405. Pinning the reply leg leaves -0.174. The reply-leg coherence, which is the `d` shift and
+the whole of the CR-22 story, therefore carries a little over half of it, and forward-path burst
+structure carries the rest. Both legs hurt and neither is sufficient. The arms in order at n = 5:
+`bern_retry` 0.493, `mg_retry` 0.309 (forward burst only), `ge_retry` 0.155 (both).
+
+**Three mechanisms have now been proposed for this one contrast and all three are refuted**:
+CR-19e's coherence excess on a monotone rise where it predicted an interior maximum in dwell,
+CR-21's retry cohort on a flat dose response where it predicted a decline, and now CR-22's
+collapse-formula account on the d-pinned control. The regularity is robust, large, gated at
+|t| up to 100, and reproduces across two metrics and two batteries. It is not explained.
+
+**One instrument was broken and that is worth recording separately.** The Fano-factor probe run to
+characterize the arrival process used counting windows of 1, 2, 4 and 10 steps against a requested
+dwell of 120 steps, so it could not have detected correlation at the scale the dwell imposes; the
+windows all sit inside a single channel state. Whatever it reported about burstiness at the console
+is uninformative about the regime in question. Repairing it is a measurement, not a fourth
+conjecture, and it is queued as such.
+
+
+## CR-23 v1 CANCELLED UNRUN, and the reason is worth more than the run
+
+*2026-08-22, on Fable's catch, before any row was read.*
+
+`retry_backoff` does not set a fixed hold by default. `retry_spread` defaults to -1, which rescales
+the standing cooldown draw, so the actual hold is uniform on roughly `[rho/2, 3rho/2]`. Verified by
+value at tau = 22:
+
+    rho = 20, default:  holds 10..30      rho = 20, retry_spread=0:  holds 20
+    rho =  6, default:  holds  3..9       rho =  6, retry_spread=0:  holds  6
+
+The rho = 20 and rho = 12 arms therefore overlap on almost their whole support, and any knee in rho
+is smeared into a slide before the physics is consulted. Falsifier (ii), "the decline is gradual",
+would have fired whatever the mechanism, and I would have retracted a correct prediction on an
+instrument artifact. This is the second broken instrument found today, after the Fano window, and
+both were found by asking what the measurement could have shown rather than what it did show.
+
+v2 sets `retry_spread=0` on every arm, extends the ladder to rho in {2,4,6,8,10,12,14,16,18,21} so
+the predicted knees at 5, 10 and 21 are each bracketed, and adds a discriminator.
+
+**The discriminator, registered.** Two readings of `d` disagree about one cell and agree everywhere
+else. If `d` is the STATIONARY round-trip delivery, `rho*(8, 0.780) = 20.6` sits just under the cap
+of `tau = 22`, so the n = 8 damage must die by rho = 21. If the relevant `d` is instead CONDITIONAL
+on the forward path having got through, it is larger, `rho*` exceeds the cap, and n = 8 on GE-120
+cannot recover at any settable backoff while Bernoulli still recovers at 13.1. Binary, and immune
+to the jitter confound that killed v1.
+
+Also on Fable's reading, the n = 4 GE cell is demoted: `rho* = -0.2` there is inside the noise of
+the `d` estimate, so neither a null nor a small effect discriminates. The n = 4 BERNOULLI cell
+(`rho* = -3.9`) remains a refuter.
+
+Job `st-backoff-9445984`.
+
+## CR-25: the sign reversal, attributed, or else given away
+
+*Registered 2026-08-22, before the run, on Fable's objection to CR-A1's verdict. Job
+`st-attrib-9445987`.*
+
+The measurement is not in doubt: sweeping span with the defenders fixed at four raises mission
+success +0.555 from three to fifteen, sweeping the same span with the force ratio held at 1.5
+lowers it -0.676, and the DiD is +1.231 at t = +75.9 with 32/32 sign agreement. What is in doubt is
+what it is a result ABOUT. I wanted to call it a span-of-control result. Three channels are live
+and I had attributed the whole of it to one.
+
+1. **Console congestion.** Operator goodput falls 0.759 to 0.160 over exactly the steepest step.
+2. **Force geometry.** Holding the ratio scales `n_red`, which deepens the defending column on one
+   lane rather than widening the engagement. That is a scenario fact, not a teaming one.
+3. **Threshold concentration.** `success` is the one bit `arrived >= 0.5 n_blue`. At a fixed
+   per-vehicle arrival probability the binomial gets *sharper* as `n` grows, so a step in success
+   can be a step in the fraction or a step across the cut, and the published metric cannot tell
+   them apart. This is why `arrived_frac` was added to the metric set today, verified byte-identical
+   on the 29 pre-existing metrics.
+
+Supervisory control has no console at all, so it bounds channels 2 and 3 together; `refund` keeps
+the console but stops it spending slots on requesters who have gone.
+
+**Registered.** (a) supervisory at held ratio falls by less than half the direct arm's -0.440 step,
+falsifier being a fall over 0.30; (b) refund recovers at least half the direct step at n = 9,
+falsifier being under 0.10; (c) `arrived_frac` on the direct held-ratio arm falls monotonically,
+falsifier being flat or rising while success falls, which would make the headline a threshold
+artifact and would have to be said in those words.
+
+Predictions (a) and (c) can each independently take the result away. That is why they are here.
+
+## CR-26: the signal nothing consumed
+
+*Registered 2026-08-22, before the run, on Fable's Q3 answer. Battery `aimd.sh`.*
+
+The manuscript reports that admission control has two halves and that they are unequal: discarding
+work the operator cannot finish carries most of the gain, and telling the requester adds a smaller
+increment that survives the gate only where a waiting asset is a stopped one. I had recorded that
+as a fact about admission control. Fable's reading is a criticism of the model instead, and it is
+right: **a refusal is a congestion signal in the sense of Floyd and Fall, and nothing in the model
+consumes it.** The refused vehicle goes autonomous sooner and then returns on exactly the same
+standing cadence, so the signal changes one wait and never once changes the offered load. In TCP
+the signal changes the sender's rate. That is the real disanalogy, and it is fixable rather than
+fundamental.
+
+`admit_response="aimd"` makes the vehicle consume it the way a sender does: halve its own request
+rate on a refusal, add back an eighth on each answered request, floored at a quarter of the
+standing rate so the cadence stretches at most fourfold. Off by default, rejected unless
+`queue_policy` is `admit` because the other policies emit no refusal, and verified byte-identical
+on the 29 pre-existing metrics.
+
+**Registered.** (1) The notification share grows to a majority: without a response
+`(admit - refund)/(admit - blind)` is the small half, and with one
+`(aimd - refund)/(aimd - blind)` exceeds 0.5 at the collapsed spans. (2) AIMD beats plain `admit`
+on goodput above the collapse span and is indistinguishable from it below, because a vehicle that
+is never refused never halves anything and so pays nothing.
+
+**Falsifier.** (i) `aimd` is not gated-better than `admit` at any span, in which case the signal
+still does nothing and the disanalogy is deeper than signal consumption; (ii) `aimd` is
+gated-worse than `admit` below the collapse span, in which case the rule costs cadence where there
+is no congestion to pay for it and must not be recommended.
+
+This is the first mechanism in the model added because a *literature* said the model was missing
+something, rather than because a measurement did.
+
+## CR-23 REFUTED on falsifier (ii): there is no knee, and the refutation supports CR-27
+
+*`st-backoff-9445984`, section B1, full tier, 32 blocks at 64 reps, deterministic holds
+(`retry_spread=0`), read 2026-08-22.*
+
+Goodput damage against the no-retry arm on GE-120 at rung 3, every cell gated:
+
+| rho | 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16 | 18 | 21 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| n=4 | -0.217 | -0.082 | -0.080 | -0.078 | -0.087 | -0.090 | -0.083 | -0.075 | -0.066 | **-0.052** |
+| n=5 | -0.510 | -0.470 | -0.436 | -0.357 | -0.247 | -0.174 | -0.135 | -0.118 | -0.090 | **-0.056** |
+| n=6 | -0.404 | -0.387 | -0.368 | -0.343 | -0.317 | -0.297 | -0.248 | -0.206 | -0.137 | **-0.043** |
+| n=8 | -0.163 | -0.153 | -0.138 | -0.128 | -0.120 | -0.106 | -0.090 | -0.077 | -0.062 | **-0.032** |
+
+**Falsifier (ii) fires.** I registered that at n = 5 the damage would be large for rho <= 4 and gone
+by rho = 8, and that a decline leaving more than half the rho = 2 damage at rho = 8 refutes the
+account. At rho = 8 the damage is -0.357 against -0.510, which is 70%. The decline is smooth and
+monotone at every span, from rho = 2 to rho = 21, with no threshold anywhere.
+
+**The discriminator answers, and it answers against the load rule too.** The registered binary was
+whether n = 8 on GE-120 clears by rho = 21, which the stationary reading of `d` requires
+(`rho* = 20.6`). It does not clear: -0.032, t = -8.36, 32/32. Nor does any other cell. The damage
+is gated at every span and every backoff including n = 4, where `rho*` is negative and the load
+rule says there should be nothing to find.
+
+**What survives, weaker and simpler.** The half-damage backoff does move right with span over
+n = 4, 5, 6 (about 3, 10 and 16), which is the direction the jam floor predicts, at roughly twice
+the predicted `rho*`, and it stops moving by n = 8. So span matters to the slope and not to a
+threshold. The usable recommendation is therefore blunter than the one I wanted: a longer backoff
+is monotonically better and there is no floor to find, so hold a failed requester off for as long
+as the mission can afford. That is easier to field than a number, and it is what the CR-24
+adaptive arm and the `fixed20` arm both already showed by another route.
+
+**And the refutation is evidence for something else.** A load threshold predicts a switch: below
+`rho*` the team is jammed and above it the retry is free. A synchronization account predicts
+exactly what was measured, a smooth decline, because lengthening the hold spreads the retries out
+in time and desynchronizes them gradually with no threshold to cross. CR-23's falsifier firing is
+therefore a point in favour of CR-27, and it was not designed to be. That is the most useful thing
+in this run.
+
+**Registrations refuted on this contrast, running total: four.** CR-19e (coherence excess),
+CR-21 (retry cohort via jitter), CR-22's mechanism (the d shift moving `n_c`), and now CR-23's jam
+floor. The regularity is enormous and gated at |t| up to 162. Every threshold story proposed for it
+has died and the one survivor is smooth.
+
+## CR-27: the pump and the valve
+
+*Registered 2026-08-22, before the run. Battery `desync.sh`. This is the fifth mechanism proposed
+for one contrast and it is registered under a higher bar than the four that died, on Fable's terms:
+one manipulation per clause, an exogenized intermediate, and a validated instrument.*
+
+**The account.** A retry on a channel with long outages is a pump. It keeps re-offering during the
+outage, everything floods through at the channel's recovery edge, and the console gets a cluster it
+cannot absorb. The back of the cluster waits past `P` and abandons. And under `blind` the operator
+serves it anyway, so the cluster costs real capacity. Two clauses, pump and valve, and neither is
+sufficient.
+
+**The valve clause already has its manipulation, gated.** `st-policyburst-9445271`: the burst
+penalty on goodput does not shrink under `refund`, it reverses, `(co_ref - bern_ref) -
+(co_blind - bern_blind)` running +0.037, +0.118, +0.253, +0.135 at n = 5, 6, 8, 10, every one
+gated, t up to 73.8. At eight vehicles a bursty link costs a blind operator 0.206 of goodput and
+buys a refunding one 0.047.
+
+**And an exogenous one, with the feedback loop cut.** `queue_theory.bench_sim`, written today,
+drives the console with a Markov-modulated Poisson arrival stream whose rate and burstiness are set
+separately and neither of which can hear the console, so the two can be crossed. Dwells calibrated
+to reproduce the observed Fano factors at matched rate. At rung-3 latency, `blind`:
+
+| | goodput at rate 0.0882 | at 0.1035 | at 0.1187 |
+|---|---|---|---|
+| smooth (F = 1.0) | 0.654 | 0.534 | 0.389 |
+| clustered (F = 6.3) | 0.222 | 0.126 | 0.066 |
+
+Clustering at matched rate costs -0.432, -0.408, -0.322. Rate at matched clustering costs -0.265
+smooth and -0.156 clustered. **Clustering does one and a half to two and a half times what the rate
+does**, with the feedback cut, so it is not an artifact of the loop echoing console state back into
+the arrival process. And the valve closes 39 to 61% of the clustering cost under `refund`.
+
+This also corrects my own earlier apportionment. I reported the reply-leg coherence as carrying "a
+little over half" of the observational effect. The three observational arms differ in BOTH rate and
+clustering, so that split was never a rate/clustering split. On the bench the `mg` to `ge` rate
+step is worth about -0.060, against -0.135 observationally, so the reply leg does roughly twice
+what a pure rate change of that size explains and the residual is not identified.
+
+**Two independent supports arrived unbidden.** CR-23's falsifier fired because the backoff damage
+declines *smoothly* in rho with no threshold at any span, which is what desynchronization predicts
+and what a load threshold does not. And CR-21's jitter refutation is explained rather than
+explained away: a jitter of plus or minus three steps cannot desynchronize a cohort synchronized by
+a 120-step channel edge.
+
+**What is registered now, and what refutes it.** Fable found the confound that would have
+manufactured a false confirmation: `retry_spread = s` does not hold the mean, because the hold is
+floored at one step, so at `rho = 4` a spread of 30, 60 or 120 delivers a mean of 10.4, 18.2 or
+33.9. Every jitter arm therefore carries a mean-matched fixed control computed by value.
+
+- **P1.** Within each mean-matched pair the jittered arm has a lower arrival Fano than its fixed
+  control. FALSIFIER: no pair shows a gated Fano reduction, in which case the retry phase is not
+  the synchronizer and the account fails at its first step.
+- **P2.** Within each mean-matched pair the jittered arm has higher goodput. FALSIFIER: a gated
+  Fano reduction with no goodput gain, in which case clustering is a description and not a cause,
+  and after four refutations I stop and report the regularity unexplained.
+- **P3.** The gain is monotone in the Fano reduction across the three pairs.
+- **D2, the null control.** On the memoryless channel there is no dwell to synchronize to, so the
+  jitter must buy nothing. If it buys the same there, P1 is measuring the retry and not the
+  channel.
+
+**The instrument, and its floor.** `fano_window` turns on an in-simulator Fano factor of the
+delivered uplink stream, binned so no per-step array is kept, byte-identical when off. Calibrated
+at n = 5, rung 3 against the offline probe: bern_off 1.76, ge_off 2.86, bern_retry 2.54, ge_retry
+5.77, same ordering and scale. Its floor is 1.76 and not 1.00, because a memoryless channel still
+carries a within-mission demand trend from attrition, so only differences against a matched control
+are meaningful. Stating that is the point of calibrating it: the first version of this measurement
+was wrong because nobody asked what it could have shown.
+
+## CR-24 VERDICT: the dominance claim died on goodput, and the insurance claim is what ships
+
+*`st-adaptive-9445865`, full tier, 32 blocks at 64 reps, read 2026-08-22.*
+
+**Prediction 1 (dominance) is refuted on operator goodput and holds on mission success.** On
+GE-120 the adaptive arm is gated-worse than `fixed20` at n = 4, 5 and 6 (-0.039, -0.136, -0.116)
+and hugely better than `fixed4` (+0.033, +0.305, +0.217). On mission success nothing separates
+adaptive from `fixed20` at any span while adaptive beats `fixed4` by +0.153, +0.197 and +0.135, all
+gated. Fable's reading of the split is right and I adopt it: goodput was the wrong gate for a
+treatment that changes the request cadence, because it shares its denominator with the treatment.
+`rate.sh` re-extracts both ladders on `served_per_step`.
+
+**Prediction 3 holds exactly.** At the healthy cell, n = 4 on a clear link, all three arms read
+0.985 and `adaptive - fixed4` is +0.0000 at t = 1.20, not gated. The doubling rule pays nothing
+where nothing is owed, because a served requester never accumulates a streak.
+
+**And `fixed20` is close to being an identity rather than a finding.** A backoff of 20 against a
+standing interval of 22 gives a failure cycle of 41 steps against 43, so "the best fixed backoff"
+is arithmetically "do not retry". That is worth saying plainly rather than dressing up.
+
+**What ships, as insurance rather than optimization.** At the published span of six on a CLEAR
+link, a naive short retry is catastrophic: operator goodput falls from 0.759 with no retry to
+**0.066** with `rho = 4`, a 91% loss with no jamming involved at all. The adaptive doubling rule
+recovers most of it, to 0.433, gated at +0.367 with t = 103.7 and 32/32, and the same gain holds
+across the ladder (+0.336, +0.309, +0.217 at C1, C2, C3) until C4, where the latency ceiling makes
+everything zero and the contrast is exactly +0.0000 as it must be.
+
+So the recommendation is not "tune the backoff to rho*". It is: **the reliance loop has no measured
+upside and a large downside; if one must exist, doubling makes it about as harmless as absence
+without knowing the channel, the span, or rho, and a fixed short backoff is the only catastrophe.**
+That is a fielded default, not an optimum, and it is honest about being one.
+
+**One scope caveat, recorded because it could reverse the sign.** Waiting is priced flat here: an
+asset at `q_fallback` is no more exposed the longer it waits. Where waiting is dangerous and
+exposure escalates, the optimum shifts back toward re-asking, and of the arms tested only the
+adaptive rule can track that without being re-tuned.
+
+## CR-23, completed with the Bernoulli ladder, and the n=4 cell decides something else entirely
+
+*`st-backoff-9445984`, section B2, read 2026-08-22. This corrects the verdict above in one
+direction and sharpens it in another.*
+
+Goodput damage against no-retry on the MEMORYLESS channel, rung 3:
+
+| rho | 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16 | 18 | 21 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| n=4 | -0.025 | -0.023 | -0.023 | -0.023 | -0.027 | -0.026 | -0.029 | -0.029 | -0.029 | -0.024 |
+| n=5 | -0.089 | -0.061 | -0.058 | -0.046 | -0.044 | -0.046 | -0.045 | -0.045 | -0.041 | -0.036 |
+| n=6 | -0.329 | -0.234 | -0.171 | -0.112 | -0.089 | -0.082 | -0.071 | -0.066 | -0.059 | -0.041 |
+| n=8 | -0.361 | -0.347 | -0.328 | -0.293 | -0.257 | -0.211 | -0.162 | -0.123 | -0.090 | -0.045 |
+
+**Falsifier (iii) does not fire, and that is a point FOR the load rule.** I designated the n = 4
+Bernoulli cell as a refuter because `rho*(4, 0.640) = -3.9` says no backoff can jam it. It is
+**not gated at any rho**: every cell reads -0.023 to -0.029 against a minimum practical effect of
+0.030. And the span ordering the load rule predicts is there in the magnitudes: at n = 4 and 5,
+where `rho*` is negative or 0.3, the damage is small; at n = 6 and 8, where it is 4.6 and 13.1, the
+damage is large. So the load rule gets **which spans are vulnerable** right on the memoryless
+channel and gets **where the vulnerability ends** wrong everywhere, which is a more useful verdict
+than the flat burial above. Span sets a slope, and it also sets which teams are on the slope at all.
+
+**And the n = 4 cell isolates the other mechanism, by accident.** Compare the two channels at four
+vehicles, where every load account says nothing can happen, and where no value of `d` in [0,1] can
+put `n_c` below four at any settable backoff:
+
+| n = 4, rho = 21 | damage | t | gated |
+|---|---|---|---|
+| Bernoulli | -0.024 | -12.8 | **no** |
+| GE-120 | -0.052 | -11.4 | **yes** |
+
+The load channel is off by construction in both. The only difference is channel burst structure,
+and it is the arm with burst structure that takes gated damage. That is a direct confirmation of
+CR-27's pump clause at a span chosen for a different purpose entirely, and it was not designed to
+be one.
+
+**The corrected scorecard.** Of three registered falsifiers, (i) does not fire (the vulnerability
+does move with span), (ii) fires (no knee at any span, on either channel), and (iii) does not fire
+(the designated Bernoulli refuter is clean). I registered "any one of which retracts", so the
+threshold account is retracted as registered. What replaces it is not nothing: `rho*` predicts the
+vulnerable spans and predicts no threshold that exists.
+
+## CR-25 VERDICT: the headline is not a threshold artifact
+
+*Read 2026-08-22 from `st-attrib-9445987`, full tier, 32 blocks of 64.*
+
+Prediction (c) was the one that could have taken the result away, and it HELD. `arrived_frac` on
+the direct held-ratio arm falls at every step, 0.571, 0.408, 0.258, 0.216, 0.186, a total of -0.385
+at t = -68.5 with 32/32 blocks agreeing. Success was not stepping across a sharpening binomial cut
+while the underlying fraction sat still. The difference in differences on the continuous mediator
+is +0.554 at t = +72.0, 32/32, against success's +1.231 at t = +75.9, so the two metrics carry the
+same result and the sharper number on success is the threshold amplifying a real move rather than
+manufacturing one. Channel 3 is dead and the headline keeps its meaning.
+
+The attribution replicates on the mediator, which is the part I did not ask for. Across n = 3 to 15
+at held ratio the direct arm falls -0.385, `refund` -0.301, supervisory -0.109, so the console owns
+72% of the collapse and the scenario 28%. On success the same three arms give -0.676, -0.614 and
+-0.171, a 75/25 split. Two metrics, one of them binary and one of them continuous, agree on the
+split to within three points. That is the sentence the manuscript should carry, and it is stronger
+than the one Fable told me to hedge in Round 7, because the residual is now bounded twice.
+
+`refund` is the disagreement worth naming rather than smoothing: it recovers 9% of the direct step
+on success and 22% on the mediator. Refunding the abandoned slot moves vehicles onto the objective
+more than it moves missions over the half-force line, which is what a policy acting on the tail of
+a distribution should do. It is one sentence in the discussion, not a claim.
+
+## CR-23R support: the smooth decline survives on success with the smear removed
+
+`st-backoff-9445984` section B3, deterministic holds, GE-120. At n = 5 success runs 0.356 with no
+retry then 0.150, 0.179, 0.194, 0.246, 0.301, 0.333, 0.343, 0.354, 0.337, 0.350 across rho = 2 to
+21; at n = 6 it runs 0.542 then 0.257, 0.324, 0.323, 0.334, 0.371, 0.396, 0.438, 0.447, 0.485,
+0.502. Every retry arm is worse than not retrying, at both spans, and the damage decays smoothly
+toward zero with no knee anywhere. CR-23's falsifier (ii) fires on success exactly as it fired on
+goodput, and it fires now on holds that are not smeared by the rescale. The load rule is dead on
+both the metric it was derived for and the metric the sponsor reads.
+
+## CR-28: is "do not re-ask" an artifact of pricing a wait flat?
+
+*Registered 2026-08-22 BEFORE the tier run, on Fable's Round 6 caveat. Battery `stall.sh`.*
+
+The recommendation this project is closest to shipping is that on a channel with long outages the
+operator should not re-ask, and B3 above now says it at full tier on success. But the model prices
+waiting FLAT: a vehicle stopped at `q_stall` on the twentieth step of its wait is exactly as badly
+off as on the first. Fable's objection is that this is where the recommendation is cheapest to
+make. Where waiting is dangerous, exposure escalates with the wait, and a rule that tells a stopped
+vehicle to keep waiting is spending something the model does not charge it for.
+
+`stall_decay` and `stall_floor` (added today, `stall_decay = 0` byte-identical to the published
+model, tested) let the wait be priced by how far into its own patience window it has run.
+
+**Registered, and this is Fable's prediction rather than mine.** (1) As `stall_decay` rises the
+optimal backoff moves LEFT, toward re-asking sooner. (2) The adaptive rule beats `fixed20` at high
+decay where at flat pricing it does not. FALSIFIER for the pair: the ordering of the arms is
+unchanged in sign at `stall_decay = 1` and no retry arm gates above no-retry, in which case the
+recommendation is NOT an artifact of flat pricing, the caveat is answered rather than conceded, and
+the manuscript says so with the exposure sweep as its evidence.
+
+A 48-seed pilot ran before the battery was written, to confirm the knob moves the metric at all. It
+does: at n = 6, rung 3, GE-120, no-retry goes 0.562, 0.500, 0.375 across decay 0, 0.5, 1.0 while
+rho = 20 goes 0.417, 0.354, 0.396. That is ungated at 48 seeds and is NOT the test; it is recorded
+here so that the tier result cannot later be read as if the registration had been written to fit
+it. The registration above stands as Fable wrote it.

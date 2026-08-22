@@ -932,6 +932,82 @@ opening and a warning at once: the surrogate stage may simply not fit a combat o
 deliberate replication design. Budget for that, and do not assume the multi-fidelity machinery of I13
 transfers unexamined.
 
+## I26. The console sits between two literatures, and each one is missing the half the other has
+
+**Strong. Added 2026-08-22, after the CR-23/CR-24 backoff work forced the question of what the
+collapse is actually an instance of.** This is the most useful piece of positioning found so far,
+because it explains why the SandTable operator produces a behavior that neither of its two obvious
+parent literatures reports.
+
+The published mechanism is unrefunded abandonment: a vehicle waits `P` steps, gives up, drives on,
+and the operator later spends a full service slot `1/mu` producing an answer for a vehicle that is
+no longer listening. Above `n* = c mu (P + tau + 1)/d` the server does nothing but this. Ask what
+that failure is an instance of and two literatures answer, each with one half.
+
+**The queueing literature has the abandonment and not the collapse.** Erlang-A and its descendants
+(Garnett, Mandelbaum and Reiman 2002, `10.1287/msom.4.3.208.7753`; Gans, Koole and Mandelbaum 2003,
+`10.1287/msom.5.2.79.16071`) model impatient customers exactly, and the review even names the
+distinction this project needs, whether the server discovers the abandonment before or after
+spending the slot. But a call-center agent discovers it *immediately*: the line is dead. So the
+wasted-service branch is a footnote there rather than a regime, and the literature has no
+self-sustaining overload to report. The nearest case where the server does *not* find out is the
+offline queue of De Vries, Roy and De Koster 2018 (`10.1016/j.jom.2018.05.001`), and that is one
+paper about human customers, not a theory of what happens when a server systematically works
+requests nobody is waiting for.
+
+**The networking literature has the collapse and not the human.** Floyd and Fall 1999
+(`10.1109/90.793002`) name exactly this failure and give it a forty-year-old term:
+**congestion collapse from undelivered packets**, a network busy carrying traffic that is discarded
+before it reaches its destination, so that throughput falls as load rises. That is the SandTable
+operator's regime with the words changed: service capacity spent on answers discarded before they
+reach a requester still waiting. The original observation is Nagle's (RFC 896, 1984); the canonical
+recovery mechanisms are Jacobson 1988 (`10.1145/52325.52356`), whose exponential retransmit backoff
+is precisely the CR-24 rule, and Metcalfe and Boggs 1976 (`10.1145/360248.360253`), whose Ethernet
+binary exponential backoff is the same rule in its original form. What that literature does not
+have is an operator. Its senders are protocol state machines, its "patience" is a timeout constant
+someone chose, and nobody asks what a human supervisor's patience is or how a console interface
+changes it.
+
+**So the contribution is the join, and it is a real one.** The operator console is a
+multiple-access channel whose contending stations are vehicles and whose server is a person, and
+it inherits both pathologies at once: Erlang-A abandonment *and* congestion collapse from
+undelivered work, which is why the collapse is sharp (a threshold, not a degradation) and why the
+two fixes that work are the two the networking literature already fields. Admission control, the
+CR-10 `admit` arm, is an explicit congestion signal, structurally an ECN mark or an ICMP source
+quench, and it works for the reason Floyd and Fall give: an unresponsive sender is what makes the
+collapse self-sustaining. The backoff floor is the other one.
+
+**Three concrete consequences for the paper.**
+
+1. **Name the mechanism with its published name.** Saying the operator queue exhibits congestion
+   collapse from undelivered packets, in the sense of Floyd and Fall, converts a model finding
+   into a rediscovery of a documented failure mode in a different substrate. That is corroboration
+   by structure and it costs one sentence. Be exact about the disanalogy: there the wasted resource
+   is upstream bandwidth on a path whose downstream link discards, here it is the server itself and
+   the discard is the customer's own patience expiring.
+2. **The adaptive backoff has a pedigree, and a published caveat.** CR-24's doubling rule is
+   Ethernet's, so the sponsor recommendation is not a novel control law, which is a strength: it is
+   the form real systems field. The caveat is that binary exponential backoff is provably
+   *unstable* in infinite-user models, which is Aldous 1987 (`10.1109/TIT.1987.1057295`) and
+   Hastad, Leighton and Rogoff 1996 (`10.1137/S0097539792233828`, the latter showing polynomial
+   backoff stable where binary exponential is not). SandTable's population is finite and the hold
+   is capped at the standing decision interval, which is what keeps it well behaved, and the honest
+   statement is that the rule is safe *because* the vehicle count is bounded and the hold is
+   capped, not because doubling is unconditionally good.
+3. **Bianchi 2000 (`10.1109/49.840210`) is the methodological model for the closed forms.** Its
+   saturation-throughput analysis of 802.11 is the same kind of object as `n*` and the fold band:
+   a two-dimensional Markov chain for a backoff-controlled contention system, solved for a
+   closed-form throughput that depends on the station count and the minimum contention window, and
+   validated against simulation. It is the precedent for reporting a closed form and a simulator
+   that obeys it, and for the observation that such systems have an interior optimum in the number
+   of contenders. Cite it where the paper defends the two-tier method, not only where it defends
+   the queue.
+
+**What this does not license.** The isomorphism is at the level of the mechanism, not the numbers.
+No network result transfers a patience, a service rate, or a span. And the human half is still
+unmeasured in both literatures: the open item from D4a, whether any supervision study measures
+vehicle abandonment explicitly, remains open, and the networking literature does not help with it.
+
 # Part 2: Comprehensive Review
 
 | Dim | Topic | Verified | Notable absence found |
@@ -1149,6 +1225,42 @@ recommendation the sponsor can act on without buying a better radio.
   finds longer waits raise reneging and, usefully for us, that in *offline* queues reneging is
   discovered only when the customer fails to appear, which is precisely the `blind` operator). That
   is a good analogy and a bad substitute; it is human customers, not supervised vehicles.
+
+**The one usable field measurement, found 2026-08-22, and what it buys.** The scenario timestep is
+one second, so `1/mu`, `tau` and `P` convert directly into the fan-out literature's own units:
+interaction time 6.67 s, neglect time 22 s, patience 20 s. Two of the three are quantities that
+literature defines and measures. The third is not measured anywhere. **No study of supervised
+vehicles reports how long a vehicle or a crew waits on an unanswered request before proceeding
+without one.** That is the single measurement that would convert the queue mechanism from a
+demonstration into a prediction, and it costs one instrumented console log. It is now stated as
+such in the paper, as an empty row in a provenance table.
+
+The retrodiction that the other two make possible comes from **Olson et al. 2012**
+(`10.1002/rob.21426`, already cited), the winning MAGIC 2010 team. They report fourteen robots under
+one task operator who "averaged 4.25 interactions per minute over the entire competition" and at one
+point went two minutes without interacting; the second operator handled only the global state
+estimate. Those two numbers fix a per-robot consultation cadence of 198 s with nothing else about
+their system needed. At SandTable's interaction time, fan-out puts their capacity at 31 robots and
+`n*` at 33, so fourteen sits at 46% of capacity with the operator interacting 47% of the time: busy,
+unsaturated, which is what they report. The check cuts both ways, because MAGIC published no
+interaction time, and their own account of an unsaturated operator **requires** one below 15 s.
+That is a testable constraint the closed form extracts from their prose.
+
+The same arithmetic dissolves an apparent contradiction between this literature and the paper.
+SandTable puts direct control's collapse at 6.45 assets on a clear link; MAGIC ran fourteen on one
+operator. Both are the same formula at different cadences. MAGIC's autonomy bought a consultation
+interval nine times longer, and `n*` is linear in it. **The autonomy dividend a program buys is
+measurable as a ratio of neglect times, and it converts into span at that exchange rate.** That is
+the most directly actionable sentence the queue work has produced, and it came from someone else's
+published field data rather than from the simulator.
+
+Two more retrodiction targets remain open and are worth a session each: Giachetti et al. 2012
+(`10.1002/sys.21216`) report that at their modeled NT and IT "the operator can effectively control
+only a single robot", consistent with Barnes et al. 2006 finding a second UGV at best marginally
+useful, which is a saturation at one to two for direct UGV control and the opposite end of the same
+scale; and Lewis et al. 2010 (`10.1177/0018720810366859`) sweep 4, 8 and 12 robots with navigation
+as the binding subtask. Neither publishes the NT/IT pair in seconds, so both need the source text
+rather than the abstract.
 
 **What the model settled, and what it cannot.** The abandonment mechanism is now measured, not
 conjectured: see `doc/autoresearch-conjectures.md` and the paper's `subsec:queue`. What the model

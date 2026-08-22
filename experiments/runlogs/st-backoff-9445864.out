@@ -1,0 +1,6 @@
+# host=hop043.orc.gmu.edu job=9445864 battery=backoff jobs=16 blocks=0-31 reps=64
+# code=28f863b92ca5c9fe
+OK   tamper guard: 2 frozen path(s) unchanged, 32 seeds fixed at [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+# start 2026-08-22T20:31:46Z
+### BATTERY backoff START
+### B1 the rho ladder on the coherent channel, where rho* walks 0/5/10/20 (goodput)

@@ -386,3 +386,56 @@ def test_coherence_excess_is_monotone_and_bounded_by_the_marginal_survival():
     assert all(0.0 <= e <= 1.0 - p for e in es)
     # a channel with no memory at all (L at the memoryless point) carries no excess at any lag
     assert qt.coherence_excess(p, 1.0 / (1.0 - p), lag) == pytest.approx(0.0, abs=1e-9)
+
+
+def test_bench_holds_the_mean_rate_across_every_dwell():
+    """CR-27. The whole point of the bench is that rate and burstiness move independently, so the
+    mean arrival rate must not drift as the dwell lengthens. If it does, every clustering contrast
+    on it is a rate contrast wearing a costume."""
+    # Averaged over seeds: at a dwell of 300 a 200k-step run holds only about 667 ON/OFF periods,
+    # so the realized ON fraction carries real sampling error and a single seed drifts by half a
+    # percent. The rate is matched in expectation by construction; this pins that it is not biased.
+    rates = [sum(qt.bench_sim(0.10, cl, 4, 0.15, 20, "blind", steps=200000, seed=sd)["rate"]
+                 for sd in (3, 4, 5)) / 3.0
+             for cl in (0, 20, 60, 120, 300)]
+    assert max(rates) - min(rates) < 0.003, rates
+    assert all(abs(r - 0.10) < 0.003 for r in rates), rates
+
+
+def test_bench_fano_recovers_a_known_burstiness():
+    """The instrument on ground truth: a homogeneous Poisson stream must read near one, and the
+    modulated one must read far above it and rise with the dwell. The in-simulator probe was wrong
+    for two weeks because nobody checked it against a stream whose answer was known."""
+    smooth = qt.bench_sim(0.10, 0, 4, 0.15, 20, "blind", steps=300000, seed=5)["fano"]
+    assert 0.9 < smooth < 1.1, smooth
+    fanos = [qt.bench_sim(0.10, cl, 4, 0.15, 20, "blind", steps=300000, seed=5)["fano"]
+             for cl in (20, 60, 120)]
+    assert all(f > 1.5 for f in fanos), fanos
+    assert fanos == sorted(fanos), fanos
+
+
+def test_bench_clustering_costs_more_than_rate_at_matched_rate():
+    """The pump clause, exogenously. At a fixed mean rate, clustering the same arrivals must cost
+    goodput, and it must cost more than the rate increase the observational arms confounded it
+    with. Feedback is cut by construction here, so this cannot be a loop echo."""
+    def g(rate, cl):
+        return qt.bench_sim(rate, cl, 4, 0.15, 20, "blind", steps=300000, seed=9)["goodput"]
+
+    clustering = g(0.0882, 60) - g(0.0882, 0)
+    rate = g(0.1187, 0) - g(0.0882, 0)
+    assert clustering < -0.2, clustering
+    assert rate < 0.0
+    assert clustering < rate, (clustering, rate)
+
+
+def test_bench_refund_closes_much_of_the_clustering_cost():
+    """The valve clause. Under `refund` the same clusters arrive and the same requests abandon, but
+    the console does not spend a slot on them, so most of the cost of clustering has to disappear.
+    If it does not, the damage is not about wasted service and the account is wrong."""
+    def g(pol, cl):
+        return qt.bench_sim(0.0882, cl, 4, 0.15, 20, pol, steps=300000, seed=9)["goodput"]
+
+    blind = g("blind", 60) - g("blind", 0)
+    refund = g("refund", 60) - g("refund", 0)
+    assert blind < refund < 0.0, (blind, refund)
+    assert refund / blind < 0.7, refund / blind
