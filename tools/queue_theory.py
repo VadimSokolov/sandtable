@@ -72,6 +72,27 @@ def two_way_delivery_bursty(p_drop: float, burst_len: float) -> float:
 
     The consequence for the ladder is that `p_drop` is not a sufficient statistic for a link. Two
     channels with the same mean loss put different loads on the same operator.
+
+    Scope, and it is a real one. `burst_len` is the channel's coherence measured in MESSAGES, and
+    `c2.step` draws the request and the reply back to back, so the model treats them as adjacent in
+    channel time when physically they are separated by the operator's whole service time. Whether a
+    real link behaves this way is a question about coherence time against round-trip time, and the
+    answer is bracketed rather than assumed: `burst_len = 1/(1-p)` is the memoryless point, where
+    the two draws are independent and `d` returns exactly to `(1-p)^2`, and as coherence grows `d`
+    saturates at `(1-p)`, because a chain left in GOOD by the first message loses the second only
+    on a fresh transition. So for any coherence at or above the memoryless point the effect is
+    bounded,
+
+        (1-p)^2  <=  d  <=  (1-p),
+
+    (shorter dwells than that are the anti-correlated corner, where the bad state refuses to repeat
+    and `d` falls BELOW the memoryless value; the ladder's default of 4 is above the memoryless
+    point at every rung, since `1/(1-p)` runs from 1.05 to 2.22 across C1 to C5),
+
+    and the collapse threshold can fall by at most a factor of `(1-p)`, which is 20% at the
+    contested rung, however bursty the link. A link that decorrelates inside one round trip gets
+    the Bernoulli answer and no effect at all. The ladder default of 4 sits between: 14.7% of a
+    possible 20% at that rung.
     """
     if burst_len <= 0.0:
         raise ValueError(f"burst_len must be positive, got {burst_len}")

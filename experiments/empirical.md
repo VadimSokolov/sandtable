@@ -1014,3 +1014,38 @@ in the stopped cell is gated. So the decomposition is right in its ordering and 
 this contract, and the manuscript gives the cells instead. A higher tier would not rescue the
 quality term: it sits below the smallest effect this contract will report by construction, which
 is itself the finding that the standalone quality-of-waiting channel is practically zero.
+
+### st-hyst-9443432 (full tier): CR-17 gated
+
+**H1 (mission success) and H2 (operator goodput)**, difference of differences against the retry-off
+control, which absorbs the initial condition's own direct effect:
+
+| n_blue | H1 success | H2 goodput |
+|---|---|---|
+| 3 | -0.0020 (t=-1.68) | -0.0000 (t=-1.07) |
+| 4 | -0.0078 (t=-0.50) | -0.0002 (t=-0.74) |
+| **5** | **+0.3130 (t=18.22, 32/32)** | **+0.5722 (t=61.12, 32/32)** |
+| 6 | +0.0010 (t=0.05) | -0.0232 (t=-6.78) |
+| 8 | +0.0044 (t=0.24) | -0.0133 (t=-3.23) |
+
+One span carries the whole effect, on both the mechanism and the outcome. Four vehicles is inside
+the predicted band (3.75, 5.85) and shows nothing, which is a basin question rather than a
+stability one: the collapsed branch is stable there, but a synchronized start is not a large enough
+disturbance to reach it. The n=6 and n=8 cells are statistically distinguishable from zero and far
+below the MPE, which is what a null looks like at 2048 missions per cell.
+
+**H3, five vehicles, retry on, staggered start minus synchronized start:**
+
+| policy | gap | t | gated |
+|---|---|---|---|
+| blind | +0.5900 | 63.01 | yes |
+| refund | +0.0133 | 34.21 | no, below MPE |
+| admit | +0.0301 | 68.65 | marginal |
+
+Both slot-freeing policies collapse the band, by 44x for `refund` and 20x for `admit`. Discarding
+work the operator cannot finish removes the bistability, not just the mean loss, which is the
+strongest operational statement the queue thread has produced.
+
+That `admit` closes the band slightly LESS completely than `refund` is not noise and has a reading:
+notification returns a requester to service sooner, so it raises the request rate, which is the
+same thing the retry loop does. Admission control's second half is itself a small reliance loop.

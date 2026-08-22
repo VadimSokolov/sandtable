@@ -188,3 +188,21 @@ def test_the_memoryless_point_of_the_burst_family_is_not_burst_length_one():
         assert qt.two_way_delivery_bursty(p, 1.0 / (1.0 - p)) == \
             pytest.approx(qt.two_way_delivery(p))
         assert qt.two_way_delivery_bursty(p, 1.0) < qt.two_way_delivery(p)
+
+
+def test_the_burst_effect_is_bounded_by_the_marginal_survival_rate():
+    """`d` cannot exceed `(1-p)`, so the threshold cannot fall by more than that factor.
+
+    This is the scope bound on the whole burstiness result: the model draws the request and the
+    reply adjacently, which is the MOST correlated a channel can make them, and even that only
+    buys `(1-p)` instead of `(1-p)^2`.
+    """
+    for p in (0.05, 0.20, 0.55):
+        memoryless = 1.0 / (1.0 - p)
+        for burst in (memoryless, 4.0, 64.0, 4096.0):
+            assert burst >= memoryless, "the ladder default must sit above the memoryless point"
+            d = qt.two_way_delivery_bursty(p, burst)
+            assert qt.two_way_delivery(p) <= d + 1e-12 and d <= 1.0 - p + 1e-12
+        assert qt.two_way_delivery_bursty(p, 1e9) == pytest.approx(1.0 - p, abs=1e-6)
+        # Below the memoryless point the chain is anti-correlated and the bound does not apply.
+        assert qt.two_way_delivery_bursty(p, 1.0) < qt.two_way_delivery(p)
