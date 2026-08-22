@@ -64,7 +64,7 @@ def fig_centerpiece_phase() -> None:
     spans, comms = piv.index.values, piv.columns.values
     Z = piv.values
 
-    fig, ax = plt.subplots(figsize=(5.4, 3.5))
+    fig, ax = plt.subplots(figsize=(5.4, 3.8))
     vmax = np.abs(Z).max()
     im = ax.imshow(Z, origin="lower", cmap="RdBu_r", vmin=-vmax, vmax=vmax, aspect="auto",
                    extent=[comms.min() - .5, comms.max() + .5, -0.5, len(spans) - 0.5])
@@ -85,6 +85,27 @@ def fig_centerpiece_phase() -> None:
     if len(segs):
         main = max(segs, key=lambda p: np.hypot(*np.diff(p, axis=0).T).sum())
         ax.plot(main[:, 0], main[:, 1], color="k", lw=1.7, zorder=5)
+    # THE QUEUE'S OWN PREDICTION, overlaid. `solve` is given only the ladder's latency and drop
+    # rate and the three queue parameters; it never sees this grid, never sees a success rate, and
+    # nothing is fitted. Where it says the direct operator's queue is healthy, direct control
+    # should win, so its goodput = 0.5 contour is the predicted crossover.
+    import sys as _sys
+    _sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import queue_theory as _qt
+    from make_queue_numbers import ROOT
+    _LAT = {0: 0, 1: 1, 2: 2, 3: 4, 4: 8, 5: 16}
+    _DROP = {0: 0.0, 1: 0.05, 2: 0.10, 3: 0.20, 4: 0.35, 5: 0.55}
+    scn = json.loads((ROOT / "scenarios" / "sc_span_control.json").read_text())["params"]
+    _mu, _P, _tau = (float(scn["service_rate"]), float(scn["patience"]),
+                     float(scn["decision_interval"]))
+    fine = np.linspace(0.0, float(len(spans)) - 1.0, 121)          # interpolate on the span axis
+    # `solve` uses the span only through the arrival rate, so a fractional span is meaningful and
+    # keeps the contour smooth instead of staircasing on the six sampled rows.
+    G = np.array([[_qt.solve(float(np.interp(y, np.arange(len(spans)), spans)),
+                             _LAT[c], _DROP[c], _mu, _P, _tau)["goodput"]
+                   for c in comms] for y in fine])
+    ax.contour(*np.meshgrid(comms, fine), G, levels=[0.5], colors=["#1a7f37"],
+               linewidths=1.7, linestyles="--", zorder=5)
     cb = fig.colorbar(im, ax=ax, pad=0.02)
     cb.set_label("Supervisory $-$ Direct  success (pp)")
     # opaque label boxes (so the contour cannot show through), placed clear of the crossover
@@ -92,6 +113,10 @@ def fig_centerpiece_phase() -> None:
                bbox=dict(boxstyle="round,pad=0.26", fc="white", ec="none"))
     ax.text(0.0, 1.5, "direct control\nwins", color="#12429c", **lbl)
     ax.text(2.35, 4.75, "supervisory autonomy wins", color="#8c1c22", **lbl)
+    ax.plot([], [], color="k", lw=1.7, label="measured crossover")
+    ax.plot([], [], color="#1a7f37", lw=1.7, ls="--", label="queue prediction, unfitted")
+    ax.legend(loc="upper left", bbox_to_anchor=(0.0, -0.17), ncol=2, fontsize=6.8,
+              frameon=False, handlelength=2.2, columnspacing=1.6)
     ax.set_title("Moving optimum: when to hand control to on-platform autonomy")
     fig.savefig(FIG / "centerpiece_phase.pdf")
     fig.savefig(FIG / "centerpiece_phase.png", dpi=170)

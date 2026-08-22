@@ -192,6 +192,12 @@ Operator-queue numbers (source: tools/make_queue_numbers.py over report/data/que
 \qFloorTwelve = +0.041
 \qFloorSixteen = +0.025
 \qFloorTwenty = +0.019
+\cpQueueCells = 36
+\cpQueueR = -0.908
+\cpQueueRDirect = +0.772
+\cpQueueRSup = +0.391
+\cpQueueSpearman = +0.742
+\cpQueueSign = 81
 \qBlocks = 32
 \qRepBlock = 64
 \qBandSeven = -0.003

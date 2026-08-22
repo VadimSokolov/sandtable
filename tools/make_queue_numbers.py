@@ -251,6 +251,45 @@ def main() -> None:
         var = sum((v - mean) ** 2 for v in diff) / (n_ - 1)
         return mean, (mean / ((var / n_) ** 0.5) if var > 0 else float("inf"))
 
+    def _cp() -> dict:
+        """The centerpiece phase diagram against the queue's own unfitted prediction.
+
+        `solve` is handed the ladder's latency and drop rate and the three queue parameters and
+        nothing else. It never sees a success rate, and no coefficient is fitted. The discriminant
+        check is that it should track the DIRECT arm and not the supervisory one, which does not
+        consult an operator, so a high correlation with both would mean it had found the scenario's
+        difficulty rather than the operator's queue.
+        """
+        import csv
+        import queue_theory as qt
+        LAT = {0: 0, 1: 1, 2: 2, 3: 4, 4: 8, 5: 16}
+        DROP = {0: 0.0, 1: 0.05, 2: 0.10, 3: 0.20, 4: 0.35, 5: 0.55}
+        def _read(name):
+            with open(ROOT / "report" / "data" / name) as f:
+                return {(int(r["comms_level"]), int(r["n_blue"])): float(r["success"])
+                        for r in csv.DictReader(f)}
+        dd, ss = _read("centerpiece_direct.csv"), _read("centerpiece_supervisory.csv")
+        g, dv, sv, delta = [], [], [], []
+        for key, direct in sorted(dd.items()):
+            lvl, n = key
+            g.append(qt.solve(n, LAT[lvl], DROP[lvl], sr, pat, di)["goodput"])
+            dv.append(direct); sv.append(ss[key]); delta.append(ss[key] - direct)
+        def _r(a, b):
+            ma, mb = sum(a)/len(a), sum(b)/len(b)
+            ca = sum((x-ma)*(y-mb) for x, y in zip(a, b))
+            va = sum((x-ma)**2 for x in a) ** 0.5
+            vb = sum((y-mb)**2 for y in b) ** 0.5
+            return ca / (va*vb)
+        def _rank(v):
+            order = sorted(range(len(v)), key=lambda i: v[i])
+            rk = [0.0]*len(v)
+            for pos, i in enumerate(order):
+                rk[i] = float(pos)
+            return rk
+        sign = sum(1 for x, y in zip(g, delta) if (x > 0.5) == (y < 0)) / len(g)
+        return {"n": len(g), "delta": _r(g, delta), "direct": _r(g, dv), "sup": _r(g, sv),
+                "spear": _r(_rank(g), _rank(dv)), "sign": 100.0 * sign}
+
     def _band() -> tuple:
         """The fold band at the published operating point, with the MEASURED healthy abandonment.
 
@@ -266,6 +305,7 @@ def main() -> None:
                 qt.backoff_floor(sr, di, 1.0), a_h)
 
     _bd = _band()
+    _cpv = _cp()
 
     def _sf(stop: str, q: str) -> tuple:
         """admit minus refund in one cell of the teleop_stop x q_stall factorial."""
@@ -361,6 +401,12 @@ def main() -> None:
         "qFloorTwelve":      f"{paired(row(hy, 'H4', 'stag', '12'), row(hy, 'H4', 'burst', '12'))[0]:+.3f}",
         "qFloorSixteen":     f"{paired(row(hy, 'H4', 'stag', '16'), row(hy, 'H4', 'burst', '16'))[0]:+.3f}",
         "qFloorTwenty":      f"{paired(row(hy, 'H4', 'stag', '20'), row(hy, 'H4', 'burst', '20'))[0]:+.3f}",
+        "cpQueueCells":      f"{_cpv['n']}",
+        "cpQueueR":          f"{_cpv['delta']:.3f}",
+        "cpQueueRDirect":    f"{_cpv['direct']:+.3f}",
+        "cpQueueRSup":       f"{_cpv['sup']:+.3f}",
+        "cpQueueSpearman":   f"{_cpv['spear']:+.3f}",
+        "cpQueueSign":       f"{_cpv['sign']:.0f}",
         "qBlocks":           f"{len(row(bf, 'B1', 'stag_retry', '5')['vals'])}",
         "qRepBlock":         "64",
         "qBandSeven":        f"{_bfd('B2', '7')[0]:+.3f}",
