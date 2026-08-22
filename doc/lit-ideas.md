@@ -1783,3 +1783,35 @@ backoff exists in ALOHA's descendants for precisely this reason.
 **Still unread and relevant:** whether the human-automation literature has measured a re-request
 rate after an unanswered request. CR-17's `pi` and `rho` are declared, and a measured value from a
 supervisory-control study would move the band from a demonstration to a prediction.
+
+## Field evidence for the retry loop and for bursty operator demand (2026-08-22)
+
+Searched for a measured re-request rate after an unanswered request, to turn CR-17's `pi` and `rho`
+from declared parameters into measured ones. **No such number found.** Two adjacent findings are
+worth more than the negative result.
+
+- **Schlenoff et al., "Using 4D/RCS to Address AI Knowledge Integration", AI Magazine 27(2):71-81,
+  2006** (`10.1609/aimag.v27i2.1881`; DOI resolves at AAAI, OpenAlex confirms title and authors,
+  not in CrossRef). Reports the Demo III experimental unmanned ground vehicle field tests: 550 km
+  over desert, woods and urban terrain, autonomous for over 90% of both time and distance. The
+  operative passage for us: the vehicles "operated completely autonomously until they got into
+  trouble and called for help", the typical cause was inability to proceed "because of some terrain
+  condition or obstacle", and the call came only "after several attempts at backing up and heading
+  a different direction". Two things this grounds:
+  1. **CR-15's terrain-driven demand.** Terrain is the typical trigger for a call for help in an
+     Army field test, not a modeling convenience.
+  2. **CR-17's retry, partially.** Fielded ground autonomy already retries before escalating, so a
+     retry loop is not an exotic assumption. It does NOT establish a retry *after* escalation, which
+     is what CR-17 models, and the manuscript says so explicitly.
+- **Olson et al., "Progress toward multi-robot reconnaissance and the MAGIC 2010 competition",
+  Journal of Field Robotics 29(5):762-792, 2012** (`10.1002/rob.21426`). The task operator averaged
+  4.25 interactions per minute but went up to two minutes without interacting, and "tended to
+  intervene when problems occurred in prolonged bursts, rather than small, quick system
+  adjustments". Real operator demand is clustered. SandTable's arrivals are mildly UNDER-dispersed
+  (measured Fano 0.88 on ten-step bins) because the jittered decision interval regularizes them, so
+  the band appears under smoother demand than a real operator faces. Cited as such: the model is
+  conservative about the conditions the band needs, not favorable.
+
+**Still open:** a supervisory-control study that measures what an operator or vehicle does after a
+request goes unanswered. That single number would move Section on the fold band from a conditional
+demonstration to a prediction about a fielded system.
