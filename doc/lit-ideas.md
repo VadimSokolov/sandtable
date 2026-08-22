@@ -1927,3 +1927,47 @@ worth more than the negative result.
 **Still open:** a supervisory-control study that measures what an operator or vehicle does after a
 request goes unanswered. That single number would move Section on the fold band from a conditional
 demonstration to a prediction about a fielded system.
+
+## I27. The literature's own robot model degrades during neglect; SandTable's priced it flat
+
+**Strong, and it settles a design question rather than motivating a new experiment.**
+
+Fable's Round 6 objection to the project's "do not re-ask" recommendation was that SandTable prices
+waiting FLAT: a vehicle stopped at `q_stall` on the twentieth step of its wait is exactly as badly
+off as on the first. My first answer was a `stall_decay` knob, which Fable then cut in Round 10 on
+the ground that a null on a self-authored knob with a self-chosen range is not evidence. The
+literature check was run to see whether the knob had an external anchor, and the finding is more
+useful than the knob was.
+
+Crandall, Goodrich, Olsen and Nielsen 2005 (`10.1109/TSMCA.2005.850587`, verified via CrossRef
+2026-08-22) is already the source of the fan-out relation this project uses, `FO = NT/IT + 1` (I5,
+confirmed verbatim from full text). The same model is explicitly a DECAY model, not a two-level
+one. As restated in the secondary literature that adopts it, the model "cycles between autonomous
+operations during which effectiveness degrades and human teleoperation which restores peak robot
+effectiveness," and in implementations of it "once the robot is autonomous or in neglect time, then
+its performance will degrade as a function of its neglect time," concretely as decreasing movement
+speed and rising failure probability. Neglect time is then DEFINED as the interval before
+effectiveness crosses a threshold, which only makes sense if effectiveness is falling through it.
+
+So the flat pricing was the departure from the literature, and Fable's caveat was well aimed at the
+model even though its predicted consequence turned out backwards. Two things follow.
+
+**First, the anchor is real but it is an anchor for the FORM, not for the rate.** The literature
+fixes that effectiveness falls during neglect. It does not fix how fast, and the rate is what a
+sweep would have to choose. That is exactly Fable's objection surviving the literature check, so
+`stall_decay` stays cut.
+
+**Second, the model already contains a stronger version of the same idea, authored for an unrelated
+reason.** `behavior.py` (CR-2) exists because the published path let a teleoperated vehicle keep
+driving at 54.5% speed with its link severed. Under `teleop_stop = true` it stops. That is the
+neglect-decay curve taken to its limiting case for a teleoperated platform, which is precisely the
+case the fan-out literature treats as the defining one, and it was in the code before the question
+was asked. CR-29 uses it, and the pilot says the recommendation strengthens rather than reverses:
+re-asking is what returns a vehicle to the stopped state, so shorter backoffs buy more stopped time
+(hold fraction 0.796 at rho = 4 against 0.448 with no retry) and less mission success.
+
+**Consequence for the model, recorded as a known limitation rather than a to-do.** SandTable's
+non-teleop modes still price a wait flat, so between the two extremes the literature's graded decay
+is not represented. The honest statement is that the recommendation is measured at both ends of the
+range the literature brackets, flat and full stop, and holds at both, which is a stronger claim
+than measuring it at one interpolated rate that nobody has estimated.

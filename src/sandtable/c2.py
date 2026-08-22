@@ -212,9 +212,19 @@ def build_c2(scn: Scenario, ent: Entities,
     op.retry_mode = str(scn.params.get("retry_mode", "fixed"))
     if op.retry_mode not in ("fixed", "double"):
         raise ValueError(f"retry_mode must be 'fixed' or 'double', got {op.retry_mode!r}")
-    if op.retry_spread > op.retry_backoff + op.decision_interval:
-        raise ValueError(f"retry_spread {op.retry_spread} exceeds anything the standing interval "
-                         f"could produce; the floor at one step would shift the mean")
+    if op.retry_spread >= 0:
+        # The point of `retry_spread` is to vary the jitter WIDTH at a held mean, so an arm whose
+        # realized mean has drifted is not the control it claims to be. Checking the width against
+        # a bound is not enough: the hold is floored at one step, so rho = 4 with spread 12 sits
+        # inside any width bound worth having and still delivers a mean of 5.8. The realized mean
+        # is therefore computed over the full support and the arm is rejected on the mean itself.
+        realized = backoff_mean(op)
+        if abs(realized - op.retry_backoff) > 0.02 * max(op.retry_backoff, 1):
+            raise ValueError(
+                f"retry_spread {op.retry_spread} at retry_backoff {op.retry_backoff} delivers a "
+                f"realized mean of {realized:.2f}, a {100 * (realized - op.retry_backoff) / max(op.retry_backoff, 1):.0f}% "
+                f"shift; the floor at one step has truncated the low tail. A jitter arm must hold "
+                f"its mean, so use retry_spread <= retry_backoff - 1 or state the arm's mean")
     if op.queue_policy not in ("blind", "refund", "admit"):
         raise ValueError(f"queue_policy must be blind|refund|admit, got {op.queue_policy!r}")
     if op.admit_response not in ("none", "aimd"):
@@ -250,6 +260,20 @@ def _claim(op: Operator, console: int, done: float) -> None:
         op.operator_free_at = done
     else:
         op.crew_free_at[console] = done
+
+
+def backoff_mean(op: "Operator") -> float:
+    """The realized mean hold of a jitter arm, over the full support of the standing interval.
+
+    A jitter arm exists to vary the width of the backoff at a fixed mean, and `_backoff` floors the
+    hold at one step, so wide spreads truncate the low tail and silently raise the mean. Every arm
+    that claims to be mean-matched is checked here by value rather than by an inequality on its
+    width, and batteries print this number in their own registrations.
+    """
+    lo = max(1, op.decision_interval // 2)
+    hi = max(lo, (3 * op.decision_interval) // 2)
+    draws = range(lo, hi + 1)
+    return sum(_backoff(op, c) for c in draws) / len(draws)
 
 
 def _backoff(op: "Operator", cool: int, i_streak: int | None = None) -> int:

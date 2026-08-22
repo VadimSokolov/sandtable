@@ -1814,3 +1814,103 @@ The either/or is mostly false: the two audits cost a fraction of a battery slot 
 One more sentence for the ledger when the n = 4 cell is written up: it decides against LOAD, not
 for CLUSTERING; the affirmative half still belongs to CR-27's P1/P2, and the write-up should not
 borrow tomorrow's conclusion today.
+
+## Round 10 (2026-08-22, the coordinator's round 10)
+
+### Scorecard first: two errors of mine, one failure mode
+
+Verified in `_backoff` by reading the draw: `u = 2(cool - lo)/(hi - lo) - 1`, so the jitter is
+CENTERED, `rho + s u` with u on [-1, 1], and the mean shifts only when the floor truncates the low
+tail (s >= rho). My Round 8 warning stated the mechanism wrong (I claimed u on [0, 1] and a +s/2
+shift always); my Round 9 free-cell arm (rho = 10, s = 22, asserted mean 21) was built on that
+unverified assumption and lands at 12.13, which would have reintroduced, inside the fix, the exact
+confound the fix existed to remove. The failure mode has a name: I verified your claims by value
+and my own designs by memory. The Round 8 concern survives (floor truncation does shift means);
+everything quantitative I attached to it was wrong. Your rebuild is correct: s = rho - 1 puts the
+support on [1, 2 rho - 1] with mean exactly rho, and the free cell's (21, 5) and (21, 21) pairs
+are clean.
+
+One residue to close: the new guard (spread > backoff + decision_interval) is a backstop, not the
+invariant. An arm like rho = 4, s = 12 passes the guard and still mean-shifts through the floor
+(mean about 5.7 against a nominal 4). The invariant is s <= rho - 1; make it the standing
+convention in the ledger, means verified by value in every registration that uses jitter.
+
+### (1) P3 as constructed is not a test; move it to the free cell
+
+Across the rebuilt pairs, width and level move together, and their effects on the jitter gain have
+OPPOSITE expected signs: wider jitter should help more (dose), while a longer mean backoff leaves
+less damage to fix (headroom). A monotone across-pair pattern, a flat one, and a reversed one are
+all consistent with some mixture, so the across-pair ordering is uninterpretable whichever way it
+lands. That is worse than collinearity; it is a confound with sign ambiguity. Keep the three pairs
+as three REPLICATED within-level P1/P2 tests, which is what they are good for, and write into the
+registration now that across-pair magnitudes will not be interpreted. P3 moves entirely to the
+free cell's width ladder at mean 21 (widths 0, 5, 21 at one level, sustained load off by
+arithmetic): that is the only clean dose axis in the design. Register one caveat before the data:
+the (21, 21) arm's support reaches down to 1, so its low tail re-arms occasional fast retries;
+Fano falling monotonically in width is the P3 claim, and a goodput non-monotonicity at the widest
+arm would implicate the low tail, not refute dose response. Say that now, not after.
+
+### (2) Drop the functional hedge, keep the residual hedge
+
+Your worry is half right and the half matters. The two numbers are not independent evidence of the
+MAGNITUDE: same 2048 missions, shared sampling noise (irrelevant at t near 70). But the two
+attribution splits are different functionals of the same mission-level distributions: success
+weights mass crossing the half-force line, the mediator weights mean displacement. They were free
+to diverge, and there is a concrete way they would have: console damage concentrated near the 0.5
+line with scenario damage in the tails would inflate the console share on success only. 72/28
+against 75/25 says the split is insensitive to the readout functional, which is precisely the
+artifact my Round 7 concern named. So: drop the threshold-amplification hedge ON THE SPLIT; keep
+the one-sentence residual bundle (geometry plus force scaling), which is a different hedge about a
+different thing. For magnitudes, lead with the mediator (+0.554) and give success (+1.231) as the
+operational readout with the 2.2x named as the threshold's lever arm, now measured rather than
+suspected.
+
+The refund sentence: keep the observation, fix the word. Recovering 22 percent on the mediator and
+9 percent on success means refund's help is DIFFUSE: many missions each moved a little, mostly
+missions not sitting near the half-force line. That is mean-acting. "Tail-acting" asserts the
+opposite (help concentrated where crossings happen). One sentence with the corrected term is fine
+for the Discussion.
+
+### (3) CR-28: cut the knob-null from the paper; your replacement is the real test
+
+The rule you are reaching for: a null on a self-authored knob is evidence only when the knob's
+range is anchored from outside the model, or when it is explicitly labeled a stress test to a
+named natural extreme, and even then it earns a sentence, not a section. stall_decay's family
+(flat to linear-vanishing) is natural enough, but the family itself is authored: why linear, why
+multiplicative on q_stall, why this coupling and not exposure. A tier-confirmed null there says
+"robust to the perturbation I chose," which a referee correctly reads as grading your own
+homework. Cut it from the manuscript; the pilot stays in the ledger as a pilot.
+
+The version with teeth is the one you named, and it should replace CR-28 rather than supplement
+it: price the wait with machinery the model already owns and that was built for other reasons.
+Under teleoperation physics a stopped vehicle stops fighting (Round 3 established that the
+behavior layer prices stall time endogenously), and blue_loss_frac charges for exposure through
+the engagement kernel. Run the recommendation grid (no-retry, fixed-4, adaptive) under
+blue_behavior physics and gate the ordering on success and blue_loss_frac. If adaptive still
+tracks no-retry there, the insurance claim survived a pricing mechanism that was not authored for
+the test, and THAT sentence belongs in the paper.
+
+### (4) The headline: your framing is backwards, and neither piece alone is the paper
+
+Treating the span DiD as the result and congestion as its explanation makes this a paper about a
+confound, which wastes the only part a sponsor can act on. Assign the roles instead:
+
+- The MECHANISM is the spine: an operator console is a queue that pays for work nobody waits for,
+  with closed forms that survived five adversarial rounds, two retractions, and its own
+  instrument failures.
+- The LEVERS are the headline: admission control removes the bistability and reverses the sign of
+  the burst penalty; adaptive doubling makes a reliance loop approximately as harmless as not
+  having one without knowing n, d, mu, or the dwell; both are software, neither adds an operator.
+- The IDENTIFICATION result is the shield: the span estimand is undefined until the threat-scaling
+  rule is declared, which explains why the field's span numbers disagree and why these are
+  estimable at all.
+- The WORKFLOW (registration, gates, retraction record) is the credibility thread that lets a
+  skeptical reader believe the other three.
+
+One abstract-shaped sentence: an operator's effective span of control is a queueing outcome, not
+a psychological constant; it moves under three software levers, and span experiments that do not
+declare what the threat does as the team grows cannot measure it. B3 closes my revival clause:
+the load rule is dead on both metrics, and its surviving limb (which spans are vulnerable) is a
+corollary of the spine, not a standing rule. The machinery this round shipped (double, aimd,
+stagger, the guard) matches the asks from Rounds 7 through 9; the portfolio as submitted is the
+right one.

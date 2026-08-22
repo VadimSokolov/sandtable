@@ -2149,3 +2149,97 @@ does: at n = 6, rung 3, GE-120, no-retry goes 0.562, 0.500, 0.375 across decay 0
 rho = 20 goes 0.417, 0.354, 0.396. That is ungated at 48 seeds and is NOT the test; it is recorded
 here so that the tier result cannot later be read as if the registration had been written to fit
 it. The registration above stands as Fable wrote it.
+
+## CR-27 AMENDMENT: P3 relocated, and a rule about who verifies what
+
+*Written 2026-08-22T22:00:38Z, while jobs 9446092-95 were RUNNING and
+`runlogs/st-desync-9446092.out` held 6 header lines and 0 AR_ROW records. The battery had produced
+no data when this was written, which is the only condition under which a registration may be
+amended.*
+
+Fable's Round 10, on the D1 rebuild.
+
+**P3 is withdrawn as constructed and moved.** Holding the mean by `retry_spread = rho - 1` couples
+the jitter width to the backoff level, and the coupling is worse than collinear: width is the dose,
+so more of it should help more, while level is headroom, so more of it leaves less damage to
+repair. The two have OPPOSITE expected signs, and any across-pair pattern is therefore consistent
+with some mixture of them. The three D1 pairs stay in as replicated within-level tests of P1 and
+P2, where the confound cannot reach, and **their across-pair magnitudes will not be interpreted.**
+That is written here before the numbers exist so it cannot be decided after seeing them.
+
+P3 moves entirely to D4's width ladder, which is the only clean one in the project: three arms at
+one level, mean 21, widths 0, 10 and 42, at an operating point where sustained load is off for
+every drop probability. Pre-registered caveat: the widest arm's support reaches down to one step,
+so its low tail re-arms occasional fast retries. **The claim is that the Fano factor falls
+monotonically in width.** If goodput is non-monotone at the widest arm specifically, that
+implicates the re-armed tail and is not evidence against dose response, and this sentence is what
+entitles that reading rather than a later rationalization.
+
+**The convention, and the guard that now enforces it.** My guard rejected only `retry_spread >
+retry_backoff + tau`, which is a backstop and not the invariant. Fable's counterexample: rho = 4
+with spread 12 passes it and still shifts the mean 45.7% through the floor, and spread 26 shifts it
+135%. The guard is replaced by one that computes the realized mean over the full cooldown support
+and rejects a deviation past 2%. That admits D4's (21, 21) at 0.2% and rejects (4, 12) at 45.7%,
+which is the line the design needs rather than the one that was easy to write.
+
+**The failure mode is worth naming because it produced two errors in three rounds.** Fable verified
+my claims by value and its own designs by memory, and I did the same thing in the opposite
+direction: I checked its arithmetic and shipped my own guard without testing a case it should have
+caught. Standing rule from here: **every jitter arm's realized mean is computed by value and
+printed in the battery's own registration before the battery is submitted.** Design is not exempt
+from the verification standard that findings are held to.
+
+## CR-29: the exposure test, priced by a mechanism authored for something else
+
+*Registered 2026-08-22 after a 48-seed pilot and BEFORE the tier run. Battery `teleop_price.sh`.
+Supersedes CR-28, which Fable cut and which is right to cut.*
+
+CR-28 asked whether "do not re-ask" survives pricing a wait by exposure, using a `stall_decay` knob
+I wrote for the purpose. Fable's Round 10 verdict is that a null on a self-authored knob with a
+self-chosen range is not evidence, and it is correct. The replacement has to price the wait with a
+mechanism nobody authored for this question.
+
+`behavior.py` is that mechanism. It was written for CR-2, on the observation that the published
+model let a teleoperated vehicle keep driving at 54.5% speed with its operator link severed, which
+is not what a teleoperated vehicle does. Under `blue_behavior = teleop` with `teleop_stop = true` a
+vehicle with no answer coming back **stops**. Waiting is then dangerous in the only way a
+mission-level model can make it dangerous: the vehicle is not advancing while it waits. Nothing
+about that was chosen with the retry question in view, and `teleop_stop = false` reproduces the
+published path exactly, which the pilot confirms cell for cell.
+
+**Registered.**
+
+1. *Confirmatory, and the pilot suggested it, which is said here rather than discovered later.*
+   Under stop-dead physics the no-retry arm still leads and the retry penalty is LARGER than under
+   the published physics, not smaller. Pilot at n = 6, rung 3, GE-120, 48 seeds: published physics
+   gives 0.562 / 0.333 / 0.354 / 0.562 across no-retry, rho = 4, 12, 21; stop-dead gives 0.333 /
+   0.000 / 0.000 / 0.229. FALSIFIER: any retry arm gates above no-retry under stop-dead physics.
+
+2. *The new content, and the part that can fail.* The mechanism is time in stall, and re-asking is
+   what buys it: a retry returns the vehicle to the waiting state that the published model let it
+   drive through. So `hold_fraction` rises monotonically as the backoff shortens, and the success
+   damage tracks it across arms. Pilot: 0.448 / 0.796 / 0.586 / 0.456 against the successes above.
+   FALSIFIER: `hold_fraction` flat or non-monotone in the backoff while success still moves, in
+   which case the damage is not stall exposure, the mechanism sentence is withdrawn, and only the
+   weaker claim in (1) survives.
+
+3. *Pre-registered as a confound, not a result.* `blue_loss_frac` is NOT a valid gate here and
+   Fable's instruction to gate on it is declined for a reason visible in the pilot: at rho = 4 the
+   hold fraction is 0.796 and blue losses are 0.156, the LOWEST of any arm, because vehicles that
+   never advance are never engaged. This is the bloodless-day artifact from Round 7 appearing in a
+   new place. Blue losses are reported and interpreted only jointly with `arrived_frac`.
+
+4. `fan_out` converts the result into the span-of-control literature's own units, falling 2.24 to
+   1.26 from no-retry to rho = 4 in the pilot. Reported, not gated: fan-out is a derived ratio here
+   and this project has not established its noise floor.
+
+**Why this is the version worth printing.** The claim is not that a wait costs something; that is
+an assumption either way. It is that under a stall cost written into the model two conjectures ago
+for an unrelated reason, the recommendation does not merely survive, it strengthens, and it
+strengthens through a mechanism that predicts which arm degrades most and by how much. Fable's
+Round 6 caveat is answered rather than conceded, and the answer is the opposite of what the caveat
+expected.
+
+**CR-28 disposition.** Cut from the paper. Job `st-stall-9446094` was already running when the cut
+was made and is allowed to finish; its output enters the ledger as a labeled stress test to a named
+extreme, is not a section, and is not cited as evidence for the recommendation.

@@ -322,3 +322,41 @@ def test_cadence_aimd_stretches_the_interval_it_scales(skirmish_scenario):
     slow = [c2._reset_cooldown(op, np.random.default_rng(s), 0.0, 0) for s in range(40)]
     assert all(b * 2 - 1 <= t <= b * 2 + 1 for b, t in zip(base, slow))
     assert sum(slow) > sum(base)
+
+
+def test_jitter_arms_are_rejected_on_the_realized_mean_not_on_their_width():
+    """CR-27 amendment. A width bound is the wrong guard: the hold is floored at one step, so a
+    spread well inside any usable width bound can still truncate the low tail and raise the mean.
+    An arm that claims to hold its mean is checked by value over the full support."""
+    from sandtable import c2
+
+    class Op:
+        decision_interval = 22
+        retry_backoff = 4
+        retry_spread = 0
+        retry_mode = "fixed"
+
+    op = Op()
+    # The arms every mean-matched battery uses: spread = rho - 1 puts the support on
+    # [1, 2*rho - 1] and the floor never bites, so the mean is exactly rho.
+    for rho in (4, 10, 18, 21):
+        op.retry_backoff, op.retry_spread = rho, rho - 1
+        assert abs(c2.backoff_mean(op) - rho) < 1e-9
+    # And the case a width bound of `rho + tau` waves through.
+    op.retry_backoff, op.retry_spread = 4, 12
+    assert op.retry_spread <= op.retry_backoff + op.decision_interval
+    assert c2.backoff_mean(op) > 5.5
+    # The one deliberate exception the free-cell width ladder needs, and its size.
+    op.retry_backoff, op.retry_spread = 21, 21
+    assert abs(c2.backoff_mean(op) - 21.0) < 0.05
+
+
+def test_the_published_rescale_is_not_held_to_the_mean_guard(skirmish_scenario):
+    """`retry_spread = -1` is the shipped rescale, which shrinks the mean deliberately. The guard
+    applies to arms that CLAIM a held mean, so it must not fire on the default."""
+    from sandtable.sim import run_mission
+
+    p = {"control_mode": "direct", "comms_level": 3, "n_blue": 5, "retry_prob": 1.0,
+         "retry_backoff": 4}
+    run_mission(skirmish_scenario.with_params(p), seed=5)                      # default, -1
+    run_mission(skirmish_scenario.with_params({**p, "retry_spread": -1}), seed=5)
