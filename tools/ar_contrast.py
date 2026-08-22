@@ -61,6 +61,15 @@ def main() -> None:
                     help="paired (A - B) - (C - D)")
     args = ap.parse_args()
 
+    # A log is only final once the runner says so. `hopper/collect.sh` rsyncs while a job may still
+    # be writing, and a partial copy reads as a complete one: a section that has not finished simply
+    # has fewer rows, with nothing to distinguish it from a section that was smaller by design. This
+    # cost one wrong read already, so the check lives here, where logs are actually consumed.
+    text = open(args.log, errors="replace").read()
+    if "### ALL BATTERIES COMPLETE" not in text:
+        print(f"WARNING: {args.log} has no completion marker; the run is unfinished or the local "
+              f"copy is stale. Re-run hopper/collect.sh before trusting these rows.")
+
     for sec in parse(args.log, args.section):
         print(f"## {sec['title']}")
         if args.diff:

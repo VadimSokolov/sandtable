@@ -1290,3 +1290,19 @@ That sharpens CR-17 rather than merely controlling for it. The finding is not th
 failure and demand creates bistability, since this model contains such feedback already and it does
 not. The finding is that a loop closing on the DECISION timescale (a retry four steps after an
 abandonment) has enough gain and a loop closing on the MOVEMENT timescale does not.
+
+### st-defile2-9443773 E2: the same monotone decline on mission outcome
+
+| terrain_demand | 0.0 | 0.25 | 0.5 | 0.75 | 1.0 | 1.5 | 2.0 |
+|---|---|---|---|---|---|---|---|
+| effect | **+0.3130** | **+0.2163** | **+0.0879** | +0.0376 | -0.0034 | -0.0059 | -0.0229 |
+
+Bold = gated. Bistability is gone by a terrain coupling of 0.75 and the profile is monotone on the
+outcome metric as it was on the queue metric, so the moved-cliff reading holds on both. The zero
+terrain cell reads +0.3130, reproducing H1's five-vehicle cell exactly from an independent job, as
+E1 did for H2.
+
+**Process note.** I first read this log at 28 of its 56 rows and got an empty E2 section, because
+`hopper/collect.sh` rsyncs on a schedule and can copy a file a job is still writing. A partial log
+is indistinguishable from a complete one by inspection: a half-written section just has fewer rows.
+`tools/ar_contrast.py` now warns when a log lacks the runner's completion marker.
