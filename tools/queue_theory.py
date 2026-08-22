@@ -55,13 +55,20 @@ def collapse_span(p_drop: float, service_rate: float, patience: float,
                   decision_interval: float, n_operators: int = 1) -> float:
     """Span above which the abandonment cycle sustains its own overload.
 
+    In the collapsed state every request abandons, so an agent's cycle is `patience` steps waiting
+    it out, then `decision_interval` steps of cooldown, then ONE step on which the next decision
+    fires. That trailing step is not cosmetic: the cooldown counter is decremented on each of
+    `decision_interval` steps and the event fires on the step after it reaches zero, so the cycle
+    is `patience + decision_interval + 1`, measured at 42.84 against a predicted 43.00 deep in
+    collapse. Dropping it understates the threshold by about 2.4 percent.
+
     Linear in crew size: `c` consoles each serving at `service_rate` carry `c` times the load,
     so the staffing question and the span question are the same question.
     """
     d = two_way_delivery(p_drop)
     if d <= 0.0:
         return float("inf")
-    return n_operators * (patience + decision_interval) * service_rate / d
+    return n_operators * (patience + decision_interval + 1.0) * service_rate / d
 
 
 def solve(n: int, latency: float, p_drop: float, service_rate: float = 0.15,

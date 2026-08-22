@@ -1,0 +1,441 @@
+# Adversarial review: the operator-queue result and four hard questions
+
+Reviewer: Fable 5 (autonomous review agent), 2026-08-22.
+Scope: repo at commit b2f73f7, branch autoresearch/aug12. Read in full: src/sandtable/c2.py,
+metrics.py, behavior.py, comms_ew.py, sim.py, tools/queue_theory.py, doc/autoresearch-conjectures.md,
+the queue-related sections of report/main.tex, scenarios/sc_span_control.json. Three new probes were
+run for this review (no gated experiment was re-run, no repo file modified); scripts lived in the
+session scratchpad and every probe is fully specified below so it can be reproduced from the
+parameters given. All probe runs use sc_span_control with params overrides, seeds 0..255
+(identical to proxy-tier blocks 0-15 x 16, seed-matched across arms).
+
+Summary of verdicts, one line each:
+
+- Q1: blind is a defensible worst case of a real protocol class, not a fiction, but the paper leans
+  on the wrong contrast: the load-bearing fix is refund (the server-side discard), and the
+  notification the Discussion recommends measures approximately zero. Keep the result, re-center it.
+- Q2: not bistable, and n* is not a saddle-node. It is a boundary-equilibrium collision of a
+  monotone scalar drift: unique attractor at every n, no coexistence, no hysteresis. Proved
+  analytically and confirmed with a preloaded pure-queue replica.
+- Q3: C7's test was decisive for the slope but never tested the headline; a new stall_eq x admit
+  cell shows the headline survives at 57 percent of its size, so q_stall prices about 40 percent of
+  the published-physics magnitude and none of the teleoperation magnitude. The semantics are
+  coherent, with one real wart at C5.
+- Q4: not a denominator artifact: interventions cancels exactly, fan_out is identically
+  1/hold_fraction, and the flatness is the analytic floor 1 + (tau+1)/P. But one sentence in the
+  paper ("never equals the true sustainable span") holds only for one of three possible bookings of
+  wait time, and the model's own instrumentation computes a booking that lands on n* to 1 percent.
+- Q5: closed-loop reliance (an adaptive ask policy, with retry as its dangerous variant). It is the
+  client-side dual of queue_policy, it is the only listed gap that touches the headline mechanism,
+  and its retry variant is the one mechanism that could make the collapse genuinely bistable.
+
+## Q1. Is blind a straw man, and does the contribution survive if it is?
+
+Verdict: blind is partly a straw man as a claim about consoles and not at all a straw man as a
+claim about models. The contribution survives, but only under a framing the manuscript is currently
+half-committed to, and one sentence of the Discussion crosses the line that framing defends.
+
+### The attack, stated at full strength
+
+A reviewer will say: no fielded console works a request whose requester drove off twenty seconds
+ago. Any console that displays request age, plus a doctrinal timeout, implements refund for free.
+So the realistic baseline is refund, and against refund your admission-control gain is not
++23.7 points, it is +2.4 points at proxy tier (0.840 vs 0.816, below your own full-tier MDE once
+paired), and the paper's headline measures the distance between a coding artifact and a fix.
+
+This attack is strong because the numbers back its second half. I ran the decomposition the paper
+does not report, at n=8, C0, published physics, seeds 0..255, paired per-seed:
+
+| arm | success | delta vs blind | paired t | goodput |
+| --- | --- | --- | --- | --- |
+| blind | 0.512 | | | 0.180 |
+| refund | 0.816 | +0.305 | 11.4 | 0.797 |
+| admit | 0.840 | +0.328 | 14.2 | 0.730 |
+
+Refund carries 93 percent of the admit-blind gap. And under teleoperation physics
+(blue_behavior=auto), where telling the vehicle should matter most because a waiting vehicle is
+physically stopped, refund scores 0.703 and admit 0.695: the notification channel is worth nothing
+measurable even there. The mechanism is visible in the goodput column: admit sends the refused
+vehicle back into the request cycle after one round trip, which raises offered load and eats the
+saved stall time as extra contention (goodput 0.730 vs 0.797). The two effects cancel at mission
+level. So the specific interface feature the Discussion recommends ("a console that tells a
+requester it will not be answered in time", main.tex line 422, and the ledger's "tell the vehicle
+the operator cannot reach it, immediately") is exactly the part of admit that does no measurable
+work. What does the work is the server not spending slots on expired requests.
+
+### Why blind nonetheless describes something real
+
+Three real systems are blind in this model's sense:
+
+1. Store-and-forward tasking without expiry metadata. A request queue (RFI cell, message-based
+   fires channel, DTN-style C2 under EW) where requests carry no TTL and the server has no shared
+   state with the requester. The requester's timeout is local; the server cannot observe it.
+   Working stale requests is exactly what such queues do.
+2. Cancellation costs comms. Under jamming, a cancel message drops with the same probability as the
+   request. A protocol that relies on the vehicle retracting its request degrades toward blind as
+   p_drop rises. (Refund does not have this problem, which is precisely why refund is the strong
+   baseline: it needs only a timestamp on the request plus knowledge of P and the return latency.)
+3. Refund as coded is clairvoyant. c2.py computes wait = reply - k exactly at arrival because
+   service is deterministic and latency known. A real console estimates whether its answer will
+   arrive in time, under variable latency, and misestimates in both directions; every misestimate
+   toward optimism is a blind slot. Real consoles sit between blind and refund, not at refund.
+
+So the honest position: blind and admit bracket a real range, blind is the pessimistic end and the
+no-metadata limit, refund is the achievable-with-timestamps point, and where a fielded console sits
+is empirical. The manuscript already says most of this (line 431, and the ledger's "the one claim
+not made"). That defence is sufficient for the modeling claim. It is not sufficient for the
+Discussion's operational guidance, which presupposes fielded consoles are blind-like and then
+attributes the remedy to the notification channel that measures zero.
+
+### Is the shipped-with defence enough?
+
+No, not alone. "It is what the model shipped with" concedes the bug framing: it explains why the
+number exists, not why a reader should care. The framing that survives review has three legs, all
+already in the repo, none dependent on blind being realistic:
+
+1. The sign pathology (G2/G3). The published model class (capacity-limited operator server in the
+   savla2012queue tradition, imported without abandonment-disposal semantics) predicts that jamming
+   improves mission success at high span (+11.4 pp, t=7.3, 29/32). That is a wrong-sign EW response,
+   and any EW tradeoff study run on such a model inherits it. Admission control reverses the sign
+   (t=2.63, 23/32, the weakest gate in the set; the paper's "small but gated" phrasing is correct
+   and should not be strengthened). This leg does not care whether consoles are blind, because the
+   claim is about models, and models demonstrably are: blind is what one gets by coding "a server
+   with a backlog" naively, which is how it got into SandTable.
+2. The closed forms. The latency ceiling holds for every policy; n* is the blind collapse
+   threshold and the simulator obeys both, plus the staffing multiples. These are structure, not
+   bug repair.
+3. The decision-relevant reversals: staffing vs admission as non-interchangeable levers, the
+   ladder confound (latency monotone harmful, loss hump-shaped), the route-choice coupling.
+
+Stated that way the contribution is: any fast mission model that includes a capacity-limited
+operator and impatient clients silently chooses an abandonment-disposal semantic; the choice is
+worth 20 to 74 points of mission success and flips the sign of the EW response at exactly the
+operating points the model exists to explore; therefore the semantic must be an explicit, reported
+modeling parameter, and here are the closed forms that say when it bites. That is falsifiable,
+class-level, and does not require defending blind as a portrait of any console.
+
+### What should change
+
+- Add the refund decomposition to the paper (tab:queue_gate or the queue subsection text). The
+  numbers exist at proxy tier in the ledger and reproduce exactly; a reviewer who knows Erlang-A
+  will ask for this split within minutes of reading. Reporting refund is also self-protective: it
+  shows the authors measured the gap between "worst case" and "achievable with timestamps" and did
+  not hide that most of the headline lives there.
+- Reweight the Discussion's ordered guidance (line 422). The load-bearing recommendation is: the
+  console must not spend service time on requests that will expire before the answer lands, which
+  needs timestamps and doctrine, not comms. The notification is a cheap extra whose measured
+  marginal value here is +2.4 pp at published physics and -0.8 pp under teleoperation. As written,
+  the guidance attributes the mechanism to the notification.
+- Keep +23.7 pp, but label it consistently as the sensitivity of the published model to an
+  undocumented semantic (equivalently, the worst-case cost of fielding a no-metadata tasking
+  protocol), never as the expected fielded gain of an interface feature.
+
+Demotion is not warranted. The result should be re-centered, not demoted: the sign reversal and the
+closed forms are the headline; the +23.7 is the magnitude exhibit.
+
+## Q2. Is the system bistable, and is n* a saddle-node?
+
+Verdict: no and no. The blind queue as coded cannot be bistable; n* is the point where the unique
+healthy equilibrium collides with the abandonment-saturation boundary and ceases to exist, a
+boundary-equilibrium (border-collision) bifurcation of a piecewise-linear monotone flow, not a
+saddle-node. There is no coexistence band and no hysteresis. The staggered-start sensitivity was a
+transient, which the ledger's own 16-block check already showed (stagger moved goodput 0.01-0.05,
+not 0.35). I confirmed all of this numerically with a preloaded replica.
+
+### The analysis
+
+Let B(k) = max(operator_free_at - k, 0), the backlog horizon in steps. At C0 (latency 0, d=1) an
+arrival finding backlog B waits W(B) = B + 1/mu and abandons iff W(B) > P, i.e. iff B > B_c = P - 1/mu
+= 13.33. Each agent's cycle is wait-then-cooldown: cycle(B) = min(B + 1/mu, P) + 1 + c with
+E[c] = tau (the +1 is the adoption step in c2.step branch 1; the exact mean cycle at saturation is
+P + tau + 1 = 43, so n* as coded is mu(P+tau+1) = 6.45 rather than the paper's 6.30; the sweeps
+bracket 6-7 either way, but the +1 belongs in a footnote). Under blind, every delivered arrival
+adds 1/mu to the backlog whether or not it will be serviced (c2.py line 305-306: _claim runs
+unconditionally). So the fluid drift is
+
+    dB/dt = n d (1/mu) / cycle(B) - 1.
+
+cycle(B) is continuous, nondecreasing in B, and constant (= P + tau + 1) for B >= B_c. Therefore
+dB/dt is continuous, nonincreasing in B, and constant beyond B_c. Three consequences:
+
+1. At most one equilibrium (a nonincreasing scalar field crosses zero at most once, up to a flat
+   segment), and it is globally attracting when it exists. No coexisting attractors at any n, so
+   no bistability and no hysteresis, period.
+2. The equilibrium exists iff the saturated drift is negative: n d/(mu (P+tau+1)) < 1, i.e. n < n*.
+   As n -> n*, the equilibrium backlog B* = n d/mu - (1/mu + tau + 1) rises continuously to exactly
+   B_c: the healthy branch does not lose stability, it marches into the saturation boundary and is
+   annihilated there. That is why the "assume collapse" self-consistency derivation is tight: at
+   saturation the healthy cycle equals the collapsed cycle (waits pinned at P) and blind makes the
+   server cost per delivered request (1/mu) independent of B, so the healthy branch's feasibility
+   limit and the collapsed branch's existence threshold are the same number. The derivation looked
+   like it only proved existence of collapse; monotonicity upgrades it to the full bifurcation.
+3. For n > n* there is no equilibrium at all: B grows linearly at rate n/n* - 1 forever. The
+   collapsed "state" is not a second equilibrium, it is a runaway. (What makes the mission-level
+   readout look like a state is the deadline, which the ledger's duration study already
+   established.)
+
+The structural reason there is no positive feedback: abandonment in this model lengthens the
+requester's cycle (P + tau + 1 >= any healthy cycle), so overload reduces offered rate. Congestion
+collapse with bistability (ALOHA, redial storms) requires the opposite: abandonment that shortens
+the cycle (retries). This model has no retries. See Q5.
+
+### Numerical confirmation (new probe)
+
+Replica of tools/queue_theory.py queue_only_sim (same arithmetic as c2.step, C0, blind, staggered
+cooldowns) with two additions: an initial-backlog preload (free_at = 200 at k=0) and goodput
+measured only over the last 10,000 of 20,000 steps, so transients cannot contaminate. Three seeds
+per cell:
+
+| n | preload 0, late goodput | preload 200, late goodput |
+| --- | --- | --- |
+| 4 | 0.995, 0.994, 0.996 | 0.995, 0.994, 0.996 |
+| 5 | 0.962, 0.965, 0.968 | 0.962, 0.964, 0.966 |
+| 6 | 0.677, 0.668, 0.677 | 0.676, 0.671, 0.676 |
+| 7 | 0.000, 0.000, 0.000 | 0.000, 0.000, 0.000 |
+| 8 | 0.000, 0.000, 0.000 | 0.000, 0.000, 0.000 |
+
+Identical to the third decimal at every span: no hysteresis band anywhere, cliff between 6 and 7 as
+mu(P+tau+1) = 6.45 predicts. The backlog trajectory at n=6 preloaded with 200 drains linearly at
+0.080/step (fluid prediction 1 - 6/6.45 = 0.070) and settles at the same B* as the unpreloaded run;
+at n=8 unpreloaded it grows at 0.248/step (prediction 8/6.45 - 1 = 0.240). The drift is the fluid
+drift, monotone, one attractor.
+
+This also explains why the staggered start mattered and then stopped mattering: a synchronized
+step-0 burst is a preload of about n/mu = 53 steps, far above B_c = 13.3. Below n* it drains at
+rate 1 - n/n*, which at n=6 is about 750 steps, a large fraction of a mission, so whole-mission
+metrics near the threshold are transient-blended; above n* both starts collapse, which is why the
+ledger's n=8 check found only 0.01-0.05 of goodput difference. Transient, not hysteresis. The
+one-seed 0.35 jump was noise, as the ledger already concluded.
+
+### The cheapest decisive experiment, and where bistability could still hide
+
+For the record, the minimal opt-in ABM change, if you want the check inside SandTable rather than
+in the replica: params["queue_preload"] (float, steps). In build_c2: if present, set
+op.operator_free_at = value (and crew_free_at[:] = value when a crew exists). No RNG touched, off
+path byte-identical. Pair it with two output-only counters, n_request_late and n_serviced_late,
+accumulated for k >= duration/2, so late-window goodput is observable. Bistability signature: a
+span band where late-window goodput depends on preload. Expected result, per the analysis and the
+replica: no band. A zero-code variant also exists: compare duration 1800 vs 5400 with
+stagger_decisions off; if the synchronized-start deficit is a transient its absolute size is
+constant as the window grows, if bistable it scales with the window.
+
+Two honest caveats. First, the no-bistability proof is for the queue as coded. terrain_demand
+(CR-15) introduces the missing positive feedback in space: a stalled vehicle moves slowly, stays on
+difficult ground longer, and difficult ground raises its request rate. The CR-15 numbers (collapse
+moving from 6-8 down to 4-6, strong dose response) are consistent with that loop, and hysteresis in
+the terrain-coupled configuration is genuinely open; the preload knob plus a terrain_demand arm is
+the test. Second, retry behavior (absent from the model) is the classic bistability ingredient; see
+Q5. So the correct paper-level statement is: the published configuration's cliff is a capacity
+crossing with a computable location and no memory; making it path-dependent requires a client-side
+feedback the model does not yet have.
+
+## Q3. Is the collapse the queue, or the punitive stall quality?
+
+Verdict: the collapse is the queue; the size of its mission-level price is partly the stall
+parameter. C7's stall_eq test was decisive for what it claimed (the slope, i.e. the interior
+optimum survives with the gap closed) and silent on what Q3 actually asks (how much of the
+admit-blind headline is stall-priced), because the ledger never ran stall_eq x admit. I ran that
+cell. The headline survives at 57 percent of its size under published physics and at full size
+under teleoperation physics. The semantics are defensible, with one genuine wart.
+
+### What C7 tested and what it did not
+
+The C7 battery (ledger, "C7 falsification battery") raised q_stall to q_fallback (0.30 -> 0.50) and
+observed that blind's rise with jamming survives (0.664 at C0 to 0.820 at C3), refuting "the stall
+gap is the mechanism of the interior optimum". That inference is sound: the slope is the queue.
+But the level shifted +15.2 pp at C0 (0.512 -> 0.664), which is 46 percent of the proxy admit-blind
+gap of +32.8, so stall punishment was still an open suspect for the headline's magnitude. New cell,
+seeds 0..255, q_stall = 0.50 for both arms:
+
+| arm (published physics, n=8, C0) | success |
+| --- | --- |
+| blind, q_stall 0.50 | 0.664 |
+| admit, q_stall 0.50 | 0.852 |
+
+admit - blind = +18.8 pp, paired t = 8.0. So with the punitive stall removed entirely the effect
+is 57 percent of its published-physics size, and comfortably above the contract MDE of 2.5 pp.
+Note admit itself moves only +1.2 pp when q_stall is raised (0.840 -> 0.852): admit vehicles barely
+stall, so q_stall is close to a blind-only lever, which is exactly why it inflates the contrast.
+Scaling the full-tier headline by the same ratio puts the stall-free gap near +13 to +14 pp. Under
+teleoperation physics q_stall is nearly irrelevant (a holding vehicle is stopped regardless) and
+the gap is +68 to +74 pp. So the honest statement of the headline's robustness is: the admit-blind
+gap ranges from about +19 pp (scalar physics, stall punishment removed) through +23.7 pp (published
+operating point, full tier) to +74.5 pp (teleoperation physics, full tier); its existence and sign
+owe nothing to q_stall, roughly 40 percent of its published-physics magnitude does. One sentence in
+the results or limitations should say this; the run to back it at full tier costs 78 seconds.
+
+### Is waiting-worse-than-not-asking coherent?
+
+Yes, for this modality, and the model contains its own best defence. A direct-control vehicle that
+has ceded decision authority and is holding for guidance is not executing anyone's plan: it
+hesitates at a contact or a fork, which is worse than a supervisory vehicle acting on its own
+mediocre plan (q_auto) and worse than a fallback vehicle that has given up and re-seized authority
+(q_fallback). The ordering q_stall < q_fallback < q_auto encodes committed deference, and the CR-2
+teleoperation arm shows the scalar version is if anything generous: the physically honest rendering
+of "waiting" for a teleoperated vehicle is speed zero, which is q_stall = 0 in effect, and the
+result there is 26x larger, not absent. So q_stall = 0.30 is a mild stand-in for a real asymmetry,
+not a thumb on the scale. Two genuine issues, though:
+
+1. The admit hold at C5 is incoherent. c2.py line 307: hold = 2*lat if admit else patience. At C5,
+   2*lat = 32 > P = 20, so an admitted-then-refused vehicle waits 12 steps longer than its own
+   patience for a refusal it does not know is coming. An agent's patience should cap every wait:
+   hold = min(2*lat, patience). As shipped this slightly biases against admit at C5 (measured
+   admit 0.551-0.605 vs blind 0.598 at C4-C5, within noise, since nothing is serviceable there
+   anyway), but the semantics are wrong and a referee reading the code will find it. One-line fix,
+   byte-identical everywhere 2*lat <= P, i.e. everywhere that currently matters.
+2. A link-dropped request waits the full P at q_stall for a reply that can never arrive. This is
+   coherent (no ack, the vehicle cannot know) but worth one sentence in the model section, because
+   it means p_drop buys the operator relief while still costing the vehicle its full patience,
+   which is part of why jamming's net effect needs the decomposition of Figure fig:queue(b).
+
+## Q4. Is the fan-out negative result an estimator artifact?
+
+Verdict: the flatness is real and provably so, not a shared-denominator artifact; the negative
+result survives and gets stronger when stated correctly. But one categorical sentence in the paper
+is falsified by the model's own instrumentation under a different (equally defensible) booking of
+wait time, and the paper should pre-empt that rather than let a referee land it.
+
+### The arithmetic
+
+metrics.py lines 128-130: interaction = held/I, neglect = (live-held)/I, fan_out = 1 +
+neglect/interaction. The intervention count I cancels exactly: fan_out = live/held = 1/hold_fraction.
+Verified on 256/256 teleop missions: fan_out equals 1/hold_fraction to machine precision. Two
+immediate consequences. First, there is no 0/0 or odd-denominator pathology in the collapsed
+regime: interventions and hold_steps do behave oddly there (every request becomes one hold of
+length P), but their oddities cancel; the statistic is well defined and equals the duty-cycle
+inverse. Second, fan_out and hold_fraction are the same statistic; neither may ever be cited as
+corroborating the other (the manuscript currently does not, but the ledger's deadline-correction
+section comes close; keep them apart).
+
+The flatness has a closed form. In collapse every request abandons after exactly P held steps and
+the cycle is P + c + 1 with E[c] = tau, so
+
+    fan_out -> 1 + (tau + 1)/P = 1 + 23/20 = 2.15,
+
+a ratio of two client timing constants. Measured: 2.18 at n=8, 2.14 at n=10, 2.13 at n=12,
+converging on 2.15 from above as the serviced remnant vanishes. The operator's service rate and the
+console count have vanished from the formula. That is the sharp statement of the negative result:
+past the cliff, the duty-cycle estimator is a function of the clients' patience and decision
+interval only, so it cannot contain information about server capacity even in principle. It is not
+that fan-out fails to see this cliff; it is that at the cliff the quantity stops being about the
+operator at all. The paper's mechanism sentence ("it does not measure whether help arrives") is
+right; this is the quantitative version, and I would put the 1 + (tau+1)/P identity in the paper.
+
+A second structural fact worth one sentence: measured neglect is constant at tau + 1 = 22.4 across
+the entire span sweep (back out NT = (fan_out - 1) x IT from the C9 table: 22.2, 22.4, 22.7, 22.4,
+22.6, 22.4 at n = 2..12). Every bit of the load dependence lives in the "interaction" term, because
+what is being measured there is not interaction, it is the request sojourn W(n), which grows with
+congestion and saturates at P. The implemented fan-out is exactly 1 + (tau+1)/W(n): a sojourn-time
+statistic wearing a capacity statistic's name.
+
+### The part that overreaches
+
+"It never equals the true sustainable span at any load" (main.tex line 256) is true only for this
+booking of wait time, where the vehicle's whole held period is counted as interaction. Wait time in
+a queue is a third category (Cummings and Mitchell's WTQ), and there are three defensible bookings.
+At the collapsed operating point (teleop, blind, n=8, from my probe, using busy_steps that
+metrics.py already collects via operator_utilization):
+
+| booking of the wait | IT | resulting fan-out |
+| --- | --- | --- |
+| wait counted as interaction (implemented) | 18.96 | 2.18 |
+| wait in neither (classic Olsen-Goodrich) | busy/I = 6.34 | 4.53 |
+| wait counted as neglect (utilization identity) | busy/I = 6.34 | cycle/IT = 6.52 |
+
+n* as coded is 6.45. The third booking lands on the true collapse span to within 1 percent, and it
+is not a coincidence: cycle/(1/mu) at wait saturation is mu(P+tau+1), which is n* by definition.
+So a referee can compute, from numbers the paper's own pipeline emits, a fan-out variant that does
+equal the sustainable span at the cliff, and the categorical "never" dies. The defensible claims,
+which I would substitute: (1) the wait-inclusive estimate is floor-capped at 1 + (tau+1)/P and
+pinned there across the entire collapsed range, so it cannot warn of the cliff; (2) the classic
+estimate excludes the wait and reads 4.5, wrong in the other direction; (3) the utilization-identity
+variant touches n* only at saturation, i.e. it confirms capacity exactly when you have already run
+out of it, and reads mu x cycle < n* below; (4) therefore no booking of the duty cycle predicts the
+cliff in advance, and the closed form is the only forward-looking instrument here. That is a
+stronger negative result than the current paragraph, and it is artifact-proof.
+
+One more caution for the C9 table caption: the admit fan-out column (3.88 down to 3.05 back up to
+3.76) is described in the ledger as "roughly flat, which is what a load-invariant capacity metric
+should look like". It is a U with a 25 percent swing, and under admit the estimator still never
+reads anywhere near 6.3. I would not claim admit rescues fan-out; the safe claim is that admit
+keeps the estimator off its patience floor, nothing more.
+
+## Q5. The one mechanism: closed-loop reliance (adaptive ask policy, with retry as its variant)
+
+Pick: make the client's decision to ask endogenous. A per-agent reliance state r_i in [0,1] that
+sets the probability a decision event becomes an operator request (else the agent acts autonomously
+at q_fallback immediately), updated by outcomes: serviced pulls r_i up, abandonment or drop pulls
+it down. Optional second knob: retry_on_abandon, an impatient re-request after abandonment instead
+of a fresh cooldown draw.
+
+### Why this one is load-bearing rather than merely absent
+
+Every number in the queue result assumes open-loop clients: agents request at a fixed rate no
+matter what happened to their last ten requests. The offered-load side of both closed forms, the
+(P + tau) cycle, is not physics, it is a behavioral assumption about vehicles and the humans who
+configure them, and it is the assumption the HMT literature specifically says is false: reliance
+adapts to experienced reliability (the trust-calibration pole structure the paper already cites via
+parasuraman1997humans). Among the missing mechanisms in the list (reactive red, GNSS denial,
+learned policies, trust dynamics, operator error, handoff), this is the only one that acts on the
+paper's central mechanism rather than adding an orthogonal layer: adaptive reliance changes the
+arrival process of the very queue the headline is about. It is also the client-side dual of
+queue_policy: CR-10 gave the server three ways to handle a load it cannot carry; the clients
+currently have none. The project's centerpiece question (protocol vs staffing vs autonomy) is
+missing its fourth arm, training/calibration, and this mechanism is that arm. And it converts
+trust calibration from a survey construct into an executable, measurable control loop: r_i is
+reliance, its trajectory is calibration, its equilibrium against the queue's capacity is
+miscalibration made quantitative, which is objective-3 territory (the C0-C5 x modality grid is one
+cut; r-dynamics is the cut the grid cannot see).
+
+The bonus mechanism, not on the list: retries. A real operator whose request goes unanswered asks
+again. Retry is the canonical ingredient of genuine congestion collapse (ALOHA, redial storms), and
+per Q2 it is exactly what this model lacks to be bistable: abandonment currently lengthens the
+cycle (negative feedback, self-stabilizing); retry shortens it (positive feedback). Reliance
+adaptation and retry are the same mechanism with opposite gain signs, which is why I count them as
+one addition with two parameters rather than two additions.
+
+### Minimal implementation preserving the opt-in discipline
+
+About 20 lines in c2.py, one new state array. build_c2: if params has reliance_adapt (gain alpha >
+0), allocate op.reliance = np.ones(n); absent means the attribute stays None and no RNG is ever
+touched (byte-identical off, same pattern as stagger_decisions). In step branch 4, direct mode
+only: if op.reliance is not None, draw one uniform; if u >= r_i, resolve immediately as autonomous
+(control_quality = q_fallback, re-arm cooldown) and continue; else proceed down the existing
+request path unchanged. Update at adoption (branch 1, where resolved_quality is adopted): serviced
+outcome r_i += alpha (1 - r_i); abandoned or dropped r_i -= alpha r_i (an asymmetry parameter can
+wait). retry_on_abandon: at adoption of an abandoned request, set decision_cooldown to a fixed
+retry_delay instead of drawing _reset_cooldown; to keep the off path byte-identical and the arms
+seed-paired, draw the cooldown either way and override the value, the CR-15 pattern. Output-only
+metrics: mean and final reliance, ask rate. All defaults absent, byte-identical off, and the ON
+arms document that they add one draw per decision event.
+
+### The falsifiable predictions it buys
+
+1. Self-calibration to the threshold: under blind with adaptive reliance, the equilibrium ask rate
+   should satisfy r_bar approximately min(1, n*/n), because the fixed point of the update is where
+   the serviced fraction balances the gain. Measurable as a -1 log-log slope of r_bar against n
+   above n*. If instead r collapses to 0 (reliance death spiral) the model has reproduced automation
+   disuse from queueing alone, which is a publishable HMT result either way.
+2. Substitutability: adaptive reliance under blind at n=8, C0 should recover most of the
+   admit-blind gap (clients shed the load the server cannot refuse), and it should also neutralize
+   the G2 sign pathology (jamming no longer helps, because clients already stopped over-asking). If
+   the gap does not close, protocol and calibration are complements, not substitutes. Either
+   outcome is decision-relevant to GVSC: it says whether an interface change or operator training
+   buys the same resilience.
+3. Bistability on demand: with retry_on_abandon and no backoff, the Q2 preload experiment should
+   flip: a hysteresis band in n appears (preloaded runs stay collapsed where unpreloaded runs stay
+   healthy), and it should disappear again with exponential backoff. That gives the testbed a
+   controlled demonstration that the difference between a graceful capacity boundary and a
+   path-dependent collapse is client discipline, which is a statement about interface design (what
+   the vehicle does when unanswered) that no current mechanism can express.
+
+## The single most important change
+
+Add the refund arm to the paper's gated table and reweight the Discussion's recommendation
+accordingly: the measured lever is the console not spending service time on expired requests
+(refund, +30.5 of the +32.8 proxy gap, and refund equals admit even under teleoperation physics),
+not the "tell the vehicle immediately" notification the text currently foregrounds, which measures
++2.4 pp at published physics and nothing under teleop. This one edit simultaneously defuses the
+straw-man attack on blind (the paper visibly quantifies the realistic-baseline gap instead of
+hiding it), corrects the one operational claim the evidence does not support, and costs one
+proxy-tier table row plus two sentences.

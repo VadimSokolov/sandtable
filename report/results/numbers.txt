@@ -121,10 +121,13 @@ SandTable paper -- generated numbers (source: tools/make_numbers.py over report/
 
 Operator-queue numbers (source: tools/make_queue_numbers.py over report/data/queue/*.out)
 ==============================================================================
-\qNStar = 6.30
-\qNStarTwo = 12.60
-\qNStarThree = 18.90
+\qNStar = 6.45
+\qNStarTwo = 12.90
+\qNStarThree = 19.35
 \qLatCut = 6.67
+\qCyclePredicted = 43.00
+\qCycleMeasured = 42.84
+\qFanFloor = 2.15
 \qServiceRate = 0.15
 \qPatience = 20
 \qDecisionInterval = 22
@@ -162,6 +165,8 @@ Operator-queue numbers (source: tools/make_queue_numbers.py over report/data/que
 \qFanEight = 2.18
 \qFanTen = 2.14
 \qFanTwelve = 2.13
+\qFanClassic = 4.61
+\qFanUtil = 6.69
 \qTerrainFlatSix = 76.7
 \qTerrainHardSix = 25.5
 \qRouteDirectBest = 90.2
@@ -175,10 +180,3 @@ Operator-queue numbers (source: tools/make_queue_numbers.py over report/data/que
 \qFastJammed = 62.7
 \qSlowClear = 12.2
 \qSlowJammed = 22.5
-
-
-Service-order numbers (source: tools/make_triage_numbers.py)
-==============================================================================
-\qTriageSpread = 0.3
-\qTriageSeen = 0.044
-\qTriageMap = 0.650

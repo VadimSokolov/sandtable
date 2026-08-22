@@ -89,6 +89,78 @@ def argmax(rs: list[dict], sec_has: str, arm: str) -> str:
     return max(hits, key=lambda r: r["mean"])["val"]
 
 
+def measured_cycle(n_blue: int = 16, seeds: int = 6) -> float:
+    """The observed request-to-request cycle deep in collapse, in steps.
+
+    The closed form claims the cycle is `patience + decision_interval + 1`. That trailing step is
+    easy to get wrong by inspection, so it is measured against a live run rather than asserted:
+    if the implementation's timing ever changes, this number moves and the paper's equation stops
+    matching it.
+    """
+    import numpy as np
+    sys.path.insert(0, str(ROOT / "src"))
+    from sandtable import c2, sim
+    from sandtable.scenario import Scenario, load_scenario
+
+    base = load_scenario(ROOT / "scenarios" / "sc_span_control.json")
+    prm = dict(base.params, control_mode="direct", comms_level=0, n_blue=n_blue)
+    scn = Scenario(**{**base.__dict__, "params": prm})
+
+    fires: dict = {}
+    orig, cur = c2.step, [0]
+
+    def spy(ent, op, comms, sc, k, rng, world=None):
+        before = ent.await_until.copy()
+        orig(ent, op, comms, sc, k, rng, world)
+        for i in np.nonzero((before < 0) & (ent.await_until >= 0))[0]:
+            fires.setdefault((cur[0], int(i)), []).append(k)
+
+    c2.step = spy
+    try:
+        for sd in range(seeds):
+            cur[0] = sd
+            sim.run_mission(scn, seed=sd)
+    finally:
+        c2.step = orig
+    gaps = [d for ks in fires.values() for d in np.diff(ks)]
+    return float(np.mean(gaps))
+
+
+def fanout_bookings(n_blue: int = 8, seeds: int = 32) -> dict:
+    """The three defensible bookings of a request's wait, at the collapsed operating point.
+
+    The implemented statistic counts the whole held period as interaction. Wait in a queue is a
+    third category (Cummings and Mitchell's wait-in-queue), so a referee can rebook it two other
+    ways from numbers this pipeline already emits. Reporting all three is what makes the negative
+    result about fan-out rather than about our choice of denominator.
+    """
+    import numpy as np
+    sys.path.insert(0, str(ROOT / "src"))
+    from sandtable import sim
+    from sandtable.scenario import Scenario, load_scenario
+
+    base = load_scenario(ROOT / "scenarios" / "sc_span_control.json")
+    prm = dict(base.params, control_mode="direct", comms_level=0, n_blue=n_blue,
+               blue_behavior="auto", teleop_stop=True)
+    scn = Scenario(**{**base.__dict__, "params": prm})
+    ms = [sim.run_mission(scn, seed=sd) for sd in range(seeds)]
+
+    impl, classic, util = [], [], []
+    for m in ms:
+        inter = m["interventions"]
+        if inter <= 0 or m["hold_fraction"] <= 0:
+            continue
+        live = (m["interaction_steps"] + m["neglect_steps"]) * inter    # live vehicle-steps
+        busy = m["operator_utilization"] * m["mission_time"]            # console-busy steps
+        if busy <= 0:
+            continue
+        impl.append(m["fan_out"])                                       # wait as interaction
+        classic.append(1.0 + (live - m["hold_fraction"] * live) / busy)  # wait in neither
+        util.append(live / busy)                                        # wait as neglect
+    return {"impl": float(np.mean(impl)), "classic": float(np.mean(classic)),
+            "util": float(np.mean(util))}
+
+
 def pct(x: float) -> str:
     return f"{100 * x:.1f}"
 
@@ -97,7 +169,10 @@ def main() -> None:
     scn = json.loads((ROOT / "scenarios" / "sc_span_control.json").read_text())
     p = scn["params"]
     sr, pat, di = float(p["service_rate"]), float(p["patience"]), float(p["decision_interval"])
-    n_star = (pat + di) * sr                       # collapse span, clean link, one console
+    # Collapse span on a clean link, one console. The trailing +1 is the step the decision event
+    # itself fires on, after the cooldown counter has been decremented `di` times; the measured
+    # cycle deep in collapse is 42.84 against this formula's 43.00.
+    n_star = (pat + di + 1.0) * sr
     lat_cut = (pat - 1.0 / sr) / 2.0               # latency above which nothing is serviceable
 
     full = rows("local-full-tier.out")             # published physics, n=8, C0 and C2
@@ -106,12 +181,16 @@ def main() -> None:
     thry = rows("st-theory-i-9437166.out")         # the closed-form tests
     dur  = rows("st-duration-9439929.out")         # the deadline robustness check
 
+    _book = fanout_bookings()
     m = {
         # --- closed form, computed from the scenario file -------------------------------
         "qNStar":            f"{n_star:.2f}",
         "qNStarTwo":         f"{2 * n_star:.2f}",
         "qNStarThree":       f"{3 * n_star:.2f}",
         "qLatCut":           f"{lat_cut:.2f}",
+        "qCyclePredicted":   f"{pat + di + 1.0:.2f}",
+        "qCycleMeasured":    f"{measured_cycle():.2f}",
+        "qFanFloor":         f"{1.0 + (di + 1.0) / pat:.2f}",
         "qServiceRate":      f"{sr:g}",
         "qPatience":         f"{pat:g}",
         "qDecisionInterval": f"{di:g}",
@@ -157,6 +236,8 @@ def main() -> None:
         "qFanEight":  f"{pick(srch, 'C9 metric=fan_out', 'blind', '8'):.2f}",
         "qFanTen":    f"{pick(srch, 'C9 metric=fan_out', 'blind', '10'):.2f}",
         "qFanTwelve": f"{pick(srch, 'C9 metric=fan_out', 'blind', '12'):.2f}",
+        "qFanClassic": f"{_book['classic']:.2f}",
+        "qFanUtil":    f"{_book['util']:.2f}",
         # --- terrain-correlated demand ---------------------------------------------------
         "qTerrainFlatSix": pct(pick(srch, "T1 terrain | metric=operator_goodput", "td0", "6")),
         "qTerrainHardSix": pct(pick(srch, "T1 terrain | metric=operator_goodput", "td2", "6")),

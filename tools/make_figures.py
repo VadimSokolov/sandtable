@@ -28,7 +28,7 @@ NREP = 300  # reps per design (for binomial CIs)
 # The closed-form thresholds the queue figure annotates, read from the scenario rather than
 # typed, so the marked line and the equation in the paper cannot drift apart.
 _QP = __import__("json").loads((Path("scenarios") / "sc_span_control.json").read_text())["params"]
-N_STAR = (float(_QP["patience"]) + float(_QP["decision_interval"])) * float(_QP["service_rate"])
+N_STAR = (float(_QP["patience"]) + float(_QP["decision_interval"]) + 1.0) * float(_QP["service_rate"])
 LAT_CUT = (float(_QP["patience"]) - 1.0 / float(_QP["service_rate"])) / 2.0
 
 # Muted, print-friendly palette; diverging map reserved for the phase diagram.

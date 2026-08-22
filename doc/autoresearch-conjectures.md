@@ -882,3 +882,75 @@ time, *whether* it refuses is the whole lever, and *who* it serves is not one.
 being able to reproduce. It does not earn a results subsection. One sentence belongs in the
 discussion of the queue subsection, and the ordering-vs-refusal distinction belongs in the
 limitations, since it bounds what the admission-control recommendation is claiming.
+
+---
+
+## Review round 1 (Fable). Three corrections, one of them to a published equation.
+
+An adversarial review was commissioned against five hard questions; the full analysis is in
+`doc/fable-review.md`. Every finding below was re-derived and re-measured here before anything
+moved, because a reviewer's claim is a conjecture like any other. Earlier entries in this ledger
+that quote `n* = 6.30`, `12.60`, `18.90` are left as written: they record what was believed then.
+The corrected values are `6.45`, `12.90`, `19.35`.
+
+### Correction 1: the collapse span was off by one step (CONFIRMED, equation changed)
+
+`n* = c(P + tau)mu/d` assumed the collapsed cycle is `P + tau`. It is `P + tau + 1`. The cooldown
+counter is decremented on each of `tau` steps and the decision event fires on the step AFTER it
+reaches zero, so the trailing step belongs in the cycle.
+
+Measured directly, instrumenting fresh requests in a live run at n=16 (deep in collapse, so every
+request abandons and the cycle is the pure client cycle): mean 42.840 steps, median 43.0, over
+2,458 cycles. Predicted `P + E[c] + 1 = 43.00` with `E[c] = 21.998` from the actual draw
+`uniform[11, 33]`. The first attempt at this probe pooled entity indices across missions and
+returned a nonsense mean of 7.678; keyed per (seed, entity) it is 42.840.
+
+So `n* = c(P + tau + 1)mu/d`, giving 6.45 / 12.90 / 19.35. Every empirical bracket still holds
+(one console transitions between 6 and 8, two between 12 and 16, three healthy at 16 below 19.35),
+so no measurement changes, but the equation, `tools/queue_theory.py`, `tools/make_queue_numbers.py`,
+`tools/make_figures.py`, and the figure annotations all did. The measured cycle is now a generated
+macro so the equation and the implementation cannot drift apart again.
+
+### Correction 2: the fan-out claim overreached (CONFIRMED, paragraph rewritten)
+
+Two sub-claims, checked separately.
+
+- "Is it a denominator artifact?" **No.** `interventions` cancels exactly: `fan_out` is identically
+  `1/hold_fraction`. Verified per mission at every span, not on averages. The two must therefore
+  never be cited as corroborating each other.
+- "It never equals the true sustainable span at any load" is **too strong** and is now removed.
+  The implemented statistic books the whole held period as interaction. Reproduced here at the
+  collapsed operating point (teleop, blind, n=8, 32 seeds): wait-as-interaction 2.18,
+  wait-in-neither (classic) 4.61, wait-as-neglect 6.69 against `n* = 6.45`. The third booking does
+  land on the threshold, so the categorical claim dies. What survives is stronger: measured neglect
+  is pinned at `tau + 1` (22.01, 22.32, 22.63, 22.41, 22.48, 22.42 across n = 2..12) while all load
+  dependence sits in the "interaction" term, which is really the sojourn `W(n)` saturating at `P`.
+  So the statistic is `1 + (tau+1)/W(n)` and floors at `1 + (tau+1)/P = 2.15` (measured 2.174,
+  2.138, 2.132 at n = 8, 10, 12, converging from above). Past the cliff, `mu` and `c` have vanished
+  from the formula: the quantity has stopped being about the operator. No booking predicts the
+  cliff in advance.
+
+### Correction 3: `admit` could hold an agent longer than its own patience (CONFIRMED, fixed)
+
+Under `admit` the hold was `2*lat` unconditionally. At C5 (one-way latency 16) that is 32 steps
+against a patience of 20, so admission control was worse than not being told, which is incoherent:
+the agent would have abandoned unaided first. Now `min(2*lat, patience)`. **No published number
+changes**, because every gated cell runs at C0 or C2 where `2*lat` is 0 or 4, and the byte-identity
+dump is unaffected (the default policy is `blind`). Fixed anyway, since the paper now recommends
+admission control and a latent defect in the recommended path is not acceptable.
+
+### Not confirmed, and therefore not acted on
+
+The review's Q2 finding is that the system is **not** bistable and `n*` is a boundary-equilibrium
+collision rather than a saddle-node, because abandonment lengthens cycles and so removes the
+positive feedback a fold would need. That is a negative about a hypothesis this ledger raised, and
+it is consistent with the earlier CR-13 result that the staggered start was a transient. It is
+recorded but not promoted, because nothing in the paper claims bistability.
+
+### Open, and gating now
+
+The review's central claim is that `refund` (free the slot, say nothing) carries most of the
+admission-control gain, which would mean the Discussion's recommendation ("tell the requester") is
+mis-attributed. Its numbers come from a non-gated probe. `hopper/batteries/refund.sh` is running
+the three-way decomposition at full tier at both physics settings. Nothing changes in the paper
+until that gates.

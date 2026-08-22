@@ -304,7 +304,13 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 #             `patience` steps. Explicit admission control.
                 if op.queue_policy == "blind":
                     _claim(op, console, done)
-                hold = 2 * lat if op.queue_policy == "admit" else op.patience
+                # Under `admit` the refusal rides the link home, so the agent learns at
+                # `2*lat`. On a slow enough link that is LATER than the agent's own patience
+                # timer, at which point it has already given up unaided: capping at `patience`
+                # keeps admission control from ever being worse than not being told. Without the
+                # cap, C5 (one-way latency 16) would hold an agent 32 steps against a patience of
+                # 20. No published number changes, because every gated cell runs at C0 or C2.
+                hold = min(2 * lat, op.patience) if op.queue_policy == "admit" else op.patience
                 ent.await_until[i] = k + hold                 # gives up waiting -> poor autonomy
                 op.resolved_quality[i] = op.q_fallback
                 op.n_abandon_queue += 1

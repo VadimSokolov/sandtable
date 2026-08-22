@@ -43,12 +43,52 @@ def test_collapse_span_rises_with_jamming():
     """A dropped request is a request the operator never has to work, so loss raises capacity."""
     spans = [qt.collapse_span(d, **OP) for d in (0.0, 0.05, 0.10, 0.20, 0.35, 0.55)]
     assert spans == sorted(spans)
-    assert spans[0] == pytest.approx((20.0 + 22.0) * 0.15)      # 6.30 at a clean link
+    assert spans[0] == pytest.approx((20.0 + 22.0 + 1.0) * 0.15)   # 6.45 at a clean link
 
 
 def test_the_published_span_sits_on_the_threshold():
-    """sc_span_control runs six vehicles against a threshold of 6.3, which is the whole story."""
-    assert qt.collapse_span(0.0, **OP) == pytest.approx(6.30, abs=0.01)
+    """sc_span_control runs six vehicles against a threshold of 6.45, which is the whole story."""
+    assert qt.collapse_span(0.0, **OP) == pytest.approx(6.45, abs=0.01)
+
+
+def test_the_closed_form_uses_the_cycle_the_simulator_actually_runs():
+    """The threshold is mu times the collapsed cycle, so the cycle is the thing to guard.
+
+    An earlier version of the closed form used `patience + decision_interval` and was low by one
+    step: the cooldown counter is decremented on each of `decision_interval` steps and the decision
+    fires on the step AFTER it reaches zero. Asserting the number alone let that survive; asserting
+    it against the cycle the model actually runs does not.
+    """
+    import numpy as np
+
+    from sandtable import c2, sim
+    from sandtable.scenario import Scenario, load_scenario
+
+    base = load_scenario("scenarios/sc_span_control.json")
+    prm = dict(base.params, control_mode="direct", comms_level=0, n_blue=12)  # deep in collapse
+    scn = Scenario(**{**base.__dict__, "params": prm})
+
+    fires, cur, orig = {}, [0], c2.step
+
+    def spy(ent, op, comms, sc, k, rng, world=None):
+        before = ent.await_until.copy()
+        orig(ent, op, comms, sc, k, rng, world)
+        for i in np.nonzero((before < 0) & (ent.await_until >= 0))[0]:
+            fires.setdefault((cur[0], int(i)), []).append(k)
+
+    c2.step = spy
+    try:
+        for sd in range(2):
+            cur[0] = sd
+            sim.run_mission(scn, seed=sd)
+    finally:
+        c2.step = orig
+
+    gaps = [d for ks in fires.values() for d in np.diff(ks)]
+    cycle = float(np.mean(gaps))
+    P, tau, mu = prm["patience"], prm["decision_interval"], prm["service_rate"]
+    assert cycle == pytest.approx(P + tau + 1, abs=0.6), f"measured cycle {cycle:.2f}"
+    assert qt.collapse_span(0.0, **OP) == pytest.approx(mu * cycle, abs=0.15)
 
 
 def test_blind_goodput_rises_with_loss_above_the_threshold_and_falls_below_it():
