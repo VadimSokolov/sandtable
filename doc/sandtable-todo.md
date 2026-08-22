@@ -763,3 +763,79 @@ belong to the gated battery at the full tier; pytest asserts mechanism.
 across span (band-limited around `n*` if anything), X3 the same contrast with admission control on
 (flat if ordering only ever mattered because `blind` wastes slots), X4 coupling strength at the
 congested span.
+
+## CR-17 Closed-loop reliance and the fold band  (IMPLEMENTED 2026-08-22)
+
+### Why
+
+Every queue result before this one assumed a vehicle's request cycle is independent of whether its
+last request was answered. That assumption is what gives the M/D/1+D model a single threshold, and
+it is not obviously true of an operator-reliant vehicle: one left unanswered may ask again sooner
+than one that was served. Drop it and offered load becomes a function of the state the queue is
+already in, which is the one ingredient the model was missing to be bistable.
+
+### Change
+
+| Param | Default | Meaning |
+| --- | --- | --- |
+| `retry_prob` | 0.0 | Fraction of abandoned requests that return on the short backoff. 0 draws nothing, so the OFF path is byte-identical. |
+| `retry_backoff` | `decision_interval` | Steps to the retry. Equal to the interval means no shortening and no band. |
+
+The coin is drawn at abandonment, not at re-arm, so an outstanding request carries no pending draw.
+The retry rescales the jittered interval `_reset_cooldown` already draws rather than replacing it,
+so exactly one integer is drawn either way and the arms stay paired on a shared seed.
+
+Also adds `operator_goodput_late` (final quarter only), because whole-mission goodput averages over
+the transient and cannot distinguish "the disturbance hurt while it lasted" from "the disturbance
+left the team somewhere else".
+
+### Result
+
+Band `(n_c, n_h)` with width `c*mu*pi*(tau-rho)*(1-a_h)/d`, in which `d` cancels at the abandonment
+floor. Gated at full tier at exactly one span: +0.313 mission success and +0.572 operator goodput
+on the initial condition alone, null at 3, 4, 6 and 8. `refund` and `admit` close the band by 44x
+and 20x. Backoff floor `rho >= tau - 1/(c*mu*pi)` = 15.33 confirmed: the band is gated at backoffs
+of 4, 8 and 12 and below the MPE at 16 and 20.
+
+### Known and deliberately unchanged
+
+`a_h` is endogenous, so the upper edge is bracketed rather than located. Four vehicles sits inside
+the band and shows nothing, which is a basin question we did not map. `pi` and `rho` are declared,
+not measured against any crew.
+
+## CR-18 Clock the comms chain in time, not in messages  (IMPLEMENTED 2026-08-22)
+
+### Why this is a correctness issue and not a refinement
+
+The Gilbert-Elliot chain advanced one transition per MESSAGE. `c2.step` drew a request and its
+reply back to back, so the model treated them as adjacent in channel time even though the operator's
+whole service delay, tens of steps, separates them in mission time. Two requests from the same
+vehicle four steps apart were likewise adjacent however many other vehicles asked in between. That
+inflates round-trip delivery from `(1-p)^2` to `(1-p)(1-p_gb)` for a coding reason rather than a
+physical one, and it manufactured a gated finding: a sign flip in the burstiness effect across span,
+reproducible across two rungs, which does not survive the repair.
+
+### Change
+
+| Param | Default | Meaning |
+| --- | --- | --- |
+| `channel_clock` | `"message"` | `"message"` keeps today's behavior exactly. `"step"` indexes the chain by time. |
+
+Under `step`, `delivered` advances the chain by the steps elapsed since it was last resolved, and
+`reply_survives(rng, lag)` prices the reply by its own lag with `1 - p(1 - lam^L)`, which is
+`1 - p_gb` at `L = 1` and decays to the marginal `1 - p`. One uniform per call either way. The
+marginal drop rate is unchanged at every rung (0.0495 / 0.0995 / 0.2016 / 0.3511 / 0.5494 against
+nominal), so the two channels still differ only in structure.
+
+### Reporting obligation
+
+Any result comparing the two channels must name the clock. The two are not variants of one model;
+they are different physical assumptions about coherence time against round-trip time, and they
+bracket a real surface rather than one being simply correct.
+
+### Result
+
+Realized round-trip delivery collapses onto the Bernoulli value at every rung, so burstiness at a
+matched mean does nothing to the queue through `d`. Every published gated cell is unaffected:
+Bernoulli has no chain to clock. What survives is an interaction with CR-17's reliance loop, which
+is being gated against the completed repair.

@@ -1759,3 +1759,27 @@ From the SOW-gap sweep (D12 to D19):
     found standard GP surrogate optimization failed on combat objectives (I25).
 34. **Report a dashboard and a non-dominated set, never a weighted mission-success index** (I22).
 35. **Stop calling "contested performance" a metric family.** It is a treatment condition (I22).
+
+## Bistability lineage for the fold band (2026-08-22)
+
+Located while placing CR-17. The fold itself is standard and the paper should claim only its
+placement.
+
+- **Falin, "A survey of retrial queues", Queueing Systems 7(2):127-167, 1990**
+  (`10.1007/BF01158472`). The canonical survey of queues in which a blocked customer returns from
+  orbit instead of leaving. That return is exactly CR-17's retry, and the resulting load dependence
+  on system state is why retrial queues have the qualitative behavior a plain M/D/1 does not.
+- **Carleial and Hellman, "Bistable Behavior of ALOHA-Type Systems", IEEE Trans. Communications
+  23(4):401-410, 1975** (`10.1109/TCOM.1975.1092823`). The classical bistability result: a collision
+  provokes a retransmission which provokes the next collision, and the channel has two stable
+  throughputs. Same feedback, same fold.
+
+Both verified against CrossRef and cited in the fold-band subsection. What is new in SandTable is
+not the fold but what is folded: the bistable quantity is span of control, a thing a program
+chooses, and the retry closing the loop is a human-machine interaction rather than a protocol. The
+design rule (a backoff floor) is the ALOHA lesson transposed, and worth saying so: exponential
+backoff exists in ALOHA's descendants for precisely this reason.
+
+**Still unread and relevant:** whether the human-automation literature has measured a re-request
+rate after an unanswered request. CR-17's `pi` and `rho` are declared, and a measured value from a
+supervisory-control study would move the band from a demonstration to a prediction.
