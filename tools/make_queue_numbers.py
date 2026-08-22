@@ -210,6 +210,11 @@ def main() -> None:
 
     _book = fanout_bookings()
     _sps = served_per_step()
+    wc = rows("st-waitcost-9443162.out")
+
+    def _wc(sec: str, q: str) -> tuple:
+        """admit minus refund at one wait cost, paired on the shared block set."""
+        return paired(row(wc, sec, "admit", q), row(wc, sec, "refund", q))
     m = {
         # --- closed form, computed from the scenario file -------------------------------
         "qNStar":            f"{n_star:.2f}",
@@ -278,6 +283,18 @@ def main() -> None:
         "qGoodAdmitEight":   pct(pick(ref, "R3 goodput", "admit", "8")),
         "qGoodRefundTwelve": pct(pick(ref, "R3 goodput", "refund", "12")),
         "qGoodAdmitTwelve":  pct(pick(ref, "R3 goodput", "admit", "12")),
+        # The wait-cost sweep (st-waitcost). `q_stall` is the control quality of a vehicle
+        # awaiting a decision and `q_fallback` = 0.50 that of one that gave up, so the top of the
+        # sweep is a setting in which waiting costs nothing.
+        "qStallLow":         "0.10",
+        "qStallFree":        "0.50",
+        "qNotifyTeleLow":    f"{100 * _wc('W2', '0.1')[0]:+.1f}",
+        "qNotifyTeleFree":   f"{100 * _wc('W2', '0.5')[0]:+.1f}",
+        "qNotifyTeleFreeT":  f"{_wc('W2', '0.5')[1]:.2f}",
+        "qNotifyPubFree":    f"{100 * _wc('W1', '0.5')[0]:+.1f}",
+        "qNotifyPubFreeT":   f"{_wc('W1', '0.5')[1]:.2f}",
+        "qWaitQuality":      f"{100 * (_wc('W2', '0.3')[0] - _wc('W2', '0.5')[0]):.1f}",
+        "qWaitMotion":       f"{100 * (_wc('W2', '0.5')[0] - _wc('W1', '0.5')[0]):.1f}",
         "qServedRefund":     f"{_sps['refund']:.4f}",
         "qServedAdmit":      f"{_sps['admit']:.4f}",
         "qFanClassic": f"{_book['classic']:.2f}",

@@ -948,3 +948,23 @@ CR-17 fold band. H1/H2 sweep n_blue = 3,4,5,6,8 across {burst, staggered} x {ret
 `retry_backoff` = 4,8,12,16,20 against the predicted floor of 15.33. Gated by difference of
 differences (`tools/ar_contrast.py --did`), because staggering perturbs the RNG stream and has a
 direct effect of its own. Predictions registered in `doc/autoresearch-conjectures.md` under CR-17.
+
+**The `refund - blind` sign reversal, resolved (local probe, 32 seeds, n=8, C0).** It is a floor
+effect plus a missing channel, not a queue puzzle.
+
+| physics | policy | q_stall=0.10 | 0.30 | 0.50 | hold fraction |
+|---|---|---|---|---|---|
+| teleop | blind | 0.031 | 0.031 | 0.031 | 0.46 |
+| teleop | refund | 0.719 | 0.844 | 0.906 | 0.39 |
+| published | blind | 0.375 | 0.469 | 0.656 | 0.00 |
+| published | refund | 0.750 | 0.781 | 1.000 | 0.00 |
+
+Under teleoperation the blind arm is pinned at 0.031 for every value of `q_stall`. It cannot
+benefit from cheaper waiting because its vehicles are stopped 46% of the mission and `q_stall`
+is a control-quality parameter: it prices what a waiting vehicle can do, and a stopped vehicle
+does nothing regardless. Only `refund` has room to move, so the gap widens. Under published
+physics nothing is stopped, `q_stall` acts through the speed multiplier `0.35 + 0.65*q_stall` on
+both arms, and the arm with more waiting (blind, +0.281) gains slightly more than the arm with
+less (refund, +0.250), so the gap narrows. Note also that refund's goodput is flat across the
+sweep (0.801 / 0.797 / 0.792) while its success rises by 0.19: `q_stall` prices the consequence
+of waiting, not the amount of it.

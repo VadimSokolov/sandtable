@@ -178,6 +178,15 @@ Operator-queue numbers (source: tools/make_queue_numbers.py over report/data/que
 \qGoodAdmitEight = 73.4
 \qGoodRefundTwelve = 57.9
 \qGoodAdmitTwelve = 44.9
+\qStallLow = 0.10
+\qStallFree = 0.50
+\qNotifyTeleLow = +9.1
+\qNotifyTeleFree = +4.6
+\qNotifyTeleFreeT = 3.72
+\qNotifyPubFree = +0.9
+\qNotifyPubFreeT = 0.89
+\qWaitQuality = 3.4
+\qWaitMotion = 3.7
 \qServedRefund = 0.1295
 \qServedAdmit = 0.1328
 \qFanClassic = 4.61
