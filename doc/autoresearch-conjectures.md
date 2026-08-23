@@ -6561,3 +6561,143 @@ threshold the reviewer said it was, and the accuracy paradox comes out. The batt
    about the retraction touches it.
 4. F9, F10 and F11 stand as registered. They test whether $b$ behaves like a shadow price, and a
    shadow price is what BOTH repairs are implementing.
+
+## CR-61. THE OPERATOR CAN NOW BE WRONG, AND D7 IS COMPUTABLE
+
+Registered with its pilots disclosed. Every console in this paper so far has been an ORACLE: its
+answers are never wrong, only late, lost or refused. That is a real limitation and it has been
+carried unlabelled through eleven batteries. It also makes one of the project's own recorded
+literature gaps uncomputable. `doc/lit-ideas.md` D7 states that no study computes a discrimination
+score for operator trust against agent ground-truth correctness at formation scale under degraded
+comms, and I11 states that what this project calls trust is properly *trust resolution* in the sense
+of Lee and See. Neither can be measured against a console that cannot be wrong.
+
+**The mechanism, four knobs and a confusion matrix.** `auto_error` $q$ is the probability the
+autonomy's proposed answer is wrong. `check_rate` $r$ is the base rate at which an uninformed
+operator checks rather than shipping it. `check_acuity` $a$ is the share of decisions on which the
+operator holds a valid cue and therefore checks exactly the wrong ones. `comply_frac` is what
+shipping costs as a fraction of checking, default a quarter, and it is the whole reason the choice is
+interesting: at a saturated console a check is not free, it is a slot. The four cells are counted in
+the operator's own decision units, which is what makes $d'$ a property of the operator rather than of
+the scenario, and both console models carry it. `bad_answer_hold` is what a wrong answer costs the
+vehicle that acted on it, as a multiple of the patience an unanswered vehicle waits: 1.0 is the
+weakest available assumption and is the default. At $(q, r) = (0, 1)$ nothing is drawn and the console
+is exactly the one every earlier battery measured.
+
+**Pilot 1, 24 replications, sixteen assets, $q = 0.3$, disclosed.**
+
+    arm                      served  correct   dprime    check
+    always check             0.1152   1.0000    0.000    1.000
+    check half, no cue       0.1834   0.8400    0.030    0.496
+    never check              0.3220   0.7045    0.000    0.000
+    check half, cue 0.5      0.2271   0.9252    1.361    0.403
+    check half, cue 1.0      0.2913   1.0000    5.645    0.306
+
+**Pilot 2, the span dependence, same $q$.** At six assets the check-rate ladder runs 0.1042, 0.1095
+and 0.1054 served per step with mission success identical at 0.625 throughout. At sixteen it runs
+0.1152, 0.1834 and 0.3220 with success 0.958, 1.000 and 1.000.
+
+- **P1. Checking is free at an idle console.** At four and six assets the ladder is flat in served
+  per step and in success. FALSIFIER: a gated effect at either span.
+- **P2. Checking is expensive at a saturated one, and at the weakest assumption about what a wrong
+  answer costs, it is not worth its price.** At sixteen assets served per step is monotone
+  decreasing in $r$ and success is non-increasing. FALSIFIER: success rising with $r$ at
+  `bad_answer_hold` 1.0.
+- **P3. THE REQUIREMENTS NUMBER.** There is a break-even wrong-answer cost $h^\star$ above which
+  checking pays at sixteen assets. Registered: $h^\star$ is finite and lies in $[1, 8]$. FALSIFIER:
+  no value in the sweep makes always-check beat never-check, in which case over-trust is never
+  punished in this model, the knob cannot change a mission outcome, and by the project's own test it
+  is not a design variable and CR-61 is withdrawn.
+- **P4. D7, AND THE REASON IT NEEDS A DISCRIMINATION SCORE RATHER THAN A RATE.** At matched checking
+  rate an operator with a valid cue ships strictly fewer wrong answers and delivers strictly more,
+  and $d'$ separates the arms while `check_frac` does not: the pilot has 0.403 checking at $d' =
+  1.36$ shipping 7.5 percent wrong against 0.496 checking at $d' = 0.03$ shipping 16.0 percent.
+  FALSIFIER: `check_frac` orders the arms as well as $d'$ does, which would make the extra
+  instrument unnecessary and would be worth saying.
+- **P5. THE ONE THAT MAKES THIS THE CENTREPIECE AND NOT A SIDE RESULT.** $h^\star$ moves with the
+  comms ladder, through the console's load and not through anything about the autonomy. Under a
+  degraded link fewer requests arrive per step, the console is less saturated, a slot is cheaper,
+  so checking is cheaper and $h^\star$ FALLS. Registered: $h^\star$ at C4 is at most half $h^\star$
+  at C0. FALSIFIER: flat across the ladder, or moving the other way.
+
+**Why P5 is worth the battery.** It says the correct level of trust in an autonomous subordinate is
+not a property of the autonomy. It is set by how loaded the operator is, which is set by the jamming.
+That is a claim about the interaction of three things this project was funded to cross and that
+`doc/lit-ideas.md` records as uncrossed anywhere in the literature: a graded EW ladder, a graded
+control modality, and trust calibration at formation scale.
+
+**What is NOT claimed.** That any of these numbers describe a human. `comply_frac` is a modelling
+constant and $q$ is a stipulation. The transferable object is the SHAPE: that the price of checking
+is the price of a slot, that the slot's price is set by load, and that load is set by the channel.
+
+## CR-58 E1 VERDICT: THE BRIDGE IS RETRACTED ON ITS REGISTERED WINDOW, AND THE ARITHMETIC FAILED FOR A REASON THIS PAPER HAS A NAME FOR
+
+256 blocks of 64 replications, eight times the standard tier, job 9449639.
+
+    contrast                      effect       t   blocks agreeing   verdict
+    cut - nocut, GE-60           -0.0013   -0.63       104/256       equivalent (one-sided 25.48)
+    cut - nocut, GE-240          -0.0009   -0.62       101/256       equivalent (one-sided 35.62)
+
+The registered window was $[-0.021, -0.007]$ about a predicted $-0.014$. The measurement is
+$-0.0013$, outside it by an order of magnitude. **E1's falsifier is met and the bridge is retracted.**
+The deterministic sawtooth does not predict the stochastic channel, and CR-57's effect is reported as
+a property of its own stimulus, which is what the registration said would follow.
+
+**E3, the control, passes perfectly and that is what makes the retraction interpretable.** Under the
+Bernoulli ladder the two arms are BIT-IDENTICAL at both rungs, 0.0000 with zero of 256 blocks
+differing. The cut-off fires on track age and on nothing else. And under Gilbert-Elliot it DOES fire:
+`follow_lost_frac` gates up to 0.0841 at mean bad run 60 and 0.0985 at 240, in 256 of 256 blocks. So
+the mechanism is live, it reverts a tenth of the fleet's follower-time, and it changes the mission by
+nothing. The retraction is of the PREDICTION, not of the instrument.
+
+**Why the arithmetic missed, and it is instrument defect 11 of the same genus as the other ten.** The
+bridge computed the deep-stale fraction as $0.55 \times e^{-40/60} = 0.282$. The 0.55 is the drop rate
+at **C5**. The battery ran at **C3**, where this model's stale fraction is 0.1999. Carrying a rate
+from the rung it was derived on to a rung where it does not hold inflated the deep fraction by 3.4
+times. With the measured deep fraction of 0.0841 the prediction becomes $0.051 \times 0.0841 =
+0.0043$, which is BELOW the materiality floor of 0.06 and therefore was never a testable prediction
+at all. The residual factor of three between 0.0043 and 0.0013 is inside the uncertainty of a cost
+rate read off a single point.
+
+**Defect 11: a rate carried from the rung it was derived on to a rung where it does not hold.** It is
+the same shape as the other ten, and it is the same shape as the paper's own result: a quantity
+correctly derived against one reference, then used against another. The bridge was an attempt to
+audit an instrument, and it was itself defeated by a reference error. That is worth one sentence in
+the discussion and no more, because a paper that congratulates itself on its own failure modes is
+not reporting them.
+
+**What the retraction costs and what it does not.** The manuscript's sentence about the cut-off is
+unchanged and is now supported at eight times the power: it is inert under every channel this study
+models, at a one-sided equivalence statistic of 25.48 under the burstiest channel available, and
+decisive only against a severed link. What comes out is any claim that the forced-staleness sweep
+FORECASTS a channel. It does not, and no sentence in the manuscript should say it does.
+
+## CR-56 A3 AND B4 VERDICT: THE COUNTER-ONLY RUNG IS MEASURED, AND THE COUNTER CHANGES SIGN
+
+Full tier, 32 blocks of 64, job 9449506. The rung the requirements ladder recommended had never been
+measured against triage, because every earlier bounded arm carried a deadline test as well.
+
+    arm                            served/step at sixteen assets
+    deadline field alone                   0.1185
+    counter alone                          0.1402
+    counter, foresight switched on         0.1402   (identical to the digit)
+    counter plus deadline field            0.1413
+    counter plus triage                    0.1545
+    triage alone                           0.1949
+
+- **B3 held, exactly.** `bound` and `boundf` are equal in every cell and `policy_admit` reads 0 for
+  both, so `admit_foresight` is bit-inert on a counter-only console. The construction argument the
+  published caveat rested on is now a measurement: the gap is 0.0000 in every block, not merely
+  small. Defect 11 did not fire here.
+- **B4 held, and hard.** Adding the counter to a triaging console costs 0.0404 served per step
+  ($t = 234$, 32/32). Adding it to a console that cannot triage gains 0.0217. **The counter changes
+  sign.** It is not a weaker substitute for discernment; on a console that already has discernment
+  it is a net harm, because a console holding $k^\star$ requests has almost nothing left to choose
+  between and the counter throws away the pool the selection was going to be made from.
+- The manuscript's caveat is replaced by the measurement rather than kept beside it.
+
+**The recommendation this changes.** A program office told that a backlog bound and operator triage
+both help would naturally buy both. In this model buying both is worse than buying either: the pair
+delivers 0.1545 where triage alone delivers 0.1949. The ladder's ordering stands, but the rungs are
+alternatives and not increments, and that sentence has to be in the guidance rather than in a
+footnote.

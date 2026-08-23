@@ -146,6 +146,38 @@ class Operator:
     # on scarcity: it can price the slot directly by refusing anything longer than a cap. Admission
     # then needs BOTH the deadline test and the cap, with an unbiased estimate in each. Zero is off.
     admit_cap: float = 0.0
+    # --- the autonomy the operator is supervising, and whether the operator checks it -----------
+    # `doc/lit-ideas.md` records D7 as a literature gap: no study computes a discrimination score
+    # for operator trust against agent ground-truth correctness at formation scale under degraded
+    # comms. It cannot be computed against a console whose every answer is right by construction,
+    # which is the console every battery before this one measured. These four knobs give it one
+    # that can be wrong, an operator who can check, and the four cells of a confusion matrix.
+    #
+    # `auto_error` is the probability the proposed answer is wrong. `check_rate` is the base rate at
+    # which an uninformed operator checks rather than shipping it. `check_acuity` is the share of
+    # decisions on which the operator has a valid cue and therefore checks exactly the wrong ones,
+    # which is what makes the discrimination score move independently of the checking rate.
+    # `comply_frac` is what shipping costs as a fraction of checking, and it is the whole reason the
+    # choice is interesting: at a saturated console a check is not free, it is a slot.
+    auto_error: float = 0.0
+    check_rate: float = 1.0
+    check_acuity: float = 0.0
+    comply_frac: float = 0.25
+    # What a wrong answer costs the vehicle that acted on it, as a multiple of the patience an
+    # UNANSWERED vehicle waits before asking again. At 1.0 a wrong answer is exactly as expensive as
+    # no answer, which is the weakest assumption available and the one the default makes. Anything
+    # above 1.0 says acting on bad guidance is worse than acting on none, which is the assumption a
+    # programme worried about over-trust actually holds. It is a sweep, not a belief.
+    bad_answer_hold: float = 1.0
+    # The confusion matrix, in the operator's own decision units. Checked-and-wrong is a hit,
+    # checked-and-right a false alarm, shipped-and-wrong a miss, shipped-and-right a correct
+    # rejection. `n_shipped_bad` is the mission-facing count: answers that went out wrong.
+    n_check_hit: int = 0
+    n_check_fa: int = 0
+    n_check_miss: int = 0
+    n_check_cr: int = 0
+    n_shipped_bad: int = 0
+    t_shipped_bad: float = 0.0
     queue_model: str = "reserve"   # "reserve" | "buffer"
     # A real console's backlog is bounded. `queue_capacity < 0` leaves it unbounded, which is the
     # default and the regime a newest-first discipline is most flattered by, since it never has to
@@ -314,6 +346,11 @@ def build_c2(scn: Scenario, ent: Entities,
         admit_bias=float(scn.params.get("admit_bias", 1.0)),
         admit_sigma=float(scn.params.get("admit_sigma", 0.0)),
         admit_cap=float(scn.params.get("admit_cap", 0.0)),
+        auto_error=float(scn.params.get("auto_error", 0.0)),
+        check_rate=float(scn.params.get("check_rate", 1.0)),
+        check_acuity=float(scn.params.get("check_acuity", 0.0)),
+        comply_frac=float(scn.params.get("comply_frac", 0.25)),
+        bad_answer_hold=float(scn.params.get("bad_answer_hold", 1.0)),
         q_operator=q_operator_eff,
         q_auto=q_auto,
         q_fallback=float(scn.params.get("q_fallback", 0.50)),
@@ -437,6 +474,41 @@ def _sees_the_draw(op: "Operator", rng: np.random.Generator) -> bool:
     if op.admit_acuity <= 0.0:
         return False
     return bool(rng.random() < op.admit_acuity)
+
+
+def _supervise(op: "Operator", svc: float, rng: np.random.Generator) -> tuple[float, bool]:
+    """The operator's check-or-ship decision, returning what it costs and whether it was right.
+
+    Returns `(effective service time, answer is good)`. A checked wrong answer is caught and goes out
+    right at the full price of a slot; a shipped wrong answer goes out wrong at a quarter of one. The
+    four counters are the confusion matrix a discrimination score is computed from, and they are kept
+    in the operator's decision units rather than the mission's so that the score is a property of the
+    operator and not of the scenario.
+
+    At the identity values (`auto_error` 0, `check_rate` 1) no randomness is drawn and the console is
+    exactly the one every earlier battery measured: it checks everything and is never wrong.
+    """
+    if op.auto_error <= 0.0 and op.check_rate >= 1.0:
+        return svc, True
+    wrong = rng.random() < op.auto_error
+    # A cue is valid on a share `check_acuity` of decisions. Where it is valid the operator checks
+    # exactly the wrong ones, which is perfect discrimination at zero excess checking; everywhere
+    # else the operator checks at a base rate that carries no information about this decision. The
+    # two knobs therefore move the discrimination score and the checking rate independently, which
+    # is the whole point: a console cannot be scored on how OFTEN it checks.
+    cued = op.check_acuity > 0.0 and rng.random() < op.check_acuity
+    checked = wrong if cued else (op.check_rate >= 1.0 or rng.random() < op.check_rate)
+    if checked:
+        if wrong:
+            op.n_check_hit += 1
+        else:
+            op.n_check_fa += 1
+        return svc, True
+    if wrong:
+        op.n_check_miss += 1
+        return op.comply_frac * svc, False
+    op.n_check_cr += 1
+    return op.comply_frac * svc, True
 
 
 def _observed(op: "Operator", svc: float, rng: np.random.Generator) -> float:
@@ -737,6 +809,9 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
             # step at twelve assets against 0.1505, so reading one as the other turns a triage
             # capability into an apparent argument that erratic operators do better.
             svc = _service_time(op, rng)
+            # The check-or-ship decision is made BEFORE the feasibility test, because a console that
+            # tests against a price it will not pay is testing the wrong number.
+            svc, good = _supervise(op, svc, rng)
             reply = start + svc + lat
             seen = _observed(op, svc, rng) if _sees_the_draw(op, rng) else None
             test = start + (seen if seen is not None else _admit_budget(op)) + lat
@@ -767,6 +842,14 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
                 op.n_worked_lost += 1                 # the slot was spent; the reply was not
                 op.t_worked_lost += svc
                 _give_up(op, ent, i, arrive, int(op.patience_v[i]), rng)
+                continue
+            if not good:
+                # The slot was spent and an answer went out; it was the wrong one, so the requester
+                # still has its problem and comes back for it.
+                op.n_shipped_bad += 1
+                op.t_shipped_bad += svc
+                _give_up(op, ent, i, arrive,
+                         int(op.bad_answer_hold * op.patience_v[i]), rng)
                 continue
             if reply > deadline:  # worked, and answered too late. `blind` always; an admitting
                                   # console only when it admitted on the mean and the draw overran
@@ -980,6 +1063,10 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
             console = int(np.argmin(op.crew_free_at))         # earliest-free console (CR-14)
             start = max(op.crew_free_at[console], recv)
         svc = _service_time(op, rng)
+        # The same check-or-ship decision the buffer console makes. The reservation console already
+        # has a quality channel, so a shipped wrong answer lands here as an answer worth no more
+        # than no answer rather than as a separate fate, which keeps its four-bin accounting intact.
+        svc, good = _supervise(op, svc, rng)
         done = start + svc                                    # operator finishes this decision
         reply = done + lat                                    # reply travels back
         down_ok = comms.reply_survives(rng, done - k)
@@ -1010,7 +1097,10 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 if op.q_droop > 0.0:
                     util = op.busy_steps / max(op.total_steps, 1)
                     q = op.q_operator - op.q_droop * util * (op.q_operator - op.q_auto)
-                op.resolved_quality[i] = q
+                if not good:
+                    op.n_shipped_bad += 1
+                    op.t_shipped_bad += svc
+                op.resolved_quality[i] = q if good else op.q_auto
                 if wait > op.patience_v[i]:
                     # Admitted on the mean, overran on the draw. The slot is spent and the answer
                     # lands after the requester has gone, which is the honest cost of a console

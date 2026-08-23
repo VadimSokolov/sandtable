@@ -1,42 +1,40 @@
-# CR-52. EVERY RESULT IN THIS PAPER WAS FOUND ON ONE MAP.
+# THE STARVATION REVERSAL, REPLICATED ACROSS THE THREE MAPS.
 #
-# build_world produced one profile until today: a lateral Gaussian band of cover broadcast along the
-# whole field, with no longitudinal structure, so a route choice is a choice of latitude. Two new
-# maps, chosen to attack from opposite sides. `open` has no cover at all and is the negative control
-# for anything claimed about terrain. `chokepoint` is a transverse ridge with one gap, so a dispersed
-# force must converge where the MAP chooses rather than where the operator does.
+# Registered as the reviewer's precondition on the Round 28 spine question: before any Discussion
+# paragraph generalizes from "the metric that reads the requester disagrees with the two that read
+# the console", the disagreement has to survive a change of world. It was measured on one map. The
+# three maps in this model are not cosmetic: banded gives a covered route beside a fast open one,
+# chokepoint forces the force to converge at a place the terrain chooses, and open removes cover
+# altogether. Mission success across them runs 0.887 / 0.751 / 0.560 at eight assets, so they are a
+# real perturbation of everything downstream of the console.
 #
-# REGISTERED (CR-52), before any arm on a new map was read:
-#   P1. admit over blind holds its sign and gates on success AND served_per_step, at the collapse
-#       span, on both new maps.
-#   P2. the capacity ladder's argmax is unchanged by the map.
-#   P3. the collapse span is SMALLER on chokepoint than on band.
+#   N1. THE REVERSAL SURVIVES. On all three maps, mean backlog ranks newest-first at or below
+#       oldest-first while the per-vehicle answer rate ranks it far above. FALSIFIER: any map where
+#       backlog and answer rate agree, which would make the disagreement a property of one world.
+#   N2. UTILIZATION STAYS BLIND ON ALL THREE. The five disciplines stay within the gate's
+#       equivalence margin on operator utilization while the answer rate spans an order of
+#       magnitude. FALSIFIER: utilization separating the disciplines on any map.
+#   N3. THE COLLAPSE SPAN MOVES WITH THE MAP AND THE STARVATION ONSET MOVES WITH IT. The onset is a
+#       queue phenomenon, so it must track the span at which the console saturates rather than the
+#       terrain. FALSIFIER: an onset that is the same span on all three maps despite different
+#       saturation, or one that moves without utilization moving.
 . hopper/batteries/_common.sh
-BLIND='"control_mode":"direct","comms_level":0'
-AD='"control_mode":"direct","comms_level":0,"queue_policy":"admit"'
-BUF='"control_mode":"direct","comms_level":0,"queue_model":"buffer","queue_policy":"blind"'
+CD='"control_mode":"direct","queue_model":"buffer"'
+AD='"queue_policy":"admit"'
+LI='"queue_discipline":"patient_first"'
 
-for M in success served_per_step operator_goodput requests_per_step; do
-echo "### M1 the lever against the map ($M)"
-$PY tools/ar_eval.py $S --metric $M $B --sweep 'n_blue=4,6,8,10,12,16' \
-  --arm "band_blind={$BLIND}" \
-  --arm "band_admit={$AD}" \
-  --arm "open_blind={$BLIND,\"terrain_profile\":\"open\"}" \
-  --arm "open_admit={$AD,\"terrain_profile\":\"open\"}" \
-  --arm "choke_blind={$BLIND,\"terrain_profile\":\"chokepoint\"}" \
-  --arm "choke_admit={$AD,\"terrain_profile\":\"chokepoint\"}"
+echo "### BATTERY maps START"
+
+for T in band chokepoint open; do
+for M in starved_frac answer_rate_v backlog_mean operator_utilization served_per_step success; do
+echo "### N1 the five levers on the $T map ($M)"
+$PY tools/ar_eval.py $S --metric $M $B --sweep 'n_blue=4,6,8,12,16' \
+  --arm "fifo={$CD,\"comms_level\":0,\"terrain_profile\":\"$T\"}" \
+  --arm "rand={$CD,\"comms_level\":0,\"terrain_profile\":\"$T\",\"queue_discipline\":\"random\"}" \
+  --arm "lifo={$CD,\"comms_level\":0,\"terrain_profile\":\"$T\",$LI}" \
+  --arm "bound={$CD,\"comms_level\":0,\"terrain_profile\":\"$T\",\"queue_capacity\":2}" \
+  --arm "admit={$CD,\"comms_level\":0,\"terrain_profile\":\"$T\",$AD}"
+done
 done
 
-for M in served_per_step success; do
-echo "### M2 the capacity ladder against the map ($M)"
-$PY tools/ar_eval.py $S --metric $M $B --sweep 'n_blue=8,12,16' \
-  --arm "band_c1={$BUF,\"queue_capacity\":1}" \
-  --arm "band_c2={$BUF,\"queue_capacity\":2}" \
-  --arm "band_c4={$BUF,\"queue_capacity\":4}" \
-  --arm "choke_c1={$BUF,\"queue_capacity\":1,\"terrain_profile\":\"chokepoint\"}" \
-  --arm "choke_c2={$BUF,\"queue_capacity\":2,\"terrain_profile\":\"chokepoint\"}" \
-  --arm "choke_c4={$BUF,\"queue_capacity\":4,\"terrain_profile\":\"chokepoint\"}" \
-  --arm "open_c1={$BUF,\"queue_capacity\":1,\"terrain_profile\":\"open\"}" \
-  --arm "open_c2={$BUF,\"queue_capacity\":2,\"terrain_profile\":\"open\"}" \
-  --arm "open_c4={$BUF,\"queue_capacity\":4,\"terrain_profile\":\"open\"}"
-done
+echo "### BATTERY maps COMPLETE"

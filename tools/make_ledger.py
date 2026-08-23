@@ -168,6 +168,24 @@ ROWS = [
      "(instrument: a running job reading a directory the sync script rewrites)",
      "\\textsc{repaired}: the header asserted a hash the run stopped keeping; guarded by a "
      "per-job source snapshot and a hash re-checked at exit that refuses the log on a mismatch"),
+    ("station-keeping error predicts mission outcome",
+     "two arms at matched error with mission outcomes far apart",
+     "\\textsc{refuted}: the counterexample is inside one configuration, and the error's "
+     "cross-track component orders both families where the scalar orders neither"),
+    ("a forced staleness sweep forecasts what a real channel costs",
+     "a measured gap outside the window the sweep's own arithmetic predicts",
+     "\\textsc{refuted} at \\FoBrBlocks{} blocks: predicted $-0.014$, measured \\FoBrGap{}. The "
+     "cut-off's inertness holds and is now stronger; the forecast does not"),
+    ("a rate derived at one rung of the ladder may be used at another",
+     "(instrument: a deep-staleness fraction computed from the wrong rung's drop rate)",
+     "\\textsc{repaired}: the C5 rate was carried into a C3 prediction and inflated it 3.4 times; "
+     "the corrected value sits below the materiality floor, so the quantity was never testable; "
+     "guarded by \\texttt{deep\\_stale\\_fraction}, which takes the rung as an argument and reads "
+     "the rate from the ladder, so a wrong rung is a visible argument rather than a constant"),
+    ("the most accurate difficulty estimate is the one to build",
+     "an honest rule that prices the slot and matches a deliberately biased estimate",
+     "\\textsc{refuted} on its own control: a capped console reaches the inflated console's "
+     "throughput and refuses eleven percent fewer requests to get there"),
 ]
 
 

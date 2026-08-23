@@ -76,6 +76,27 @@ def main() -> None:
             ("AcServeFore", f"{sv['fore'][i16]:.4f}"),
             ("AcSelectGap", f"{POP - wk['fore'][i16]:.4f}")]
 
+    # --- the counter against triage, which is where the published direction was backwards -------
+    # A3 puts the counter and the deadline test in one job so the two levers can be read alone, in
+    # combination, and against the triaging console. The registered claim was that the counter
+    # FORECLOSES most of triage rather than substituting for it, which is worth checking because a
+    # program office asked to buy both would naturally assume they add.
+    A3 = "A3 the counter alone, against the counter plus a deadline test"
+    a3 = survey(ACU, A3, "served_per_step", quiet=True)
+    a3c = survey(ACU, A3, "served_per_step", ref="admf", quiet=True)
+    i16 = 2
+    out += [("AcBoundAlone", f"{a3['bound'][i16]:.4f}"),
+            ("AcDeadlineAlone", f"{a3['adm'][i16]:.4f}"),
+            ("AcBoundPlusTriage", f"{a3['boundadmf'][i16]:.4f}"),
+            ("AcTriageAlone", f"{a3['admf'][i16]:.4f}"),
+            # The counter is worth this much to a console that CANNOT triage ...
+            ("AcBoundHelps", f"{a3['bound'][i16] - a3['adm'][i16]:+.4f}"),
+            # ... and this much to one that can. It changes sign.
+            ("AcBoundHurts", f"{a3c[('boundadmf', '16')][0]:+.4f}"),
+            ("AcBoundHurtsT", f"{abs(a3c[('boundadmf', '16')][1]):.0f}"),
+            # And the bit-identity check: foresight is inert on a console with no queue to triage.
+            ("AcInertGap", f"{abs(a3['boundf'][i16] - a3['bound'][i16]):.4f}")]
+
     gen = ROOT / "report" / "gen" / "acuity_numbers.tex"
     gen.write_text("".join(f"\\newcommand{{\\{k}}}{{{v}}}\n" for k, v in out))
     print(f"wrote {gen} with {len(out)} macros")

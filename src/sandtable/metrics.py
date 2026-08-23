@@ -11,6 +11,8 @@ import math
 
 import numpy as np
 
+from scipy.special import ndtri as _ndtri
+
 from sandtable.entities import AIR, BLUE, RED, Entities
 from sandtable.scenario import Scenario
 
@@ -132,6 +134,8 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "wait_p95": 0.0, "queue_depth_mean": 0.0,
            "operator_goodput": 0.0, "operator_goodput_late": 0.0,
            "abandon_queue_frac": 0.0, "abandon_link_frac": 0.0,
+           "trust_dprime": 0.0, "trust_hit_rate": 0.0, "trust_fa_rate": 0.0,
+           "check_frac": 0.0, "shipped_bad_per_step": 0.0, "answer_correct_frac": 1.0,
            "station_along_mean": 0.0, "station_cross_mean": 0.0,
            "abandoned_per_step": 0.0, "wasted_frac": 0.0,
            "served_per_step": 0.0, "requests_per_step": 0.0,
@@ -260,6 +264,30 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
         if op.n_request > 0:
             out["operator_goodput"] = op.n_serviced / op.n_request
             out["abandon_queue_frac"] = op.n_abandon_queue / op.n_request
+            # D7, which `doc/lit-ideas.md` records as absent from the literature: a discrimination
+            # score for the operator's trust decision against the agent's ground-truth correctness.
+            # The four cells are counted in the operator's own decision units, so the score is a
+            # property of the operator and does not move when the scenario changes how much work
+            # arrives. The log-linear correction is the standard one for empty cells; without it a
+            # perfect operator scores infinity and the metric cannot be averaged over replications.
+            hit, fa = op.n_check_hit, op.n_check_fa
+            miss, cr = op.n_check_miss, op.n_check_cr
+            npos, nneg = hit + miss, fa + cr
+            # An operator who checks everything sits at the top-right corner of the ROC and one
+            # who checks nothing sits at the bottom-left. Discrimination is not estimable at either
+            # corner, and the log-linear correction returns a small signed number there rather than
+            # refusing, which would read as a discrimination score that is not one. Both corners
+            # report zero, which is the truth: no decision was discriminated.
+            if npos > 0 and nneg > 0 and (hit + fa) > 0 and (miss + cr) > 0:
+                hr = min(max((hit + 0.5) / (npos + 1.0), 1e-6), 1 - 1e-6)
+                far = min(max((fa + 0.5) / (nneg + 1.0), 1e-6), 1 - 1e-6)
+                out["trust_dprime"] = float(_ndtri(hr) - _ndtri(far))
+                out["trust_hit_rate"] = hit / npos
+                out["trust_fa_rate"] = fa / nneg
+            out["check_frac"] = (hit + fa) / max(hit + fa + miss + cr, 1)
+            out["shipped_bad_per_step"] = op.n_shipped_bad / op.total_steps
+            out["answer_correct_frac"] = 1.0 - op.n_shipped_bad / max(op.n_serviced +
+                                                                      op.n_shipped_bad, 1)
             out["abandon_link_frac"] = op.n_abandon_link / op.n_request
             # Goodput discounted by the demand that survived to offer it, so a share earned in a
             # costly mission is not read as capacity available in a cheap one.

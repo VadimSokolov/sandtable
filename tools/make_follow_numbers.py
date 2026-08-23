@@ -17,6 +17,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from ar_survey import survey  # noqa: E402
+from ar_gate import margin, tost  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 FOL, STL = "st-follow-9449505.out", "st-stale-9449524.out"
@@ -67,6 +68,56 @@ def main() -> None:
             ("FoCutT", f"{abs(cut[('noreverts', '320')][1]):.2f}"),
             ("FoLostWorst", f"{100 * lost['revert'][AS.index('320')]:.0f}"),
             ("FoLostMid", f"{100 * lost['revert'][AS.index('80')]:.0f}")]
+
+    # --- what the follow stack is worth against what else is on the same table -----------------
+    # F3 is the matched-rate comparison: same mean drop rate, i.i.d. against Gilbert-Elliot. The
+    # channel statistic a programme reports, packet delivery ratio, is identical by construction;
+    # the tracking statistic differs by two orders of magnitude; the mission does not move.
+    F3 = "F3 matched mean drop rate, i.i.d. against bursty"
+    trk = survey(FOL, F3, "track_err_mean", quiet=True)
+    bst = survey(FOL, F3, "success", ref="iid", quiet=True)
+    iid5, ge5 = trk["iid"][2], trk["ge240"][2]
+    # The weakest one-sided TOST statistic across the six cells, recomputed from the gate rather
+    # than read off the contrast tuple, whose fourth field is the block count and not a margin.
+    base = survey(FOL, F3, "success", quiet=True)["iid"][2]
+    m = margin("success", base)
+    worst = min(tost(v[0], v[1], v[3], m)[1] for v in bst.values())
+    out += [("FoBurstTrkIid", f"{iid5:.2f}"), ("FoBurstTrkGe", f"{ge5:.1f}"),
+            ("FoBurstRatio", f"{ge5 / iid5:.0f}"),
+            ("FoBurstSucGap", f"{bst[('ge240', '5')][0]:+.4f}"),
+            ("FoBurstCells", str(len(bst))),
+            ("FoBurstTost", f"{worst:.1f}")]
+
+    # F4 and F5 put the three levers on one table: what the column is COMMANDED to be, what holds
+    # it there, and what the console does. Only two of the three clear the gate.
+    F4 = "F4 what column geometry is worth, scripted path"
+    F5 = "F5 does the platform lever compose with the console lever"
+    scr = survey(FOL, F4, "success", quiet=True)["scripted"]
+    lev = survey(FOL, F5, "success", ref="admit_bc", quiet=True)
+    levb = survey(FOL, F5, "success", quiet=True)["admit_bc"][0]   # the margin's own base
+    out += [("FoSpreadTight", f"{scr[0]:.4f}"), ("FoSpreadWide", f"{scr[-1]:.4f}"),
+            ("FoConsoleLever", f"{-lev[('blind_bc', '8')][0]:+.4f}"),
+            ("FoConsoleT", f"{abs(lev[('blind_bc', '8')][1]):.2f}"),
+            ("FoPlatformLever", f"{lev[('admit_ls', '8')][0]:+.4f}"),
+            ("FoPlatformT", f"{abs(lev[('admit_ls', '8')][1]):.2f}"),
+            ("FoPlatformTost", f"{tost(*[lev[('admit_ls', '8')][i] for i in (0, 1, 3)],
+                                         margin('success', levb))[1]:.2f}")]
+
+    # --- the eight-times-tier test of the one claim that rests on a forced disturbance ---------
+    # The cut-off's value was measured against a sawtooth no channel produces, so the claim that it
+    # is inert under real channels had to be tested at power rather than asserted. 256 blocks.
+    BRG, E1 = "st-bridge-9449639.out", "E1 the bridge, Gilbert-Elliot mean bad run 60 and 240"
+    E3 = "E3 the control: Bernoulli, where the cut-off can never fire"
+    br = survey(BRG, E1, "success", ref="nocut", quiet=True)
+    bb = survey(BRG, E1, "success", quiet=True)["nocut"][0]
+    lo = survey(BRG, E1, "follow_lost_frac", quiet=True)
+    e3 = survey(BRG, E3, "success", ref="nocut", quiet=True)
+    mb = margin("success", bb)
+    out += [("FoBrGap", f"{br[('cut', '60')][0]:+.4f}"),
+            ("FoBrTost", f"{min(tost(v[0], v[1], v[3], mb)[1] for v in br.values()):.1f}"),
+            ("FoBrBlocks", str(br[('cut', '60')][3])),
+            ("FoBrLost", f"{100 * lo['cut'][0]:.1f}"),
+            ("FoBrCtrl", f"{max(abs(v[0]) for v in e3.values()):.4f}")]
 
     gen = ROOT / "report" / "gen" / "follow_numbers.tex"
     gen.write_text("".join(f"\\newcommand{{\\{k}}}{{{v}}}\n" for k, v in out))

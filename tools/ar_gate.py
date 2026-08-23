@@ -21,6 +21,8 @@ build rather than produce a number nobody knows to doubt.
 """
 from __future__ import annotations
 
+import math
+
 # metric -> the metric whose paired contrast must be null for a claim on it to be readable.
 INFLATABLE = {
     "operator_goodput": "requests_per_step",
@@ -180,3 +182,24 @@ def tost(eff: float, t: float, n: int, marg: float, *, t_min: float = FULL_T) ->
         return abs(eff) < marg, float("inf")
     lo, hi = (eff + marg) / se, (marg - eff) / se
     return min(lo, hi) > t_min, min(lo, hi)
+
+
+def deep_stale_fraction(level: int, burst_len: float, age: float) -> float:
+    """The share of time a Gilbert-Elliot channel at rung `level` spends more than `age` steps
+    into a bad run, computed from the MODEL's own ladder rather than from a remembered constant.
+
+    This exists because of instrument defect 11. CR-58's bridge arithmetic computed this quantity
+    with a drop rate of 0.55, which is the ladder's value at C5, and then ran the battery at C3,
+    where it is 0.20. The prediction came out 3.4 times too large and its falsifier fired. A
+    remembered rate has no rung attached to it and nothing in a formula can notice that it is the
+    wrong one; a function argument does. Any prediction of this shape is written through here so
+    that the rung is a parameter and not a memory.
+
+    The bad run is memoryless, so the conditional mean depth GIVEN that it is past `age` is
+    `age + burst_len`, which is what makes the cost rate comparable across depths.
+    """
+    from sandtable.comms_ew import _LADDER
+    if level not in _LADDER:
+        raise KeyError(f"no rung {level} in the ladder; it has {sorted(_LADDER)}")
+    p_drop = _LADDER[level][1]
+    return float(p_drop * math.exp(-age / burst_len))

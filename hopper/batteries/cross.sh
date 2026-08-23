@@ -37,7 +37,7 @@ done
 # of the penalty. Terrain is the sweep so the same arms are read in three worlds.
 for M in success station_cross_mean fleet_spread_mean fleet_cross_mean support_frac; do
 echo "### L2 does the penalty need a corridor ($M)"
-$PY tools/ar_eval.py $S --metric $M $B --sweep 'terrain_profile=banded,chokepoint,open' \
+$PY tools/ar_eval.py $S --metric $M $B --sweep 'terrain_profile=band,chokepoint,open' \
   --arm "base={$F}" \
   --arm "out320={$F,\"follow_outage\":320}" \
   --arm "sp120={$F,\"formation_spread\":120}" \

@@ -473,10 +473,17 @@ per step; an unbounded one that can triage delivers \FsSeeing{}. The bound does 
 discernment reaches, it forecloses most of it. What it does do is lift the console that cannot
 triage, from \FsNoisy{} to \FsBoundNoisy{}. So the counter substitutes for the operator one did not
 train and handicaps the one one did, and a program office that buys both gets less than it paid for.
-One caveat belongs inside that sentence rather than after it: the bounded arms carry a deadline test
-as well as a counter, so they price the counter as an addition to admission control rather than as
-the requirements ladder's counter-only rung, and on a blind console the distinction is inert by
-construction because the deadline test it changes is never reached.
+That statement first shipped with a caveat, because the bounded arms carried a deadline test as well
+as a counter and therefore priced the counter as an addition to admission control rather than as the
+requirements ladder's counter-only rung. The rung has since been measured on its own. At sixteen
+assets a counter alone delivers \AcBoundAlone{} served per step, a deadline field alone
+\AcDeadlineAlone{}, the two together \AcBoundPlusTriage{} once the console can also triage, and
+triage alone \AcTriageAlone{}. So the counter is worth \AcBoundHelps{} to a console that cannot
+triage and \AcBoundHurts{} to one that can ($t = \AcBoundHurtsT{}$, agreeing in 32 of 32 blocks).
+It does not merely fail to add: it changes sign. The measurement also closes the construction
+argument the caveat rested on, since a counter-only console with and without the triage capability
+switched on differs by \AcInertGap{} served per step, exactly and in every block, which is what it
+means for a deadline test never to be reached.
 
 
 \paragraph{Two thresholds, predicted then measured.} Equation~\ref{eq:nstar} puts the collapse span at $\qNStar{}$ assets on one console and $\qNStarTwo{}$ on two, and $\ell^{\star} = \qLatCut{}$ steps puts a ceiling on serviceable latency. Figure~\ref{fig:queue}(a) and Table~\ref{tab:staffing} are the staffing curve those numbers predict. On one console the operator's goodput, the fraction of its service time that reaches a requester still waiting, is \qGoodOneSix\% at six assets and \qGoodOneEight\% at eight, so the transition brackets $\qNStar{}$. On two consoles it is \qGoodTwoTwelve\% at twelve and \qGoodTwoSixteen\% at sixteen, bracketing $\qNStarTwo{}$. On three consoles, whose predicted threshold is $\qNStarThree{}$, the queue is still healthy at sixteen (\qGoodThreeSixteen\%). Those three readings are on the ratio, and the ratio is the metric this paper has had to correct twice, so they were re-run on the delivered rate. The brackets do not move: one console serves \seSrvOneNSix{} per step at six assets and \seSrvOneNEight{} at eight, two serve \seSrvTwoNTwelve{} at twelve and \seSrvTwoNSixteen{} at sixteen, and three are still rising at sixteen (\seSrvThreeNSixteen{}). Three consoles, three brackets, each containing its own prediction, with no parameter fitted to any of them. That the $c$-scaling survives on a metric with no denominator is the part worth having, because it is the one place in this paper where the equation makes a prediction about a knob the equation was not derived from. Adding a console does not raise goodput a little at every span; it moves a cliff. Staffing and admission control are the two levers the call-center literature puts on the same congestion \citep{ibrahim2018announcements}, and they act differently here: a second console doubles the span the queue can carry, while admission control on a single console converts the cliff into a slope, holding \qGoodOneEightAdmit\% goodput at eight assets where the blind operator has fallen to \qGoodOneEight\%. The latency ceiling shows the same discipline. Because C4 and C5 both sit above $\ell^{\star}$ at the default patience, they are one rung, not two: goodput is \qPatShortCfour\% at both. Raising patience to 30 steps lifts $\ell^{\star}$ past C4's latency and C4 separates (\qPatMidCfour\%) while C5 stays dead (\qPatMidCfive\%); at patience 45 both resolve (\qPatLongCfive\% at C5). The cut-off is a property of the requester's patience, not of the link.
@@ -981,6 +988,17 @@ strung out, so the force arrives piecemeal and fights alone; an estimator error 
 a wrong point along a trajectory that still tracks the route and closes when the track refreshes.
 Mean position error is the same number for both and describes one of them.
 
+The same warning arrives from the channel end of the stack, and there it involves three metrics
+rather than two. Holding the mean drop rate fixed and changing only its arrival structure, from
+independent losses to a Gilbert-Elliot chain with a long bad run, moves mean track error by a factor
+of \FoBurstRatio{} at the worst rung, from \FoBurstTrkIid{}~m to \FoBurstTrkGe{}~m. Packet delivery
+ratio, which is the statistic a link specification is written in, is identical across that pair by
+construction. Mission success does not move either: all \FoBurstCells{} contrasts against the
+independent channel are equivalent, the weakest carrying a one-sided statistic of \FoBurstTost{}.
+So the channel metric cannot see the structure, the tracking metric reads it two orders of magnitude
+loud, and the mission reads neither. The three are not measuring the same thing badly. They are
+referenced to three different things: the packet stream, the commanded station, and the objective.
+
 The consequence for the follow stack is that its channel is mission-immaterial here and its one
 requirement is a scalar. Across the whole communications ladder, the two-by-two of refresh channel
 against column topology is statistically equivalent to a link-following star in all \FoCells{}
@@ -998,6 +1016,29 @@ five-minute outage costs \FoCutGain{} of mission success ($t = \FoCutT{}$). The 
 under every channel this study models and decisive against a severed link, which makes it a
 zero-premium insurance scalar rather than a parameter to tune: sweeping its value is noise under
 both the burstiest channel here and the forced disturbance.
+
+That inertness is the one claim in this section that rests on a disturbance no channel produces, so
+it was tested at \FoBrBlocks{} blocks rather than the standard tier. Under a Gilbert-Elliot channel
+the cut-off is live: it hands \FoBrLost\% of the fleet's follower-time back to waypoint navigation,
+in every one of those blocks. It is also worth \FoBrGap{} of mission success, equivalent to zero at
+a one-sided statistic of \FoBrTost{}. The control is exact: under the independent-loss ladder, where
+no bad run reaches the cut-off's age, the two arms are bit-identical at \FoBrCtrl{} in every block,
+so the mechanism fires on track age and on nothing else. The forced sweep does not, however, forecast
+the channel. Its own arithmetic predicted a gap an order of magnitude larger than the one measured,
+and the reason is recorded in the ledger rather than argued away here: the deep-staleness fraction
+was computed from a drop rate belonging to a different rung of the ladder.
+
+Put the three levers of the formation stack on one table and the ordering is not the one the stack's
+own literature would suggest. At eight assets, admission control at the console is worth
+\FoConsoleLever{} of mission success against a console that cannot refuse ($t = \FoConsoleT{}$,
+agreeing in 32 of 32 blocks). Moving the follower from a commanded link to an on-platform sensor,
+with the console fixed either way, is worth \FoPlatformLever{} and is equivalent to zero at a
+one-sided statistic of \FoPlatformTost{}. What the column is COMMANDED to be spans further than
+both: driving the same scripted path at spreads from ten to nine hundred metres runs mission success
+from \FoSpreadTight{} to \FoSpreadWide{}. Within this model, then, what a formation is told to be
+dominates, what holds it there is immaterial, and the console outranks both. A programme that spends
+its effort on the follower's sensing chain is spending it on the one term of the three that does not
+move.
 
 The absolute success rates should therefore be read as comparative, not predictive: the value is in the \emph{ordering} of designs and the \emph{location} of crossovers, which is what a search loop consumes, not in any single percentage. The moving optimum's exact crossover cells near the contour are within Monte-Carlo noise, so what the study establishes is the direction of the boundary, not the precise cell. The Lanchester check validates the aggregate attrition law but not the spatial or command dynamics. The stronger forms of validation this class of model admits are left open: docking the emergent behavior against an independently built model \citep{axtell1996aligning}, pattern-oriented validation that asks the model to reproduce several observed tactical patterns at once \citep{grimm2005pattern}, and empirical comparison against exercise or high-fidelity ProjectGL traces. This is why the intended role of the model is to feed, not replace, high-fidelity validation.
 
