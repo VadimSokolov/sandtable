@@ -4197,3 +4197,127 @@ on `served_per_step` is null.
 Metrics logged: `served_per_step` (the gate), `success`, `operator_goodput` (recorded and NOT gated
 on, because the disciplines change the asking), `patience_mean`, `patience_sd`, `patience_min` (the
 arm printing its own assumption), `abandon_queue_frac`.
+
+---
+
+## CR-46 VERDICT: VOID-UNREACHABLE. THE MODEL COMMITS AT ARRIVAL, SO THERE IS NO QUEUE TO ORDER
+
+Filed as instance two of the category CR-39 P2 opened. The four fields:
+
+1. **What was registered.** Six predictions about queue discipline under patience dispersion.
+2. **Why it is unreachable.** `queue_model = "reserve"`, the published model, decides a request's
+   fate at ARRIVAL: it reads the console's free time, computes the reply, and either books the slot
+   or refuses. Nothing ever waits anywhere it could be reordered, so a discipline can only permute
+   requests that arrive on the same step.
+3. **The measurement, not the argument.** At `mult_window = 1`, the two regimes do not overlap:
+
+   | $n$ | $\tau$ | $E[k \mid k \ge 1]$ | $P(\ge 2)$ | served/step | utilization |
+   |---|---|---|---|---|---|
+   | 6 | 30 | 1.108 | 0.069 | 0.1107 | 0.712 |
+   | 8 | 30 | 1.130 | 0.083 | 0.1354 | 0.885 |
+   | 8 | 12 | 1.159 | 0.128 | 0.1438 | 0.944 |
+   | 12 | 12 | 1.307 | 0.247 | 0.1519 | 0.999 |
+   | 16 | 12 | 1.466 | 0.348 | 0.1519 | 0.999 |
+
+   Where the console has slack, same-step contention is 7 to 13 percent of busy steps. Where
+   contention is common, served/step is 0.1519 against a capacity of 0.15 and no order can change
+   the count.
+4. **The positive-control obligation.** `queue_model = "buffer"`, built and gated below. CR-46's
+   predictions are re-registered against it as CR-46 v2, and the reserve-model null rides inside
+   that battery as its in-battery negative control rather than being run alone.
+
+**Infection scope.** One manuscript sentence, which explained the triage null with an argument from
+queueing that is wrong on its own terms: under a common deadline first-come-first-served already IS
+earliest-deadline-first, the order that maximizes deadlines met, so a worse order strands earlier
+arrivals and serves FEWER \citep{barrer1957ordered}. The claim has moved to the instruments block
+and the conclusion now reads that ordering was not testable at this fidelity.
+
+---
+
+## CR-47. A CONSOLE THAT CANNOT DETECT ABANDONMENT CAN STILL WORK ITS QUEUE NEWEST-FIRST
+
+**Provenance, stated first because it changes how this reads.** CR-46's registration was written
+blind and its battery was never run at tier. Building the positive control it obligated produced
+this, and I saw the numbers before writing the conjecture. Everything below is therefore a
+CONFIRMATION registration plus four extensions whose answers I do not have, and the confirmation
+limb is labelled as such in the ledger rather than presented as a prediction.
+
+**What the smoke test showed**, `queue_model = "buffer"`, clear link, `blind`, 32 replications:
+
+| $n$ | oldest-first served/step | newest-first | \texttt{admit}, oldest-first | stale share, oldest-first |
+|---|---|---|---|---|
+| 6 | 0.0994 | 0.1037 | 0.1190 | 0.00 |
+| 8 | 0.0387 | 0.1189 | 0.1363 | 0.22 |
+| 10 | 0.0065 | 0.1323 | 0.1418 | 0.72 |
+| 12 | 0.0032 | 0.1389 | 0.1466 | 0.62 |
+| 16 | 0.0023 | 0.1459 | 0.1489 | 0.44 |
+
+A blind console working its backlog newest-first recovers 98 percent of what admission control buys,
+at sixteen assets, **without knowing any deadline at all**. That is the part that matters for a
+program. Every `refund` and `admit` number in this paper is conditional on the request format
+carrying the requester's time-to-autonomy; the paper says so. Newest-first needs a stack and nothing
+else, so it is the lever available to a console whose message format cannot be changed.
+
+The mechanism is the paper's own. Under overload, oldest-first serves the request most likely to
+have expired: at ten assets 72 percent of the operator's work goes to requests whose requester gave
+up and asked again. Newest-first serves the freshest, which is the one most likely to still be
+waited on. This is old: Barrer's pair of 1957 papers is the original statement that with impatient
+customers the service ORDER changes how many are lost, not merely which \citep{barrer1957ordered,
+barrer1957indifferent}. It is new here only in where it sits, on a supervisory console whose clients
+are vehicles rather than callers, and in what it substitutes for.
+
+Note that `patient_first` degenerates to newest-first when patience is uniform, because the deadline
+is arrival plus patience. The same arm therefore reads as last-come-first-served in the homogeneous
+fleet and as longest-deadline-first in the mixed one, which is why one arm answers both questions.
+
+**P1 (confirmation, at tier).** Under `buffer` and `blind` on a clear link, `patient_first - fcfs`
+on `served_per_step` is positive and gated at $n \ge 8$, at 32 blocks of 64.
+  **FALSIFIER.** A null at tier retracts the whole conjecture and the smoke test is recorded as
+  underpowered. Nothing else in the paper depends on it.
+
+**P2 (the mission metric, genuinely open).** The same contrast on `success` is positive and gated at
+$n \ge 8$. The smoke test's $|t|$ never exceeded 1.72 at one block, so this is not known.
+  **FALSIFIER.** A null on `success` **narrows the claim to the console's throughput**, and the
+  recommendation ships as a queue-management result rather than a mission result.
+
+**P3 (the crossover, genuinely open).** The advantage is absent or reversed below the collapse span:
+at $n = 6$ the smoke test has newest-first WORSE on success by 0.062. The prediction is that the
+sign of `patient_first - fcfs` on `success` is negative at $n \le 6$ and positive at $n \ge 8$.
+  **FALSIFIER.** A uniform sign across the sweep refutes the account that this is an overload
+  discipline, and the effect would then need a different mechanism.
+
+**P4 (substitution, genuinely open).** Under `admit`, newest-first is WORSE than oldest-first,
+because admission control removes the overload that makes newest-first correct and first-come is
+then already earliest-deadline. Registered as: `patient_first - fcfs` under `admit` is negative and
+gated at $n \ge 8$.
+  **FALSIFIER.** Newest-first at or above oldest-first under `admit` refutes the substitution and
+  the two levers would compose rather than trade off, which is a different and better
+  recommendation.
+
+**P5 (the reliance loop, genuinely open).** The advantage survives with retries on, which is the
+condition that produces the fold band. The retry loop feeds the backlog and newest-first starves the
+oldest requests, so a retrying vehicle could re-enter at the head forever.
+  **FALSIFIER.** A null or reversal with `retry_prob = 1` scopes the recommendation to fleets that
+  do not re-ask, which is a serious limit and has to be stated in the same sentence as the claim.
+
+**P6 (the cost, genuinely open).** Newest-first starves the tail. The backlog under `blind` grows to
+a mean of 82.9 pending at twelve assets against 68.5 for oldest-first. Registered: mean backlog under
+newest-first is HIGHER than under oldest-first at every span, and the fraction of requests never
+served at all is higher.
+  **FALSIFIER.** A backlog no larger under newest-first would mean the discipline is not doing what
+  the account says, and the mechanism would need re-reading.
+
+**The instrument gate, which blocks all six.** `queue_model = "buffer"` is a new service model and
+nothing may be read from it until it reproduces the old one where theory says it must. With
+deterministic service and no cancellation a request's completion time is fixed at booking, so under
+`refund` and `admit`, where the console never commits beyond what it can serve, buffer and reserve
+must agree.
+  **GATE.** `buffer - reserve` on `served_per_step` under `refund` and under `admit`, `fcfs`,
+  across the span sweep, at tier, must not gate anywhere.
+  **FALSIFIER.** A gated difference means the buffer's dispatch is not reproducing the schedule and
+  every CR-47 number is void until it is found.
+  **Recorded in advance, because it is a real difference and not a defect:** under `blind` the two
+  models must NOT agree, because reserve books doomed work at an ever-receding free time and
+  over-commits past the end of the mission, while buffer holds it in a backlog. The smoke test has
+  reserve's booking clock at 2273 on an 1800-step mission. `blind` is therefore excluded from the
+  gate and the exclusion is stated here rather than discovered later.

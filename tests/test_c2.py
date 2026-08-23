@@ -368,3 +368,62 @@ def test_patience_layout_draws_from_a_child_stream_and_leaves_the_parent_alone()
     a, b = make_rng(4, 2), make_rng(4, 2)
     _patience_vector(6, np.arange(6), 20, 9, a)
     assert np.allclose(a.random(5), b.random(5))
+
+
+# ---- the buffered queue model (CR-47) --------------------------------------
+
+def test_reserve_is_the_default_and_is_untouched_by_the_buffer_code(skirmish_scenario):
+    """Every published number was produced under `reserve`. The buffer is a second service model,
+    not a revision of the first, so the default path must be bit-identical with the new code in."""
+    from sandtable.sim import run_mission
+
+    a = run_mission(_span_scenario(control_mode="direct", n_blue=8, queue_policy="admit"), seed=3)
+    b = run_mission(_span_scenario(control_mode="direct", n_blue=8, queue_policy="admit",
+                                   queue_model="reserve"), seed=3)
+    assert a == b
+
+
+def test_build_c2_rejects_an_unknown_queue_model(skirmish_scenario, rng):
+    scn = skirmish_scenario.with_params({"control_mode": "direct", "queue_model": "carousel"})
+    with pytest.raises(ValueError, match="queue_model"):
+        build_c2(scn, build_entities(scn, rng), rng)
+
+
+def test_the_buffer_starts_work_at_the_fractional_free_time():
+    """One service is 1/mu steps and 1/mu is not an integer. Dispatching only on integer steps
+    would round every service up and cost capacity that has nothing to do with queueing: at
+    mu = 0.15 the console would deliver 1/7 = 0.1429 rather than 0.15, a four percent cut. The
+    served rate under a policy that never over-commits is the check."""
+    from sandtable.sim import run_mission
+
+    m = run_mission(_span_scenario(control_mode="direct", n_blue=16, comms_level=0,
+                                   queue_policy="admit", queue_model="buffer"), seed=5)
+    assert m["served_per_step"] > 0.1429
+
+
+def test_a_stale_request_is_worked_and_counted_but_never_answers_its_requester():
+    """The waste `blind` is named for, in its sharpest form: a requester whose patience ran out
+    asks again while its first request is still in the backlog, the console works the first one,
+    and the answer lands on a request nobody is holding. `reserve` cannot represent this at all."""
+    from sandtable.sim import run_mission
+
+    blind = run_mission(_span_scenario(control_mode="direct", n_blue=12, comms_level=0,
+                                       queue_policy="blind", queue_model="buffer"), seed=5)
+    admit = run_mission(_span_scenario(control_mode="direct", n_blue=12, comms_level=0,
+                                       queue_policy="admit", queue_model="buffer"), seed=5)
+    assert blind["stale_frac"] > 0.3          # most of a blind console's work, at this span
+    assert admit["stale_frac"] == 0.0         # a refused request leaves the queue before it can go stale
+    assert blind["backlog_mean"] > admit["backlog_mean"]
+
+
+def test_newest_first_beats_oldest_first_on_an_overloaded_blind_console():
+    """The CR-47 mechanism, at one seed and one span, so a regression that inverted the discipline
+    would be caught here rather than in a battery. The tier result is what the paper reports."""
+    from sandtable.sim import run_mission
+
+    def go(disc):
+        return run_mission(_span_scenario(control_mode="direct", n_blue=12, comms_level=0,
+                                          queue_policy="blind", queue_model="buffer",
+                                          queue_discipline=disc), seed=5)["served_per_step"]
+
+    assert go("patient_first") > 10 * go("fcfs")

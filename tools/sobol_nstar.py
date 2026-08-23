@@ -133,6 +133,14 @@ def _one(row: np.ndarray, seeds: int) -> float:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=128)
+    # The closed form costs nothing to evaluate, so there is no reason to estimate its indices at
+    # the simulator's sample size. Matching the two sample sizes "for fairness" is the wrong parity:
+    # what has to match is the DESIGN, the ranges and the estimator, not the number of draws, and
+    # only the expensive side is budget-limited. At n = 128 the closed form's own patience and
+    # decision-interval indices came back tied to three decimals, which produced an apparent rank
+    # inversion against the simulator; at n = 65536 they separate by exactly the ratio of the two
+    # ranges squared, which is what the algebra says, and the inversion was noise in the reference.
+    ap.add_argument("--n-eq", type=int, default=65536)
     ap.add_argument("--seeds", type=int, default=8)
     ap.add_argument("--out", default="sobol.json")
     a = ap.parse_args()
@@ -149,31 +157,42 @@ def main() -> None:
     with mp.Pool(nproc, initializer=_init) as pool:
         Y_sim = np.array(pool.starmap(_one, [(row, a.seeds) for row in X], chunksize=4))
     Y_eq = closed_form(X)
+    X_eq = saltelli.sample(PROBLEM, a.n_eq, calc_second_order=False)
+    Y_eq_fine = closed_form(X_eq)
 
     res = {}
-    for tag, Y in (("simulator", Y_sim), ("closed_form", Y_eq)):
+    for tag, Y in (("simulator", Y_sim), ("closed_form_paired", Y_eq),
+                   ("closed_form", Y_eq_fine)):
         s = sobol_indices(Y, PROBLEM["num_vars"])
         res[tag] = {**s, "mean": float(Y.mean()), "std": float(Y.std()),
                     # The raw responses ride along, 768 floats, so the decomposition can be redone
                     # without re-running 79,872 missions. That is what the first attempt cost.
-                    "Y": list(map(float, Y))}
+                    # The raw responses ride along so the decomposition can be redone without
+                    # re-running the missions; the fine reference is 393,216 numbers and is not
+                    # worth carrying, since it is reproducible from four lines of arithmetic.
+                    "Y": list(map(float, Y)) if tag != "closed_form" else []}
     res["names"] = PROBLEM["names"]
     res["bounds"] = PROBLEM["bounds"]
     res["n_draws"] = len(X)
     res["corr"] = float(np.corrcoef(Y_sim, Y_eq)[0, 1])
+    res["n_draws_eq"] = len(X_eq)
     pathlib.Path(a.out).write_text(json.dumps(res, indent=1))
 
-    print(f"\n{'parameter':>20} {'S1 sim':>9} {'S1 eq':>9} {'diff':>8}   "
-          f"{'ST sim':>9} {'ST eq':>9}")
+    print(f"\n{'parameter':>20} {'S1 sim':>16} {'S1 eq':>9} {'diff':>8}   "
+          f"{'ST sim':>16} {'ST eq':>9} {'diff':>8}")
     for i, nm in enumerate(PROBLEM["names"]):
-        d = res["simulator"]["S1"][i] - res["closed_form"]["S1"][i]
-        print(f"{nm:>20} {res['simulator']['S1'][i]:9.3f} {res['closed_form']['S1'][i]:9.3f} "
-              f"{d:+8.3f}   {res['simulator']['ST'][i]:9.3f} {res['closed_form']['ST'][i]:9.3f}")
+        sm, eq = res["simulator"], res["closed_form"]
+        print(f"{nm:>20} {sm['S1'][i]:8.3f} +-{sm['S1_conf'][i]:5.3f} {eq['S1'][i]:9.3f} "
+              f"{sm['S1'][i] - eq['S1'][i]:+8.3f}   "
+              f"{sm['ST'][i]:8.3f} +-{sm['ST_conf'][i]:5.3f} {eq['ST'][i]:9.3f} "
+              f"{sm['ST'][i] - eq['ST'][i]:+8.3f}")
     rs = np.argsort(res["simulator"]["S1"])[::-1]
     re_ = np.argsort(res["closed_form"]["S1"])[::-1]
     print(f"\nrank, simulator:   {[PROBLEM['names'][i] for i in rs]}")
     print(f"rank, closed form: {[PROBLEM['names'][i] for i in re_]}")
     print(f"rank order identical: {list(rs) == list(re_)}")
+    print(f"largest |ST difference|: "
+          f"{max(abs(res['simulator']['ST'][i] - res['closed_form']['ST'][i]) for i in range(4)):.3f}")
     print(f"largest |S1 difference|: "
           f"{max(abs(res['simulator']['S1'][i] - res['closed_form']['S1'][i]) for i in range(4)):.3f} "
           f"(P1 falsifier fires above 0.10)")
