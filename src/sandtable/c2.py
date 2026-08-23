@@ -100,6 +100,16 @@ class Operator:
     # the delay itself. `buffer` is the queue: an arrival joins a pending list, the console picks
     # from it when it frees, and the admission test is applied at the head with the delay known.
     queue_model: str = "reserve"   # "reserve" | "buffer"
+    # A real console's backlog is bounded. `queue_capacity < 0` leaves it unbounded, which is the
+    # default and the regime a newest-first discipline is most flattered by, since it never has to
+    # account for the requests it starves. Zero is a meaningful setting and not a sentinel: it means
+    # the console holds no backlog at all, serving a request only if it is free when the request
+    # arrives, which is what the sizing rule prescribes on a slow enough link. A bound drops the
+    # OLDEST pending request on overflow, the one purge a console can perform knowing nothing about
+    # the requester: it needs its own receive clock, not the deadline field `refund` and `admit`
+    # require.
+    queue_capacity: int = -1
+    n_dropped: int = 0             # buffer: requests pushed out of a full backlog
     pending: list = field(default_factory=list)   # buffer: [i, arrive, recv, deadline, seq]
     req_seq: np.ndarray = None     # buffer: per-vehicle request counter, for the staleness test
     n_stale: int = 0               # buffer: requests worked after their requester had moved on
@@ -309,6 +319,7 @@ def build_c2(scn: Scenario, ent: Entities,
     if op.admit_response == "aimd" and op.queue_policy != "admit":
         raise ValueError("admit_response='aimd' needs queue_policy='admit'; the other policies "
                          "emit no refusal for the vehicle to respond to")
+    op.queue_capacity = int(scn.params.get("queue_capacity", -1))
     op.queue_model = str(scn.params.get("queue_model", "reserve"))
     if op.queue_model not in ("reserve", "buffer"):
         raise ValueError(f"queue_model must be reserve|buffer, got {op.queue_model!r}")
@@ -491,6 +502,32 @@ def _pick(op: Operator, ready: list[int], rng: np.random.Generator,
         sign = -1.0 if d == "hard_first" else 1.0
         return min(ready, key=lambda r: (sign * difficulty.get(int(op.pending[r][0]), 0.0), r))
     return ready[0]
+
+
+def _trim(op: Operator, ent: Entities, k: int, rng: np.random.Generator) -> None:
+    """Hold the backlog to `queue_capacity` by dropping the OLDEST pending request.
+
+    The choice of victim is the whole content of the knob. Dropping the oldest is the purge a
+    console can perform on its own clock, without the requester's deadline travelling in the
+    message, and it is therefore a weaker information requirement than `refund` or `admit`. It is
+    also the purge that most helps first-come-first-served and least helps newest-first, since
+    newest-first was never going to reach those requests anyway, so a bound is the adversarial test
+    of a newest-first recommendation rather than a friendly one.
+    """
+    if op.queue_capacity < 0:
+        return
+    # The bound is on the console's buffer, which holds what has ARRIVED. A request still in flight
+    # is not occupying anything the console owns, and counting it would make a capacity of zero mean
+    # "serve nothing" on any link with latency, which is a different and much stronger policy than
+    # the sizing rule prescribes.
+    while True:
+        here = [r for r, rec in enumerate(op.pending) if rec[2] <= k]
+        if len(here) <= op.queue_capacity:
+            return
+        i, arrive, _recv, _deadline, _seq = op.pending.pop(here[0])
+        op.n_dropped += 1
+        op.n_abandon_queue += 1
+        _give_up(op, ent, int(i), arrive, int(op.patience_v[int(i)]), rng)
 
 
 def _give_up(op: Operator, ent: Entities, i: int, arrive: float, hold: int,
@@ -852,3 +889,8 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
         # After the arrivals, so a request that reaches a free console on the step it was sent is
         # served on that step, which is what `reserve` does with `start = max(free_at, recv)`.
         _drain_buffer(op, ent, comms, k, rng, difficulty)
+        # And the overflow drop comes last, so the order within a step is arrive, serve, discard.
+        # Trimming before service would make a capacity of zero mean "serve nothing" rather than
+        # "serve only what arrives to a free console", which is the setting the sizing rule
+        # prescribes once the link is slow enough.
+        _trim(op, ent, k, rng)

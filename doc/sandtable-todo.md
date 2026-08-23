@@ -1105,3 +1105,77 @@ forgone service was doomed service; CR-36 re-reads every remaining goodput contr
 - CR-35: is "serves less, wins more" a mechanism or a story?
 - CR-36: the goodput audit.
 - Backlog: Sobol indices, CR-8, C5.
+
+---
+
+## State at 2026-08-23 (early): the model grew a queue
+
+### The day's theme: an assumption in a docstring, and what removing it cost
+
+`service_order`'s docstring said ordering cannot change how many requests the operator serves,
+because every requester carries the same patience. The manuscript repeated it as the reason the
+triage null was a null. Both were wrong, in different ways, and finding out took building two things.
+
+**Heterogeneous patience** (`patience_spread`). A balanced multiset about the published mean, laid
+out on a `rng.spawn` child stream so the parent is untouched and a dispersed fleet sees the same
+mission as a uniform one. Spread zero is a constant vector, so every deadline discipline is a stable
+sort on a constant key and each arm is its own control at its own zero.
+
+**A real queue** (`queue_model = "buffer"`). The published operator is a reservation system: a
+request is committed to a slot at ARRIVAL, so nothing ever waits anywhere it could be reordered.
+Under `buffer` an arrival joins a pending list and the console picks from it when it frees, so
+admission happens at the head against the delay it actually has. Two details are load-bearing: the
+console starts work at the FRACTIONAL free time (integer-only dispatch would cut capacity four
+percent for reasons unrelated to queueing), and there is no background reaper (a console that swept
+its whole backlog would be refusing work it has not looked at).
+
+### What that produced
+
+- **CR-46 is VOID-UNREACHABLE**, filed with the four fields. The contention table is the evidence:
+  where the console has slack, same-step contention is 7 to 13 percent of busy steps; where
+  contention is common, the console is already at capacity.
+- **CR-47**, and it is the largest result in the project. A blind console working newest-first
+  recovers 98 percent of what admission control buys, at sixteen assets, **without knowing any
+  deadline**: 0.0023 served/step oldest-first, 0.1459 newest-first, 0.1489 with admission control.
+  Every `refund` and `admit` number in the paper is conditional on the request format carrying the
+  requester's time-to-autonomy. Newest-first needs a stack. Registered with its provenance stated
+  first, six predictions of which five are open, an instrument gate that blocks all of them, and P7,
+  the bounded-backlog test, which is the adversarial version.
+- **STALE requests**, which `reserve` cannot represent at all: at ten assets under `blind`, 72
+  percent of the operator's work goes to requests whose requester gave up and asked again.
+
+### Landed from Hopper
+
+- **CR-35 CONFIRMED.** The service the rate rule gives up was going to be wasted: 63 abandonments
+  removed per unit of service at sixteen assets. Second limb unreadable, its denominator moved 41%.
+- **CR-38 CONFIRMED and split.** Admission control on one console is worth 62% of a second operator
+  in delivered service and 77% in mission success at eight assets; 64% and 86% at twelve. Unregistered
+  bonus: the $c$-scaling of $n^{\star}$ brackets at 6-8, 12-16 and not-by-16 against predictions of
+  6.5, 12.9 and 19.4, on the denominator-free metric.
+- **CR-40 and CR-41** are in the manuscript. The tail statistic says a longer fade does not multiply
+  collisions, it deepens them: two-or-more windows grow 1.4x across a 240-fold dwell range while
+  three-or-more grow 2.3x and the mean excess 2.5x.
+- **CR-45** answered and rerun. The first job's own error bars said it was unresolved (+-0.59 on an
+  index of 0.495), and worse, the reference was estimated at the simulator's sample size, which tied
+  two of its indices and produced a rank inversion that is not in the equation.
+
+### Instruments repaired
+
+- `SALib.analyze` is unusable on NumPy 2 (`ndarray.ptp`). The Sobol estimators are ours now, benched
+  against Ishigami's analytic indices in `tests/test_sobol.py`.
+- The Sobol reference is no longer estimated at the simulator's sample size. Matching sample sizes
+  for fairness is the wrong parity: the design has to match, the sample size does not, and only the
+  expensive side is budget-limited.
+- The ledger's queue-discipline row moved from claims to instruments.
+
+### Running
+
+`st-sobol` 9448646 (n=512, fixed reference), `st-lifo` 9448647 (CR-47, gate first).
+
+### Open
+
+- CR-47 P1 through P7 at tier; the instrument gate blocks all of them.
+- CR-46 v2 against the buffer, with the reserve null as its in-battery negative control.
+- Whether the LIFO recommendation survives a bounded backlog (P7), which decides whether the paper
+  says "invert your queue" or "bound it."
+- Backlog: CR-8, C5.

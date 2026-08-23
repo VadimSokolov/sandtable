@@ -4434,3 +4434,200 @@ Three consoles, three brackets, each containing its own prediction. The manuscri
 this on `operator_goodput`; the brackets do not move on the denominator-free metric, which matters
 because the console count is the one knob in this paper about which the equation makes a prediction
 it was not derived from.
+
+**CR-47 P7 (registered before the run, and it is the adversarial test of the recommendation).**
+Newest-first on an unbounded backlog never has to account for the requests it starves, and a real
+console's queue is bounded. `queue_capacity` bounds it and drops the OLDEST pending request on
+overflow, which is the one purge a console can perform on its own receive clock without the
+requester's deadline travelling in the message. That purge is exactly what first-come-first-served
+needs and exactly what newest-first does not, since newest-first was never going to reach those
+requests.
+  **PREDICTION.** The newest-first advantage NARROWS monotonically as the bound tightens, and at a
+  bound of one or two requests it is null.
+  **FALSIFIER, and this is the one that would change the recommendation.** If a bounded
+  first-come-first-served queue reaches newest-first's delivered rate, the finding is **"bound your
+  backlog," not "invert it,"** and the paper reports the bound as the lever, with newest-first as
+  one way of achieving what the bound achieves. If instead the advantage survives at every bound,
+  newest-first is the lever and the bound is a detail.
+  Registered with the ordering it implies either way: both are software, both need less information
+  than admission control, and the question is only which of the two a console should be told to do.
+
+---
+
+## CR-47 P7 VERDICT: THE FALSIFIER FIRED. THE FINDING IS "BOUND YOUR BACKLOG," NOT "INVERT IT"
+
+Registered as the adversarial test of the newest-first recommendation, and it did its job. Clear
+link, `blind`, `buffer`, 32 replications, delivered service:
+
+| $n$ | bound | oldest-first | newest-first | gap |
+|---|---|---|---|---|
+| 8 | none | 0.0387 | 0.1189 | +0.0801 |
+| 8 | 8 | 0.0462 | 0.1217 | +0.0755 |
+| 8 | 4 | 0.0715 | 0.1271 | +0.0556 |
+| 8 | 2 | **0.1328** | 0.1259 | **-0.0069** |
+| 12 | none | 0.0032 | 0.1389 | +0.1357 |
+| 12 | 2 | **0.1472** | 0.1428 | **-0.0044** |
+| 16 | none | 0.0023 | 0.1459 | +0.1423 |
+| 16 | 2 | **0.1481** | 0.1465 | **-0.0016** |
+
+**A two-deep oldest-first queue reaches and slightly passes an unbounded newest-first one, at every
+span tested.** At a bound of one they are identical by construction, because a one-slot queue has no
+order. The registered consequence applies as written: the paper reports the bound as the lever and
+newest-first as one way of achieving what the bound achieves.
+
+The comparison that matters is against the lever the paper already has. At twelve assets a two-deep
+blind queue delivers 0.1472 per step against 0.1466 for full admission control on an unbounded one.
+**A console that holds two requests performs like a console that knows every requester's deadline,
+and it needs no information about the requester at all.**
+
+---
+
+## CR-48. THE CONSOLE HAS BUFFERBLOAT, AND THE RIGHT BUFFER SIZE IS ALREADY DERIVED IN THIS PAPER
+
+**Provenance.** P7 above was seen before this was written. P1 is therefore a confirmation limb and
+labelled as one. P2 through P4 are registered before their runs and P3 and P4 are the reason the
+conjecture is worth having, because they are parameter-free predictions at operating points nobody
+has looked at.
+
+The failure has a name and it is not ours. A buffer large enough to hold work past the point where
+anyone still wants it is bufferbloat \citep{gettys2012bufferbloat}, and the fix is to size or age the
+queue rather than to maximize it \citep{nichols2012codel}. This paper has already cited the other
+three members of the same family, Floyd and Fall on congestion signals, Jacobson on congestion
+control, Metcalfe on backoff. The console is the fourth.
+
+**And the right size is already in this paper, derived for something else.** A request that joins a
+buffer already holding $k-1$ others, with one more in service, is answered at
+$2\ell + (k+1)/\mu$ after it was sent, so it makes its deadline only while
+$(k+1)/\mu \le P - 2\ell$, giving
+$$k^{\star} = \lfloor (P - 2\ell)\,\mu \rfloor - 1 .$$
+A backlog bounded at $k^{\star}$ holds exactly the requests that can still be answered in time and no
+others. The expression is already in `c2.py`, where it was written to say which arrival cohorts are
+free, and it was never used as a design rule.
+
+**Correction, recorded because it changes the predictions below.** The first version of this
+registration wrote $k^{\star} = \lfloor (P-2\ell)\mu \rfloor$ and predicted 3 on a clear link. That
+forgot the request already in service, which every arrival must also wait through. The clear-link
+smoke run had been read when the error was found and its argmax was 2, not 3; the C3 arm and every
+patience and service-rate arm below were UNREAD, and are unread now. The corrected rule gives 2 on a
+clear link and 0 at C3.
+
+Two implementation consequences fell out of the same correction and are recorded with it. A capacity
+of zero is a meaningful setting, "serve only what arrives to a free console", so it cannot also be
+the unbounded sentinel; that is $-1$ now. And the bound applies to what has ARRIVED at the console,
+not to what is in flight toward it, or a capacity of zero would mean "serve nothing" on any link
+with latency.
+
+**P1 (confirmation).** At rung 0 the argmax of delivered service over the capacity ladder is
+$k^{\star} = 2$, at tier.
+  **FALSIFIER.** An argmax outside $\{1, 2\}$ refutes the closed form as a sizing rule at the one
+  operating point where it has been looked at, and the bound ships as a tuned parameter, which is a
+  much weaker result.
+
+**P2 (open).** At C3, where $k^{\star} = 0$, the argmax is 0 or 1. No arm at this rung has been read.
+  **FALSIFIER.** An argmax above 1 at C3 refutes the latency term of the rule.
+
+**P3 (open, and the strongest test available).** Raising patience to 30 and 45 moves $k^{\star}$ to 3
+and 5, and the measured argmax follows, on a clear link. Nothing about these operating points has
+been looked at.
+  **FALSIFIER.** An argmax that does not move with patience refutes the rule outright: the bound
+  would then be a property of the queue's own dynamics rather than of the requester's deadline, and
+  the recommendation becomes "bound it at two" with no derivation behind it.
+
+**P4 (open).** Halving the service rate to $\mu = 0.075$ takes $k^{\star}$ to 0, and doubling it to
+0.30 raises $k^{\star}$ to 5.
+  **FALSIFIER.** As P3.
+
+**P5 (the requirements ladder, which is what a sponsor buys).** Ordered by what the console must
+know, the levers are: bound the backlog (a counter), work it newest-first (a stack), refuse on the
+requester's deadline (a field in the message format). Registered claim: on delivered service at the
+collapse span, the first is not worse than the third.
+  **FALSIFIER.** The bound falling below admission control by a gated margin puts the message-format
+  change back at the front of the requirements list, which is the expensive recommendation.
+
+**P1 VERDICT: HELD.** 32 replications a point, local, `served_per_step`, blind console, capacity
+ladder $\{-1, 0, 1, 2, 3, 4, 6\}$ at rung 0:
+
+    n= 8  c0=0.0864 c1=0.1243 c2=0.1280 c3=0.0920 c4=0.0587 c6=0.0452 c-1=0.0387  argmax 2
+    n=12  c0=0.1072 c1=0.1424 c2=0.1432 c3=0.1098 c4=0.0700 c6=0.0157 c-1=0.0032  argmax 2
+    n=16  c0=0.1168 c1=0.1459 c2=0.1478 c3=0.1316 c4=0.1033 c6=0.0328 c-1=0.0023  argmax 2
+
+$k^{\star} = 2$ at 3 of 3 spans, and the curve is single-peaked in capacity at all three. The size
+of the effect is the part worth carrying: at $n = 16$ the derived bound delivers 64 times the
+service of the unbounded buffer the console has today, and the whole gain is one integer in a
+configuration file. Registered caveat, kept: 1 and 2 are within noise of each other at any sample
+size a unit test can afford (0.1279 against 0.1275, standard error 0.004, at 12 seeds), so the
+fixture in `tests/test_c2.py` asserts the $\{1,2\}$ plateau against its outside neighbours and
+leaves the separation to the battery.
+
+**P2 VERDICT: HELD AS REGISTERED, AND THE POINT PREDICTION IS OFF BY ONE.** At C3, same protocol:
+
+    n= 8  c0=0.0568 c1=0.0699 c2=0.0533 c3=0.0439 c4=0.0383 c6=0.0361 c-1=0.0372  argmax 1
+    n=12  c0=0.0741 c1=0.0840 c2=0.0446 c3=0.0217 c4=0.0139 c6=0.0136 c-1=0.0039  argmax 1
+    n=16  c0=0.0841 c1=0.0945 c2=0.0476 c3=0.0181 c4=0.0068 c6=0.0025 c-1=0.0009  argmax 1
+
+The registered band was $\{0, 1\}$ and the falsifier was an argmax above 1, so P2 is not refuted.
+But the rule's point prediction is 0 and the measurement is 1 at 3 of 3 spans, which is a
+one-directional miss and not noise. That is a finding about the derivation, and it is CR-49.
+
+## CR-49. THE BUFFER RULE USED A MEAN WHERE THE DEADLINE TEST IS A PROBABILITY
+
+**Provenance.** Written after both rungs of CR-48 P1 and P2 were read, and before any patience or
+service-rate arm was read. The two points that motivated it are therefore not evidence for it. The
+three prospective tests below are.
+
+**The defect.** The derivation in CR-48 asks whether a request's MEAN wait fits inside its deadline:
+$(k+1)/\mu \le P - 2\ell$. But the wait of a request admitted behind $k$ others, with exponential
+service, is $\mathrm{Erlang}(k+1, \mu)$, and the deadline test is not about a mean, it is about the
+probability that one draw lands under a fixed number. The Erlang is right-skewed, so its mean sits
+above its median, and a rule that tests the mean rejects admissions that would in fact make their
+deadline more often than not. The mean-fits rule under-sizes the buffer, and it under-sizes it by
+more the larger the fractional part it throws away.
+
+Replacing the mean with the median makes the criterion match the test. A request at depth $k$ makes
+its deadline with probability $\Pr[\mathrm{Erlang}(k+1,\mu) \le D] = \Pr[\mathrm{Poisson}(\mu D) \ge
+k+1]$, which is at least one half exactly while $k+1$ is at or below the median, so with
+$\lambda = (P - 2\ell)\mu$,
+$$k^{\star} = \operatorname{median}\bigl(\mathrm{Poisson}(\lambda)\bigr) - 1
+  \;=\; \lfloor \lambda + 1/3 \rfloor - 1 ,$$
+the closed form on the right being Choi's median approximation, which agrees with the exact median
+at all ten operating points in this battery. The correction is one term. It is the same derivation
+with the right order statistic in it.
+
+**Why this is a mechanism and not a curve fit.** The two rules differ only when
+$\mathrm{frac}(\lambda) \ge 2/3$, so the refinement predicts WHERE the offset appears, not just that
+one exists. At rung 0, $\lambda = 3.00$ exactly, the fraction discarded is zero, and both rules say
+2: measured 2. At C3, $\lambda = 1.80$, the mean-fits rule discards 0.8 of a service, and the two
+rules split 0 against 1: measured 1. Every prediction below follows from $\lambda$ alone with
+nothing fitted.
+
+**P1 (the discriminating arms, all unread).** On a clear link at $n = 12$, sweeping patience, the
+measured argmax equals median-fits and not mean-fits at the three points where they disagree:
+
+| $P$ | 12 | 20 | 25 | 27 | 30 | 34 | 38 | 45 |
+|---|---|---|---|---|---|---|---|---|
+| $\lambda$ | 1.80 | 3.00 | 3.75 | 4.05 | 4.50 | 5.10 | 5.70 | 6.75 |
+| mean-fits | 0 | 2 | 2 | 3 | 3 | 4 | 4 | 5 |
+| median-fits | **1** | 2 | **3** | 3 | 3 | 4 | **5** | **6** |
+
+  **FALSIFIER.** The argmax matching mean-fits at any of $P \in \{25, 38, 45\}$ refutes the
+  refinement at that point, and matching it at two of the three retracts CR-49 and restores the
+  published floor rule. ($P = 12$ is a confirmation limb: it is the same $\lambda = 1.8$ as the C3
+  rung already read, reached by shortening the deadline instead of lengthening the link, so it tests
+  only that the rule depends on $\lambda$ and not on how $\lambda$ was assembled.)
+
+**P2 (the controls, which fail both rules at once).** At $P \in \{20, 27, 30, 34\}$ the two rules
+agree, and the measured argmax equals the agreed value.
+  **FALSIFIER.** A miss at two or more controls says the argmax is not a function of $\lambda$ at
+  all, and both rules go, not just the older one. This limb is why the sweep carries eight patience
+  values rather than the three that discriminate.
+
+**P3 (the service-rate leg, a second route to $\lambda$).** Both rules agree at $\mu = 0.075$
+($\lambda = 1.50$, both 0) and at $\mu = 0.30$ ($\lambda = 6.00$, both 5), so this leg discriminates
+nothing between them and tests only that $\mu$ enters through $\lambda$.
+  **FALSIFIER.** As P2.
+
+**What it costs the recommendation if it holds.** Nothing, and that is the point. The sponsor-facing
+sentence is unchanged in form, "bound the console's backlog at $\lfloor(P - 2\ell)\mu + 1/3\rfloor -
+1$", and unchanged in value at the published operating point, where both rules say 2. It changes on
+degraded links and short deadlines, which is where the console is under the most pressure and where
+the older rule would have told an operator to hold nothing at all.

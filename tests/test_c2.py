@@ -427,3 +427,50 @@ def test_newest_first_beats_oldest_first_on_an_overloaded_blind_console():
                                           queue_discipline=disc), seed=5)["served_per_step"]
 
     assert go("patient_first") > 10 * go("fcfs")
+
+
+def test_queue_capacity_defaults_to_unbounded_and_zero_is_a_real_setting():
+    """Zero must mean "hold no backlog", not "no bound", because the sizing rule prescribes zero
+    once the link is slow enough. The unbounded sentinel is therefore negative."""
+    from sandtable.sim import run_mission
+
+    scn = _span_scenario(control_mode="direct", n_blue=12, comms_level=0,
+                         queue_model="buffer", queue_policy="blind")
+    default = run_mission(scn, seed=5)
+    explicit = run_mission(scn.with_params({**scn.params, "queue_capacity": -1}), seed=5)
+    assert default == explicit
+    zero = run_mission(scn.with_params({**scn.params, "queue_capacity": 0}), seed=5)
+    assert zero["served_per_step"] > 0.0        # a free console still serves what arrives to it
+    assert zero["backlog_mean"] < 1.0
+
+
+def test_the_bound_counts_what_has_arrived_not_what_is_in_flight():
+    """A request still travelling occupies nothing the console owns. Counting it would make a
+    capacity of zero mean "serve nothing" on any link with latency, which is a different and much
+    stronger policy than the one being tested."""
+    from sandtable.sim import run_mission
+
+    m = run_mission(_span_scenario(control_mode="direct", n_blue=12, comms_level=3,
+                                   queue_model="buffer", queue_policy="blind",
+                                   queue_capacity=0), seed=5)
+    assert m["served_per_step"] > 0.0
+
+
+def test_the_derived_bound_sits_on_a_plateau_that_beats_everything_outside_it():
+    """k* = floor((P - 2L) mu) - 1 is 2 at the published operating point, and a bound of 1 measures
+    the same to within noise at any sample size a unit test can afford (0.1279 vs 0.1275, se 0.004,
+    12 seeds). So the fixture asserts what is resolvable here: the {1, 2} plateau beats 0, beats 3,
+    and beats unbounded by a factor of three. Separating 1 from 2 is the battery's job, not this
+    file's. A regression in the trim, the sentinel, or the in-flight rule moves the plateau."""
+    from sandtable.sim import run_mission
+
+    def go(cap):
+        return np.mean([run_mission(_span_scenario(control_mode="direct", n_blue=8, comms_level=0,
+                                                   queue_model="buffer", queue_policy="blind",
+                                                   queue_capacity=cap), seed=s)["served_per_step"]
+                        for s in range(12)])
+
+    plateau = min(go(1), go(2))
+    assert plateau > go(0) * 1.2
+    assert plateau > go(3) * 1.2
+    assert plateau > go(-1) * 2.0

@@ -126,7 +126,7 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "arrival_distinct": 0.0, "arrival_repeat": 0.0, "arrival_repeat_frac": 0.0,
            "arrival_ge2": 0.0, "arrival_ge3": 0.0, "arrival_ge4": 0.0,
            "patience_mean": 0.0, "patience_sd": 0.0, "patience_min": 0.0,
-           "stale_frac": 0.0, "backlog_mean": 0.0,
+           "stale_frac": 0.0, "backlog_mean": 0.0, "dropped_frac": 0.0,
            "supervised_mean": 0.0, "supervised_frac": 0.0, "demand_norm_goodput": 0.0,
            "hold_fraction": 0.0, "interaction_steps": 0.0, "neglect_steps": 0.0, "fan_out": 0.0}
 
@@ -155,6 +155,7 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
             # it, because there a request's fate is settled at arrival and a vehicle can never have
             # two outstanding.
             out["stale_frac"] = op.n_stale / op.n_request
+            out["dropped_frac"] = op.n_dropped / op.n_request
         out["backlog_mean"] = op.backlog_sum / op.total_steps
         if op.patience_v is not None:
             # The dispersion arm prints its own assumption. A `patience_spread` sweep is a pure
