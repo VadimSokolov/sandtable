@@ -6207,3 +6207,45 @@ point. At twelve assets the same three gains are 0.0248, 0.0533 and 0.1052, and 
 triage reallocates a fixed quantity, and below saturation the quantity is not fixed because the
 console is waiting for work. The law is therefore a ceiling that is reached exactly when the console
 is the binding constraint, which is the regime the span-of-control question lives in.
+
+## CR-58. THE BRIDGE: DOES THE DETERMINISTIC PROBE PREDICT THE STOCHASTIC CHANNEL
+
+Registered before the run, and the arithmetic is the reviewer's rather than mine.
+
+CR-57 measured mission outcome against a SAWTOOTH track age: one refresh every $a+1$ steps, forced,
+deterministic, produced by no channel. My own objection to it was that a five-minute total outage is
+not a communications condition but a severed link, so a gated effect measured only there might be
+reporting its own stimulus. The reply is that a sawtooth is a transfer-function probe and not a
+claimed environment. A shaker table does not manufacture a resonance, it locates one. What makes
+that more than an analogy is that the probe's response curve should PREDICT the channel's null, and
+the prediction is arithmetic with no free parameter.
+
+**The bridge.** At $a = 160$ the cut-off is worth 0.0381 of mission success, and the arm spends a
+fraction 0.745 of its follower-time at an age past the 40-step cut-off, at a mean deep age of 100.
+That is a cost rate of $0.0381 / 0.745 = 0.051$ per unit of deep-stale time at that depth. A
+Gilbert-Elliot channel with mean bad run 60 at C3 spends $0.55 \times e^{-40/60} = 0.282$ of its time
+deep, and because the bad run is memoryless its mean depth GIVEN that it is past 40 is $40 + 60 =
+100$, the same depth. So the predicted cut-off gap under that channel is $0.051 \times 0.282 =
+-0.014$.
+
+- **E1.** A high-power paired contrast of cut-off against no cut-off, under Gilbert-Elliot with mean
+  bad run 60 at C3, lands at $-0.014$ within 0.007. FALSIFIER: outside $[-0.021, -0.007]$, in which
+  case the probe does not predict the environment, the bridge is wrong, and CR-57's effect must be
+  reported as a property of its own stimulus.
+- **E2.** The same contrast at mean bad run 240, where the deep fraction is $0.55 e^{-40/240} =
+  0.465$ and the mean deep depth is 280. The cost rate is not constant in depth, so this is a second
+  and harder test of the same bridge rather than a repeat of it.
+- **E3, the control that makes E1 mean something.** Under the Bernoulli ladder at the same rung, the
+  deep fraction is $0.55^{40} \approx 10^{-11}$, so the predicted gap is exactly zero and the two
+  arms should be bit-identical, not merely equivalent. FALSIFIER: any difference at all, which
+  would mean the cut-off is firing on something other than track age.
+
+**Power.** The gate's materiality floor for mission success is 0.06 and the quantity here is 0.014,
+so this is an ESTIMATE against a registered value and not a gate. From CR-57's own pairing, the
+block standard error at 32 blocks is 0.0106, so resolving 0.007 needs about 256 blocks. The battery
+runs at 256 blocks of 64 replications, which is eight times the standard tier on three cells.
+
+**Why it is worth eight times the tier.** Every sentence the manuscript will write about the follow
+stack rests on a probe that no channel produces. If the probe predicts the channel, the probe is an
+instrument and the paper may use it. If it does not, one paragraph comes out and an instrument
+claim comes out with it.
