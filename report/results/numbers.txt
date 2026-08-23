@@ -917,3 +917,12 @@ The no-retry control (source: tools/make_noretry_numbers.py over st-noretry-9446
   nrMemSpanHi = 10
   nrMemSpanLo = 4
   nrMemSpans = 5
+
+
+Console regime at the jitter cells (source: tools/measure_util.py)
+  utCells = 20
+  utHi = 0.91
+  utLo = 0.42
+  utSeeds = 24
+  utShareHi = 37
+  utShareLo = 4

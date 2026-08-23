@@ -47,6 +47,10 @@ ROWS = [
     ("a consumed refusal beats an ignored one",
      "no gain past collapse, or a cost below it",
      "\\textsc{held}: +0.268 goodput at twelve, and free at four"),
+    ("the crowding is vehicles colliding with each other, not with themselves",
+     "the cross-vehicle contrast is null while the self-collision one carries it",
+     "\\textsc{held}: self-collision is exactly zero, the round trip forbids it, "
+     "and the cross-vehicle contrast gates in every cell"),
     ("a residual cohort survives jitter and grows with the dwell",
      "the no-retry control shows the same crowding as the jittered arm",
      "\\textsc{refuted}: it shows more, so nothing survives jitter and the residual "
