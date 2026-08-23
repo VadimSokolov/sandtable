@@ -5354,7 +5354,18 @@ delivers 27 percent more service at twelve assets than a metronome. Read at face
 erratic operators are better operators, which is absurd, so the next step was to read the code
 rather than to write the paragraph.
 
-`c2.py` drew the service time and then tested the deadline against it:
+**Correction to this entry, made the same day, before it reached the manuscript.** The numbers above
+were measured on the RESERVATION console, not the buffer one. The v1 battery wrote `$D` for its arms
+and `_common.sh` defines `D` without `queue_model`, so it inherited the published default. The defect
+itself is unaffected, because it exists in both paths and both were read before either was patched,
+but the mechanism sentence below quotes `_drain_buffer` and the arm it was measured on was
+`_direct_step`'s reservation branch. Both are given. The reservation form is:
+
+    done = start + _service_time(op, rng)   # the realized draw
+    wait = done + lat - k
+    if wait <= op.patience_v[i]:  ... claim the slot ...
+
+and the buffer form is:
 
     svc = _service_time(op, rng)
     reply = start + svc + lat
@@ -5448,3 +5459,43 @@ against ProjectGL itself, on the grounds that the sponsor's blocked decision is 
 simulator at all" and that zero cross-tier points exist. That is the right experiment and it is not
 ours to run: ProjectGL is Government-furnished and not in hand. It is recorded as the top ask for the
 sponsor rather than as a battery. The reviewer's own named fallback, CR-46 v2, stays in the backlog.
+
+---
+
+## INSTRUMENT DEFECT 8: A BATTERY ABOUT THE QUEUE THAT RAN THE CONSOLE WITHOUT ONE
+
+Found 2026-08-23 by reading two batteries against each other rather than each on its own.
+
+`st-svccv-9448848` (v1) and `st-lifo-9448647` each contain an arm with what should be the identical
+configuration: a blind direct console on a clear link. They disagree. At eight assets the lifo
+battery's `fifo` delivers 0.0411 served per step and the svccv battery's `cv00` delivers 0.0197, on
+32 blocks each, so it is not noise.
+
+`hopper/batteries/_common.sh` defines
+
+    D='"control_mode":"direct","comms_level":0'
+
+with no `queue_model`, so it inherits the published default, which is `reserve`. Eleven batteries use
+`$D` and are right to: reserve is the published console and those batteries are about it. The svccv
+battery registered CR-51 and CR-53 **against the buffer console**, wrote `$D` for its arms, and
+measured reserve. Two sections were read before the discrepancy surfaced.
+
+**Genus, and it is a new one.** The previous seven were all "a convention correctly derived for its
+first use case, carried silently into a second where it does not hold". This is different: a shared
+default that is correct everywhere it had been used, and that became wrong the moment a second model
+existed for the same thing. Nothing about `D` changed; the world around it did. The guard is
+therefore not a check but a name: `_common.sh` now also defines `DB` for the buffer console, and
+carries the incident in a comment, because the failure is invisible at the call site.
+
+**What is salvaged.** v1's C1 section is a valid measurement, of the reservation console rather than
+the buffer one, and it says the same thing v2's C1 says about the buffer console: service
+variability is a gated LOSS below the collapse span and irrelevant above it. On reserve, cv = 1.0
+costs 0.0213 served per step at four assets and 0.0332 at six; on buffer, 0.0205 at four and 0.0318
+at six. Two different consoles, same shape, same sign, nearly the same size. That is a robustness
+result nobody registered and it is worth keeping.
+
+**What this cost.** Nothing that reached the manuscript, because the battery was voided for an
+unrelated reason first. It is the fourth thing wrong with that battery, after the no-op jitter arms,
+the foresight defect, and the P1 registration whose letter was the reverse of the measurement. One
+battery, four defects, all caught before publication, and three of the four were caught only because
+something in the output looked too good or too strange to write up without reading the source.
