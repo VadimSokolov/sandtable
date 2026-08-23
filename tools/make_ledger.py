@@ -47,6 +47,17 @@ ROWS = [
     ("a consumed refusal beats an ignored one",
      "no gain past collapse, or a cost below it",
      "\\textsc{held}: +0.268 goodput at twelve, and free at four"),
+    ("the software lever is worth a fraction of a second console, and the fraction "
+     "is the same on the clean metrics",
+     "the one-console admit arm at or below one blind console on the absolute rate",
+     "\\textsc{held}: 62\\% of a console on service, 77\\% on success, at eight assets"),
+    ("the rate rule serves less and wins more, so staffing has two answers",
+     "the rule winning or losing on both metrics at once",
+     "\\textsc{held} at every span: below plain admit on service, above it on success"),
+    ("the service the rate rule gives up was going to be wasted",
+     "abandonment falling no faster than service, or the wasted share not falling",
+     "\\textsc{held} on the first limb, 63 abandonments removed per unit of service at sixteen "
+     "assets; the second limb is unreadable, its denominator moved 41\\%"),
     ("admission control is worth more, not less, as the link gets worse",
      "null or reversed on the absolute service rate",
      "\\textsc{held} on the clean metric at two spans where the ratio found one; "

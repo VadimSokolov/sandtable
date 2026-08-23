@@ -4381,3 +4381,56 @@ doubles, and the mean excess grows by the same factor as the deep tail rather th
 one. A mean could not have separated these, which is exactly why the statistic was requested. The
 operational content is that the vehicles at the back of a larger cohort are the ones whose patience
 expires while they wait, so the fade's cost is concentrated rather than spread.
+
+---
+
+## CR-38 VERDICT: THE STAFFING EQUIVALENCE SURVIVES THE CLEAN METRICS, SPLITS, AND VALIDATES THE $c$-SCALING
+
+Job 9446740. Three findings, one of them not registered.
+
+### P1 CONFIRMED, and the equivalence now has two numbers instead of an impression
+
+The table read 17.0, 73.4 and 99.0 percent goodput for one blind console, one with admission
+control, and two blind, and a program office reads that as "admission control buys most of a second
+operator." The admit column's denominator moved by up to a third and the two-console column's did
+not, so the reading was unsafe in a known direction. On the two metrics no policy inflates, at eight
+assets:
+
+| | one blind | one, admit | two blind | admit's share of a console |
+|---|---|---|---|---|
+| served/step | 0.0197 | 0.1377 | 0.2094 | **62%** |
+| success | 56.3% | 80.0% | 86.9% | **77%** |
+
+At twelve the two shares are 64% and 86%. The falsifier, the admit arm falling to or below the blind
+arm on the absolute rate, did not come close to firing.
+
+**The gap between the two percentages is the finding, not either number.** The software is worth
+less in throughput than in outcomes, because what it removes is service that was going to be
+discarded, and a program staffing consoles is buying the second.
+
+### P2 CONFIRMED at every span: two questions, two answers
+
+`aimd` is BELOW plain `admit` on `served_per_step` at every span and ABOVE it on `success` at every
+span from six up. That is the registered "different answers to different questions" shape and it
+holds without exception.
+
+Stacking: at ten and twelve assets, one console running admission control plus the vehicle rate rule
+is not distinguishable from two consoles running neither (-0.6 and +0.5 points of success, $t$ =
+-0.72 and +0.92, 32 blocks). Reported as an equivalence we cannot distinguish at this power rather
+than as an equality.
+
+### Unregistered, and the strongest thing in the battery: the $c$-scaling of Equation nstar
+
+The battery runs one, two and three consoles across the same span sweep, so the collapse span's
+linear scaling in consoles is testable with no free parameter. On `served_per_step`, clear link:
+
+| consoles | predicted $n^{\star}$ | delivered rate collapses between |
+|---|---|---|
+| 1 | 6.5 | 6 and 8 |
+| 2 | 12.9 | 12 and 16 |
+| 3 | 19.4 | not by 16 |
+
+Three consoles, three brackets, each containing its own prediction. The manuscript already reported
+this on `operator_goodput`; the brackets do not move on the denominator-free metric, which matters
+because the console count is the one knob in this paper about which the equation makes a prediction
+it was not derived from.
