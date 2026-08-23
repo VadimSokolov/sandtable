@@ -8,6 +8,15 @@
 #
 #   P1. The residual falls monotonically below L = 7 and is not gated at L = 1.
 #   FALSIFIER. Flat or still growing below one service refutes the gate account of the residual.
+#
+# SCOPE WIDENED before the run, and the reason is an instrument result rather than a hunch.
+# tools/bench_gate.py computes the exact excess of a gated source by transfer matrix and finds the
+# gate's OWN excess is neither 1.0 nor constant: at rung 3 it runs 0.957 at an outage of 1 step to
+# 1.044 at 240, crossing one near 5, and it moves as much again with the delivered RATE (1.019 to
+# 1.064 at L = 240 across rates 0.06 to 0.16). F3's dwell sweep was read against a fixed null of
+# 1.0 and did not log arrival_rate, so its residual cannot be separated from its own null. This
+# battery therefore covers the whole dwell range, not only the sub-service end, and logs
+# arrival_rate at every point so the null can be computed per arm instead of assumed.
 . hopper/batteries/_common.sh
 G='"channel":"gilbert_elliot","channel_clock":"step"'
 C='"control_mode":"direct","comms_level":3'
@@ -15,7 +24,7 @@ W='"retry_prob":1.0,"fano_window":7,"mult_window":7'
 
 for M in arrival_excess arrival_multiplicity arrival_rate arrival_repeat_frac; do
 echo "### D1 the residual below one service ($M)"
-$PY tools/ar_eval.py $S --metric $M $B --sweep 'ge_burst_len=1,2,3,5,7,15,30' \
+$PY tools/ar_eval.py $S --metric $M $B --sweep 'ge_burst_len=1,2,3,5,7,15,30,60,120,240' \
   --arm "fix18={$C,$G,$W,\"n_blue\":6,\"retry_backoff\":18,\"retry_spread\":0}" \
   --arm "jit18={$C,$G,$W,\"n_blue\":6,\"retry_backoff\":18,\"retry_spread\":17}"
 done

@@ -678,3 +678,13 @@ P1 re-run at the benched window (source: tools/make_fanoredo_numbers.py over st-
   frMemMinT = 30
   frMemPairs = 4
   frMemRed = 3
+
+
+Gated-source null for arrival_excess (source: tools/bench_gate.py)
+  bgCrossL = 7
+  bgHighL = 240
+  bgHighNull = 1.044
+  bgLowL = 1
+  bgLowNull = 0.957
+  bgMaxBias = 0.0044
+  bgRows = 10

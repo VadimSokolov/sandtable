@@ -3623,3 +3623,56 @@ was absent because I wrote the estimator while thinking about a vehicle that is 
 model where no vehicle is ever not held. The defense that works is not care. It is a diagnostic that
 prints the assumption: the probe printed `hold_fraction 0.3586, not a clean arm` sixty-four times
 before it printed anything else, and that line is what found both defects.
+
+---
+
+## CR-34 P4 RE-VERDICT: THE GROWTH WAS THE NULL MOVING, AND I HAD ALREADY PUT IT IN THE PAPER
+
+Fable's Round 18 required a bench at sub-window dwells before CR-41 could be read, on the ground
+that the dwell is part of the instrument and not only part of the model. Building it overturned a
+result I had committed to the manuscript two hours earlier.
+
+`tools/bench_gate.py` computes the EXACT excess of a gated source rather than simulating it, by
+carrying the joint law of (chain state, arrivals so far) forward through the window by transfer
+matrix. Two things came out, and the second is the one that matters.
+
+**The estimator is unbiased at every dwell from 1 to 240**, |bias| at most 0.0044 against a residual
+of about 0.08. Fable's obligation is discharged with a positive answer and CR-41's rows are readable.
+
+**The gate's own excess is neither 1.0 nor constant.** At the deployed rung and rate it runs:
+
+| outage $L$ | 1 | 2 | 3 | 5 | 7 | 15 | 30 | 60 | 120 | 240 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| true excess | 0.957 | 0.972 | 0.984 | 1.000 | 1.009 | 1.026 | 1.035 | 1.040 | 1.043 | 1.044 |
+
+A gate faster than the window REGULARIZES the stream and pushes the excess BELOW one; slower than
+the window it clusters. And it moves as much again with the delivered rate: at $L=240$ the null runs
+1.019 at rate 0.06 to 1.064 at rate 0.16, a spread comparable to the whole residual.
+
+**So F3's residual, which I reported as monotone across six dwells and wrote into the manuscript, is
+not separable from its own null.** Subtracting the dwell-matched null at the bench's rate gives
+0.053, 0.045, 0.042, 0.039, 0.040, 0.050 across $L = 7$ to 240: **flat, not rising.** That subtraction
+is itself not admissible, because F3 did not log `arrival_rate` and the null needs it, so the correct
+statement is that the reading is **unreadable** rather than that it is flat.
+
+**Status of P4: growth limb WITHDRAWN.** Not refuted, because a refutation would also require the
+null; withdrawn, because it was read against a constant that is not constant. The manuscript
+paragraph is retracted and replaced with the withdrawal and its reason.
+
+**What survives, and it is worth separating carefully.** Of the three quantities I called monotone:
+the fixed arm's crowding rises by 0.157 while its null rises by 0.035, so that one survives the
+correction with room to spare; the arm-to-arm gap at a common dwell shares most of its null and is
+the most robust of the three; only the residual, which is a level rather than a difference, is
+destroyed. **A difference of two arms at one dwell was safe and a level against an assumed constant
+was not, which is the general rule and the one I should have applied without being told.**
+
+`dwellow` is cancelled and resubmitted (job 9447711) over the full dwell range 1 to 240 with
+`arrival_rate` logged at every point, so the null can be computed per arm instead of assumed. That
+run supersedes F3 entirely.
+
+**This is the fifth instance of the genus and the one that got furthest.** Jitter width guard, MPE on
+rate metrics, blocks-won on negative effects, `t=inf` on nulls, the Fano window, the goodput
+denominator, the missing $(1-h)$ in the tempo budget, and now a burstiness null assumed rather than
+computed. The common shape every time: a reference value correct in the setting it was derived for,
+carried unexamined into a setting where it is a function rather than a constant. The paper should say
+that plainly, because it is the most transferable thing in it.
