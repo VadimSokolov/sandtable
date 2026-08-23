@@ -47,6 +47,13 @@ ROWS = [
     ("a consumed refusal beats an ignored one",
      "no gain past collapse, or a cost below it",
      "\\textsc{held}: +0.268 goodput at twelve, and free at four"),
+    ("admission control is worth more, not less, as the link gets worse",
+     "null or reversed on the absolute service rate",
+     "\\textsc{held} on the clean metric at two spans where the ratio found one; "
+     "the contaminated metric was hiding it"),
+    ("burstiness helps an open reliance loop and harms a closed one",
+     "the difference in differences loses its sign on the absolute rate",
+     "\\textsc{held}: the LEVELS themselves flip sign, +0.004 open against -0.018 closed"),
     ("the crowding is vehicles colliding with each other, not with themselves",
      "the cross-vehicle contrast is null while the self-collision one carries it",
      "\\textsc{held}: self-collision is exactly zero, the round trip forbids it, "

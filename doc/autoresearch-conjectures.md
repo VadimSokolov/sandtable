@@ -3980,3 +3980,117 @@ control shows the antecedent was reachable in the original battery. `cohsplit` r
 where the cycle is 24 against a window of 7. **Not reachable. The void stands**, and it stands on a
 computation I got wrong once and had corrected for me, which is why the category carries the
 requirement to publish the computation rather than the conclusion.
+
+---
+
+## CR-40 VERDICT: TWO CONFIRMED ON THE CLEAN METRIC, ONE FALSIFIER FIRED WHERE I EXPECTED IT
+
+Job 9447205. The three goodput sites re-read on `served_per_step`, with `requests_per_step` logged
+alongside so the contamination is visible rather than assumed.
+
+### P1 CONFIRMED, and the contamination ran AGAINST the claim
+
+`refund - blind` on delivered service, by span:
+
+| span | memoryless | bursty | difference in differences | $t$ |
+|---|---|---|---|---|
+| 5 | +0.0021 | +0.0046 | +0.0026 | 3.9, null |
+| 6 | +0.0037 | +0.0110 | +0.0073 | 10.1, null |
+| 8 | +0.0181 | +0.0435 | **+0.0254** | 31.4, GATED |
+| 10 | +0.0562 | +0.0816 | **+0.0255** | 49.9, GATED |
+
+"Admission control is worth more, not less, as the link gets worse" survives on the metric no policy
+can inflate, at **two** spans where the goodput reading established it at one. And the denominator
+moved in the direction that was HIDING the effect: requests rose +7.9% on the bursty link against
++4.9% on the memoryless one at ten assets, so the ratio penalized the bursty arm more and understated
+its advantage. **The contaminated metric was making our own claim look smaller than it is**, which is
+worth recording because the previous two denominator findings both ran the other way and it would be
+easy to start assuming the bias has a direction.
+
+### P2's FALSIFIER FIRED, confirming independently what the cohort battery already forced
+
+`jit - fix` on delivered service: +0.0044 and +0.0058 memoryless, +0.0054 and +0.0026 bursty, at
+$n=5,6$. None clears the capacity floor of 0.009. The registered consequence, that the self-collision
+decomposition's magnitudes are restated on the absolute rate or withdrawn, was already applied when
+the cohort battery showed the same thing; this is an independent confirmation of it on the exact arms
+the decomposition used. The mechanism keeps its Fano, multiplicity and distinct-sender evidence and
+does not get a console cost.
+
+### P3 CONFIRMED, and the sign flip is now literal
+
+The reliance-loop result was that burstiness HELPS a queue with the loop open, because a dropped
+request is one the operator never has to work, and HARMS it with the loop closed, because the
+vehicles that abandoned together come back together. On delivered service the levels themselves flip:
+
+| rung | GE minus memoryless, loop OPEN | loop CLOSED | DiD | $t$ |
+|---|---|---|---|---|
+| 1 | **+0.0026** | **-0.0181** | -0.0207 | -19.9 |
+| 2 | **+0.0047** | **-0.0271** | -0.0318 | -33.8 |
+| 3 | **+0.0040** | **-0.0183** | -0.0223 | -33.3 |
+
+All 32 of 32, all gated. This is a stronger statement than the goodput version supported: **the same
+channel that helps a console serving assets which give up for good hurts one serving assets that come
+back**, and the crossing is in the delivered rate itself rather than in a difference of differences.
+
+### Net effect of the whole goodput audit, across CR-31, CR-36 and CR-40
+
+Five sites audited. Two claims survived and got larger (admission control's absolute gain, the burst
+interaction), one survived unchanged and sharper (the reliance-loop flip), one was refuted and
+retracted (notification's share), one was narrowed to a single span (jitter's console value). The
+metric was wrong in both directions and the direction was not predictable from the treatment, which
+is the reason the fix is a gate rule rather than a habit of checking.
+
+---
+
+## CR-41 VERDICT: FALSIFIER FIRED, AND IT COMPLETES THE MECHANISM RATHER THAN DAMAGING IT
+
+Job 9447711, ten dwells from 1 to 240 with `arrival_rate` logged, so each arm is scored against the
+transfer-matrix null computed at **its own dwell and its own delivered rate**. This is the first
+reading in the project that satisfies the `NULL_ARGS` rule rather than assuming a constant.
+
+| outage $L$ | fix excess | its null | fix residual | jit excess | its null | **jit residual** | fix - jit | $t$ |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 1.1666 | 0.9645 | +0.2021 | 1.0241 | 0.9644 | **+0.0597** | +0.1425 | 51.3 |
+| 2 | 1.1819 | 0.9760 | +0.2058 | 1.0310 | 0.9759 | **+0.0551** | +0.1508 | 38.0 |
+| 3 | 1.1926 | 0.9852 | +0.2074 | 1.0400 | 0.9851 | **+0.0549** | +0.1526 | 50.9 |
+| 5 | 1.2147 | 0.9974 | +0.2173 | 1.0531 | 0.9974 | **+0.0558** | +0.1615 | 53.3 |
+| 7 | 1.2267 | 1.0047 | +0.2221 | 1.0622 | 1.0046 | **+0.0576** | +0.1645 | 52.3 |
+| 15 | 1.2441 | 1.0172 | +0.2268 | 1.0707 | 1.0171 | **+0.0536** | +0.1734 | 52.6 |
+| 30 | 1.2685 | 1.0235 | +0.2450 | 1.0769 | 1.0234 | **+0.0535** | +0.1916 | 51.9 |
+| 60 | 1.2903 | 1.0270 | +0.2633 | 1.0789 | 1.0277 | **+0.0512** | +0.2114 | 43.6 |
+| 120 | 1.3331 | 1.0297 | +0.3034 | 1.0828 | 1.0296 | **+0.0533** | +0.2503 | 39.1 |
+| 240 | 1.4190 | 1.0312 | +0.3878 | 1.0941 | 1.0314 | **+0.0627** | +0.3249 | 30.2 |
+
+**P1's falsifier fired.** The jittered arm's residual does not fall below one service. It is FLAT:
+0.0512 to 0.0627 across a **240-fold range of dwell**, with no trend in either direction. The gate
+account of the residual is refuted, as registered.
+
+**And that is the answer rather than a loss, because CR-34 P6 already told us what the flat value
+is.** At $n=6$ on GE-120 the no-retry arm's excess is 1.0829 against a null of 1.0296, a residual of
++0.0533. The jittered arm at the same point is +0.0532. **The flat residual is the no-retry baseline,
+to four decimal places.** It was never a retry cohort, which is why no channel property predicts it.
+
+**Fable's P4 was right about the mechanism and wrong about which quantity carries it.** The dwell
+does hold a larger cohort together, and the growth is there, monotone across all ten dwells: the
+**fixed** arm's residual runs +0.2021 to +0.3878 and the fix-minus-jit gap runs +0.1425 to +0.3249,
+rising at every one of nine steps. A longer fade produces more crowding for a fixed hold and none at
+all for a randomized one.
+
+### The complete statement, now instrumented end to end
+
+1. A gated channel contributes crowding of its own, computable in closed form from its dwell and
+   the delivered rate, running 0.964 to 1.031 over this sweep. Not a fleet property.
+2. A fleet with the reliance loop open sits +0.053 above that, at every dwell. Not a channel
+   property: it does not move over a 240-fold dwell range.
+3. A fixed hold adds a retry cohort on top, and **that** term is what grows with the fade, from
+   +0.15 to +0.32 above the jittered arm.
+4. A randomized hold of the same mean adds nothing: it returns the fleet to line 2 exactly.
+
+Four terms, three of them measured against references that are computed or paired rather than
+assumed, and the one that used to be reported as a single "residual" was lines 2 and 3 added
+together with line 1 subtracted wrong. **Every earlier disagreement in this thread, mine and the
+reviewer's, was a disagreement about which of these four things the word residual meant.**
+
+**Outstanding:** the battery has no in-battery `noretry` arm, so line 2's identity with the no-retry
+baseline is established across batteries at one point rather than at every dwell. That is a one-arm
+addition and it is the last thing this mechanism needs.

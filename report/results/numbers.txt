@@ -926,3 +926,25 @@ Console regime at the jitter cells (source: tools/measure_util.py)
   utSeeds = 24
   utShareHi = 37
   utShareLo = 4
+
+
+Four-term crowding decomposition (source: tools/make_dwell_numbers.py over st-dwellow-9447711.out)
+  dwBlocks = 32
+  dwBlocksN = 32
+  dwFixHi = 0.388
+  dwFixLo = 0.202
+  dwFold = 240
+  dwGapHi = 0.325
+  dwGapLo = 0.143
+  dwGapMinT = 30
+  dwGapRising = 9
+  dwGapSteps = 9
+  dwHi = 240
+  dwJitHi = 0.0627
+  dwJitLo = 0.0512
+  dwJitMean = 0.056
+  dwJitSpread = 0.0115
+  dwLo = 1
+  dwN = 10
+  dwNullHi = 1.031
+  dwNullLo = 0.964
