@@ -7,6 +7,8 @@ added as the C2, comms/EW, and air layers land).
 """
 from __future__ import annotations
 
+import math
+
 import numpy as np
 
 from sandtable.entities import AIR, BLUE, RED, Entities
@@ -118,7 +120,7 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "operator_goodput": 0.0, "operator_goodput_late": 0.0,
            "abandon_queue_frac": 0.0, "abandon_link_frac": 0.0,
            "served_per_step": 0.0, "requests_per_step": 0.0,
-           "arrival_fano": 0.0,
+           "arrival_fano": 0.0, "arrival_multiplicity": 0.0, "arrival_peak": 0.0,
            "supervised_mean": 0.0, "supervised_frac": 0.0, "demand_norm_goodput": 0.0,
            "hold_fraction": 0.0, "interaction_steps": 0.0, "neglect_steps": 0.0, "fan_out": 0.0}
 
@@ -147,6 +149,23 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
         # costly trial being applied to a cheap one.
         out["supervised_mean"] = op.supervised_sum / op.total_steps
         out["supervised_frac"] = out["supervised_mean"] / max(op.supervised_n0, 1)
+        if op.mult_window > 0 and op._mult_busy > 0:
+            # E[k | k >= 1]: given that a service window saw any request, how many did it see.
+            # 1.0 is a perfectly scattered stream; above 1.0 counts the forced waits a cohort
+            # imposes on itself. Conditioned on a busy window so that lowering the RATE cannot
+            # be mistaken for lowering the clustering, which is the confound that makes the
+            # unconditioned mean useless for comparing arms at different offered loads.
+            out["arrival_multiplicity"] = op._mult_sum / op._mult_busy
+            out["arrival_peak"] = op._mult_peak
+            out["arrival_rate"] = op._mult_sum / op.total_steps
+            # E[k | k >= 1] rises with rate for ANY process, so a channel that delivers more
+            # round-trips looks more clustered even with identical phase structure. The
+            # Poisson value at this arm's own delivered rate is the scatter-only control:
+            # `lw / (1 - exp(-lw))`. The ratio is clustering net of rate, and it is the only
+            # form of this statistic comparable ACROSS channels.
+            lw = out["arrival_rate"] * op.mult_window
+            pois = lw / (1.0 - math.exp(-lw)) if lw > 0 else 1.0
+            out["arrival_excess"] = out["arrival_multiplicity"] / pois
         if op.fano_window > 0 and op._fano_n > 1 and op._fano_sum > 0.0:
             mean = op._fano_sum / op._fano_n
             var = op._fano_sumsq / op._fano_n - mean * mean

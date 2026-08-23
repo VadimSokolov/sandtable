@@ -2605,3 +2605,124 @@ the source text shows exploration performance in fact declining with team size a
 
 **Status until the source text is in hand: OPEN.** Nothing from this paper enters the manuscript
 until both falsifiers have been checked against the actual numbers, not the abstract.
+
+---
+
+## CR-33. THE DWELL RESIDUE: TWO STORIES, REGISTERED TOGETHER, AND A TEST THAT KILLS BOTH
+
+**First, the retraction.** CR-27 D7 above reports the residue's sign flip between n = 5 and n = 6
+and I matched it against `n* = 6.45`. That constant is the CLEAR-LINK NO-RETRY threshold and it is
+wrong on both counts: the residue table is built from the `jit18`/`fix18` pair at rung 3, both of
+which retry. Recomputed with the shipped closed form, where a retry replaces `patience + tau + 1`
+with `patience + backoff + 1`:
+
+| pair mean rho | memoryless (D2) | GE-120 (D1) |
+|---|---|---|
+| 4 | 5.86 | 4.70 |
+| 10 | 7.27 | 5.82 |
+| 18 | 9.14 | 7.33 |
+
+The residue table is the mean-18 row, whose thresholds are 9.14 and 7.33. **Both n = 5 and n = 6
+sit below both.** The flip does not bracket anything. The coincidence is withdrawn, and it is worth
+naming the error: I matched a number to the nearest constant I had memorized instead of computing
+the constant that governed the arms in front of me. This is the same genus as the three instrument
+defects, transplanted from code into reasoning.
+
+**Fable's alternative, which fits the data mine cannot.** Jitter's value is single-peaked in
+congestion: zero at idle (nothing to collide with), maximal near threshold, back toward zero deep in
+saturation (the server is never idle, so arrival timing stops mattering). The residue is then the
+difference of two single-peaked curves whose peaks sit at the two channels' different thresholds,
+GE at 7.33 and memoryless at 9.14. On the rising limb the GE curve leads; once GE crests while
+memoryless is still climbing, the difference turns negative. Observed: +0.0112 at n = 5 (GE ahead,
+n/n* = 0.68 against 0.55) and -0.0248 at n = 6 (GE at 0.82 of its threshold and cresting, memoryless
+still at 0.66 and climbing). That is the pattern.
+
+**PREDICTIONS, registered before the run, on the mean-18 pair.**
+
+| n | mine (retracted account, kept as the null) | Fable's single-peak account |
+|---|---|---|
+| 4 | negative or flat | near zero, both curves near idle |
+| 5 | positive | positive |
+| 6 | negative | negative |
+| 10 | stays negative | returns toward zero, both past peak |
+
+n = 4 and n = 10 discriminate. n = 5 and n = 6 are already seen and adjudicate nothing.
+
+**THE TEST THAT CAN KILL BOTH, and the reason to run it first.** Under either account the flip is
+located by the two thresholds, so it must MOVE when the pair mean moves. At mean 4 the thresholds
+are 5.86 and 4.70 and the crossing should fall near n = 4 to 5; at mean 18 they are 9.14 and 7.33
+and it should fall near n = 6 to 7. **FALSIFIER: if the flip sits between n = 5 and n = 6
+regardless of pair mean, it is not threshold-located, and both accounts are refuted together.** The
+residue then goes into the paper as an unexplained regularity or not at all, and no mechanism is
+claimed for it.
+
+Nothing about the residue enters the manuscript until this runs. The self-collision component,
+which is what actually gates, is unaffected either way.
+
+---
+
+## CR-34. THE COHORT INSTRUMENT, AND THE THIRD ACCOUNT IT KILLED IN ONE AFTERNOON
+
+Fable asked for the instrument that would decide whether a bursty channel's cohort is born
+pre-scattered. Collision multiplicity, `E[k | k >= 1]` over windows one service time long, because
+k requests inside one service is k-1 forced waits and that is the quantity the mechanism consumes.
+A Fano factor is a variance and cannot tell many small clusters from few large ones.
+
+**Three accounts died in order, which is worth recording as a sequence rather than a conclusion.**
+
+1. *Drowning.* The channel's variance hides the cohort. **Refuted** by `tools/bench_fano.py` at
+   service-scale windows: a known injected cohort is recovered to within 6% on the on-off stream.
+2. *Born pre-scattered.* The outage releases its vehicles at different instants, so there is no
+   cohort. **Refuted, in the opposite direction:** GE multiplicity is HIGHER than memoryless at
+   every cell (+1.049, +0.890 at pair mean 4; +0.186, +0.352 at 18).
+3. *Banked idle time.* GE clustering arrives against a console idled by the outage, so it is
+   absorbed. **Refuted:** GE utilization is HIGHER (0.603, 0.645) than memoryless (0.477, 0.572),
+   because GE's two-way delivery is 0.798 against 0.640 and it simply delivers more.
+
+**And that last number exposed a confound in the instrument itself.** `E[k | k >= 1]` rises with
+rate for ANY process, so a channel delivering 25% more round-trips looks more clustered with
+identical phase structure. `arrival_excess` divides by the Poisson value at the arm's own delivered
+rate, `lw / (1 - exp(-lw))`. That is the scatter-only control and the only form of this statistic
+comparable across channels. 32-seed probe, pair mean 18, rung 3:
+
+| channel | n | excess, fixed hold | excess, jittered | delta | t |
+|---|---|---|---|---|---|
+| memoryless | 5 | 1.096 | 1.001 | -0.094 | -5.3 |
+| memoryless | 6 | 1.099 | 1.011 | -0.088 | -4.9 |
+| GE-120 | 5 | 1.214 | 1.042 | -0.173 | -3.5 |
+| GE-120 | 6 | 1.348 | 1.083 | -0.265 | -6.4 |
+
+**The account the data supports, and it is the first one that explains all four facts.** On a
+memoryless link the retry hold is the ONLY thing setting arrival phase, so randomizing the hold
+scatters the stream COMPLETELY: excess goes to 1.001 and 1.011, statistically a Poisson process. On
+a bursty link the channel gate is a SECOND synchronizer sitting downstream of the hold, and the hold
+cannot reach it: however the vehicles are scattered before the gate, the gate releases them together
+when the outage lifts. Jitter removes the part it controls and leaves a residual, 1.042 and 1.083.
+
+This explains why GE dissolves MORE clustering and gains LESS goodput. What costs is the residual,
+not the amount removed. Registered as CR-34 P1/P2/P3 in `hopper/batteries/cohort.sh`, running at
+full tier with the falsifier that if the jittered GE excess also reaches 1.0 the account is
+withdrawn.
+
+**Operational consequence, and it is the one that ties the three levers together.** Randomized
+backoff fully solves self-collision on a clean link and only partially on a contested one, because
+a contested link re-clusters what the backoff scattered. On a contested link the backoff is not
+sufficient by itself and the console-side levers are not redundant with it.
+
+### The window was the bug, not the variance
+
+`tools/bench_fano.py` extended to the window the D1 battery actually used, which was set to the
+channel dwell of 120 on the reasoning that that is where the channel's structure lives:
+
+| channel | window | baseline F | recovered | t |
+|---|---|---|---|---|
+| memoryless | 1 | 0.85 | 0.998 | 376 |
+| on-off | 1 | 0.85 | 0.997 | 335 |
+| memoryless | 120 | 0.94 | 0.461 | 4.2 |
+| on-off | 120 | 9.97 | 1.307 | 3.7 |
+
+Setting the window to the correlation time is exactly backwards. It is the scale at which the
+channel's own variance is largest and the statistic's power is least, and it costs a factor of
+eighty in t. The published Fano null was read through a window that had almost no power. This is a
+fifth member of the genus in `tests/test_gate_helpers.py`: a parameter chosen by an argument about
+where the physics lives rather than by measuring where the instrument works.

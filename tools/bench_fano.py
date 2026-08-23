@@ -57,8 +57,8 @@ def main() -> None:
     ap.add_argument("--blocks", type=int, default=32)
     ap.add_argument("--steps", type=int, default=1800)
     ap.add_argument("--lam", type=float, default=0.15)
-    ap.add_argument("--l-on", type=float, default=20.0)
-    ap.add_argument("--l-off", type=float, default=20.0)
+    ap.add_argument("--l-on", type=float, default=120.0)
+    ap.add_argument("--l-off", type=float, default=120.0)
     a = ap.parse_args()
 
     pi = a.l_on / (a.l_on + a.l_off)
@@ -68,7 +68,7 @@ def main() -> None:
     print(f"{'channel':>12} {'w':>3} {'F(K=1)':>9} {'F(K=2)':>9} {'recovered':>10} {'t':>8} "
           f"{'agree':>7} {'gate':>5}")
 
-    for window in (1, 2, 4, 10):
+    for window in (1, 2, 4, 10, 120):
         for name in ("memoryless", "on-off"):
             f1, f2 = [], []
             for b in range(a.blocks):

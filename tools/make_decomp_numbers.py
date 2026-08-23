@@ -87,15 +87,21 @@ def main() -> None:
         if len(p) == 8 and p[0] in ("memoryless", "on-off"):
             rows[(p[0], p[1])] = p
     for chan, key in (("memoryless", "Mem"), ("on-off", "Burst")):
-        for wnd, wd in (("1", "One"), ("10", "Ten")):
+        for wnd, wd in (("1", "One"), ("10", "Ten"), ("120", "Dwell")):
             r = rows[(chan, wnd)]
             m[f"fb{key}W{wd}"] = f"{float(r[4]):.3f}"
             m[f"fb{key}W{wd}T"] = f"{float(r[5]):.0f}"
             m[f"fb{key}W{wd}Base"] = f"{float(r[2]):.2f}"
-    # the worst recovery error over every channel and window: the headline the bench supports
-    worst = max(abs(1.0 - float(r[4])) for r in rows.values())
-    m["fbWorstErr"] = f"{100 * worst:.0f}"
-    m["fbBurstWorstErr"] = f"{100 * max(abs(1.0 - float(r[4])) for k, r in rows.items() if k[0] == 'on-off'):.0f}"
+    # Worst recovery error, reported SEPARATELY for the two regimes, because they are two
+    # different findings. At windows on the order of a service time the estimator is excellent on
+    # both channels; at a window the size of the channel's correlation time it is not, and quoting
+    # one number over both would hide exactly the fact this bench was run to establish.
+    short = {k: abs(1.0 - float(r[4])) for k, r in rows.items() if int(k[1]) <= 10}
+    long_ = {k: abs(1.0 - float(r[4])) for k, r in rows.items() if int(k[1]) > 10}
+    m["fbWorstErr"] = f"{100 * max(short.values()):.0f}"
+    m["fbBurstWorstErr"] = f"{100 * max(v for k, v in short.items() if k[0] == 'on-off'):.0f}"
+    m["fbDwellWorstErr"] = f"{100 * max(long_.values()):.0f}"
+    m["fbServiceWindows"] = str(len({k[1] for k in short}))
     m["fbBlocks"] = "32"
 
     gen = ROOT / "report" / "gen" / "decomp_numbers.tex"

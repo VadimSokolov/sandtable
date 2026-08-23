@@ -146,6 +146,17 @@ class Operator:
     # Accumulated in bins so no per-step array is kept. Off by default (window 0), and counting
     # consumes no randomness, so the OFF path is byte-identical.
     fano_window: int = 0
+    # Collision multiplicity (CR-34). `fano_window` is the CHANNEL dwell; this window is the
+    # SERVICE time, because the quantity the mechanism consumes is how many requests land
+    # inside one service: k arrivals in a service window is k-1 forced waits. The Fano is a
+    # variance and cannot say that; two streams with equal variance can differ in whether the
+    # excess arrives as many small clusters or a few large ones.
+    mult_window: int = 0
+    _mult_bin: float = 0.0
+    _mult_idx: int = 0
+    _mult_sum: float = 0.0
+    _mult_busy: int = 0                   # windows with at least one arrival
+    _mult_peak: float = 0.0
     _fano_bin: float = 0.0
     _fano_idx: int = 0
     _fano_n: int = 0
@@ -205,6 +216,10 @@ def build_c2(scn: Scenario, ent: Entities,
     op.retry_streak = np.zeros(ent.n, dtype=int)
     op.admit_response = str(scn.params.get("admit_response", "none"))
     op.fano_window = int(scn.params.get("fano_window", 0))
+    # Default: one service time, rounded up, so the window is the thing it is meant to be
+    # without the battery having to restate the service rate.
+    mw = scn.params.get("mult_window")
+    op.mult_window = int(mw) if mw is not None else 0
     op.q_droop = float(scn.params.get("q_droop", 0.0))
     if not 0.0 <= op.q_droop <= 1.0:
         raise ValueError(f"q_droop must lie in [0, 1], got {op.q_droop}")
@@ -418,6 +433,15 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
         op.busy_steps += float((op.crew_free_at > k).mean())
     op.queue_depth_sum += float((ent.await_until[blue] >= 0).sum()) if blue.size else 0.0
     op.supervised_sum += float(blue.size)
+    if op.mult_window > 0:                    # same bookkeeping, on the service-time window
+        idx = k // op.mult_window
+        while op._mult_idx < idx:
+            if op._mult_bin > 0.0:
+                op._mult_sum += op._mult_bin
+                op._mult_busy += 1
+                op._mult_peak = max(op._mult_peak, op._mult_bin)
+            op._mult_bin = 0.0
+            op._mult_idx += 1
     if op.fano_window > 0:                    # close the bin this step has left behind
         idx = k // op.fano_window
         while op._fano_idx < idx:
@@ -476,6 +500,8 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
         up_ok = comms.delivered(rng)
         if op.fano_window > 0 and up_ok:
             op._fano_bin += 1.0                  # one arrival at the console on this step
+        if op.mult_window > 0 and up_ok:
+            op._mult_bin += 1.0
         # Read the queue before pricing the reply. The reply is not sent when the request is: it
         # leaves when the operator finishes, so the two messages are separated by `done - k` steps,
         # and on a channel with memory that gap is what decides whether their fates are correlated
