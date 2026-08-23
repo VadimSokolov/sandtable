@@ -5158,3 +5158,57 @@ because the cohort it breaks up has already been broken.
 **P3 (open).** The mission-metric LOSS is real and gated, not the small sample above.
   **FALSIFIER.** A null on mission success at tier makes this a console-statistic curiosity and it
   is reported in one sentence rather than as a finding.
+
+**CR-47 G0 VERDICT: THE INSTRUMENT GATE PASSES, AND IT PASSES AFFIRMATIVELY.** Job 9448647, full
+tier, 32 blocks by 64 replications. The buffered queue must reproduce the published reservation
+model under the policies where the console never commits beyond what it can serve, `refund` and
+`admit`, with `blind` excluded in advance and for a stated reason. On `served_per_step`, paired,
+against the reservation arm at each span:
+
+    admit   n= 4    6    8   10   12   16      refund  n= 4    6    8   10   12   16
+    effect  -0.0012 -0.0041 -0.0039 -0.0042 -0.0035 -0.0028   -0.0010 +0.0001 -0.0013 -0.0011 -0.0013 -0.0012
+
+Twelve of twelve contrasts are EQUIVALENT at the standing margin, with the weaker one-sided
+statistic running from 5.29 to 211. Six of them have $|t|$ above 5 as differences, and three above
+13: at this tier the two models are distinguishable and the distinction is immaterial, which is
+exactly the pair of statements a failure-to-separate could not have made. **This is the first use of
+the equivalence instrument on something load-bearing, and it is the reason the rest of CR-47 is
+readable at all.** The buffer consistently delivers a hair less than the reservation model under
+`admit`, which is the honest direction: a real queue admits at the head against the delay it has,
+and a reservation commits at arrival against the delay it will have.
+
+**CR-48 P1 AND CR-49 CONFIRMED AT FULL TIER INSIDE SANDTABLE.** Job 9448688, 32 blocks by 64
+replications, capacity ladder from 0 to 10 plus unbounded, `served_per_step`:
+
+    clear link (lambda 3.00, k* = 2)      n= 6      8     10     12     16
+      cap 0                             0.0728 0.0861 0.0974 0.1059 0.1173
+      cap 1                             0.1075 0.1247 0.1350 0.1413 0.1461
+      cap 2                             0.1167 0.1316 0.1403 0.1442 0.1476   <- argmax at all five
+      cap 3                             0.1017 0.0956 0.1006 0.1098 0.1299
+      unbounded                         0.0956 0.0411 0.0088 0.0028 0.0023
+
+    C3 (lambda 1.80, k* = 1)              n= 6      8     10     12     16
+      cap 0                             0.0445 0.0548 0.0650 0.0727 0.0840
+      cap 1                             0.0533 0.0668 0.0779 0.0851 0.0948   <- argmax at all five
+      cap 2                             0.0487 0.0512 0.0496 0.0464 0.0473
+      unbounded                         0.0480 0.0363 0.0121 0.0031 0.0007
+
+Ten of ten argmaxes are $k^{\star}$. **And C3 is the cell that separates the corrected rule from the
+published one.** The floor rule says 0 there; capacity 0 is gated WORSE than capacity 1 at four of
+five spans, by 0.0108 to 0.0129 served per step against a floor of 0.009. So the correction term,
+which came out of a mechanism I first derived against the wrong queue and then re-derived against
+the right one, earns its place on a measurement rather than on the derivation.
+
+**The size, which is what a sponsor buys.** At sixteen assets on a clear link the bound delivers 63
+times the service of the unbounded console the model shipped with, and at C3, 146 times. On mission
+success at eight assets it is worth 17.4 points, 79.7 percent against 62.3. The intervention is one
+integer in a configuration file and needs no change to the message format, no deadline field, and no
+second operator.
+
+**A metric disagreement, reported because it is this paper's recurring subject.** On mission success
+the argmax is capacity ONE at four of the five spans rather than two, so the console-throughput
+optimum and the mission optimum differ by one slot. They are not materially different: capacity one
+and capacity two are EQUIVALENT on success at all five spans, with the weaker one-sided statistic
+from 2.03 to 13.19. The honest statement is that the plateau on the mission metric contains both,
+and that where the two metrics disagree the mission metric prefers the SMALLER bound, which is the
+direction the queue-only model's load analysis also pointed.

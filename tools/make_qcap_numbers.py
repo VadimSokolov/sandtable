@@ -237,6 +237,38 @@ def main() -> None:
         out += [(f"QcapCvBound{tag}", f"{(g - b).mean():+.4f}"),
                 (f"QcapCvAge{tag}", f"{(a - b).mean():+.4f}")]
 
+    # 9. And the same rule inside SandTable itself, at full tier, which is where the paper's
+    #    numbers have to come from. The auxiliary model above is the mechanism; this is the claim.
+    from ar_survey import survey  # noqa: PLC0415
+
+    LOG = "st-qcap-9448688.out"
+    for sec, tag, kstar in (("Q1 the capacity ladder", "Clear", 2), ("Q2 the capacity ladder",
+                                                                    "Jam", 1)):
+        try:
+            lv = survey(LOG, sec, "served_per_step", quiet=True)
+        except SystemExit:
+            continue
+        pts = ["6", "8", "10", "12", "16"]
+        names = {0: "cap_zero", 1: "cap_one", 2: "cap_two", 3: "cap_three"}
+        idx = {p: i for i, p in enumerate(pts)}
+        arg = [max((c for c in names if names[c] in lv),
+                   key=lambda c: lv[names[c]][idx[p]]) for p in pts]
+        out += [(f"StQcap{tag}Argmax", "/".join(str(a) for a in arg)),
+                (f"StQcap{tag}Hit", f"{sum(1 for a in arg if a == kstar)}"),
+                (f"StQcap{tag}Spans", f"{len(pts)}"),
+                (f"StQcap{tag}Best", f"{lv[names[kstar]][idx['16']]:.4f}"),
+                (f"StQcap{tag}None", f"{lv['cap_none'][idx['16']]:.4f}"),
+                (f"StQcap{tag}Ratio", f"{lv[names[kstar]][idx['16']] / max(lv['cap_none'][idx['16']], 1e-9):.0f}")]
+        if kstar == 1 and "cap_zero" in lv:
+            out.append(("StQcapJamFloorGap", f"{lv['cap_one'][idx['16']] - lv['cap_zero'][idx['16']]:+.4f}"))
+    try:
+        su = survey(LOG, "Q1 the capacity ladder", "success", quiet=True)
+        out += [("StQcapSuccBound", f"{100 * su['cap_two'][1]:.1f}"),
+                ("StQcapSuccNone", f"{100 * su['cap_none'][1]:.1f}"),
+                ("StQcapSuccGain", f"{100 * (su['cap_two'][1] - su['cap_none'][1]):.1f}")]
+    except (SystemExit, KeyError):
+        pass
+
     dst = ROOT / "report" / "gen" / "qcap_numbers.tex"
     dst.write_text("".join(f"\\newcommand{{\\{k}}}{{{v}}}\n" for k, v in out))
     print(f"wrote {dst} with {len(out)} macros")
