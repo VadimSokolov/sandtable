@@ -6134,7 +6134,7 @@ geometry and estimator error are not the same quantity, exactly as review argued
 CR-55 rested on is refuted by the arm it was supposed to predict. Geometry the planner asks for
 changes the mission; geometry the estimator fails to hold does not.
 
-## CR-56 W1 VERDICT: AN INSTRUMENT THAT ANSWERS "DOES THIS CONSOLE HAVE DIFFICULTY INFORMATION" WITH A 500 TO 1 MARGIN
+## CR-56 W1 VERDICT: AN INSTRUMENT THAT ANSWERS "DOES THIS CONSOLE HAVE DIFFICULTY INFORMATION" WITH AN 85 TO 1 MARGIN
 
 Job 9449525, W1, full tier. The registered test is the reviewer's and it replaced mine, which was
 unsound: I had proposed that a console serving more while abandoning less must have information, and
@@ -6154,9 +6154,10 @@ Mean service of decisions worked, against a population mean of 6.667 steps:
 | acuity one half | 6.3378 | 6.0628 | 5.8217 |
 | perfect foresight | 6.0317 | 5.5115 | 5.0923 |
 
-**All four information-free consoles work at population, within 0.003 of it and of each other, at
-every span.** Only the two acuity arms select, and they select in proportion to what they can see.
-The instrument's spread among the arms it should not separate is 0.003; the gap it does open is 1.57.
+**All four information-free consoles work at population, within 0.019 of it and of each other,
+across every span.** Only the two acuity arms select, and they select in proportion to what they can
+see. The instrument's spread among the twelve cells it should not separate is 0.0185, against a gap
+of 1.5744 for the console that can see: a margin of 85 to 1.
 C1, C2 and C3 all hold as registered, including the sharp one: the quantile console, which many
 readers will take for a cheap triage, works at population because it selects on the requester's
 SLACK and not on the decision's length. It is a rung of the requirements ladder, not a substitute
