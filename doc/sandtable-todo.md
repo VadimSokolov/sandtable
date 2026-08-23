@@ -1228,17 +1228,58 @@ moving-link experiment and a policy comparison, all in an afternoon.
 - `tools/make_qcap_numbers.py` regenerates every number in the three new manuscript paragraphs,
   running the link sweep and the moving-link experiment itself rather than parsing a log.
 
-### Running
+### Running (2026-08-23)
 
-`st-qcap` 9448688 (CR-48/CR-49 at full tier in SandTable), `st-lifo` 9448647 (CR-47 P1-P6).
-`st-sobol` 9448646 landed: rank order identical to the closed form on both index families, largest
-total-effect gap 0.020 against a falsifier at 0.10.
+`st-qcap` 9448688 (CR-48/49), `st-maps` 9448824 (CR-52), `st-svccv` 9449062 (CR-51/53 v2),
+`st-capacity` 9449071 (CR-54), `st-maps2` 9449266 (CR-52 P3 at one-asset resolution).
+
+### Landed and written up (2026-08-23)
+
+- **CR-47 P1-P6.** P1, P2, P4, P5, P6 hold at full tier. P3 fails on its letter (the sign change
+  brackets at 5-6 spans, not the predicted 6.45) and is recorded as failed rather than rounded.
+  P4 is the load-bearing one: under `admit`, reordering is negative at all seven spans and
+  TOST-equivalent at all seven, so the levers substitute.
+- **The four-lever price list, and the control that reduced it to one lever.** At sixteen assets on
+  a clear link: oldest-first 0.0023 served per step, RANDOM order 0.0100, newest-first 0.1464, the
+  derived bound 0.1476, admission control 0.1490, all three working levers inside one materiality
+  floor of each other. Random order recovers five percent of what newest-first does, so breaking
+  first-come-first-served is not the mechanism. Staleness is: the share of requests worked after
+  the requester gave up runs 43.8, 37.3, 0.02 and 0.00 percent in the same order.
+- **CR-52 P1 and P2.** Three terrain profiles. The console lever is map-invariant to within 0.0014;
+  the mission lever spans a factor of five, and the mechanism is headroom. The capacity rule's
+  argmax and its error shape are both map-invariant. P3 was untestable at that sweep's resolution
+  and is re-registered as 9449266.
+- **Prior art found and cited.** Doshi 1983 (BSTJ) analyses a deadline-aware hybrid discipline and
+  compares it against LIFO on the throughput of successfully served customers, which is CR-47's
+  contrast made analytically in 1983. Ross 2015 is the optimality side. What survives as new is the
+  console BELOW that information level: ours cannot observe delay at all.
+
+### Instrument defects found today (7, 8, 9)
+
+- **7.** The admission test drew the service time and then tested the deadline against the DRAW, so
+  the console accepted precisely the decisions that happened to be quick, worth 27 percent at
+  cv = 0.5. Fixed as a parameter (`admit_foresight`) rather than a correction, so the difference
+  becomes a measured price for an operator capability rather than a hidden assumption.
+- **8.** `_common.sh` defines `D` without `queue_model`, so a battery registered against the buffer
+  console measured the reservation one. Found only by disagreeing with another battery's identical
+  arm. A new genus: a shared default that was correct everywhere it had been used and became wrong
+  when a second model appeared. Guarded by a name, `DB`, because the failure is invisible at the
+  call site.
+- **9.** `sync.sh` rsyncs into the directory jobs run from, so editing source mid-run changed the
+  code under two in-flight batteries. Both verified bit-identical afterwards, so nothing was lost.
+  Jobs now snapshot into `runs/$SLURM_JOB_ID` and re-check the code hash at exit.
 
 ### Open
 
-- CR-47 P1 through P6 once 9448647 lands; the instrument gate blocks all of them.
-- The SandTable confirmation of the sizing rule at full tier, from 9448688. Everything in the paper
-  about it is currently from the auxiliary model plus a 32-replication local run.
+- CR-54, the four-bin capacity identity and utilization invariance, from 9449071. The registered
+  identity was two bins short and was corrected before the run.
+- CR-51/53 v2 from 9449062, including the price of operator foresight as a first-class arm.
+- CR-52 P3a/P3b/P3c from 9449266.
+- **The sponsor's own top ask, which is not ours to run.** Adversarial review's headline
+  recommendation is a cross-tier confirmation against ProjectGL itself, on the grounds that the
+  blocked decision is "may I act on this simulator at all" and that zero cross-tier points exist.
+  ProjectGL is Government-furnished and not in hand. Recorded here as the ask.
 - Whether the paper should be cut to its spine (span collapse is congestion, located by closed
-  forms, moved by software) and the cohort, dwell and Fano apparatus moved out. Under review.
-- Backlog: CR-8, C5.
+  forms, moved by software) and the cohort, dwell and Fano apparatus moved out. The companion split
+  did half of this already.
+- Backlog: CR-8, C5, CR-46 v2.
