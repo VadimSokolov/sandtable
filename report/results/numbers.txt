@@ -2061,6 +2061,32 @@ CR-53 v2, consistency against discernment (source: tools/make_foresight_numbers.
   abWfDenom = -40.9
   abWfMove = -68.6
 
+--- gen/acuity_numbers.tex  (24 macros, source: tools/make_acuity_numbers.py) ---
+  AcBusyFull = 0.9912
+  AcBusyT = 0.01
+  AcBusyZero = 0.9912
+  AcFloor = 0.0090
+  AcFreeHi = 6.6827
+  AcFreeLo = 6.6719
+  AcFreeSpread = 0.0108
+  AcFull = 0.1949
+  AcGain = +0.0764
+  AcGainPct = 64
+  AcHalf = 0.1546
+  AcLinMax = 0.0021
+  AcPop = 6.667
+  AcQuarter = 0.1360
+  AcQuarterGain = +0.0175
+  AcSelectGap = 1.5744
+  AcServeFore = 5.0923
+  AcServeMean = 5.5379
+  AcSrvT = 274
+  AcThreeQ = 0.1742
+  AcWorkFore = 5.0923
+  AcWorkHalf = 5.8217
+  AcWorkMean = 6.6719
+  AcZero = 0.1185
+
 --- gen/aimd_numbers.tex  (221 macros, source: tools/make_aimd_numbers.py) ---
   aiBlocks = 32
   aiGoodClearAdmitEight = 0.734

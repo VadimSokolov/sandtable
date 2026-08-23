@@ -39,6 +39,7 @@
 \input{gen/lever_numbers}
 \input{gen/maps_numbers}
 \input{gen/foresight_numbers}
+\input{gen/acuity_numbers}
 \input{gen/ledger_counts}
 
 \newcommand{\sandtable}{\textsc{SandTable}}
@@ -398,28 +399,68 @@ The direction of the omission is worth stating because it is not neutral, and it
 \paragraph{Two things a program office can buy from an operator, priced against each other.} The
 metronome assumption of the previous paragraph hides a second one that is more interesting and was
 found by accident. When the service time is variable, a console applying admission control has to
-compare the deadline against \emph{something}, and there are two candidates. It can compare against
-the mean, which is all a deadline field in the message could ever give it. Or it can compare against
-what this particular decision will actually take, which is not a message field at all: it is an
-operator who can tell a hard request from an easy one at a glance, and who therefore accepts exactly
-the ones that are quick. Our implementation did the second while its comment claimed the first, and
-the two are separated here as \texttt{admit\_foresight} because they are requirements of completely
-different kinds. They coincide exactly when the service time is constant, which is why every number
-published before this paragraph is unaffected by the distinction.
+compare the deadline against something, and there are two candidates. It can compare against the
+mean, which is all a deadline field in the message could ever give it. Or it can compare against the
+service time this particular decision will actually take, which is an operator who can tell a hard
+request from an easy one before committing to it. Our implementation did the second while its
+comment claimed the first, and the two are separated here because they are requirements of
+completely different kinds. They coincide exactly when the service time is constant, which is why
+every number published before this paragraph is unaffected by the distinction.
 
 Priced at sixteen assets on a clear link, with the mean held fixed so nothing moves but variability
 and discernment, the ordering is not the intuitive one. A metronome that cannot triage delivers
 \FsMetro{} served per step. Give it a coefficient of variation of one half and it falls to
 \FsNoisy{}, so consistency is worth \FsConsistency{} and the gate accepts it. Give the variable
 operator the ability to triage and it rises to \FsSeeing{}, so discernment is worth \FsDiscernment{},
-which is \FsRatio{} times what consistency is worth and also gated. The two together are the result:
-a discerning but erratic operator beats a consistent but undiscerning one by \FsNetOverMetro{}
-served per step, and the advantage grows with how erratic they are, reaching \FsSeeingHi{} at an
-exponential service time where the undiscerning console has fallen to \FsNoisyHi{}. Variance is an
-opportunity to whoever can see it and a cost to whoever cannot, and the same dispersion that hurts
-one operator is what gives the other something to select from. Discernment's value also rises with
-span, from \FsDiscernSix{} at six assets to \FsDiscernEight{} at eight and \FsDiscernTwelve{} at
-twelve, for the same reason: triage needs something to triage away.
+which is \FsRatio{} times what consistency is worth and also gated. Variance is an opportunity to
+whoever can see it and a cost to whoever cannot, and the same dispersion that hurts one operator is
+what gives the other something to select from. Discernment's value also rises with span, from
+\FsDiscernSix{} at six assets to \FsDiscernTwelve{} at twelve, for the same reason: triage needs
+something to triage away.
+
+\paragraph{Perfect triage is a ceiling, so we measured the interior, and it is a straight line.} An
+operator who sees each decision's exact duration before committing is an oracle, and a number
+produced by one bounds what any real capability is worth without estimating it. The quantity a
+human-subjects arm can estimate is the probability that an operator recognises a hard request at
+all, so the console now carries that probability and treats the request as average otherwise, with
+the same feasibility test either way. The curve it traces at sixteen assets is \AcZero{},
+\AcQuarter{}, \AcHalf{}, \AcThreeQ{} and \AcFull{} served per step as the probability runs from zero
+to one. Every step gates up with all thirty-two blocks agreeing, and the largest departure from a
+straight line through the endpoints is \AcLinMax{} against a materiality floor of \AcFloor{}. There
+is no threshold below which partial skill is wasted: a quarter of the capability buys
+\AcQuarterGain{} served per step and gates up on its own. That is the answer to the question a
+program office actually asks, which is not whether a perfect operator would be valuable.
+
+And it costs the console nothing. Occupancy is statistically equivalent across every acuity at every
+span, \AcBusyZero{} against \AcBusyFull{} at sixteen assets with $t = \AcBusyT{}$, while delivered
+service on the same missions rises \AcGainPct\% at $t = \AcSrvT{}$. Two statistics, 0.01 and 274,
+from one set of runs. The console that can triage does not work harder, and the console that cannot
+is not idle: what changes is which decisions the same fixed effort is spent on. This is the effort
+result of the previous paragraphs carried from a policy axis onto a capability axis, where it is
+more surprising, and it is measured in console-time rather than in decisions completed because a
+console that selects short decisions completes more of them without doing more.
+
+\paragraph{How to tell triage from tightening, which is the objection this result has to answer.}
+Every admission rule refuses work, and refusing work helps a saturated console whatever the rule is,
+so a gain in delivered service is not by itself evidence of any capability. The test that separates
+them uses the service-time accounting directly: length cannot be selected without seeing length, so
+a console has difficulty information if and only if the mean service of the decisions it works falls
+below the population mean of \AcPop{} steps. Four consoles that have the lever and not the
+information were run against that test: a capacity bound, a rule that refuses a fixed fraction at
+random, the honest deadline test against the mean, and a budget set at the 0.9 quantile of the
+service distribution. All four work at population, spanning \AcFreeLo{} to \AcFreeHi{} across every
+span, a spread of \AcFreeSpread{}. The two consoles that can see work \AcWorkHalf{} and
+\AcWorkFore{}, a gap of \AcSelectGap{} steps. The instrument's noise and its signal differ by nearly
+two orders of magnitude, and the quantile arm is the one to notice: a budget quantile looks like
+cheap triage and is not, because it selects on the requester's slack rather than on the decision's
+length.
+
+The same accounting gives the mechanism a sentence it did not have. The honest console works
+\AcWorkMean{} steps per decision and serves \AcServeMean{}; the foreseeing console works
+\AcServeFore{} and serves \AcServeFore{}. Their served mixes are nearly the same. What differs is
+that the honest console pays full service time for the long decisions it then fails to deliver
+before the deadline, and the foreseeing one refuses them before the slot is spent. Triage and a
+deadline test select almost the same jobs; the difference between them is who pays for the rejects.
 
 The corollary is the one to act on, and its direction is the reverse of what we first drew from it.
 Run the same comparison with a backlog bound in place and discernment almost stops paying: it is
@@ -431,19 +472,10 @@ per step; an unbounded one that can triage delivers \FsSeeing{}. The bound does 
 discernment reaches, it forecloses most of it. What it does do is lift the console that cannot
 triage, from \FsNoisy{} to \FsBoundNoisy{}. So the counter substitutes for the operator one did not
 train and handicaps the one one did, and a program office that buys both gets less than it paid for.
-
-Two caveats belong inside that sentence rather than after it, and both are limits on the discernment
-number itself. The bounded arms carry a deadline test as well as a counter, so they price the
-counter as an addition to admission control rather than as the requirements ladder's counter-only
-rung; on a blind console the distinction is inert by construction, because the deadline test it
-changes is never reached. And a console with perfect foresight is an oracle: it sees each decision's
-exact duration before committing to it. That is an upper bound on what any real triage is worth, not
-an estimate of it, and the quantity a human-subjects arm can actually estimate is the probability
-that an operator recognises a hard request at all. \sandtable{} carries that probability, and the
-decomposition it supports, against an admission rule that refuses at random and therefore has the
-same lever with none of the information, is the measurement this section will rest on. Until it is
-made, \FsDiscernment{} should be read as a ceiling with the mechanism identified and the magnitude
-open.
+One caveat belongs inside that sentence rather than after it: the bounded arms carry a deadline test
+as well as a counter, so they price the counter as an addition to admission control rather than as
+the requirements ladder's counter-only rung, and on a blind console the distinction is inert by
+construction because the deadline test it changes is never reached.
 
 
 \paragraph{Two thresholds, predicted then measured.} Equation~\ref{eq:nstar} puts the collapse span at $\qNStar{}$ assets on one console and $\qNStarTwo{}$ on two, and $\ell^{\star} = \qLatCut{}$ steps puts a ceiling on serviceable latency. Figure~\ref{fig:queue}(a) and Table~\ref{tab:staffing} are the staffing curve those numbers predict. On one console the operator's goodput, the fraction of its service time that reaches a requester still waiting, is \qGoodOneSix\% at six assets and \qGoodOneEight\% at eight, so the transition brackets $\qNStar{}$. On two consoles it is \qGoodTwoTwelve\% at twelve and \qGoodTwoSixteen\% at sixteen, bracketing $\qNStarTwo{}$. On three consoles, whose predicted threshold is $\qNStarThree{}$, the queue is still healthy at sixteen (\qGoodThreeSixteen\%). Those three readings are on the ratio, and the ratio is the metric this paper has had to correct twice, so they were re-run on the delivered rate. The brackets do not move: one console serves \seSrvOneNSix{} per step at six assets and \seSrvOneNEight{} at eight, two serve \seSrvTwoNTwelve{} at twelve and \seSrvTwoNSixteen{} at sixteen, and three are still rising at sixteen (\seSrvThreeNSixteen{}). Three consoles, three brackets, each containing its own prediction, with no parameter fitted to any of them. That the $c$-scaling survives on a metric with no denominator is the part worth having, because it is the one place in this paper where the equation makes a prediction about a knob the equation was not derived from. Adding a console does not raise goodput a little at every span; it moves a cliff. Staffing and admission control are the two levers the call-center literature puts on the same congestion \citep{ibrahim2018announcements}, and they act differently here: a second console doubles the span the queue can carry, while admission control on a single console converts the cliff into a slope, holding \qGoodOneEightAdmit\% goodput at eight assets where the blind operator has fallen to \qGoodOneEight\%. The latency ceiling shows the same discipline. Because C4 and C5 both sit above $\ell^{\star}$ at the default patience, they are one rung, not two: goodput is \qPatShortCfour\% at both. Raising patience to 30 steps lifts $\ell^{\star}$ past C4's latency and C4 separates (\qPatMidCfour\%) while C5 stays dead (\qPatMidCfive\%); at patience 45 both resolve (\qPatLongCfive\% at C5). The cut-off is a property of the requester's patience, not of the link.
