@@ -3112,7 +3112,7 @@ inflation and the whole of the apparent goodput collapse.
 
 ---
 
-## CR-30 VERDICT (full tier). THE ORACLE ASSUMPTION IS CONSERVATIVE, NOT LOad-BEARING
+## CR-30 VERDICT (full tier). THE ORACLE ASSUMPTION IS CONSERVATIVE, NOT LOAD-BEARING
 
 Job 9446590, 32 blocks x 64 reps, five droop levels from the shipped model to an operator whose
 answers decay all the way to the autonomous baseline at full utilization.
