@@ -3147,3 +3147,73 @@ that metric inflatable by anything that changes the asking. Here the contaminati
 conclusion, since `admit` returns a vehicle to autonomy after one round trip rather than after full
 patience and therefore asks MORE often, so the +0.565 is measured against an inflated denominator
 and the true advantage is larger. `absrate` re-reads it on the absolute rate.
+
+---
+
+## CR-34 VERDICT (partial log, K1/K2 complete). P1 REFUTED, P2 CONFIRMED, AND A CONFOUND I PUT THERE MYSELF
+
+Job 9446609. Judged against the AMENDED predictions, with the instrument's floor at each arm's own
+delivered rate. The rate is recovered exactly from the two logged statistics rather than carried as
+a third metric: `excess = mult / P(lw)` with `P(lw) = lw/(1 - e^{-lw})`, so `P` is known from the
+pair and `lw` follows by bisection.
+
+### P1 is REFUTED
+
+Registered: the jittered memoryless arm's excess is within the bench's error band of the
+scattered-source reading. It is not. Above its floor, mean hold 18:
+
+| n | rate | floor | excess | above floor | gate |
+|---|---|---|---|---|---|
+| 4 | 0.0613 | 0.9752 | 0.9940 | +0.0188 | no |
+| 5 | 0.0731 | 0.9717 | 1.0027 | +0.0310 | **yes**, t=24 |
+| 6 | 0.0883 | 0.9676 | 1.0087 | +0.0411 | **yes**, t=35 |
+| 8 | 0.1231 | 0.9605 | 1.0126 | +0.0521 | **yes**, t=32 |
+| 10 | 0.1608 | 0.9557 | 1.0150 | +0.0593 | **yes**, t=52 |
+
+**Randomizing the hold does not fully scatter the stream, even on a link with no burst structure at
+all.** Nine of ten cells across both mean holds sit gated above the floor. The account's stronger
+half is false and is withdrawn.
+
+### P2 is CONFIRMED, and the discriminating comparison is at matched delivered rate
+
+The GE arm also sits above its floor, +0.019 to +0.080, gated at four of five spans. That alone
+proves nothing, since the memoryless arm does too. The comparison that carries the mechanism is
+GE against memoryless at the SAME delivered rate, which the mean-18 pair supplies to within 2%:
+
+| n | rate (mem / GE) | residual mem | residual GE | gap |
+|---|---|---|---|---|
+| 4 | 0.0613 / 0.0621 | +0.0188 | +0.0190 | +0.0002 |
+| 5 | 0.0731 / 0.0733 | +0.0310 | +0.0375 | +0.0065 |
+| 6 | 0.0883 / 0.0890 | +0.0411 | +0.0511 | +0.0100 |
+| 8 | 0.1231 / 0.1207 | +0.0521 | +0.0748 | +0.0227 |
+| 10 | 0.1608 / 0.1606 | +0.0593 | +0.0798 | +0.0205 |
+
+**Identical at four assets, and the gap opens monotonically with span.** That is the gate adding
+clustering the hold cannot reach, and it is load-dependent: with the console idle there is nothing
+for the gate to hold back, and the more backlog there is when an outage lifts the more the gate
+releases at once.
+
+### The confound, which is mine and which the battery cannot resolve
+
+The floor is a BERNOULLI scatter reference. The actual source is a superposition of n vehicles on
+quasi-periodic decision cycles, which is not Bernoulli and need not read at the Bernoulli reference
+even with nothing synchronized. A superposition of renewal processes converges to Poisson only as n
+grows, and n here is four to ten.
+
+So the residual that refutes P1 may be the retry cohort, or it may be the standing cadence's own
+structure, and this battery cannot tell them apart because **it has no `noretry` arm.** That is a
+design error on my part: every arm in K1 and K2 retries, so there is no cell in which the retry
+cohort is absent by construction.
+
+**The control is registered as CR-34 P6 and runs before any of this enters the manuscript.** A
+`noretry` arm has no retry hold and therefore no retry cohort; whatever excess it shows above the
+floor is the standing cadence and the floor's own misspecification together. P1's refutation stands
+only if the jittered arms sit above the `noretry` arm, not merely above a Bernoulli closed form.
+
+**FALSIFIER for P6: if `noretry` shows the same excess above the floor as the jittered arms, the
+residual is the standing cadence, P1 returns to UNDECIDED, and the two-synchronizer account rests
+entirely on the matched-rate GE-minus-memoryless gap above, which does not depend on the floor at
+all because the floor is common to both channels at matched rate.**
+
+That last clause is worth stating plainly: **the gap table is floor-free and survives whatever the
+control says.** The mechanism is safe; only P1's absolute claim is at risk.
