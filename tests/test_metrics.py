@@ -51,6 +51,8 @@ EXPECTED_KEYS = {
     "queue_depth_mean",
     "operator_goodput", "operator_goodput_late",
     "abandon_queue_frac",
+    "abandoned_per_step",
+    "wasted_frac",
     "abandon_link_frac",
 }
 

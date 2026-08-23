@@ -2009,5 +2009,35 @@ a server with abandoning clients rather than of the scenario, the interface, or 
 independent model with none of our choices produced the same interaction and had to explain it the
 same way. Together the two bracket the span axis from one robot to fourteen.
 
-**Remaining target.** Lewis et al. 2010 (`10.1177/0018720810366859`), 4/8/12 robots with navigation
-binding, still needs source text and is still open.
+**CLOSED, 2026-08-22, and it is the strongest external evidence in the paper.** Lewis et al. 2010
+(`10.1177/0018720810366859`) source text recovered from the Internet Archive after the Pittsburgh
+URL died (`web.archive.org/web/20240423152545/http://www.ischool.pitt.edu/people/lewis/HF-2010.pdf`).
+The prediction was registered blind, before the Results section was read, on the one quantity the
+abstract does not give: the 4-to-8 step.
+
+Full-task victims found: **4.80, 7.06, 4.73** at 4, 8 and 12 robots. `N x Task` interaction
+`F(2,56) = 8.45, p = .001`. Pairwise 4-8 `p < .001`, 8-12 `p = .006`, and **4 against 12 `p = .08`,
+not significant.** Twelve robots performed like four. An attention account predicting monotone
+decline from four is refuted on this dataset, not merely unsupported.
+
+Two further facts, both stronger than what I registered:
+
+1. Full-task area explored rose 129.2 to 285.8 square metres from 4 robots to 12, a factor of 2.2,
+   while victims found moved -0.07. **The fleet more than doubled its productive output and the
+   mission output did not move.** The loss is in the conversion, and conversion happens one
+   interaction at a time at a shared server.
+2. Their perceptual-search arm automates one class of console interaction and the collapse
+   disappears: 6.93, 8.20, 8.33, monotone, `F(1,28) = 27.4, p < .001` against full task. That is
+   this project's supervisory arm, run on human operators in 2010, reported by authors who framed
+   it as a question about which subtask to automate rather than about a queue.
+
+Status in the retrodiction table: `shape, pre-registered`. Not `numerical`, since no interaction or
+neglect time is reported and no `n*` is computable for their setup. Stronger than Giachetti's
+`sign only`, because the SHAPE was predicted (non-monotone, interior peak, endpoints statistically
+equal) and registered before the source was read. Their design has three team sizes, the minimum
+that can show a hump at all, and it shows one.
+
+**What this does to the span axis.** MAGIC (14 robots, unsaturated, `n* = 33`), Lewis (interior
+optimum at 8 of 4/8/12, in people), Giachetti (capacity one, sign only). Three independent sources,
+three scales, one shape. None of them was built to test a queue account and none of them can be
+explained by an attention account that predicts monotone decline.

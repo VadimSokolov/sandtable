@@ -2935,3 +2935,63 @@ be read on `served_per_step` as well, and where the two disagree the absolute ra
 and the ratio is a diagnostic of the asking. That is not a new rule; CR-23R established it for
 retries. What is new is that it was never applied to the queue policies, which change the asking at
 least as much.
+
+---
+
+## CR-35. IS "SERVES LESS, WINS MORE" A MECHANISM OR A STORY I REACHED FOR?
+
+**REGISTERED before the metric is looked at, and registered specifically because I already know
+which answer I want.** CR-31 showed the AIMD rule makes the console serve 4% less on a clear link
+and 12% less under jamming while mission success still gates positive. I rewrote the manuscript
+around "the console is asked forty percent less, does a few percent less work, and wins more
+missions." The mechanism I offered in that rewrite is that the rule suppresses requests that were
+going to abandon anyway, so the service it forgoes is service that would have been wasted. That is
+plausible and unmeasured, which is the condition under which this project has been wrong five times
+this week.
+
+**The discriminator.** If the forgone service is doomed service, then under AIMD the ABSOLUTE
+abandonment rate falls by more, proportionally, than the absolute service rate does. If it falls by
+the same proportion or less, the rule is throttling indiscriminately and the outcome gain has some
+other cause, which I would then have to find or else report the gain unexplained.
+
+This needs absolute quantities, not fractions, for exactly the reason CR-31 just established:
+`abandon_queue_frac` divides by `n_request`, and the rule's whole effect is on `n_request`. Two new
+metrics: `abandoned_per_step` (queue abandonments per step) and `wasted_frac` (queue abandonments
+per request SERVED, which is how much doomed work the console carries per unit of completed work).
+
+**PREDICTION.** `aimd - admit` on `abandoned_per_step` is negative, gated, and larger in relative
+magnitude than the same contrast on `served_per_step`, at n = 8, 10 and 12 on both rungs.
+Equivalently `wasted_frac` falls under AIMD.
+
+**FALSIFIER.** If `abandoned_per_step` falls by the same relative amount as `served_per_step` or
+less, or if `wasted_frac` does not fall, the "suppresses doomed work" mechanism is WITHDRAWN. The
+manuscript then says the rule reduces console load and improves outcomes, which is measured, and
+does NOT say why, which is not. The rewrite's framing survives either way; only its explanatory
+clause is at stake.
+
+**Registered honestly about the incentive.** I want this to hold, because it would turn a
+correction into a mechanism. That is the reason it is written down before the number is read rather
+than after.
+
+---
+
+## CR-36. EVERY GOODPUT CONTRAST IN THE PAPER, RE-READ ON THE ABSOLUTE RATE
+
+CR-31 established that `operator_goodput` is inflatable by any treatment that changes the asking,
+and that the paper's queue policies all do. CR-23R established the identical fact for retries and
+the rule was never carried across, which is the same failure as the Fano window and the MPE
+constant: a rule correctly derived for its first use case and not applied to the second.
+
+`operator_goodput` appears in six places in the manuscript. Three AIMD sites are corrected. The
+remainder include the refund-against-blind contrast that carries this paper's FIRST lever, and
+refunding changes the asking too.
+
+**No prediction is registered, because this is an audit and not a conjecture.** Every arm pair the
+manuscript reports on `operator_goodput` is re-run on `served_per_step`, `requests_per_step`,
+`abandoned_per_step` and `success`, at full tier, and the manuscript reports whichever the absolute
+rate supports. Where the two agree the goodput number stays and gains a confirmation. Where they
+disagree the absolute rate is the finding and the ratio is reported as a diagnostic of the asking.
+
+**The standing rule going forward, which is the durable output of this:** a contrast between arms
+whose request rates differ may not be reported on a ratio metric whose denominator is the request
+count. It must be read on the rate, or the request rates must first be shown equal.

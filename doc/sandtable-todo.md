@@ -1022,3 +1022,86 @@ smoke-tested, queued behind them.
 4. Sobol indices over the queue parameters. Never started.
 5. CR-8 (r-robustness against algebraic connectivity) and C5 (blocked on a convoy operating point),
    both older than the queue line and both still unstarted.
+
+---
+
+## State at 2026-08-22 (late)
+
+### The day's theme: five instrument defects, one genus, closed by a test
+
+Fable named the genus and it is worth stating once because it explains most of what was wrong:
+**a convention correctly derived for its first use case, then carried silently into a second where
+it does not hold.** Five instances, three found today:
+
+1. Nominal jitter width where the floor clipped the support (arms differed 45.7% in mean).
+2. MPE 0.03 calibrated on `[0,1]` metrics near 0.5, applied to a rate near 0.05. Corrected to 6%
+   relative, forward only.
+3. `paired`'s blocks-won counting positives, which is agreement only for a positive effect.
+4. `paired` returning `t = inf` for two identical arms, because the zero-variance branch never
+   asked whether the effect was also zero.
+5. **`fano_window` set to the channel dwell**, on the reasoning that that is where the channel's
+   structure lives. Exactly backwards: it is the scale where the channel's variance is largest and
+   the statistic's power is least. `bench_fano` at that window recovers 0.46 of a known injected
+   cohort and overshoots to 1.31, at `t = 4` where a service-time window returns `t > 300`.
+
+`tests/test_gate_helpers.py` runs every gate helper against negative effects, rate scales, clipped
+supports and null contrasts with hand-computed answers. The genus is closed by a test rather than
+by vigilance.
+
+**And a sixth, of the same genus but larger, found by following a falsifier:** `operator_goodput`
+is `n_serviced / n_request`, and every queue policy changes the asking. CR-23R established this for
+retries and it was never carried to the policies. See below.
+
+### The correction that matters most
+
+**AIMD does not make the console serve more. It makes it serve less.** The +0.268 goodput figure
+was requests falling 40.9% against service falling 4.0%. Mission success still gates positive
+(+0.044 at n=10 clear, +0.033 at n=8 jammed), so the finding survives, but the honest statement is
+"the console is asked forty percent less, does a few percent less work, and wins more missions."
+Corrected in the abstract, the results paragraph and the discussion. CR-35 registers whether the
+forgone service was doomed service; CR-36 re-reads every remaining goodput contrast on the rate.
+
+### Established today
+
+- **CR-32 (Lewis et al. 2010): prediction confirmed, registered blind.** 4.80 / 7.06 / 4.73 victims
+  at 4/8/12 robots, `4 vs 12 p = .08`. See `doc/lit-ideas.md`.
+- **CR-31: falsifier fired.** Plain `admit` serves MORE per step than `refund` (+1.8% at n=12,
+  ungated) while being asked +32.4% more. The goodput inversion was denominator inflation.
+- **CR-27 D7 retracted in part.** The residue's sign flip was matched to `n* = 6.45`, the clear-link
+  no-retry constant, where the table is the mean-18 pair at rung 3 (thresholds 9.14 and 7.33).
+- **The two-synchronizers account (CR-34).** On a memoryless link the retry hold is the only thing
+  setting arrival phase, so randomizing it scatters the stream completely. On a bursty link the
+  channel gate is a second synchronizer downstream of the hold, and it re-clusters what the hold
+  scattered. Operationally: backoff alone is not sufficient on a contested link.
+- **CR-27 P1 status changed to VOID**, not refuted: it was read at `fano_window = 120`, where the
+  bench says the instrument has almost no power. Fable's three salvage prongs come back clean (the
+  power check was committed before its answer was known; the new status is undecided rather than
+  confirmed; the replacement instrument is benched against injected ground truth).
+
+### New instruments, each with its own bench point
+
+- `arrival_multiplicity`, `arrival_peak`, `arrival_rate`, `arrival_excess` (`mult_window`, deployed
+  at 7 = one service time). `arrival_excess` divides by the Poisson value at the arm's own
+  delivered rate, because `E[k | k>=1]` rises with rate for any process.
+- `abandoned_per_step`, `wasted_frac`: absolute abandonment, for the same reason `served_per_step`
+  exists.
+- `tools/bench_fano.py`, `tools/bench_excess.py`: injected-ground-truth benches. **The rule they
+  establish: a deployed instrument setting is registration content and owes its own bench point at
+  the geometry it is deployed at.** The excess bench found that an on-off gate manufactures
+  apparent clustering (a source with no cohort reads 1.026 to 1.032 at the deployed duty cycle, and
+  1.46 at duty 0.5), which amended both CR-34 predictions before the battery landed.
+
+### Running (all at 32 cores on `interactive`, 2h; the 11h shape starves on Priority)
+
+`rate`, `stall`, `teleop_price`, `droop`, `admitrate` (9446587-91), `cohort` (9446609),
+`absrate` (9446698).
+
+### Open
+
+- CR-33: does the residue's flip MOVE with the pair mean? If it sits at 5-6 regardless, both the
+  single-peak account and its null are refuted together.
+- CR-34 P4/P5 (Fable's free signatures): residual grows with dwell L and collapses as L approaches
+  the service time; residual flat in jitter width while memoryless pins at its floor.
+- CR-35: is "serves less, wins more" a mechanism or a story?
+- CR-36: the goodput audit.
+- Backlog: Sobol indices, CR-8, C5.

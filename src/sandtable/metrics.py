@@ -119,6 +119,7 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "wait_p95": 0.0, "queue_depth_mean": 0.0,
            "operator_goodput": 0.0, "operator_goodput_late": 0.0,
            "abandon_queue_frac": 0.0, "abandon_link_frac": 0.0,
+           "abandoned_per_step": 0.0, "wasted_frac": 0.0,
            "served_per_step": 0.0, "requests_per_step": 0.0,
            "arrival_fano": 0.0, "arrival_multiplicity": 0.0, "arrival_peak": 0.0,
            "arrival_rate": 0.0, "arrival_excess": 0.0,
@@ -189,6 +190,17 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
         # differ has to be read here as well, or congestion and denominator inflation are mixed.
         out["served_per_step"] = op.n_serviced / op.total_steps
         out["requests_per_step"] = op.n_request / op.total_steps
+        # Absolute abandonment, for the same reason. `abandon_queue_frac` divides by
+        # `n_request`, so a treatment that suppresses requests can lower the FRACTION while
+        # abandoning exactly as often, or raise it while abandoning less. The rate cannot be
+        # moved that way, and it is the quantity that says whether work a policy forgoes was
+        # work that would have been wasted.
+        out["abandoned_per_step"] = op.n_abandon_queue / op.total_steps
+        # The share of everything the console was asked that ended in a queue abandonment,
+        # expressed against requests SERVED rather than requests made: how much doomed work
+        # the console carries per unit of work it completes.
+        if op.n_serviced > 0:
+            out["wasted_frac"] = op.n_abandon_queue / op.n_serviced
         if op.n_request_late > 0:
             # Final quarter only: whether the team ENDED the mission serving requests, which is a
             # different question from how many it served on average (CR-17).
