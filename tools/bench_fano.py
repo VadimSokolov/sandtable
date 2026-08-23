@@ -68,7 +68,7 @@ def main() -> None:
     print(f"{'channel':>12} {'w':>3} {'F(K=1)':>9} {'F(K=2)':>9} {'recovered':>10} {'t':>8} "
           f"{'agree':>7} {'gate':>5}")
 
-    for window in (1, 2, 4, 10, 120):
+    for window in (1, 2, 4, 7, 10, 20, 40, 60, 120):
         for name in ("memoryless", "on-off"):
             f1, f2 = [], []
             for b in range(a.blocks):

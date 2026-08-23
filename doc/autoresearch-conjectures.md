@@ -2995,3 +2995,63 @@ disagree the absolute rate is the finding and the ratio is reported as a diagnos
 **The standing rule going forward, which is the durable output of this:** a contrast between arms
 whose request rates differ may not be reported on a ratio metric whose denominator is the request
 count. It must be read on the rate, or the request rates must first be shown equal.
+
+---
+
+## CR-37. CR-27 P1 RE-RUN, WINDOW DERIVED FROM THE BENCH POWER CURVE AND REGISTERED BLIND
+
+**Status change first.** CR-27 P1 ("within each mean-matched pair the jittered arm has a lower
+arrival Fano") was reported REFUTED. It was read at `fano_window = 120`, where `tools/bench_fano.py`
+now says the estimator recovers 0.681 of a known injected cohort at `t = 4.7`. A null measured with
+an instrument that noisy is not evidence of absence. **P1's status is changed to VOID: not refuted,
+not confirmed, instrument underpowered at the registered setting.**
+
+Fable's three salvage tests, applied to that change before making it. The power check was committed
+before its answer was known (the bench was written to test the drowning sentence, not to rescue
+P1). The new status is undecided, not confirmed. The replacement instrument is benched against
+injected ground truth rather than tuned to agree with a preferred answer. And instrument
+invalidation is direction-blind: a ledger that has retracted gated positives when a clock broke has
+standing to void a null when a window fails its bench.
+
+**D2's result is untouched.** It killed the strong fade-edge pump on goodput evidence, with no Fano
+window involved anywhere in it.
+
+### The window, chosen from the curve and not from an argument
+
+`bench_fano` at the deployed GE geometry, lambda 0.09, 32 blocks of 1800 steps, cohort K = 2 raising
+the source Fano by exactly 1.000:
+
+| window | memoryless recovered | t | on-off recovered | t |
+|---|---|---|---|---|
+| 1 | 1.001 | 545 | 0.999 | 508 |
+| 4 | 0.976 | 43 | 0.957 | 48 |
+| **7** | **0.979** | **29** | **0.936** | **25** |
+| 20 | 0.866 | 16 | 0.837 | 16 |
+| 60 | 0.856 | 10 | 0.802 | 7.5 |
+| 120 | 0.784 | 6.1 | 0.681 | 4.7 |
+
+Monotone in both columns. **The re-run window is 7 steps, one service time**, and the choice is
+made on two grounds that agree: the bench retains 0.936 recovery at `t = 25` there, five times the
+power of the deployed 120, and it is the mechanism's own timescale rather than the channel's, which
+is the doctrine the whole episode established. It is also the window `arrival_excess` is deployed
+at, so the two instruments read the same scale and can be compared directly.
+
+Window 1 has more power still and is NOT chosen, because a one-step window measures whether two
+requests land on the same tick and the mechanism is about landing inside one service. Choosing the
+highest-power setting rather than the mechanistically correct one would be the same error in the
+opposite direction.
+
+### PREDICTION, registered before any Fano-at-7 number from the simulator is looked at
+
+P1R. On the bursty link, within each mean-matched pair, the jittered arm has a LOWER arrival Fano
+at window 7, gated.
+
+**FALSIFIER.** If no pair shows a gated Fano reduction at window 7 either, P1 moves from VOID to
+REFUTED and stays there, with the instrument objection answered rather than outstanding. That is a
+worse outcome for the two-synchronizer account than the current VOID, which is the point of running
+it.
+
+**Secondary, and the one I actually expect to be informative.** `arrival_excess` at the same window
+is the better instrument, because a Fano is a variance and cannot distinguish many small clusters
+from few large ones. If the two disagree, the excess is the finding and the Fano is reported as the
+weaker statistic that motivated it.
