@@ -1283,3 +1283,86 @@ moving-link experiment and a policy comparison, all in an afternoon.
   forms, moved by software) and the cohort, dwell and Fano apparatus moved out. The companion split
   did half of this already.
 - Backlog: CR-8, C5, CR-46 v2.
+
+## State, 2026-08-23 (evening): the paper grew a lever that is not the console
+
+### Instrument defect 10, and the first one found before its battery rather than after
+
+`behavior._follow` refreshed the behaviour follower's leader track from ground truth on EVERY step:
+its branch read `if follow_mode == "behavior" or got`, so the dead-reckoning lines beneath were
+unreachable, `trk_age` was identically zero and `track_timeout` could never fire. C5 says on-platform
+dead reckoning degrades less than link-based following. That code would have measured telepathy
+against a lossy radio, which nothing can lose to, and C5 would have "held" without ever running its
+mechanism. Tenth of the genus, and it cost nothing because no published number reaches this path.
+
+Both arms now run one estimator (refresh when the channel delivers, dead reckon when it does not,
+hand back to waypoint navigation past `track_timeout`, re-acquire on the next refresh) and differ
+only in the channel: link refreshes on `comms.delivered`, behaviour refreshes when the vehicle ahead
+is within `follow_sense_range`. Topology follows the channel, because a broadcast pose is the column
+leader's (star) and a sensor return is the vehicle ahead (chain); `follow_topology` overrides it so
+the 2x2 that separates channel from geometry can be run.
+
+### C5 was refuted in its original form by a pilot, and what replaced it is better
+
+At C5 the link follower runs on a stale track 55% of the time and its track error is **0.6 m**,
+because an i.i.d. channel at drop rate $p$ has mean outage $1/(1-p)$, which is 2.2 steps at the worst
+rung, and extrapolating a vehicle turning at 20 mrad per step over two steps is accurate to under a
+metre. Mission success does not move at all.
+
+The missing variable is outage DURATION, not drop rate. Leading order, a track $a$ steps stale is
+wrong by about $v \omega a^2 / 2$: the square is the whole point. Under Gilbert-Elliot at the same
+mean rate, pilot track error runs 0.19, 1.18 and 2.81 m at mean bad-run 4, 20 and 60.
+
+And the mission's own sensitivity is separately measurable: sweeping `formation_spread` on the
+scripted path, success runs 0.906, 0.781, 0.812, 0.781, 0.562 at 10, 40, 120, 300 and 600 m. The
+mission responds to column geometry at HUNDREDS of metres; the channel moves geometry by ONES. The
+transfer needs about 50 steps of continuous outage, which an i.i.d. ladder never produces and a
+bursty channel produces routinely. That is C1's sufficient-statistic claim moved from the console to
+the platform, and it comes with a sponsor requirement: **specify a follow radio on its worst-case
+outage duration, not on its packet delivery ratio.** Registered as CR-55, running as 9449505.
+
+### The effort identity was in the wrong unit, and the reviewer caught it
+
+The four bins a claimed slot exits through counted JOBS. That is a faithful effort measure only on a
+metronome: above `service_cv = 0` a console admitting on a deadline test finishes SHORT jobs and
+refuses long ones, so jobs per busy step rises with nothing added to the console. Time cannot be
+selected. The bins are now also accumulated in console-steps (`busy_serviced`, `busy_stale`,
+`busy_lost`, `busy_late`, `busy_total`), and `busy_total` is the utilization reached by summing the
+four fates. Measured at twelve assets, cv = 0.5: foresight runs 0.1772 jobs per step against 0.1439
+blind while both occupy the console 98% of the time, because its served decisions take 5.54 steps
+against a population 6.67. The honest admitting console already gets part of that free through
+failure: 5.85 served against 6.76 worked. Also closed the reservation console's effort, which
+claimed a slot under `blind` and counted it in no bin at all.
+
+### The discernment result was published backwards, and now has its nulls
+
+`admit_foresight` is an oracle, so +0.0764 is a ceiling. `admit_acuity` fills it in as a probability
+(sees the draw w.p. $p$, else the mean), bit-identical at both ends, and the pilot is strikingly
+linear: 0.1220, 0.1377, 0.1501, 0.1648, 0.1740 at $p$ = 0, .25, .5, .75, 1.
+
+The published sentence said a backlog bound SUBSTITUTES for triage. Its own numbers say the reverse:
+bounded-and-triaging delivers 0.1545 where unbounded-and-triaging delivers 0.1949. The bound
+forecloses most of discernment; what it does do is lift the console that cannot triage, 0.1185 to
+0.1413. Corrected in the manuscript and in the ledger. The arms were also mislabelled: they carry a
+deadline test as well as a counter, so the ladder's counter-only rung was never measured against
+triage, and on a blind console the foresight switch is inert by construction.
+
+Two admissible nulls now exist. `admit_quantile` tests against a q-quantile budget rather than the
+mean, which needs a number and not a skill; it is NOT information-free, because it uses the
+requester's deadline. `admit_refuse` is the real control: refuse a fixed fraction at random, same
+lever, zero information. Pilot decomposition: tightness alone about 5% of the gain, deadline-aware
+budgeting about a third, the remaining two thirds requires knowing this request's difficulty. The
+discriminator worth having is that foresight serves MORE while abandoning LESS (0.0915 against
+0.1326), which no tightening can do. Registered as CR-56, running as 9449506, with a falsifier that
+takes the section out of the paper if random refusal recovers more than half the gain.
+
+### Running
+
+`st-follow` 9449505 (CR-55), `st-acuity` 9449506 (CR-56), `st-capacity2` 9449430 (CR-54 P1/P6/P7).
+
+### Open
+
+- CR-54's identity, utilization invariance and the starvation correction, from 9449430. The
+  manuscript states the starvation result qualitatively and needs generated macros once it lands.
+- Whether the discernment section stays in the manuscript at all, which CR-56's nulls decide.
+- Backlog: CR-8, CR-46 v2.
