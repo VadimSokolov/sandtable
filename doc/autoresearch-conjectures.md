@@ -3217,3 +3217,29 @@ all because the floor is common to both channels at matched rate.**
 
 That last clause is worth stating plainly: **the gap table is floor-free and survives whatever the
 control says.** The mechanism is safe; only P1's absolute claim is at risk.
+
+### The metric-selection worry, settled by checking rather than by arguing
+
+Having just corrected a headline that rested on a contaminated metric, the obvious next failure is
+over-weighting whichever metric survived. The check is whether the two uncontaminated metrics agree,
+and they do, completely. Full stack (`admit` + AIMD) against `blind`:
+
+| rung | n | success (pts) | blue_loss_frac (pts) |
+|---|---|---|---|
+| clear | 4 | +0.0, null | (null) |
+| clear | 6 | +6.2, gated | |
+| clear | 8 | **+27.3**, t=20.9 | **-18.4**, t=-25.3 |
+| clear | 10 | +19.8 | -16.4 |
+| clear | 12 | +12.1 | -11.5 |
+| jam | 8 | +11.8 | -9.4 |
+| jam | 10 | +16.6 | -12.5 |
+
+Same sign, same shape, same peak span, gated at the same spans, null at the same one. And **success
+gives the LARGER number** (+27.3 against -18.4), so leading with it is not a retreat to the
+surviving metric: it is leading with the number that is both bigger and more diagnostic. Reporting
+both is therefore not having it both ways, it is reporting a result two independent measurements
+confirm. Abstract and results now lead with success and carry losses alongside.
+
+The two are genuinely separate measurements and the manuscript says why: `success` thresholds the
+assault, `blue_loss_frac` counts the force that does not come back, and both are fractions of what
+was FIELDED rather than of what was requested, which is the property that makes them immune.
