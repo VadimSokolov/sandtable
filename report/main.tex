@@ -61,37 +61,40 @@
 Designing human-machine teams for contested ground operations means choosing how operators control
 robotic assets, which routes formations take, and how much reconnaissance to field, under
 communications an adversary can degrade. ProjectGL, the Army's Government-furnished high-fidelity
-ground simulation framework, is the authoritative engine for that work, but a mission runs at or
-near real time, so broad design searches are impractical. This paper builds the fast tier of a
-two-tier workflow in which a cheap model explores many designs and ProjectGL confirms only the ones
-that matter. \sandtable{} keeps the effects that change teaming decisions, which are movement,
-sensing, engagement, operator attention and contested communications, and drops the vehicle physics
-and rendering, so a full mission finishes in about a tenth of a second.
+ground simulation framework, is authoritative for that work but runs at or near real time, so broad
+design searches are impractical. This paper builds the fast tier of a two-tier workflow in which a
+cheap model explores many designs and ProjectGL confirms only the ones that matter. \sandtable{}
+keeps the effects that change teaming decisions, which are movement, sensing, engagement, operator
+attention and contested communications, and drops the vehicle physics and rendering, so a full
+mission finishes in about a tenth of a second.
 
 Its central finding is a sufficiency result. An operator that never errs, never slows and never
 tires still produces the span-of-control pathologies usually attributed to human attention, because
-the pathologies come from the queue its clients form. The operator is a server whose clients abandon
-it, and one that never learns it has been abandoned spends service time producing answers nobody is
-waiting for. Attention arguments alone therefore cannot set span doctrine, and the effective span
-moves under levers that touch no operator at all. Two closed forms locate the failure, a collapse
-span and a ceiling on serviceable latency, and the simulator obeys both with nothing fitted.
+they come from the queue its clients form: a server whose clients abandon it, and which never learns
+it has been abandoned, spends service time producing answers nobody is waiting for. Attention
+arguments alone therefore cannot set span doctrine, and effective span moves under levers that touch
+no operator at all. Two closed forms locate the failure, a collapse span and a ceiling on serviceable
+latency, and the simulator obeys both with nothing fitted.
 
 Because effective span is a queueing outcome it moves under software, and we price a ladder of
 console policies that differ in what the message must carry rather than in mechanism: bound the
 backlog with a counter, cap the request's age, or refuse on the requester's own deadline. The
-recommendation is conditional on the link and it inverts inside the ladder this study sweeps. The
-cheapest rung is free while the link is good and gives up a gated margin once it degrades, because a
+recommendation is conditional on the link and inverts inside the ladder this study sweeps, because a
 length bound is a proxy for a request's age and the proxy fails as latency eats the deadline. The
 console's total effort is the same under every one of these policies; what they change is its
-composition, so no amount of working a saturated operator harder is available as a lever.
+composition, so working a saturated operator harder is not available as a lever.
 
 The account also says what a span-of-control experiment must declare before its numbers can be
 compared with anyone else's. Sweeping span with the defending force fixed raises mission success;
-sweeping the identical span with the force ratio held reverses the sign. And any span metric
-expressed as a ratio of requests served to requests made can be inflated by a policy that changes
-the asking, which the policies worth recommending all do. Route choice under fire, reconnaissance
-cueing under jamming, and counter-swarm air defense are reported as further studies on the same
-engine. \sandtable{} is the fast search companion to ProjectGL for Army mission engineering.
+sweeping the identical span with the force ratio held reverses the sign. A more portable version of that failure recurs
+across four subsystems: a metric measured against a reference the treatment itself moves cannot
+audit that treatment. Mean backlog and console utilization rank two scheduling disciplines as
+equivalent or backwards where the share of a vehicle's own requests ever answered separates them by
+a factor of \KpClearAnsRatio{}; station-keeping error cannot see whether the commanded geometry it
+is measured against is survivable; and packet delivery ratio is identical across a change in burst
+structure that moves tracking error by two orders of magnitude. In each case a metric referenced to
+something the treatment does not set was already available and cheaper than a new sensor. Route choice under fire, reconnaissance cueing under
+jamming, and counter-swarm air defense are reported as further studies on the same engine.
 \end{abstract}
 
 \section{Introduction}
@@ -135,6 +138,7 @@ the band covers, mission success moves by \qBandSuccess{} on the initial conditi
 that discards work it cannot finish shrinks that to \qBandRefund{}, and a backoff floor of
 \qBandFloor{} steps closes the band outright (Section~\ref{subsec:band}).
 \item A measurement result that applies to any span-of-control study reporting a service ratio, and which cost this paper a headline before it was found. Operator goodput, serviced over requested, has a denominator that every policy worth recommending moves: explicit admission control returns a refused vehicle to autonomy after one round trip instead of after its full patience, so it is asked \rtAskedAdmitOverRefundClearTwelve{} more often at twelve assets while serving \rtServedAdmitOverRefundClearTwelve{}, and a client-side rate rule suppresses requests by construction and so flatters itself by the same arithmetic in reverse. Read on absolute rates the rate rule serves \rtServedAimdOverAdmitClearTwelve{} rather than more, and it is the offered load that falls, by \rtAskedAimdOverAdmitClearTwelve{}. A contrast between arms whose request rates differ cannot be reported on a ratio whose denominator is the request count (Section~\ref{subsec:queue}).
+\item That failure turned out not to be about ratios, and the general form is the paper's most portable result because it costs nothing to apply. A metric measured against a reference that the treatment itself moves cannot audit that treatment. Five instances are gated here, in four different subsystems, and in each the metric is correct about what it measures. Operator goodput is referenced to the asking, which every policy worth recommending changes. Mean backlog is referenced to the queue, which a scheduling discipline reshapes: it ranks newest-first \emph{worse} than oldest-first, \KpClearBackLifo{} against \KpClearBackFifo{}, while the share of its own requests that a vehicle ever gets answered ranks it \KpClearAnsRatio{} times better. Operator utilization is referenced to the console's clock and puts those same two policies at \KpClearUtilLifo{} against \KpClearUtilFifo{}, which is the same console to four figures. Station-keeping error is referenced to the commanded station, so it cannot see whether the commanded geometry is survivable, and it orders two failure modes backward: \FoDisCmdErr{}~m of error scores \FoDisCmdSuc{} and \FoDisEstErr{}~m scores \FoDisEstSuc{}. Packet delivery ratio is referenced to the packet stream and is identical by construction across a change in burst structure that moves mean track error by a factor of \FoBurstRatio{}. The constructive half is that the metrics which survive are the ones referenced to something the treatment does not set, and in every case here one was already available and cheaper than a new sensor (Sections~\ref{subsec:queue} and \ref{subsec:attrib}).
 \item Three decision-relevant findings for Army human-machine teaming, the moving control optimum,
 the speed-survivability frontier of route choice (Section~\ref{subsec:uc3}), and the EW-induced collapse of a sensor-to-shooter chain (Section~\ref{subsec:uc5}), each generated from \nRep{}-replication Monte-Carlo studies with confidence intervals.
 \item An analytic validation: \sandtable{}'s emergent attrition matches Lanchester's square law to
