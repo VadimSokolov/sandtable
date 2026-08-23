@@ -166,8 +166,15 @@ def _behavior_targets(ent: Entities, scn: Scenario, bhv, tx_new, ty_new):
             ruy = ent.speed[ref] * np.sin(ent.heading[ref]) / rv
         else:
             rux, ruy = 1.0, 0.0
-        bhv.st_err_sum[i] += float(np.hypot(ent.x[i] - (ent.x[ref] - rank * gap * rux),
-                                            ent.y[i] - (ent.y[ref] - rank * gap * ruy)))
+        ex = ent.x[i] - (ent.x[ref] - rank * gap * rux)
+        ey = ent.y[i] - (ent.y[ref] - rank * gap * ruy)
+        bhv.st_err_sum[i] += float(np.hypot(ex, ey))
+        # The same error resolved onto the reference's heading and its normal. A vehicle that is
+        # merely late is displaced ALONG the column and is still on the route; one that is off to
+        # the side has left it. The scalar station error adds the two in quadrature and cannot tell
+        # a programme which of them its autonomy stack is producing.
+        bhv.st_along_sum[i] += abs(ex * rux + ey * ruy)
+        bhv.st_cross_sum[i] += abs(-ex * ruy + ey * rux)
         bhv.st_steps[i] += 1
 
     held = np.nonzero(bhv.holding)[0]

@@ -79,6 +79,8 @@ EXPECTED_KEYS = {
     "fan_out",
     "track_err_mean",
     "station_err_mean",
+    "station_along_mean",
+    "station_cross_mean",
     "track_stale_frac",
     "follow_lost_frac",
     "turn_rate_mean",

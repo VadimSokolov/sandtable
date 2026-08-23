@@ -133,6 +133,19 @@ class Operator:
     # INFORMATION; anything this arm reproduces was never information, only tightness, and at
     # saturation tightness alone is worth a great deal. Zero takes no draw.
     admit_refuse: float = 0.0
+    # A console that sees the draw does not see it exactly. These two describe the residual error of
+    # whatever produced the difficulty estimate, and they are deliberately separated because they
+    # are separately procurable: `admit_bias` is a multiplicative calibration offset the console
+    # cannot invert (it does not know it is there), `admit_sigma` is the log-scale spread that is
+    # left after any offset has been removed. At (1.0, 0.0) the estimate is the realization and no
+    # randomness is drawn, so every earlier foresight number reproduces bit for bit.
+    admit_bias: float = 1.0
+    admit_sigma: float = 0.0
+    # The honest rule-repair, and the control that decides whether an inflated estimate is a finding
+    # or a strawman. A console that knows its slot is scarce does not need a wrong estimate to act
+    # on scarcity: it can price the slot directly by refusing anything longer than a cap. Admission
+    # then needs BOTH the deadline test and the cap, with an unbiased estimate in each. Zero is off.
+    admit_cap: float = 0.0
     queue_model: str = "reserve"   # "reserve" | "buffer"
     # A real console's backlog is bounded. `queue_capacity < 0` leaves it unbounded, which is the
     # default and the regime a newest-first discipline is most flattered by, since it never has to
@@ -298,6 +311,9 @@ def build_c2(scn: Scenario, ent: Entities,
         admit_acuity=float(scn.params.get("admit_acuity", 0.0)),
         admit_quantile=float(scn.params.get("admit_quantile", 0.0)),
         admit_refuse=float(scn.params.get("admit_refuse", 0.0)),
+        admit_bias=float(scn.params.get("admit_bias", 1.0)),
+        admit_sigma=float(scn.params.get("admit_sigma", 0.0)),
+        admit_cap=float(scn.params.get("admit_cap", 0.0)),
         q_operator=q_operator_eff,
         q_auto=q_auto,
         q_fallback=float(scn.params.get("q_fallback", 0.50)),
@@ -421,6 +437,22 @@ def _sees_the_draw(op: "Operator", rng: np.random.Generator) -> bool:
     if op.admit_acuity <= 0.0:
         return False
     return bool(rng.random() < op.admit_acuity)
+
+
+def _observed(op: "Operator", svc: float, rng: np.random.Generator) -> float:
+    """The service time the console reads off its difficulty estimate, not the one it will spend.
+
+    The lognormal factor is median-normalised rather than mean-normalised so that `admit_sigma`
+    moves spread without dragging the centre with it; `admit_bias` is then the only thing that
+    moves the centre, which is what makes the two separable in an experiment. Neither draw happens
+    at the identity values, so a console with a perfect estimator consumes exactly the randomness
+    it consumed before this function existed.
+    """
+    if op.admit_sigma > 0.0:
+        svc *= float(np.exp(op.admit_sigma * rng.standard_normal()))
+    if op.admit_bias != 1.0:
+        svc *= op.admit_bias
+    return svc
 
 
 def _admit_budget(op: "Operator") -> float:
@@ -706,9 +738,14 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
             # capability into an apparent argument that erratic operators do better.
             svc = _service_time(op, rng)
             reply = start + svc + lat
-            test = reply if _sees_the_draw(op, rng) else start + _admit_budget(op) + lat
+            seen = _observed(op, svc, rng) if _sees_the_draw(op, rng) else None
+            test = start + (seen if seen is not None else _admit_budget(op)) + lat
+            # The cap reads the SAME estimate the deadline test reads, so a capped console with an
+            # unbiased estimator is honest twice over: it is not wrong about anything, it has simply
+            # been told that a slot has a price. A console with no estimate cannot apply one.
+            capped = op.admit_cap > 0.0 and seen is not None and seen > op.admit_cap
             blind_refusal = op.admit_refuse > 0.0 and rng.random() < op.admit_refuse
-            if (test > deadline or blind_refusal) and op.queue_policy != "blind":
+            if (test > deadline or blind_refusal or capped) and op.queue_policy != "blind":
                 # Head-of-line admission control against the delay this console actually has. No
                 # service time is claimed, so the next request is considered on the same step.
                 op.n_abandon_queue += 1

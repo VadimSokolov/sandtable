@@ -577,9 +577,14 @@ version is the intuitive one. A mean backlog counts requests that never leave. I
 requesters who never get an answer, and under newest-first those are not the same set, because a
 requester whose first request is buried asks again and its new request lands on \emph{top} of the
 pile it was buried under. Measured directly, as the fraction of assets that asked at least once and
-were never once answered, newest-first starves nobody at all and neither do the bound or admission
-control, while oldest-first abandons most of the force and random order abandons half of it. The backlog under newest-first is memory, not harm, and the honest
-statement of its price is that it holds a large dead queue rather than that it starves a tail. The substitution is
+were never once answered, oldest-first abandons \KpClearStarveFifo\% of the force at sixteen assets
+and random order abandons \KpClearStarveRand\%, while newest-first, the bound and admission control
+between them strand at most \KpClearStarveFair\%. The harm arrives with the collapse and not before:
+no policy strands anybody through six assets, and at eight oldest-first is already stranding
+\KpClearStarveOnsetHi\%. Jamming does not reorder the column, it only sharpens it, to
+\KpJamStarveFifo\% against \KpJamStarveFair\% at C3. The backlog under newest-first is memory, not
+harm, and the honest statement of its price is that it holds a large dead queue rather than that it
+starves a tail. The substitution is
 measurable rather than argued: once the console can refuse, reordering what it accepted is worth
 \LvSubEight{} served per step at eight assets and \LvSubSixteen{} at sixteen, negative at every span
 in the sweep and equivalent to zero at every one. Two levers aimed at the same waste do not add.

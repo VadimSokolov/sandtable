@@ -132,6 +132,7 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "wait_p95": 0.0, "queue_depth_mean": 0.0,
            "operator_goodput": 0.0, "operator_goodput_late": 0.0,
            "abandon_queue_frac": 0.0, "abandon_link_frac": 0.0,
+           "station_along_mean": 0.0, "station_cross_mean": 0.0,
            "abandoned_per_step": 0.0, "wasted_frac": 0.0,
            "served_per_step": 0.0, "requests_per_step": 0.0,
            "arrival_fano": 0.0, "arrival_multiplicity": 0.0, "arrival_peak": 0.0,
@@ -171,6 +172,8 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
         st_n = float(bhv.st_steps.sum())
         if st_n > 0.0:
             out["station_err_mean"] = float(bhv.st_err_sum.sum()) / st_n
+            out["station_along_mean"] = float(bhv.st_along_sum.sum()) / st_n
+            out["station_cross_mean"] = float(bhv.st_cross_sum.sum()) / st_n
         out["intervention_rate"] = out["interventions"] / (n_ground * hours)
         held = float(bhv.hold_steps.sum())
         live = float(bhv.alive_steps.sum())

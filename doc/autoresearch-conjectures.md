@@ -6296,3 +6296,268 @@ five sixths of the time at no measurable cost. By the project's own test, that a
 change a mission outcome is not a design variable, the follow behaviour is not one here, and the
 scenario that would make it one has to be named before the layer is worth further work: a mission
 whose success depends on the force being concentrated when it arrives rather than on its arriving.
+
+## CR-59. THE ESTIMATOR REQUIREMENT: WHAT A DIFFICULTY ESTIMATE HAS TO BE GOOD AT
+
+Registered before its battery. CR-56 priced difficulty information and found a closed form for it,
+$\mathrm{VoI} = \mu\,cv$, measured against a console that either sees the realization exactly or
+sees nothing but the population mean. Both ends are fictions. What a sponsor actually procures is an
+estimator with a residual error, and the question a procurement document has to answer is which part
+of that error to pay to remove. This conjecture separates the error into the two parts that are
+separately purchasable and asks which one is binding.
+
+`admit_bias` is a multiplicative calibration offset the console does not know is there, so it cannot
+divide it out. `admit_sigma` is the log-scale spread that remains after any offset has been removed.
+At $(1.0, 0.0)$ the estimate is the realization and every CR-56 number reproduces bit for bit.
+
+**The mechanism the predictions come from, which is visible in the code and not inferred.** A refusal
+costs the console no service time at all: `n_abandon_queue` increments and the loop `continue`s to
+the next request on the same step. An admitted job that overruns its deadline costs the full draw:
+the slot is claimed, `t_worked_late` accumulates it, and nothing is delivered. The two errors an
+estimator can make are therefore priced differently by construction, and the price of a false
+refusal is the opportunity cost of the freed slot, which is zero when there is nothing else to serve.
+
+- **F1. The optimum is pessimistic.** Sweeping $b \in \{0.6, 0.8, 1.0, 1.25, 1.6, 2.0\}$ at
+  $\sigma = 0$, $cv = 0.5$, sixteen assets, served per step has an interior maximum at $b^\star > 1$.
+  FALSIFIER: the gated maximum sits at $b \le 1.0$, in which case the asymmetry argument above is
+  wrong about this console and the whole conjecture is withdrawn.
+- **F2. The pessimism is a property of the LOAD, not of the estimator.** At four assets, where the
+  console is not saturated and a freed slot buys nothing, $b^\star = 1$. FALSIFIER: any $b > 1$ beats
+  $b = 1$ at four assets at full tier. This is the prediction that makes the result a requirements
+  statement rather than a calibration constant: a vendor cannot be given a target without being told
+  the span of control.
+- **F3. Spread and offset are substitutes, in one direction only.** $b^\star$ increases with
+  $\sigma$: an estimator that cannot be made precise should be deliberately shifted high, because
+  its own spread manufactures overruns. Registered at $\sigma \in \{0, 0.35, 0.7\}$. FALSIFIER:
+  $b^\star(0.7) \le b^\star(0)$.
+- **F4. Only spread is binding.** At its own best offset, an estimator with $\sigma = 0.7$ recovers
+  most of the value that $\sigma = 0$ recovers at $b = 1$. Registered: the re-tuned $\sigma = 0.7$
+  console lands within one third of the CR-56 acuity gain of the exact console. FALSIFIER: it lands
+  below half, in which case offset does not compensate spread and the two errors are not tradeable.
+- **F5, the whole-conjecture falsifier.** If the served-per-step surface over $(b, \sigma)$ is flat
+  to within the gate's rate floor of 0.0090 at every load in the sweep, then estimator calibration
+  is not a design variable in \sandtable{} by the project's own test, and CR-59 is retracted with a
+  recorded negative: the paper then says that the value of triage is insensitive to how the triage
+  is produced, which is a stronger and cheaper recommendation than any calibration target.
+
+**What is NOT claimed.** That $b^\star$ transfers to a real operator. The asymmetry is a property of
+this console's accounting, and the accounting is the model's, not the world's. The transferable
+object is the SHAPE: which error is free, which is binding, and what sets the trade.
+
+**Added to CR-59 after a four-block local pilot, and registered before the full battery.** The pilot
+put served per step at sixteen assets at 0.1949 for $b = 1$, 0.2186 at $b = 2.5$, 0.1700 at $b = 4$
+and 0.0116 at $b = 12$, and at four assets at 0.0873, 0.0747, 0.0409 and 0.0022 for the same ladder.
+That is F1 and F2 in the same table at pilot power, so the full battery is confirmatory for those
+two and the registered content moves to what the pilot cannot settle.
+
+- **F6. THE ACCURACY PARADOX, STATED AS A MEASUREMENT.** An estimator's accuracy in its own units is
+  not monotone in the mission quantity it feeds. The console holding the most accurate possible
+  estimate, the realization itself, is beaten at sixteen assets by a console whose estimate is wrong
+  by a factor of 2.5 on every single job, by more than the gate's rate floor of 0.0090. FALSIFIER:
+  the full-tier gap is inside the floor. This is the sentence the battery exists for, and it is the
+  same genus as CR-57 D1: a component-level metric that a programme would naturally write into a
+  specification is not monotone in the system-level metric the mission is scored on.
+- **F7. THE MECHANISM IS LENGTH SELECTION, AND THE CR-56 W1 INSTRUMENT READS IT.** A feasibility
+  test with an inflated estimate is a shortest-job filter wearing a deadline's clothes, so
+  `svc_serviced_mean` must fall monotonically with $b$ over the rising region while `busy_total`
+  stays equivalent: the console is not working more, it is working shorter. FALSIFIER: served per
+  step rises while `svc_serviced_mean` is flat to within its own noise, which would put the gain
+  somewhere other than job selection and would break the instrument's claim to read exactly that.
+- **F8. TIGHTER IS NOT THE SAME AS TIGHTER-AND-SELECTIVE.** `admit_refuse` at its own best fraction,
+  which is CR-56's information-free null, must not reach the best $b$. Registered: it recovers under
+  a third of the bias gain. FALSIFIER: it reaches two thirds or more, in which case the gain is an
+  admission-rate artefact and F6 is a restatement of B6 rather than a new result.
+
+**The dual reading, which is why the knob is worth having in the model.** $b$ is an estimator's
+uncorrectable calibration offset when the console does not know it is there, and it is the console's
+own commanded safety factor when it does. The two readings share every number and separate only in
+what a programme would do about them: procure a different estimator, or write a different rule.
+
+## CR-60. THE DISSOCIATION HAS A DIRECTION, AND IT RESCUES THE METRIC INSTEAD OF DISCARDING IT
+
+Registered with its pilot disclosed. CR-57 D1 established that station-keeping error does not predict
+mission outcome and left it there, as a bare null. A bare null is the weakest thing an experiment can
+return, and I let it stand for two rounds without asking the obvious follow-up: WHICH PART of the
+error is the mission blind to.
+
+Station error is $\|\mathbf{p}_i - \mathbf{s}_i\|$, a quadrature sum of two displacements that mean
+entirely different things. Resolved onto the reference's heading, the along-track component says the
+vehicle is LATE on a route that is still the route. The normal component says it has LEFT it. A
+scalar norm adds them and a programme reading the scalar cannot tell which its autonomy stack is
+producing. `station_along_mean` and `station_cross_mean` are added at the same accumulation site as
+`station_err_mean` and cost one dot product each. `fleet_spread_mean` is added in the sim loop as an
+independent check with no commanded geometry in it at all: the RMS distance of the living blue
+assault force from its own centroid.
+
+**The pilot, 24 replications, supervisory star follow at eight assets, disclosed before the battery.**
+
+    arm        st_err    along    cross    fleet    succ
+    base         13.1     11.4      3.0     92.3   0.958
+    out80       212.2    204.4     22.9    120.0   0.917
+    out320      222.3    194.0     53.8    124.3   0.833
+    sp60         18.0     14.3      6.3    132.7   0.917
+    sp300       191.2     97.8    145.3    565.3   0.667
+    sp600       816.1    315.4    724.4   1103.1   0.375
+
+Station error inverts across the two families exactly as CR-57 said: out320 carries 222 m and scores
+0.833, sp300 carries 191 m and scores 0.667. The cross-track component does not invert anywhere.
+
+- **J1. Cross-track error orders mission outcome and the scalar does not.** Registered: across the
+  pooled six-arm set at full tier, the cross ordering has ZERO inversions against success, and the
+  scalar has at least one. FALSIFIER: any inversion in the cross ordering, or none in the scalar's.
+- **J2. The ordering is not the gap in disguise.** Within the outage family the commanded gap is
+  FIXED, so any correlation there cannot be the commanded geometry. Registered: cross rises
+  monotonically with outage length at fixed gap while success falls, at full tier. FALSIFIER: cross
+  flat within the family, in which case J1 is a re-reading of the spread knob and nothing more.
+- **J3. THE MECHANISM, AND THE ONE THAT CAN FAIL WHILE J1 HOLDS.** Cross-track error costs mission
+  outcome because it takes vehicles out of a survivable corridor. Remove the corridor and the
+  penalty must shrink. Registered: the success cost per 100 m of cross-track error at least halves
+  from the banded terrain to open terrain. FALSIFIER: it does not fall, in which case cross-track
+  error is predictive here and the corridor explanation is not established, and only the correlation
+  may be written.
+- **J4. The constructive claim, stated as an acceptance rule.** A programme that accepts an autonomy
+  stack at station error under 250 m accepts sp300 at 0.667 and cannot distinguish it from out320 at
+  0.833. Registered: some cross-track threshold separates every arm above 0.83 from every arm below
+  it, at full tier, across both families. FALSIFIER: no single threshold does.
+- **J5. The independent instrument.** `fleet_spread_mean` has no commanded geometry in it and is
+  cheaper to instrument on a real range than a resolved error. If it orders as cleanly as cross
+  does, it is the better recommendation; the pilot already shows it inverting once (out320 at 124.3
+  scoring 0.833 against sp60 at 132.7 scoring 0.917), so the registered expectation is that cross
+  wins and dispersion is reported as the runner-up.
+
+**What this changes about CR-57.** D1 stays true and stops being the finding. The finding becomes
+that the tracking metric a programme would naturally specify is a quadrature sum over a direction the
+mission is not indifferent to, and that the fix is a projection rather than a new sensor.
+
+## CR-59 AND CR-60 AMENDED ON REVIEW: THE DEFENCE WAS A REBRAND AND THE PROSE WAS WRONG
+
+Round 28. Both amendments are the reviewer's and both are conceded in full.
+
+**CR-59. My defence of F6 does not survive.** I wrote that the console "does not know it is doing
+shortest-job-first, it believes it is doing a feasibility test." What a console believes is not a
+measurable quantity, and a claim that rests on it is a rebrand. The attack that actually kills the
+sentence is not Conway 1967 at all, it is the operating point: at $\sigma = 0$ the console's ranking
+of jobs is EXACT, so a multiplicative factor on a threshold rule slides the operating point along a
+perfect ROC curve and destroys no information whatsoever. "The most accurate estimator is beaten"
+then reads as "a default threshold is beaten by a re-tuned threshold," which is one line from any
+referee and correctly so.
+
+What survives is better than what I registered. **$b$ is the omitted shadow price of a saturated
+console.** The feasibility test `start + svc + lat <= deadline` prices the slot at zero: it asks
+whether this job fits and never asks what the slot is worth to the next job. At saturation the slot
+has an opportunity cost, and $b$ is a price knob wearing an error costume. The pilot already carries
+the signature: the ladder is ASYMMETRIC about $b = 1$, with optimism at $b = 0.6$ costing 0.0808 and
+matched pessimism at $b = 1.6$ paying 0.0237, which is the free-refusal against paid-overrun
+asymmetry showing up as a price; and the four-asset column peaks at $b = 1$, which is a shadow price
+of zero at an idle server. Registered additions, all falsifiable:
+
+- **F9.** $b^\star(n)$ crosses 1 at the collapse span, the same $n^\star$ the queue law gives.
+  FALSIFIER: it crosses somewhere else.
+- **F10.** At four assets the ladder is FLAT below $b = 1$ rather than falling, because an idle
+  server loses nothing by admitting a long job. FALSIFIER: a gated fall.
+- **F11.** At $cv = 0$ the ladder degenerates to a step: every job is the same length, so the price
+  knob either admits all or refuses all. FALSIFIER: an interior optimum at $cv = 0$.
+
+**THE ONE CONTROL, and F6 is held out of the manuscript until it lands.** The honest rule-repair is a
+console that admits only if the job is BOTH feasible and shorter than a cap, using an unbiased
+estimate: it is wrong about nothing and has simply been told a slot has a price. `admit_cap`
+implements exactly that. If the capped console at its best cap recovers the inflated console's
+0.2186, F6 dies as worded and becomes a rule-repair sentence, which is a smaller but honest finding.
+If it does not, the residue is a real coupling between the cap and the deadline slack and that is its
+own result. Without the arm, "you beat a strawman rule" ends the discussion, so nothing about F6
+reaches the manuscript before it runs.
+
+**The T&E sentence that is not a rebrand**, and it comes off the $b \times \sigma$ ridge rather than
+the $b$ ladder alone: an accuracy specification conflates DISCRIMINATION, which is expensive and
+monotone in what it buys, with CALIBRATION, which given a fixed decision rule is a free constant and
+is NOT monotone. The right report is the frontier value at the best $b$ for each $\sigma$.
+**Rider, which must sit beside any version of F6:** $b = 2.5$ starves long jobs by design. Throughput
+bought this way is bought from a subpopulation, and CR-54's own fairness column is the place to say
+so.
+
+**CR-60. Two corrections, one of which is a prose error I would have shipped.**
+
+First, the reference-frame blindness is DEFINITIONAL. Station error is measured against the commanded
+station, so it cannot see the commanded geometry; that needs no arms and must be labelled as an
+identity rather than a result. What the arms establish is that the blindness BITES, and specifically
+that it orders the two failure modes BACKWARD: 172.6 m at 0.4341 against 215.7 m at 0.8643.
+
+Second, my sentence that the spread arm is "holding its slot well" is simply wrong. 172.6 m of error
+against a 300 m gap is 57 percent of the commanded spacing, so that arm has BOTH failure modes at
+once. The exhibit is not that one arm tracks well and the other badly, it is that the scalar cannot
+RANK them.
+
+**The genus has a name and this is its third instance: REFERENCE SET BY TREATMENT.** Operator goodput
+is referenced to the asking, which the policy changes. Station error is referenced to the commanded
+station, which the spread knob moves. Mean backlog is referenced to the queue, which the discipline
+reshapes. In all three the treatment moves the yardstick.
+
+**The mediator panel, pre-registered, four candidates and a constructed pair.** RMS dispersion has a
+known failure mode: it grows with extent even when every vehicle still has a neighbour inside weapon
+range. So the panel is `fleet_spread_mean` (RMS), its exact decomposition into `fleet_along_mean` and
+`fleet_cross_mean` on the force's own mean heading, `support_frac` (the share of the force with
+another blue inside blue weapon range), and mission duration. `station_cross_mean` sits beside them
+as the treatment-referenced comparator.
+
+- **J6.** Exactly one construct orders ALL families monotonically against success, and the
+  constructed equal-RMS pair separates it from RMS. FALSIFIER: none does, or more than one
+  independent construct does, in which case the audit rule is published WITHOUT naming a replacement
+  invariant, which is the reviewer's stated fallback and is accepted in advance.
+- **J7, the reviewer's boundary law tested on new instruments.** Internal metrics whose reference is
+  set by the treatment are ceteris-paribus only; metrics referenced to something the treatment does
+  not set will travel. `fleet_cross_mean` is referenced to the force's own centroid and heading,
+  which no knob in this battery commands. Registered prediction: it travels and
+  `station_err_mean` does not. FALSIFIER: it inverts anywhere the scalar does not.
+
+**Pilot for the amended panel, 24 replications, disclosed before the battery.**
+
+    arm        st_err st_cross    fleet  f_along  f_cross  support     succ
+    base         13.1      3.0     92.3     91.9      3.8    1.000    0.958
+    out80       212.2     22.9    120.0    117.5     10.3    1.000    0.917
+    out320      222.3     53.8    124.3    121.6     12.3    1.000    0.833
+    sp60         18.0      6.3    132.7    131.7      7.8    1.000    0.917
+    sp300       191.2    145.3    565.3    549.2     74.9    0.988    0.667
+    sp600       816.1    724.4   1103.1   1050.6    181.5    0.929    0.375
+
+Two constructs order all six without inversion and both are cross-track components; both quadrature
+sums and both along-track components invert once or twice; `support_frac` is saturated at 1.000 for
+four of the six arms and cannot rank the outage family at all. That is one construct measured two
+ways rather than two constructs, which is why the full battery has to add the constructed pair
+before J6 can be called either way.
+
+## CR-59 F6 IS RETRACTED ON ITS REGISTERED CONTROL, AND WHAT IS LEFT IS BETTER
+
+The control was registered this round and its verdict is a retraction, so it is recorded before the
+full battery lands rather than after. 32 replications at sixteen assets, cv = 0.5, exact estimator:
+
+    arm       served/step   svc_serviced   refused
+    bias2.5      0.2180         4.181       0.5382
+    bias3.2      0.2034         3.766       0.6080
+    cap7         0.2167         4.366       0.4814
+    cap8         0.2096         4.654       0.4691
+    cap10        0.1989         4.952       0.4610
+
+The honest capped console, which is wrong about nothing and has merely been told a slot has a price,
+reaches 0.2167 against the inflated console's 0.2180. The gap is 0.0013 against a rate floor of
+0.0090. **F6 as worded is dead**: "the most accurate estimator is beaten" is exactly the re-tuned
+threshold the reviewer said it was, and the accuracy paradox comes out. The battery `capped`
+(9449936) runs it at full tier to confirm rather than to rescue.
+
+**What survives, and it is a better result than the one that died.**
+
+1. **The feasibility test is the wrong rule at saturation, and this is now shown twice over.** It
+   asks whether a job fits and never asks what the slot is worth. TWO mechanically unrelated repairs,
+   inflating the estimate and capping the job, land within 0.0013 of each other and both beat the
+   unrepaired rule by about 0.022, which is eleven percent of throughput. Two different knobs
+   arriving at the same value is the evidence that they are one repair.
+2. **The honest repair is STRICTLY better at matched throughput.** At essentially equal delivery the
+   capped console refuses 0.481 of requests and the inflated one refuses 0.538. The miscalibrated
+   console buys the same throughput by turning away eleven percent more of the force. That is a
+   clean recommendation with no paradox in it and no estimator specification attached.
+3. **The T&E sentence survives untouched because it lives on the other axis.** An accuracy
+   specification conflates DISCRIMINATION, which is expensive and monotone in what it buys, with
+   CALIBRATION, which given a fixed decision rule is a free constant and is not monotone. That
+   claim is measured on the $b \times \sigma$ ridge in 9449800, not on the $b$ ladder, and nothing
+   about the retraction touches it.
+4. F9, F10 and F11 stand as registered. They test whether $b$ behaves like a shadow price, and a
+   shadow price is what BOTH repairs are implementing.

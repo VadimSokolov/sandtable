@@ -83,6 +83,26 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     t_reached = None
     cov_sum = 0.0
     cov_steps = 0
+    # Mutual support is a range question, and the range that matters is the one an engagement
+    # happens at rather than any formation constant. Blue's own weapon range is the honest choice:
+    # two vehicles inside it can shoot at the same thing.
+    _bw = ent.weapon_range[ent.side_mask(BLUE) & (ent.domain == GROUND)]
+    supp_range = float(_bw.max()) if _bw.size else 1000.0
+    # Formation dispersion, which is the same positions as station-keeping error read through a
+    # different functional. Station error is measured against each vehicle's COMMANDED station, so
+    # it is structurally blind to whether the commanded geometry is survivable; this one has no
+    # commanded geometry in it at all. RMS distance of the living blue assault force from its own
+    # centroid, averaged over the steps where two or more of them are alive.
+    disp_sum = 0.0
+    disp_steps = 0
+    # And the same three mediators the reviewer asked for, because RMS dispersion has a known way of
+    # being wrong: it grows with extent even when every vehicle still has a neighbour inside weapon
+    # range. `along` and `cross` decompose the RMS exactly onto the force's own mean heading, so
+    # disp^2 = along^2 + cross^2 and the pair is a partition rather than two more numbers.
+    # `support` is the mission-referenced one: the share of the force that is not alone.
+    along_sum = 0.0
+    cross_sum = 0.0
+    supp_sum = 0.0
     for k in range(n_steps):
         comms.set_step(k)                       # no-op unless the scenario declares a jam window
         if op is not None:
@@ -111,6 +131,22 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
             cov_sum += int((ent.seen & red_alive).sum()) / n_red
             cov_steps += 1
 
+        assault = ent.side_mask(BLUE) & (ent.domain == GROUND)
+        if int(assault.sum()) > 1:
+            ax, ay = ent.x[assault], ent.y[assault]
+            dx, dy = ax - ax.mean(), ay - ay.mean()
+            disp_sum += float(np.sqrt((dx ** 2 + dy ** 2).mean()))
+            hx = float(np.cos(ent.heading[assault]).mean())
+            hy = float(np.sin(ent.heading[assault]).mean())
+            hn = float(np.hypot(hx, hy))
+            ux, uy = (hx / hn, hy / hn) if hn > 1e-6 else (1.0, 0.0)
+            along_sum += float(np.sqrt(((dx * ux + dy * uy) ** 2).mean()))
+            cross_sum += float(np.sqrt(((-dx * uy + dy * ux) ** 2).mean()))
+            rr = np.hypot(ax[:, None] - ax[None, :], ay[:, None] - ay[None, :])
+            np.fill_diagonal(rr, np.inf)
+            supp_sum += float((rr.min(axis=1) <= supp_range).mean())
+            disp_steps += 1
+
         if t_reached is None and metrics.blue_at_goal(ent, scn).sum() >= need:
             t_reached = t
             break
@@ -120,6 +156,10 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     result = metrics.compute(scn, init_counts, ent, t_reached, t, assault0=assault0, air0=air_blue0,
                              bhv=bhv, op=op)
     result["detection_coverage"] = cov_sum / max(cov_steps, 1)
+    result["fleet_spread_mean"] = disp_sum / max(disp_steps, 1)
+    result["fleet_along_mean"] = along_sum / max(disp_steps, 1)
+    result["fleet_cross_mean"] = cross_sum / max(disp_steps, 1)
+    result["support_frac"] = supp_sum / max(disp_steps, 1)
     return result
 
 

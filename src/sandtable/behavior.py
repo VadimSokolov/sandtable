@@ -67,6 +67,8 @@ class Behavior:
     trk_stale_steps: np.ndarray   # int32 per entity: follower steps running on a dead-reckoned track
     trk_lost_steps: np.ndarray    # int32 per entity: follower steps handed back to waypoint
     st_err_sum: np.ndarray        # float per entity: summed |position - commanded station|
+    st_along_sum: np.ndarray      # float per entity: the same error resolved along the reference's
+    st_cross_sum: np.ndarray      # heading, and onto its normal
     st_steps: np.ndarray          # int32 per entity: steps with a commanded station
     prev_heading: np.ndarray      # float per entity: heading at the previous tick
     turn_sum: np.ndarray          # float per entity: summed |heading change| (rad)
@@ -129,7 +131,8 @@ def build_behavior(scn: Scenario, ent: Entities) -> Behavior | None:
         outage=int(scn.params.get("follow_outage", 0)),
         trk_err_sum=np.zeros(n), trk_steps=np.zeros(n, np.int32),
         trk_stale_steps=np.zeros(n, np.int32), trk_lost_steps=np.zeros(n, np.int32),
-        st_err_sum=np.zeros(n), st_steps=np.zeros(n, np.int32),
+        st_err_sum=np.zeros(n), st_along_sum=np.zeros(n), st_cross_sum=np.zeros(n),
+        st_steps=np.zeros(n, np.int32),
         # How hard the thing being tracked is to extrapolate. A dead-reckoned track is a constant
         # velocity assumption, so its error is a function of how much the reference TURNS, and a
         # follow-channel result that does not report the turn rate is not reporting its own

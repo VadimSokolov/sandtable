@@ -115,6 +115,26 @@ def main() -> None:
             out += [(f"Kp{tag}Lost{a.capitalize()}", f"{at(b['worked_lost_per_step'], a, PC, '16'):.4f}"),
                     (f"Kp{tag}Late{a.capitalize()}", f"{at(b['worked_late_per_step'], a, PC, '16'):.4f}"),
                     (f"Kp{tag}Stale{a.capitalize()}", f"{at(b['stale_per_step'], a, PC, '16'):.4f}")]
+        # Fairness, in the unit the harm is in. `starved_frac` is the share of vehicles that asked
+        # at least once and were never once answered, so unlike mean backlog it cannot be large for
+        # a policy that is doing well, and unlike any ratio over requests it cannot be moved by a
+        # policy that changes the asking. Read from `st-capacity2`, which is the job that reached it.
+        try:
+            st = survey("st-capacity2-9449430.out", sec, "starved_frac", quiet=True)
+            for a2 in arms:
+                out.append((f"Kp{tag}Starve{a2.capitalize()}",
+                            f"{100 * at(st, a2, PC, '16'):.1f}"))
+            # The three fair policies are all at the resolution floor, so quote their worst case
+            # once rather than three indistinguishable zeros.
+            out.append((f"Kp{tag}StarveFair",
+                        f"{100 * max(at(st, a2, PC, '16') for a2 in ('lifo', 'bound', 'admit')):.2f}"))
+            # The onset is the collapse span showing up in a per-vehicle statistic, with no queue
+            # quantity in it at all: zero for every policy up to six assets, and a quarter of the
+            # force stranded at eight.
+            out += [(f"Kp{tag}StarveOnsetLo", f"{100 * at(st, 'fifo', PC, '6'):.1f}"),
+                    (f"Kp{tag}StarveOnsetHi", f"{100 * at(st, 'fifo', PC, '8'):.1f}")]
+        except SystemExit:
+            pass
         # And the inversion: bound minus admit, which is inside the floor clear and outside it at C3.
         for sp in ("8", "12", "16"):
             out.append((f"Kp{tag}BoundVsAdmit{NAMES[sp]}",
