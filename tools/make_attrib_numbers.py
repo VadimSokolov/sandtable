@@ -74,7 +74,7 @@ def main() -> None:
         for reg, pre in (("Dir", "dir"), ("Ref", "ref"), ("Sup", "sup")):
             held = _series(rs, held_sec, pre, True)
             fix = _series(rs, fix_sec, pre, False)
-            hm, ht, _, hn = paired(held[-1], held[0])
+            hm, ht, hw, hn = paired(held[-1], held[0])
             fm, ft, _, _ = paired(fix[-1], fix[0])
             steps[reg] = hm
             m[f"at{tag}Held{reg}"] = f"{hm:+.3f}"
@@ -87,7 +87,11 @@ def main() -> None:
                 m[f"at{tag}DidT"] = f"{dt:.1f}"
                 m[f"at{tag}DidBlocks"] = str(dw)
                 m[f"at{tag}DidN"] = str(dn)
-                m[f"at{tag}Blocks"] = str(hn)
+                # Blocks AGREEING with the step's own sign, over blocks. This used to emit
+                # `hn` for both halves, so the table read "32 of 32" by construction rather
+                # than by measurement. It happened to be true here; it was not being checked.
+                m[f"at{tag}Blocks"] = str(hw)
+                m[f"at{tag}BlocksN"] = str(hn)
                 m[f"at{tag}Mono"] = ("yes" if all(a["mean"] > b["mean"]
                                                   for a, b in zip(held, held[1:])) else "no")
         # Supervisory removes the console entirely, so the share of the collapse it does NOT

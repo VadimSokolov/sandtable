@@ -20,21 +20,6 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from make_queue_numbers import ROOT, paired  # noqa: E402
 
 
-def agree(hi: dict, lo: dict) -> tuple[float, float, int, int]:
-    """Like `paired`, but the third value counts blocks agreeing with the effect's OWN sign.
-
-    `make_queue_numbers.paired` returns blocks with a POSITIVE difference, which is agreement only
-    when the effect is positive. Reporting that for a negative effect inverts the sign-consistency
-    statistic and would understate exactly the contrasts that show a cost.
-    """
-    d = [a - b for a, b in zip(hi["vals"], lo["vals"], strict=True)]
-    n = len(d)
-    mean = sum(d) / n
-    var = sum((x - mean) ** 2 for x in d) / (n - 1)
-    t = mean / ((var / n) ** 0.5) if var > 0 else float("inf")
-    return mean, t, sum(1 for x in d if x * mean > 0), n
-
-
 LOG = "st-desync-9446092.out"
 SPAN = {"5": "Five", "6": "Six"}
 
@@ -69,7 +54,7 @@ def main() -> None:
         sec = f"D1 jitter against its mean-matched fixed control ({metric})"
         for n, ntag in SPAN.items():
             for width, wtag in (("04", "Narrow"), ("10", "Mid"), ("18", "Wide")):
-                eff, t, w, N = agree(get(sec, f"jit{width}", n), get(sec, f"fix{width}", n))
+                eff, t, w, N = paired(get(sec, f"jit{width}", n), get(sec, f"fix{width}", n))
                 m[f"jiGe{mtag}{wtag}{ntag}"] = f"{eff:+.4f}"
                 m[f"jiGe{mtag}{wtag}{ntag}T"] = f"{t:.1f}"
                 m[f"jiGe{mtag}{wtag}{ntag}Blocks"] = str(w)
@@ -77,7 +62,7 @@ def main() -> None:
     for metric, mtag in (("arrival_fano", "Fano"), ("operator_goodput", "Good")):
         sec = f"D2 the null control: no dwell to synchronize to ({metric})"
         for n, ntag in SPAN.items():
-            eff, t, w, N = agree(get(sec, "jit18", n), get(sec, "fix18", n))
+            eff, t, w, N = paired(get(sec, "jit18", n), get(sec, "fix18", n))
             m[f"jiBern{mtag}{ntag}"] = f"{eff:+.4f}"
             m[f"jiBern{mtag}{ntag}T"] = f"{t:.1f}"
             m[f"jiBern{mtag}{ntag}Blocks"] = str(w)

@@ -2068,3 +2068,89 @@ contour overlay from the foundations review (predict the crossover contour from 
 link arithmetic and draw it over the measured phase diagram; existing CSVs, one figure, and it is
 the picture that makes the sufficiency thesis visible on the paper's own centerpiece), and the
 one-sentence C3 scope line above. After that, run and stop asking is the correct plan.
+
+## Round 13 (2026-08-22, the coordinator's round 13)
+
+### Scoreboard on CR-27, stated precisely, because "the pump is refuted" is half true
+
+What died: the CHANNEL-COUPLING clause, that retry re-offers synchronize to the fade's recovery
+edge. D2 kills it cleanly: the jitter gain on the memoryless channel (+0.040, +0.049 at t over
+30) is as large as on the bursty one, so the fade is one way to co-queue vehicles and not even a
+necessary one. What lives, now twice gated: deterministic holds preserve cohort phase-locking
+among whatever the queue co-abandons, and dissolving that phase-lock buys goodput on both
+channels (P2 on GE, D2 on Bernoulli). The valve and the reply-rate channel stand as before. So
+the surviving account of the original contrast is: rate/reply shift, plus determinism-cohort
+damage that any co-queueing event feeds, plus blind booking to convert clusters into dead
+capacity. Two items follow. First, the manuscript sentence ("wait at least the floor, and do not
+wait exactly the floor") is right, correctly anchored on Metcalfe and Boggs for randomization's
+original reason, and it is the best one-sentence design product this contrast has produced.
+Second, my own Round 7 registration owned: I proposed the notification SHARE statistic that
+CR-26's P1 refuted, and the statistic was ill-posed past collapse (negative unconsumed share).
+The direction I registered (signal worthless unconsumed, valuable consumed) is what the data
+show; the instrument I specified for it was wrong. That is my fourth instrument-adjacent error in
+this review and it goes in the same column as the others.
+
+### The zero-cost cell that closes the five-death ledger
+
+D1/D2 already contain both channels at wide jitter and matched mean. The cross-channel DiD at
+wide jitter is the original contrast NET of the determinism-cohort component; if what remains
+matches the reply-rate share the bench and the pin measured, the contrast is fully decomposed
+into three audited parts (rate/reply, determinism-cohort, valve) and the saga ends with a
+complete accounting table instead of a sixth mechanism. One re-read, no compute. If a residual
+remains beyond the reply-rate share, THAT is the unexplained regularity, now with a size.
+
+One caution before the paper states P1's null explanation as fact: "the channel's burst variance
+drowns the retry's contribution in the delivered-stream Fano" is a post-hoc account of an
+instrument failure. It is checkable on the bench in an afternoon: inject a known cohort component
+on top of an on-off stream at GE-120 parameters and report fano_window's resolution at that
+operating point against the cohort size the retry produces. State the drowning explanation with
+that power number or state it as conjecture.
+
+### The MPE convention: right in kind, wrong in constant, and the timing has a cost
+
+Relative-for-rate-metrics is correct; an absolute 0.03 on a 0.05-scale metric encodes "only
+60 percent changes matter," which nobody intends. But your own analogy yields six percent, not
+three: 0.03 absolute at the 0.5 calibration scale is 0.03/0.5 = 6 percent OF VALUE, and "three
+points on a probability" conflates points with percent. Adopt MPE_rel = 6 percent of the control
+arm for rate metrics, which preserves the established gate's implied stringency at its
+calibration point. Consequences exist and are healthy: the n=4 damage (8.8 percent) gates either
+way; the 5.2 percent jitter recovery gates under your 3 and fails under 6.
+
+On timing: a threshold chosen after unblinding cannot adjudicate the data that prompted it, both
+readings written down or not. The repair costs nothing here: declare the 6 percent convention
+FORWARD for all rate-metric gates, and mark the already-seen cells "ungated under the
+pre-existing rule; convention amended after unblinding." Since the n=4 cell is retired anyway
+(its account is dead and D2 shows the phenomenon cleaner), the conservative treatment preserves
+the gate's meaning at zero cost. General rule for the ledger: thresholds are registration
+content; amendments apply forward only.
+
+### CR-26: the third lever is admit-plus-AIMD as a unit, and plain admit needs a warning label
+
+The result is stronger and stranger than the registration: a refusal signal with no response
+rule COSTS 0.131 of goodput at twelve assets. The mechanism is the fold arithmetic reaching into
+the policy lever: admit's short hold (min(2 lat, P) = 8 against a standing 43) is a fast retry
+in disguise, and at high span the refusal-shortened cycle is an accelerant at exactly the spans
+where admission control is needed most. With the response rule the same signal is worth +0.268
+over plain admit. So the lever the paper ships is admit-plus-AIMD as a unit; plain admit gets a
+scope line on the old results (its advantage inverts past the span where the shortened re-ask
+cycle overloads the console) and the doctrine sentence writes itself: a refusal without a
+client-side rate rule is not admission control, it is load acceleration with better manners.
+
+### The paired-helper bug: name the genus and close the class
+
+Three instrument-class defects now share one shape: a convention calibrated on the first use
+case silently misapplied to the second (Fano windows sized inside the dwell; MPE calibrated at
+0.5-scale applied at 0.05-scale; blocks-won counting positives on negative effects). The fix for
+the instance is done; the fix for the CLASS is a fixture file that runs every gate helper
+against synthetic negative-effect and rate-scale cases with known answers, the same pattern as
+the estimator ground-truth tests. One file, and this genus stops recurring.
+
+One audit line is still owed, and I am required to ask for it: "no published number changed"
+covers the manuscript, but the REVIEW record is also a record. The batch-7 and batch-8 tables
+reported to me carried consistency counts on negative contrasts (the CR-23 v2 ladders, B3, the
+attribution steps). State explicitly which reported tables passed through the buggy generators
+and re-state any affected consistency columns, even if every verdict survives. The burden here
+is verification, not probability.
+
+Nothing to add ahead of the resubmitted rate and stall or the queued teleop_price and droop; the
+plan stands.

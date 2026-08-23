@@ -2421,14 +2421,143 @@ it on metrics living on [0,1] near 0.5 and never defined it for a rate metric wh
 0.05.** Reading it absolutely, nothing gates. Reading it relatively, everything does.
 
 **That is settled here, before it can be settled by whichever answer is convenient.** The MPE is
-declared RELATIVE for rate metrics, at 3% of the control arm's own value, and absolute for metrics
-on [0,1]. The justification is that 0.03 of mission success is three points of a probability, and
-the analogous quantity for a rate is 3% of that rate; an absolute 0.03 on `served_per_step` would
-be 60% of the metric, which is not a minimum effect but a demand for a catastrophe. Under that
-convention the n = 4 damage and the jitter recovery both gate.
+declared RELATIVE for rate metrics and absolute for metrics on [0,1]. An absolute 0.03 on
+`served_per_step` would be 60% of the metric, which is not a minimum effect but a demand for a
+catastrophe.
+
+**The constant is 6% of the control arm, not 3%, and the first draft of this entry got it wrong.**
+The reasoning was that 0.03 of mission success is "three points of a probability" and the analogue
+for a rate is 3% of the rate. That conflates points with percent. The MPE was calibrated on metrics
+near 0.5, and 0.03 at 0.5 is **6% of value**, not 3%. Carrying the stringency across, rather than
+the digits, gives 6%. (`tests/test_gate_helpers.py::test_six_percent_matches_the_calibration_scale`
+pins the arithmetic.) 3% would have quietly halved the bar on every rate metric this project ever
+gates, which is the same class of error as the absolute reading it was introduced to fix.
+
+**The amendment applies forward only, and this cell is not forward.** A threshold chosen after
+unblinding cannot adjudicate the data that prompted it. The n = 4 damage (-8.8%) and the jitter
+recovery (+5.2%, +11.2%) were all seen before the convention was fixed, and are hereby marked
+**ungated under the pre-existing rule; convention amended after unblinding**. For the record of
+what the amendment would have done: -8.8% and +11.2% clear 6% either way, and the +5.2% recovery
+clears 3% but not 6%, so the constant is load-bearing on exactly the cell that motivated the
+question. That is the reason to refuse to apply it here. The cost is nil, because the cell is
+retired for an unrelated reason below, and what is preserved is the gate's meaning: thresholds are
+registration content, and an amendment to one is a rule for the next conjecture, never a re-scoring
+of the last.
 
 **And the cell still does not become a poster, for a reason that has nothing to do with the gate.**
 CR-27's P1 is refuted above, so the pump account this cell was collected to support no longer
 exists. What the cell now shows is retry self-collision at a span where sustained load is off,
 which is the same thing D2 shows more cleanly on a channel with no burst structure at all. The
 clean demonstration is the one to print.
+
+---
+
+## CR-27 D7. THE CROSS-CHANNEL RE-READ, AND THE EXPLANATION IT KILLS
+
+Zero new compute. D1 and D2 are sections of one battery, so block `i` carries the same seed in
+both and the cross-channel difference in differences on the mean-matched wide-jitter contrast is
+itself a paired quantity. Running it separates the effect into the part that exists on a link with
+no dwell at all (vehicles desynchronizing from each other) and the part the dwell adds.
+
+| metric | span | self-collision (no dwell) | dwell residue | residue gates |
+|---|---|---|---|---|
+| operator_goodput | 5 | +0.0400, t=31.0, 32/32 | +0.0112, t=2.5, 22/32 | no (under MPE) |
+| operator_goodput | 6 | +0.0490, t=30.6, 32/32 | -0.0248, t=-5.2, 26/32 | no (under MPE) |
+| arrival_fano | 5 | -0.1341, t=-3.2, 22/32 | +0.1106, t=1.8, 21/32 | marginally, t just over 1.70 |
+| arrival_fano | 6 | -0.1296, t=-2.8, 22/32 | +0.0385, t=0.5, 18/32 | no |
+
+**The self-collision component carries the whole of what gates, and the dwell residue changes sign
+between the two spans.** On the outcome metric neither residue reaches the MPE and their point
+estimates are opposite, which is what an unstable nuisance term looks like and not what a second
+mechanism looks like. Fable's hoped-for three-part ledger does not materialize because there are
+not three parts; there is one audited part and a residue that will not hold still. That is the
+better answer, and it makes the recommendation indifferent to the link.
+
+**The Fano residue at n = 5 marginally clears (t = 1.76, 21/32), and is reported rather than
+buried.** A difference in differences on a variance statistic is the noisiest thing in this
+project's instrument set, and a pass at t = 1.76 is the weakest a pass can be. It is not load
+bearing for anything claimed.
+
+### The explanation that had to die first
+
+The paper said the bursty link's Fano null was the channel's own variance drowning the retry's
+contribution. That is a claim about the INSTRUMENT, and this project has now been bitten three
+times by conventions asserted about instruments instead of measured on them. `tools/bench_fano.py`
+measures it: arrivals are `N_t = K * B_t` with `B_t ~ Bernoulli(lambda/K)`, so the mean is `lambda`
+for every K and the Fano is exactly `K - lambda`. A cohort of K = 2 therefore raises the source's
+Fano by exactly 1.000 and moves nothing else. Pushed through a memoryless channel and through an
+on-off gate with matched marginal rate, at 32 blocks of 1800 steps:
+
+| channel | window | baseline F | recovered | t |
+|---|---|---|---|---|
+| memoryless | 1 | 0.85 | 0.998 | 376 |
+| on-off | 1 | 0.85 | 1.000 | 354 |
+| memoryless | 10 | 0.89 | 0.907 | 23 |
+| on-off | 10 | 1.78 | 0.957 | 17 |
+
+**REFUTED.** The estimator recovers the injected cohort on the bursty stream at least as well as on
+the memoryless one, worst case 6% short across every window read, even where the channel's own
+burst structure has doubled the baseline. The contrast is paired on the gate realization, so the
+channel variance is differenced away rather than competing with the signal. Drowning was never the
+reason.
+
+**What the null actually says is that the cohort is not there,** and the mechanism follows: an
+outage that drops several vehicles does not release them at one instant, so a bursty channel has
+already scattered the return times that a deterministic hold would otherwise preserve. The channel
+does part of the randomizing for free. That is why the arm with no burst structure was the
+informative one, and it is a statement about the fleet rather than an apology for the instrument.
+
+### Ledger
+
+Three instrument defects, one genus: a convention calibrated on its first use case and carried
+silently into a second. Nominal jitter width where the floor clipped the support; an MPE of 0.03
+where the metric lives near 0.05; blocks-won counting positives where the effect goes down. A
+fourth surfaced while writing the fixture that closes the class: `paired` returned `t = inf` for
+two identical arms, because the zero-variance branch never asked whether the effect was also zero.
+`tests/test_gate_helpers.py` now runs every gate helper against negative effects, rate scales,
+clipped supports and null contrasts, with answers computed by hand. The genus is closed by a test,
+not by vigilance.
+
+---
+
+## CR-31. DOES PLAIN ADMISSION CONTROL INVERT AGAINST MERE REFUNDING?
+
+**REGISTERED before the falsifying metric is run.** Fable predicted a scope limit on CR-26: that
+plain `admit` loses its advantage past the span where the shortened re-ask cycle overloads the
+console, and proposed the doctrine sentence "a refusal without a client-side rate rule is not
+admission control, it is load acceleration with better manners." The prediction is confirmed on
+`operator_goodput` at rung 0, and the size is not marginal:
+
+| n | admit - refund (goodput) | t | blocks | admit - refund (success) | t |
+|---|---|---|---|---|---|
+| 4 | +0.0005 | 2.3 | 23/32 | +0.0122 | 0.9 |
+| 6 | -0.0121 | -14.0 | 32/32 | +0.0068 | 0.5 |
+| 8 | -0.0660 | -43.7 | 32/32 | +0.0142 | 1.4 |
+| 10 | -0.1094 | -51.7 | 32/32 | +0.0122 | 1.1 |
+| 12 | -0.1306 | -75.9 | 32/32 | +0.0176 | 2.3 |
+
+Two things are already clear without any new run. **The inversion is on the console's efficiency
+and not on the mission**: on `success` nothing gates at any span, so refusing work does not cost
+missions, it costs console cycles. And **AIMD more than repairs it**: `aimd - refund` is +0.060,
++0.101 and +0.137 at n = 8, 10, 12, so the three-lever recommendation is unaffected either way.
+
+**But the goodput reading cannot be trusted here, for a reason this project has already found
+once.** `operator_goodput = n_serviced / n_request`, and a refusal MANUFACTURES requests exactly as
+a retry does: a refused vehicle returns to autonomy sooner and re-consults sooner, inflating the
+denominator on its own. That is the contamination CR-23R was registered to measure for retries, and
+it applies verbatim to refusals. A -0.131 goodput gap at n = 12 is consistent with admission control
+genuinely serving fewer vehicles AND with it serving the same vehicles while being asked more often.
+
+**PREDICTION.** On `served_per_step`, the absolute rate with no denominator to inflate,
+`admit - refund` is negative and gates (relative MPE 6%, |t| > 1.70, 60% agreement) at n = 8, 10
+and 12 on the clear channel.
+
+**FALSIFIER.** If `served_per_step` shows `admit >= refund` at those spans, or the negative effect
+fails to gate, the goodput inversion is denominator inflation. The doctrine sentence is then
+WITHDRAWN, not softened, and the goodput column above is marked contaminated in the same way the
+CR-23 v2 ladder was.
+
+**Either verdict is worth having.** If it holds, the paper gains a scope limit on its own
+recommendation, which is the kind of qualification a sponsor needs and a paper usually omits. If it
+is refuted, a metric this project reports in six places is shown to be inflatable by a second
+mechanism, and every refusal contrast in the manuscript has to be re-read on the absolute rate.

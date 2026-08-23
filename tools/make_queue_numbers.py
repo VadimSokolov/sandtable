@@ -67,14 +67,25 @@ def pick(rs: list[dict], sec_has: str, arm: str, val: str = "") -> float:
 
 
 def paired(hi: dict, lo: dict) -> tuple[float, float, int, int]:
-    """Blockwise effect, paired t, blocks won, blocks. The blocks are seed-matched, so the
-    per-block difference is the paired quantity the keep/discard gate is defined on."""
+    """Blockwise effect, paired t, blocks AGREEING WITH THE EFFECT'S OWN SIGN, blocks. The
+    blocks are seed-matched, so the per-block difference is the paired quantity the gate is
+    defined on.
+
+    The third value counts `x * mean > 0`, not `x > 0`. Counting positives is agreement only
+    for a positive effect; on a contrast that goes down it reports the blocks that DISAGREE,
+    which inverts the consistency column exactly where the effect is real. The contract's own
+    gate (`ar_table.paired`) has always been two-sided via `wins >= min_win or 1 - wins >=
+    min_win`; this brings the reporting helper into line with it. See the fixture in
+    tests/test_gate_helpers.py, which pins both signs and the rate scale."""
     d = [a - b for a, b in zip(hi["vals"], lo["vals"], strict=True)]
     n = len(d)
     mean = sum(d) / n
     var = sum((x - mean) ** 2 for x in d) / (n - 1)
-    t = mean / ((var / n) ** 0.5) if var > 0 else float("inf")
-    return mean, t, sum(1 for x in d if x > 0), n
+    # `inf` only when a zero-variance contrast has a nonzero effect. Two identical arms
+    # have both zero, and the honest statistic there is 0, not maximal significance.
+    # `ar_table.paired`, the gate itself, has always drawn this distinction.
+    t = mean / ((var / n) ** 0.5) if var > 0 else (float("inf") if mean else 0.0)
+    return mean, t, sum(1 for x in d if x * mean > 0), n
 
 
 def argmax(rs: list[dict], sec_has: str, arm: str) -> str:
