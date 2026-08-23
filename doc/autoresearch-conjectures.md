@@ -2868,3 +2868,70 @@ residual borrowed from the instrument.
 content and owes its own bench point against injected ground truth, at the geometry it is deployed
 at. The Fano window was the first instance and it cost a refutation. This one was caught before it
 cost anything, which is the only difference.
+
+---
+
+## CR-31 VERDICT. THE FALSIFIER FIRES, AND IT TAKES A HEADLINE WITH IT
+
+Read from the `admitrate` battery in progress (job 9446591); the E0 sections and E2's
+`served_per_step` are complete and that is what the registered falsifier needs. Re-verified at
+completion below.
+
+### The doctrine sentence is withdrawn
+
+Registered: "On `served_per_step`, admit - refund is negative and gates at n = 8, 10 and 12 on the
+clear channel." Measured, rung 0:
+
+| n | admit - refund, served_per_step | rel | t | admit - refund, requests_per_step | rel |
+|---|---|---|---|---|---|
+| 4 | +0.00087 | +0.9% | 1.2 | +0.00083 | +0.9% |
+| 6 | +0.00393 | +3.3% | 4.8 | +0.00618 | +4.8% |
+| 8 | +0.00376 | +2.8% | 7.1 | +0.02145 | +12.7% |
+| 10 | +0.00336 | +2.3% | 7.5 | +0.04900 | +23.0% |
+| 12 | +0.00260 | +1.8% | 13.7 | +0.08378 | +32.4% |
+
+**Admit serves MORE work per step than refund at every span, not less, and never by a gated
+margin.** Its request rate meanwhile inflates by a third at twelve assets, gated at t = 76. The
+-0.131 goodput "inversion" is denominator inflation in full. Fable's doctrine sentence, "a refusal
+without a client-side rate rule is not admission control, it is load acceleration with better
+manners", is WITHDRAWN per the registration. Its second clause is literally true, since the offered
+load does accelerate by 32%, but the first is false: the console is not overloaded by it. The
+METRIC is.
+
+### And the same contamination runs the other way through this paper's third lever
+
+`operator_goodput = n_serviced / n_request`. A refusal inflates the denominator. **An AIMD rate rule
+DEFLATES it, which is the entire point of the rule.** So the contamination that made plain admit
+look bad makes AIMD look good, and the headline was measured on the contaminated metric.
+
+`aimd - admit`, from the same battery:
+
+| rung | n | served_per_step | requests_per_step | success (from the aimd battery) |
+|---|---|---|---|---|
+| 0 | 8 | -4.6% | -19.4% | +0.036 |
+| 0 | 10 | -4.2% | -31.1% | +0.044, gated |
+| 0 | 12 | -4.0% | -40.9% | +0.021 |
+| 2 | 8 | -10.4%, gated | | +0.033, gated |
+| 2 | 10 | -11.5%, gated | | +0.035, gated |
+| 2 | 12 | -12.0%, gated | | +0.023 |
+
+**AIMD does not make the console serve more. It makes it serve LESS**, four percent less on a clear
+link and twelve percent less under jamming, both consistently signed at t up to -54. What collapses
+is the asking, by forty-one percent at twelve assets.
+
+**The finding survives and its description does not.** Mission success under AIMD still gates
+positive at n = 10 clear and n = 8 and 10 jammed. So the honest statement is stronger and more
+useful than the one in the manuscript: **the console does measurably less work and the missions go
+measurably better.** That is what a rate rule is supposed to do, and stating it as a throughput gain
+both misdescribes the mechanism and understates the result, because a lever that improves outcomes
+while REDUCING operator load is a different kind of recommendation from one that improves outcomes
+by extracting more work.
+
+### Consequence for the manuscript
+
+`operator_goodput` is reported in six places and every contrast between arms whose request rates
+differ is now suspect in a known direction. The rule is: a treatment that changes the ASKING must
+be read on `served_per_step` as well, and where the two disagree the absolute rate is the finding
+and the ratio is a diagnostic of the asking. That is not a new rule; CR-23R established it for
+retries. What is new is that it was never applied to the queue policies, which change the asking at
+least as much.
