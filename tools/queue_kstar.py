@@ -30,9 +30,21 @@ import numpy as np
 ISSUE, ARRIVE, ABANDON, DONE = 0, 1, 2, 3
 
 
-def simulate(n, P, L, mu, cap, Z, horizon, seed, discipline="fifo", drop="oldest"):
+def simulate(n, P, L, mu, cap, Z, horizon, seed, discipline="fifo", drop="oldest", age_cap=None,
+             lat_switch=None):
+    """`age_cap` in steps, measured from when the request was SENT, is the middle rung of the
+    requirements ladder: it needs a send timestamp in the message and nothing about the link. It
+    composes with `cap`; pass `cap=-1` to test it alone. `lat_switch`, a pair (period, other_L),
+    alternates the one-way latency every `period` steps, which is what a jammer does to the
+    parameter the length cap depends on and the age cap does not."""
     rng = np.random.default_rng(seed)
     svc = 1.0 / mu
+
+    def lat_at(now):
+        if lat_switch is None:
+            return L
+        period, other = lat_switch
+        return L if int(now // period) % 2 == 0 else other
     ev, ctr = [], 0
     gen = np.zeros(n, dtype=np.int64)
 
@@ -53,8 +65,18 @@ def simulate(n, P, L, mu, cap, Z, horizon, seed, discipline="fifo", drop="oldest
     work_time = 0.0
 
     def maybe_start(now):
-        nonlocal busy_until
+        nonlocal busy_until, dropped
         if busy_until > now or not buf:
+            return
+        # The age cap is applied where a console can apply it, at pick-up, on the request in hand.
+        # There is no background reaper here either, for the same reason as in `c2.py`.
+        while buf and age_cap is not None:
+            head = buf[0] if discipline == "fifo" else buf[-1]
+            if now - head[0] <= age_cap:
+                break
+            (buf.pop(0) if discipline == "fifo" else buf.pop())
+            dropped += 1
+        if not buf:
             return
         rec = buf.pop(0) if discipline == "fifo" else buf.pop()
         issue, i, g = rec
@@ -69,7 +91,7 @@ def simulate(n, P, L, mu, cap, Z, horizon, seed, discipline="fifo", drop="oldest
         if kind == ISSUE:
             (i,) = pl
             gen[i] += 1
-            push(t + L, ARRIVE, (i, t, gen[i]))
+            push(t + lat_at(t), ARRIVE, (i, t, gen[i]))
             push(t + P, ABANDON, (i, gen[i]))
         elif kind == ARRIVE:
             i, issue, g = pl
@@ -90,10 +112,11 @@ def simulate(n, P, L, mu, cap, Z, horizon, seed, discipline="fifo", drop="oldest
             i, issue, g = pl
             served += 1
             work_time += svc
-            if t + L <= issue + P and gen[i] == g:
+            back = lat_at(t)
+            if t + back <= issue + P and gen[i] == g:
                 useful += 1
                 gen[i] += 1                  # the answer landed: cancel the pending abandon
-                think(t + L, i)
+                think(t + back, i)
             maybe_start(t)
 
     return dict(useful=useful / horizon, served=served / horizon,

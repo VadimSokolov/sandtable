@@ -4887,3 +4887,105 @@ drop-oldest rule is the packet-management line in age of information, \citet{kau
 composition is ours; none of the components are. Framed as new queueing theory this dies at review,
 framed as the deadline analogue of buffer sizing, located exactly and confirmed at mission level,
 it survives.
+
+**CR-49 P6 VERDICT: THE CONSTANT SURVIVES, AND THE ALTERNATIVE IS UNFALSIFIABLE IN THIS SYSTEM.**
+Load sweep at fixed $P = 20$, $\ell = 0$, $\mu = 0.15$, so $\lambda = 3.00$ throughout and only $\pi$
+moves. 16 replications, 40000-step horizon, offered load in units of console capacity:
+
+    load  0.70x  0.93  1.16  1.40  1.86  2.33  2.79  3.72  5.58  7.44  11.16  14.88
+    argmax   2      2     2     2     2     2     2     2     2     2      1      1
+    plateau[1-6] [2-6] [2-2] [2-2] [2-2] [1-2] [1-2] [1-3] [1-4] [1-6] [1-6]  [1-6]
+
+The argmax is flat at 2 across a twenty-one-fold range of offered load. The two cells that read 1 are
+not a fall: at 11x and 15x capacity every bound from 1 to 6 delivers 0.1500, the console's ceiling,
+and the argmax there is a rounding tie. So the marginal condition's prediction, that the argmax
+slides toward 1 as $\pi \to 1$, cannot be tested in this system: **$\pi \to 1$ and the objective
+going flat are the same limit.** Where the sizing question has an answer, the constant is right;
+where the constant would be wrong, nothing is.
+
+The plateau column carries the finding that survives. It is a U in load, narrowest at one to two
+times capacity and wide at both ends. At low load the buffer rarely fills and the bound is
+irrelevant; at extreme load drop-oldest refreshes the buffer faster than anything can go stale, and
+the bound is irrelevant again. **The sizing rule earns its keep in a window, roughly one to four
+times console capacity**, which is exactly the span-of-control range this project studies and is why
+the effect is visible at all.
+
+**CR-50 AMENDED BEFORE ANY ARM WAS RUN. The interesting rung is not a delay target, it is a
+TIMESTAMP.** Working through what a delay-based console would actually need exposed that P1 as
+registered is close to empty and something better sits next to it.
+
+A delay target does not free the console from knowing the requester's deadline: no amount of
+self-measurement recovers $P$. What it frees the console from is $\ell$, and only if the sojourn is
+measured from when the request was SENT rather than from when it arrived. That requires the message
+to carry a send time, which every message format already has, and it is a strictly weaker
+requirement than carrying a time-to-autonomy, which is a semantic field somebody has to define,
+populate and agree on. So the ladder is finer than the paper currently draws it:
+
+| rung | the console must know | the message must carry |
+|---|---|---|
+| bound the backlog | $P$, $\ell$, $\mu$ | nothing |
+| cap the request's AGE | $P$, $\mu$ | a send timestamp |
+| refuse on the deadline | nothing | the requester's time-to-autonomy |
+
+The middle rung is new and it is the one worth recommending if it works, because a send timestamp is
+free in any real protocol and the latency it silently absorbs is the parameter a jammer controls.
+
+**P4 (open, replaces the emptied P1).** One fixed age cap, in steps, covers the whole $\lambda$ grid
+at every load, where no fixed backlog bound covers more than 85% of it.
+  **FALSIFIER.** An age cap needing to be retuned across the grid puts it back on the same rung as
+  the counter and CR-50 collapses to the amendment above being a distinction without a difference.
+
+**P5 (open, and the limb that decides whether any of this reaches SandTable).** With the link
+latency stepping between 0 and 4 mid-mission, the age cap holds its delivered service and every
+fixed backlog bound loses some, at tier. This is the claim the ladder is FOR: the age cap is
+$\ell$-invariant by construction and the counter is not.
+  **FALSIFIER.** A fixed counter matching the age cap under a moving link removes the only argument
+  for the timestamp, and the recommendation stays "a counter".
+
+**CR-50 VERDICT: RETRACTED ON ITS OWN FALSIFIER. The recommendation stays "a counter".**
+
+Instrument gate passed first: the fixed-bound plateau reproduced to every printed digit on the same
+seeds after the age-cap and moving-link code was added (0.1049, 0.1452, 0.1497, 0.1302 at
+$\lambda = 3.0$, identical to the archived scan).
+
+**P4, the static link sweep.** $P = 20$, $\mu = 0.15$, $n = 12$, $\ell$ from 0 to 6, one fixed
+setting of each mechanism against all seven links, scored as "within one material effect of the best
+mechanism at that link":
+
+    best single backlog bound   k=1   5 of 7 links   worst shortfall 0.0456
+    best single age cap         T=7   6 of 7 links   worst shortfall 0.0105
+
+The age cap does degrade more gracefully, and the reason is visible in the table: a single counter
+is fine to $\ell = 4$ and then falls off a cliff, 0.1452 at a clear link down to 0.0644 at
+$\ell = 6$, while $T = 7$ runs 0.1452 down to 0.1101. At $\ell = 6$ the age cap delivers 71 percent
+more useful service than the best fixed counter. The mechanism is not the one the registration
+claimed, though: the age cap is NOT $\ell$-invariant, because the answer still has to travel back,
+so its correct setting is $P - 1/\mu - \ell$ and the single good value 7 is just the worst case of
+that expression over the sweep. The registration's argument for the timestamp was wrong even where
+its prediction was right.
+
+**P5, the moving link, which is the limb that was supposed to matter.** REFUTED. With $\ell$
+stepping between 0 and 4 mid-mission, paired over common random numbers, 32 replications, at four
+switching periods from 200 to 2000 steps:
+
+    period    200     500    1000    2000
+    k = 1   0.1398  0.1397  0.1396  0.1398
+    T = 7   0.1363  0.1362  0.1361  0.1362
+    T7 - k1 -0.0035 -0.0035 -0.0035 -0.0035     |t| 37 to 46, all BELOW the material floor
+
+The fixed counter matches the age cap at every switching period, and if anything edges it. The
+registered falsifier reads "a fixed counter matching the age cap under a moving link removes the only
+argument for the timestamp, and the recommendation stays a counter." It does, so it does.
+
+**Scope, stated from an arm that was read BEFORE P5 was run and is therefore not a salvage.** The
+counter's cliff is at $\ell \ge 5$. The comms ladder this project models tops out at $\ell = 4$ at
+C3. So within the operating envelope of the study, the simple counter is not beaten by the
+mechanism the bufferbloat literature would recommend, and the age cap's advantage lives entirely
+outside it. Extending the switch to $\ell = 6$ to recover a win would be reading a new arm to save a
+dead claim, and is not done.
+
+**Why this is worth keeping rather than deleting.** It is the paper's cheapest recommendation
+surviving its strongest challenger. A sponsor asked to bound a console's backlog can now be told
+that the obvious next step, delay-based active queue management with a timestamped message format,
+was implemented and measured and buys nothing inside the envelope. Negative results about
+interventions somebody would otherwise fund are the useful kind.

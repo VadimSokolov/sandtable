@@ -1,0 +1,13 @@
+CR-50 P5. The link STEPS between 0 and 4 every `period` steps, mid-mission. One fixed
+setting each, chosen by the sweep already read: counter k=1, age cap T=7. Paired on common
+random numbers, 32 reps, MPE 0.0090, |t|>1.70.
+
+period |  k=1     k=2     T=7     T=10  | T7-k1     t     gate
+   200 | 0.1398  0.1145  0.1363  0.1326 | -0.0035  -44.58   .  
+   500 | 0.1397  0.1135  0.1362  0.1327 | -0.0035  -44.73   .  
+  1000 | 0.1396  0.1134  0.1361  0.1325 | -0.0035  -37.46   .  
+  2000 | 0.1398  0.1131  0.1362  0.1327 | -0.0035  -45.98   .  
+
+Static controls at the two link states, same settings, for reference:
+  L=0   | 0.1452  0.1497  0.1453  0.1483
+  L=4   | 0.1342  0.0762  0.1271  0.1169

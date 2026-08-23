@@ -1,0 +1,37 @@
+Fixed P=20, mu=0.15, n=12. Only the LINK moves, which is what a jammer moves.
+The counter's optimum depends on it; the age cap's should not. MPE = 0.0090
+
+-- fixed BACKLOG BOUND (needs P, ell, mu) --
+  L  |  k=0     k=1     k=2     k=3     k=4     k=6  |  best  k*rule
+  0  |0.1049 0.1452 0.1497 0.1302 0.0932 0.0230| 0.1497   2
+  1  |0.1031 0.1446 0.1446 0.1122 0.0675 0.0115| 0.1446   2
+  2  |0.1024 0.1440 0.1334 0.0862 0.0422 0.0048| 0.1440   1
+  3  |0.1022 0.1438 0.1092 0.0551 0.0216 0.0016| 0.1438   1
+  4  |0.1020 0.1340 0.0764 0.0293 0.0083 0.0003| 0.1340   1
+  5  |0.1012 0.1095 0.0418 0.0100 0.0017 0.0001| 0.1095   1
+  6  |0.1005 0.0644 0.0107 0.0010 0.0001 0.0000| 0.1005   0
+
+-- fixed AGE CAP (needs P, mu, and a send timestamp) --
+  L  | T=4     T=7     T=10    T=13    T=16    T=20    T=26  |  best
+  0  |0.1358 0.1452 0.1483 0.1494 0.0777 0.0245 0.0030| 0.1494
+  1  |0.1295 0.1427 0.1473 0.1273 0.0590 0.0178 0.0020| 0.1473
+  2  |0.1218 0.1389 0.1460 0.0984 0.0439 0.0126 0.0013| 0.1460
+  3  |0.1126 0.1337 0.1443 0.0750 0.0323 0.0089 0.0009| 0.1443
+  4  |0.1021 0.1270 0.1169 0.0539 0.0224 0.0059 0.0005| 0.1270
+  5  |0.0000 0.1190 0.0851 0.0373 0.0153 0.0037 0.0004| 0.1190
+  6  |0.0000 0.1101 0.0614 0.0258 0.0104 0.0025 0.0002| 0.1101
+
+-- coverage: how many of the 7 links each SINGLE fixed setting is within MPE of the best --
+  backlog bound k=0: 0/7   worst shortfall 0.0448
+  backlog bound k=1: 5/7   worst shortfall 0.0456
+  backlog bound k=2: 2/7   worst shortfall 0.0994
+  backlog bound k=3: 0/7   worst shortfall 0.1091
+  backlog bound k=4: 0/7   worst shortfall 0.1257
+  backlog bound k=6: 0/7   worst shortfall 0.1426
+  age cap    T= 4: 0/7   worst shortfall 0.1190
+  age cap    T= 7: 6/7   worst shortfall 0.0105
+  age cap    T=10: 4/7   worst shortfall 0.0487
+  age cap    T=13: 1/7   worst shortfall 0.0843
+  age cap    T=16: 0/7   worst shortfall 0.1120
+  age cap    T=20: 0/7   worst shortfall 0.1354
+  age cap    T=26: 0/7   worst shortfall 0.1466
