@@ -5070,3 +5070,50 @@ paper's headline is not an artifact of a predictable operator.
    has lost much absolute ground. Any rule that admits work on a prediction of the remaining service
    inherits the variance of that service, and this is the second independent reason, after the
    moving-link null, that the recommendation is the counter.
+
+## CR-52. EVERY RESULT IN THIS PAPER WAS FOUND ON ONE MAP
+
+**Provenance.** Adversarial review's second swing, registered before any arm on a new map is read.
+Every `band` arm is read: the `band` map IS the paper. Nothing below has been looked at.
+
+**The defect.** `build_world` produced a single profile: one lateral Gaussian band of cover
+broadcast along the entire length of the field. That map has no longitudinal structure at all, so a
+route choice in this project is a choice of latitude and nothing else, and every lever magnitude,
+every threshold and both headline results live on it. The generator now takes a `profile` and a
+dozen parameters, with the published path pinned bit-identical on three seeds and every metric.
+
+Two new maps, chosen to attack the queue results from opposite sides rather than to be pretty:
+
+  `open`         no cover anywhere. The negative control: route bias cannot mean anything here, so
+                 any result that survives on `open` is not a terrain result.
+  `chokepoint`   a transverse ridge with one gap. The only fast ground across it is the gap, so a
+                 dispersed force has to converge, and it converges where the MAP chooses rather
+                 than where the operator does.
+
+**P1 (the levers).** Admission control over a blind console holds its sign and gates on both
+`success` and `served_per_step`, at the collapse span, on both new maps.
+  **FALSIFIER.** A sign change on either map, or a failure to gate on both metrics on both maps,
+  makes the headline lever a property of the one map it was found on, and every magnitude in
+  Section~queue is quoted for that map alone.
+
+**P2 (the bound).** The capacity ladder's argmax is unchanged by the map, because $k^{\star}$ is a
+property of the queue and the deadline and contains no term for the ground.
+  **FALSIFIER.** An argmax outside $\{1,2\}$ on either new map. That would be the more interesting
+  outcome and would mean the ground enters the sizing rule through the arrival process.
+
+**P3 (the threshold, and the reason a chokepoint was chosen).** The collapse span is SMALLER on
+`chokepoint` than on `band`. A constriction funnels vehicles into contact together, which raises the
+request rate at the moment it is least affordable, and Equation nstar is linear in the reciprocal of
+that rate.
+  **FALSIFIER.** A collapse span on `chokepoint` at or above the `band` map's puts the direction of
+  the terrain-to-console coupling the other way, and the terrain-demand paragraph in the manuscript
+  is rewritten rather than extended.
+
+**CR-52 INSTRUMENT ADJUSTMENT, made before any registered arm was run and recorded because it
+changes what `open` is.** The first version of the control had no cover at all, and a six-seed smoke
+run put mission success at 0.00 on it against 1.00 on `band` at ten assets. A floored metric cannot
+carry a contrast, so the control would have been unreadable on the metric a sponsor buys. The
+control I want is the absence of a route CHOICE, not the absence of protection, so `open` now
+carries the band profile's own mean cover, concealment and trafficability, uniformly. Nothing about
+P1, P2 or P3 was read when this was changed; the smoke run that motivated it was on `success` at a
+span outside the registered contrast and is reported here rather than used.
