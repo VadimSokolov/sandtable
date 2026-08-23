@@ -40,6 +40,7 @@
 \input{gen/maps_numbers}
 \input{gen/foresight_numbers}
 \input{gen/acuity_numbers}
+\input{gen/follow_numbers}
 \input{gen/ledger_counts}
 
 \newcommand{\sandtable}{\textsc{SandTable}}
@@ -943,6 +944,40 @@ A saturating operator changes the magnitudes without changing any of the conclus
 Two of the queue findings are conditioned on choices worth naming. Abandonment semantics are a modeling choice rather than an observation: \texttt{blind}, \texttt{refund}, and \texttt{admit} bracket what a console might plausibly do, \texttt{blind} is the pessimistic end and the behavior of the model as first published, and which of the three a fielded system resembles is an empirical question this model cannot settle. Second, the delivered-vehicle counts that make the collapse look like a throughput ceiling are specific to the \qDeadline{}~s mission window. At \qLongWindow{}~s the same blind configuration delivers \qArrivedTwelveLong{} vehicles at twelve assets rather than \qArrivedTwelve{}, and delivery is again monotone in span. What the queue imposes is a tempo penalty; the deadline is what converts tempo into failure. Success rates under the published window are joint statements about the queue and the clock, and the window belongs with the number whenever it is quoted.
 
 The model's parameters are set, not measured. The command model is a capacity-limited-server abstraction of operator attention, calibrated to the qualitative findings of the supervisory-control literature rather than to human-subject data; and the lethality probabilities and the C0--C5 latency and drop values are hand-set, so they, not measured link or weapon data, fix where the crossover falls and how fast the sensor-to-shooter chain degrades. The studies also use fixed heuristic behaviors rather than learned or reinforcement-learning policies, a single operator with no handoff or dynamic span reallocation, and three scenarios with small teams; extrapolation to larger forces, multi-operator command, or adaptive policies is untested.
+
+\paragraph{What this model can inherit from a controls result, and what it cannot.} One boundary is
+worth reporting with a number rather than as a caveat, because the temptation to cross it is
+specific and the literature invites it. Convoy and formation control optimise PATH ERROR, and the
+sharpest empirical finding available to this project reports large reductions in it for a
+behaviour-based follower under jamming \citep{cheung2022convoy}. Carrying that to mission outcome
+requires station-keeping error to predict mission outcome, and in this model it does not. The
+counterexample sits inside a single configuration. Disturbing a follower's ESTIMATE of where its
+station is, and MOVING where the station is, produce the same metric on the same arm: at
+\FoDisEstErr{}~m of mean station error from a stale estimate the mission succeeds \FoDisEstSuc{} of
+the time, and at \FoDisCmdErr{}~m from a commanded spread it succeeds \FoDisCmdSuc{}. The larger
+error is the harmless one at the other end too, \FoDisEstBigErr{}~m scoring \FoDisEstBigSuc{}
+against \FoDisCmdBigErr{}~m at \FoDisCmdBigSuc{}. A commanded spread is a column designed to be
+strung out, so the force arrives piecemeal and fights alone; an estimator error is a vehicle chasing
+a wrong point along a trajectory that still tracks the route and closes when the track refreshes.
+Mean position error is the same number for both and describes one of them.
+
+The consequence for the follow stack is that its channel is mission-immaterial here and its one
+requirement is a scalar. Across the whole communications ladder, the two-by-two of refresh channel
+against column topology is statistically equivalent to a link-following star in all \FoCells{}
+contrasts, at station errors of \FoStErrClear{} to \FoStErrSevere{}~m; the weakest of those
+equivalences carries a one-sided statistic of 1.73 against a threshold of 1.70, so the finding is
+affirmative but not comfortably so. Within that band the on-platform follower's point estimate is
+\FoGapClear{} on a clear link and \FoGapSevere{} at the worst rung, which is the opposite of the
+sign the path-error literature reports; signs inside an equivalence band are noise and we draw
+nothing from it beyond the failure to reproduce. What does matter is the platform's willingness to
+stop trusting a stale track. Forcing the track age up directly, so that no channel model stands
+between the disturbance and the measurement, mission success moves \FoCutSpread{} across a
+sixteen-fold range of staleness while the cut-off is in place, and the fleet spends up to
+\FoLostWorst\% of its time navigating by waypoint rather than following. Remove the cut-off and a
+five-minute outage costs \FoCutGain{} of mission success ($t = \FoCutT{}$). The cut-off is inert
+under every channel this study models and decisive against a severed link, which makes it a
+zero-premium insurance scalar rather than a parameter to tune: sweeping its value is noise under
+both the burstiest channel here and the forced disturbance.
 
 The absolute success rates should therefore be read as comparative, not predictive: the value is in the \emph{ordering} of designs and the \emph{location} of crossovers, which is what a search loop consumes, not in any single percentage. The moving optimum's exact crossover cells near the contour are within Monte-Carlo noise, so what the study establishes is the direction of the boundary, not the precise cell. The Lanchester check validates the aggregate attrition law but not the spatial or command dynamics. The stronger forms of validation this class of model admits are left open: docking the emergent behavior against an independently built model \citep{axtell1996aligning}, pattern-oriented validation that asks the model to reproduce several observed tactical patterns at once \citep{grimm2005pattern}, and empirical comparison against exercise or high-fidelity ProjectGL traces. This is why the intended role of the model is to feed, not replace, high-fidelity validation.
 

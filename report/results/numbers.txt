@@ -2605,6 +2605,32 @@ CR-53 v2, consistency against discernment (source: tools/make_foresight_numbers.
   frMemPairs = 4
   frMemRed = 3
 
+--- gen/follow_numbers.tex  (24 macros, source: tools/make_follow_numbers.py) ---
+  FoBcAll = 0.8740
+  FoCells = 18
+  FoCutClear = 0.8872
+  FoCutGain = +0.0811
+  FoCutSpread = 0.0259
+  FoCutT = 7.68
+  FoCutWorst = 0.8726
+  FoDisCmdBigErr = 819
+  FoDisCmdBigSuc = 0.4468
+  FoDisCmdErr = 173
+  FoDisCmdSuc = 0.4341
+  FoDisEstBigErr = 1254
+  FoDisEstBigSuc = 0.7915
+  FoDisEstErr = 187
+  FoDisEstSuc = 0.8726
+  FoGapClear = -0.0132
+  FoGapSevere = -0.0220
+  FoLostMid = 47
+  FoLostWorst = 84
+  FoLsClear = 0.8872
+  FoLsSevere = 0.8926
+  FoNoCutWorst = 0.7915
+  FoStErrClear = 13.0
+  FoStErrSevere = 16.3
+
 --- gen/foresight_numbers.tex  (18 macros, source: tools/make_foresight_numbers.py) ---
   FsBoundDiscernment = +0.0132
   FsBoundMetro = 0.1476
