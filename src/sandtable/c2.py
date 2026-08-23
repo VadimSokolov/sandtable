@@ -164,6 +164,15 @@ class Operator:
     # distinct senders separates them at no cost, because the mask is one integer.
     _mult_mask: int = 0
     _mult_dsum: float = 0.0
+    # Busy windows holding at least 2, 3 and 4 DISTINCT senders. The console prices the tail and
+    # not the mean: it serves one request and can hold `floor((P - 2*lat)/S)` more before the
+    # requester's patience expires, so a window whose sender count stays inside that depth costs
+    # nothing however crowded the average looks. The whole distribution is kept rather than a
+    # single over-depth flag, because the depth depends on the rung and baking one rung's
+    # arithmetic into the simulator would make the statistic un-reusable at another.
+    _mult_ge2: int = 0
+    _mult_ge3: int = 0
+    _mult_ge4: int = 0
     _fano_bin: float = 0.0
     _fano_idx: int = 0
     _fano_n: int = 0
@@ -447,7 +456,11 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 op._mult_sum += op._mult_bin
                 op._mult_busy += 1
                 op._mult_peak = max(op._mult_peak, op._mult_bin)
-                op._mult_dsum += float(int(op._mult_mask).bit_count())
+                senders = int(op._mult_mask).bit_count()
+                op._mult_dsum += float(senders)
+                op._mult_ge2 += senders >= 2
+                op._mult_ge3 += senders >= 3
+                op._mult_ge4 += senders >= 4
             op._mult_bin = 0.0
             op._mult_mask = 0
             op._mult_idx += 1

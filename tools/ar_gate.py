@@ -32,13 +32,31 @@ INFLATABLE = {
 # other, so the tier is an argument rather than a default that can drift.
 FULL_T, FULL_FRAC, FULL_MPE = 1.70, 0.60, 0.06
 
+# A minimum practical effect stated as a share of the REFERENCE ARM's own level does no work in the
+# regime this paper is about. At sixteen assets the blind console serves 0.0023 per step, so a
+# +0.148 improvement reads as +6299% and every effect is material by construction: the floor is
+# vacuous exactly where the console has collapsed, which is where the paper's claims live.
+#
+# For a rate the invariant is not the reference arm, which goes to zero, but the console's own
+# capacity, which does not. `service_rate` decisions per step is what one console can deliver, so a
+# rate effect is material at six percent of capacity and the floor scales with staffing rather than
+# with whichever arm happened to be picked as the baseline. This does not apply to `success` or any
+# other quantity bounded in [0, 1], where six percent already has a scale meaning.
+CAPACITY = 0.15                      # operator service rate, decisions per step, per console
+RATE_METRICS = {"served_per_step", "requests_per_step", "abandoned_per_step"}
+
+
+def rate_floor(mpe: float = FULL_MPE, consoles: int = 1) -> float:
+    """The absolute floor a rate effect must clear: a share of what the console can deliver."""
+    return mpe * CAPACITY * consoles
+
 
 class DenominatorUnchecked(RuntimeError):
     """Raised when an inflatable ratio is gated without its denominator contrast."""
 
 
 def gate(metric: str, eff: float, t: float, won: int, n: int, base: float,
-         *, denom: tuple[float, float] | None = None,
+         *, denom: tuple[float, float] | None = None, consoles: int = 1,
          t_min: float = FULL_T, frac: float = FULL_FRAC, mpe: float = FULL_MPE) -> bool:
     """True when the contrast survives the tier's gate.
 
@@ -55,9 +73,21 @@ def gate(metric: str, eff: float, t: float, won: int, n: int, base: float,
         d_eff, d_base = denom
         # A denominator that itself moved by more than the materiality floor makes the ratio
         # unreadable, whichever way the ratio went. Not a weaker claim: no claim.
+        #
+        # This test stays RELATIVE even though `requests_per_step` is a rate and rates are otherwise
+        # floored against capacity below. The two floors answer different questions. What biases a
+        # ratio is the denominator's PROPORTIONAL movement: a denominator that moves six percent
+        # moves the ratio about six percent whatever the absolute rate is. Swapping this to the
+        # capacity floor would let a proportionally large move through whenever the absolute rate
+        # is small, which is precisely the collapsed regime where the ratio is least trustworthy.
         if d_base and abs(d_eff) > mpe * abs(d_base):
             return False
-    return abs(t) > t_min and won >= frac * n and abs(eff) > mpe * abs(base)
+    if not (abs(t) > t_min and won >= frac * n):
+        return False
+    if metric in RATE_METRICS:
+        # Anchored to capacity, not to a baseline that collapses. See RATE_METRICS above.
+        return abs(eff) > rate_floor(mpe, consoles)
+    return abs(eff) > mpe * abs(base)
 
 
 def verdict(metric: str, eff: float, t: float, won: int, n: int, base: float, **kw) -> str:

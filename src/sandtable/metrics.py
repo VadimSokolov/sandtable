@@ -124,6 +124,7 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "arrival_fano": 0.0, "arrival_multiplicity": 0.0, "arrival_peak": 0.0,
            "arrival_rate": 0.0, "arrival_excess": 0.0,
            "arrival_distinct": 0.0, "arrival_repeat": 0.0, "arrival_repeat_frac": 0.0,
+           "arrival_ge2": 0.0, "arrival_ge3": 0.0, "arrival_ge4": 0.0,
            "supervised_mean": 0.0, "supervised_frac": 0.0, "demand_norm_goodput": 0.0,
            "hold_fraction": 0.0, "interaction_steps": 0.0, "neglect_steps": 0.0, "fan_out": 0.0}
 
@@ -178,6 +179,14 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
             out["arrival_distinct"] = op._mult_dsum / op._mult_busy
             out["arrival_repeat"] = out["arrival_multiplicity"] - out["arrival_distinct"]
             out["arrival_repeat_frac"] = out["arrival_repeat"] / out["arrival_multiplicity"]
+            # The tail, which is what the console actually prices. It serves one request and can
+            # hold `floor((patience - 2 * latency) / service)` more before the requester gives up,
+            # so crowding inside that depth is free and crowding past it is not. Reporting the
+            # whole distribution rather than one over-depth flag keeps the statistic usable at any
+            # rung, since the depth is 3, 2, 2, 1, 0 across rungs 0 to 4 and the arms differ in rung.
+            out["arrival_ge2"] = op._mult_ge2 / op._mult_busy
+            out["arrival_ge3"] = op._mult_ge3 / op._mult_busy
+            out["arrival_ge4"] = op._mult_ge4 / op._mult_busy
         if op.fano_window > 0 and op._fano_n > 1 and op._fano_sum > 0.0:
             mean = op._fano_sum / op._fano_n
             var = op._fano_sumsq / op._fano_n - mean * mean

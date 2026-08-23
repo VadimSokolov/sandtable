@@ -3441,3 +3441,185 @@ $L \in \{1, 2, 3, 5\}$, all below one service.
   and an $lw$-dependent estimator bias, and CR-39 is measuring the first of them.
 
 Status of P4: **growth limb CONFIRMED, collapse limb UNTESTED, extension registered.**
+
+---
+
+## CR-29 VERDICT, AND CR-42: THE CLIFF HAS A CLOSED FORM AND THE MEDIATOR IS ZERO ON THE OTHER PHYSICS
+
+Job 9446589, full tier. Three findings, the third of which is a new registration.
+
+### P1 CONFIRMED, and pricing the wait makes the recommendation stronger rather than cheaper
+
+Fable's objection to CR-28 was that the model prices a wait flat, so "do not re-ask" is cheap advice.
+Priced by mobility instead, through a mechanism written two conjectures earlier for something else:
+
+| arm | n=5 | n=6 | n=8 |
+|---|---|---|---|
+| stop, rho=4 minus no-retry | -0.2554 (-100%) | -0.3726 (-100%) | floor |
+| stop, rho=12 minus no-retry | -0.1709 (-67%) | -0.3726 (-100%) | floor |
+| stop, rho=21 minus no-retry | -0.0107, null | -0.0640 (-17%) | floor |
+| keep, rho=4 minus no-retry | -0.1777 (-50%) | -0.2183 (-40%) | -0.1440 (-24%) |
+
+**No retry arm gates above no-retry anywhere, on either physics.** The falsifier did not fire, and the
+damage is roughly twice as large under stop-dead physics: at rho=4 success is exactly zero.
+Caveat recorded: at n=8 under stop-dead physics even no-retry reaches 0.0034, so that column is a
+floor and carries no information about the contrast.
+
+### P2 CONFIRMED as partial mediation, exactly at the pre-registered limit, and the shape is a cliff
+
+n=6, stop-dead, across the backoff ladder, fraction of each quantity's own range closed:
+
+| backoff | hold | success | hold closed | success closed |
+|---|---|---|---|---|
+| 2 | 0.8666 | 0.0000 | 0.000 | 0.000 |
+| 4 | 0.7966 | 0.0000 | 0.167 | 0.000 |
+| 8 | 0.6786 | 0.0000 | 0.449 | 0.000 |
+| 12 | 0.5889 | 0.0000 | 0.664 | 0.000 |
+| 16 | 0.5181 | 0.0127 | 0.833 | 0.034 |
+| 21 | 0.4575 | 0.3086 | 0.978 | 0.828 |
+| none | 0.4484 | 0.3726 | 1.000 | 1.000 |
+
+The mediator moves smoothly and monotonically; the outcome does not move at all until the mediator is
+two thirds closed, and then jumps. **The pre-registered limit is met exactly**: at rho=21 hold is
+97.8% closed and success only 82.8%, so hold fraction is partial and the remainder is unexplained,
+which is what the registration said may be claimed and no more.
+
+**The cliff is not a mystery.** `success` is `arrived_frac >= survive_fraction`, and that identity
+holds block by block in 32 of 32 blocks in eleven of the twelve P1 cells and 31 of 32 in the twelfth.
+The outcome is a threshold on a continuous quantity, and `arrived_frac` is monotone in hold fraction
+within every span.
+
+### The mediator is IDENTICALLY ZERO on the physics the paper ships, which changes what P2 can claim
+
+`hold_fraction` is 0.0000 for every keeps-driving arm, correctly: nothing is held when a vehicle with
+no answer keeps driving. Yet retrying still costs -0.2183 at rho=4 there. **Time in stall cannot be
+the mechanism on the published physics, because there is no stall.** So the recommendation is
+over-determined rather than singly caused: under stop-dead physics it is a tempo budget, and under
+keeps-driving physics it is the console congestion of Section~\ref{subsec:queue}. Two mechanisms,
+same advice. That is a stronger reason to believe the advice than either alone, and it is the honest
+way to report the mediation: not "the mechanism is time in stall" but "on the physics where stalling
+exists, time in stall is most of it."
+
+### CR-42. THE CLIFF SHOULD BE PREDICTABLE WITH NO FREE PARAMETER
+
+If the damage is a tempo budget, the mission fails when the force cannot cover the route in the time
+allowed: $v_{\text{eff}} \, T \, (1 - h) < D$, so the critical hold fraction is
+$h^{\star} = 1 - D / (v_{\text{eff}} T)$. Every term is already fixed by the scenario: $D = 5350$~m
+(start at 250, goal at 5750, radius 150), $T = 1800$~s, and $v_{\text{eff}}$ is the mean advance rate
+of an unheld vehicle, which is a property of terrain and control quality and not of the retry rule.
+
+At $n=6$ the measured collapse sits between $h = 0.4575$ (arrived 0.2504) and $h = 0.5889$
+(arrived 0.0001), which brackets $v_{\text{eff}}$ in $[5.48, 7.23]$~m/s against a platform maximum
+of 12.0.
+
+**P1. Measured independently on an arm with no holds, $v_{\text{eff}}$ falls inside $[5.48, 7.23]$~m/s.**
+  **FALSIFIER.** A measured $v_{\text{eff}}$ outside that interval **refutes** the tempo-budget account
+  of the cliff, and the cliff goes back to being an unexplained threshold that the paper reports
+  without a mechanism.
+
+**P2. The predicted $h^{\star}$ locates the collapse at every span, not only at $n=6$.** Computing
+$h^{\star}$ once from the measured $v_{\text{eff}}$ and comparing it against the measured collapse at
+$n = 5$ and $n = 8$ is a two-point out-of-sample test of a zero-parameter prediction.
+  **FALSIFIER.** A collapse at a hold fraction that moves with span **refutes** P2, and the account
+  becomes span-conditional rather than a budget, since a budget does not know how many vehicles share
+  the console.
+
+Registered before $v_{\text{eff}}$ is measured. The measurement is one probe run and takes a minute,
+which is precisely why the prediction is written down first.
+
+---
+
+## CR-42 P1 VERDICT: REFUTED. THE FALSIFIER FIRED AND THE BRACKET WAS BUILT WRONG
+
+Measured on 64 seeds with the retry rule off and a clear link, so no vehicle is ever held:
+
+    route D = 5350 m, T = 1800 s, platform max 12.0 m/s
+    reach time over 56 of 64 seeds: median 1013 s, mean 1258 s
+    v_eff from median reach = 5.28 m/s      -> h* = 0.4372
+    v_eff from mean   reach = 4.25 m/s      -> h* = 0.3010
+    registered bracket                       [5.48, 7.23]
+
+**Both estimates fall below the registered bracket, so P1 is REFUTED as written.** The tempo-budget
+account of the cliff does not survive its own falsifier and I am not going to widen the bracket after
+the fact. P2 is void with it, since it was conditioned on P1's $v_{\text{eff}}$.
+
+**Why it failed is worth more than the failure.** The bracket was derived from ARM MEANS: the mean
+hold fraction of an arm and the mean arrived fraction of the same arm. Both quantities are per-run,
+success is a threshold applied per run, and a threshold does not commute with an average. The budget
+$v_{\text{eff}} T (1-h) \ge D$ is a statement about one run's hold fraction and one run's distance
+covered. Comparing it against a mean over 2048 runs asks whether the average run is above threshold,
+which is a different question from what fraction of runs are, and the two differ by exactly the
+amount the distribution is spread. This is the same defect genus as the five already in the ledger:
+a construction correct for its first use, an average, carried into a second where a nonlinearity
+sits between the quantity and the outcome.
+
+**CR-43. The budget at the level it is a statement about.** Collect per-run pairs of hold fraction
+and arrived fraction, not per-arm means, and test the budget where it lives.
+  **P1.** Within a single arm, runs sort by hold fraction: those with
+  $v_{\text{eff}} T (1-h) \ge D$ arrive and those below it do not, at the $v_{\text{eff}} = 5.28$~m/s
+  already measured and with no parameter fitted to these runs.
+  **FALSIFIER.** If arrived fraction does not separate at the predicted hold, or separates at a hold
+  that has to be fitted, the budget account is **dead** and does not come back. Three registrations on
+  one mechanism is the limit; a fourth would be fitting.
+  **P2.** The separating hold is the same across spans $n = 5, 6, 8$. A budget does not know how many
+  vehicles share a console.
+  **FALSIFIER.** A separating hold that moves with span makes it console congestion wearing a budget's
+  clothes, and the cliff is reported as a threshold with no closed form.
+
+This is a new registration made after a refutation, not a repair of the refuted one. It carries its
+own falsifier and can fail on its own terms, and the refuted version stays refuted in the table.
+
+---
+
+## CR-42 CORRECTION: THE REFUTATION IS VOID, AND I HAVE TO SAY WHY BEFORE SAYING WHAT REPLACES IT
+
+The measurement that fired CR-42 P1's falsifier was wrong in two independent ways, both found while
+building the CR-43 probe rather than while defending the result.
+
+**One. The run had no behavior module.** `measure_veff.py` passed `teleop_stop: True` without
+`blue_behavior: "teleop"`, so `behavior.py` was never instantiated and the arm was not the physics
+the conjecture is about. Median reach time 1013~s. With the module active it is 1387~s.
+
+**Two, and worse, the estimator was wrong even with the right run.** I computed
+$v_{\text{eff}} = D / t_{\text{reach}}$ and called it the advance rate of an unheld vehicle. It is
+not. $t_{\text{reach}}$ already contains the holds, so that ratio is the NET rate, which is exactly
+the left-hand side of the budget rather than its input. The budget is
+$v_{\text{eff}} T (1-h) \ge D$, so $v_{\text{eff}} = D / (t_{\text{reach}} (1-h))$, and I had divided
+by nothing. **There is no hold-free arm in this model to measure it on**: at rung 0 with the retry
+rule off, hold fraction is still 0.34 to 0.40, because a teleoperated vehicle stops whenever it has
+no answer, including during an ordinary queue wait. The probe printed that in its own diagnostic and
+the diagnostic is what caught it.
+
+Corrected: $v_{\text{eff}} = 5350 / (1387 \times 0.63) = 6.12$~m/s, which is **inside** the registered
+bracket $[5.48, 7.23]$.
+
+**P1 is therefore VOID, not confirmed.** The falsifier fired on a defective measurement, so it did
+not fire; but I have now seen the corrected number, so I cannot claim a blind confirmation either,
+and the CR-37 precedent says an instrument-defective null goes to VOID and gets re-run rather than
+being flipped to a positive by whoever spots the defect. The difference from CR-37 is that there I
+registered the re-run blind and here the number is already in front of me. **A quantity I measured
+after seeing what it needed to be is not evidence, whatever it came out to.**
+
+**What survives as a real test is P2, which I have not looked at.** $v_{\text{eff}}$ is estimated at
+$n=6$, and the bracket was read at $n=6$, so any statement about $n=6$ is circular. The out-of-sample
+question is whether the SAME $h^{\star} = 1 - D/(v_{\text{eff}} T) = 0.514$ locates the collapse at
+$n=5$ and $n=8$, where nothing was fitted.
+
+**CR-43 REVISED, and this is the version that gets run.** Estimate $v_{\text{eff}}$ on rung-0,
+retry-off runs at $n=6$ alone. Predict $h^{\star}$ once. Test the per-run budget on retry-on runs at
+$n=5$ and $n=8$ only, holding $n=6$ out of the test entirely because it trained the parameter.
+  **P1. At $n=5$ and $n=8$, runs with $h < h^{\star}$ arrive and runs with $h \ge h^{\star}$ do not,
+  separating within 0.05 of the predicted hold.**
+  **FALSIFIER.** A separation more than 0.05 from $h^{\star}$, or no separation at all, kills the
+  budget account permanently. This is its third registration and there will not be a fourth.
+  **P2. The separating hold does not move with span between $n=5$ and $n=8$.**
+  **FALSIFIER.** A separating hold that moves with span makes it console congestion in a budget's
+  clothes, and the cliff is reported as a threshold with no closed form.
+
+**The general lesson, which is the fifth of its kind and belongs in the paper.** Every instrument
+defect in this project has had the same shape: a quantity computed correctly for one construction and
+carried into a second where a term was needed and absent. Here the absent term was $(1-h)$, and it
+was absent because I wrote the estimator while thinking about a vehicle that is never held, in a
+model where no vehicle is ever not held. The defense that works is not care. It is a diagnostic that
+prints the assumption: the probe printed `hold_fraction 0.3586, not a clean arm` sixty-four times
+before it printed anything else, and that line is what found both defects.

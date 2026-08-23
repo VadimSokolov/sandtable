@@ -216,3 +216,42 @@ def test_the_three_original_parts_still_bind_on_an_inflatable_metric():
     assert ar_gate("operator_goodput", 0.30, 1.0, 32, 32, 0.50, **held) is False
     assert ar_gate("operator_goodput", 0.30, 40.0, 15, 32, 0.50, **held) is False
     assert ar_gate("operator_goodput", 0.001, 40.0, 32, 32, 0.50, **held) is False
+
+
+# ---------------------------------------------------------------------------
+# A relative minimum practical effect is vacuous on a rate whose reference collapses, which is
+# exactly the regime this paper reports. Anchoring the floor to console capacity fixes it, and
+# capacity is the right invariant because it scales with staffing while a baseline does not.
+# ---------------------------------------------------------------------------
+from tools.ar_gate import CAPACITY, rate_floor  # noqa: E402
+
+
+def test_the_rate_floor_is_a_share_of_capacity_not_of_the_baseline():
+    assert rate_floor() == 0.06 * CAPACITY
+    assert rate_floor(consoles=2) == 2 * rate_floor()
+
+
+def test_a_collapsed_baseline_no_longer_makes_everything_material():
+    # n=16, blind serves 0.0023/step. A +0.0001 effect is +4.3% of that baseline and would have
+    # cleared a relative floor at 6 percent only by being compared against nearly nothing; against
+    # capacity it is four hundredths of what one console delivers, and it does not gate.
+    assert ar_gate("served_per_step", eff=0.0001, t=40.0, won=32, n=32, base=0.0023,
+                   denom=None) is False
+
+
+def test_the_real_refund_effect_still_gates_against_capacity():
+    # +0.148/step at n=16 is sixteen times the capacity floor.
+    assert ar_gate("served_per_step", eff=0.1477, t=2605.0, won=32, n=32, base=0.0023) is True
+
+
+def test_a_bounded_metric_keeps_the_relative_floor():
+    # success lives in [0, 1] and 6 percent has a scale meaning there, so nothing changes.
+    assert ar_gate("success", eff=0.02, t=40.0, won=32, n=32, base=0.50) is False
+    assert ar_gate("success", eff=0.04, t=40.0, won=32, n=32, base=0.50) is True
+
+
+def test_the_denominator_guard_stays_relative_not_capacity_floored():
+    # A denominator moving 20 percent on a small absolute rate would clear no capacity floor, and
+    # it still makes the ratio unreadable, because ratio bias tracks proportional movement.
+    assert ar_gate("operator_goodput", eff=0.30, t=40.0, won=32, n=32, base=0.50,
+                   denom=(0.0020, 0.010)) is False
