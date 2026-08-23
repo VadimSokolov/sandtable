@@ -132,6 +132,40 @@ ROWS = [
      "a random-order console that recovers what newest-first recovers",
      "\\textsc{refuted}: random order recovers \\LvRandShare\\% of it, so the mechanism is the "
      "age of the work in service and not the order"),
+    ("newest-first buys its throughput by starving the tail",
+     "a starvation measure in vehicles rather than in queue length",
+     "\\textsc{refuted}: it starves nobody. Oldest-first leaves most of the force never once "
+     "answered and newest-first leaves none of it; the large backlog is memory, not harm"),
+    ("the counter is the recommendation at every rung of the comms ladder",
+     "the counter against a deadline field on a degraded link",
+     "\\textsc{narrowed}: equivalent on a clear link and gated WORSE at C3 by "
+     "\\KpJamBoundVsAdmitSixteen{}, because a length bound is a proxy for age and the proxy fails "
+     "as the link takes over the deadline. The recommendation is now conditional on the link"),
+    ("the rounding constant in the capacity rule is one half",
+     "a second scan through the operating band, on a different knob",
+     "\\textsc{narrowed}: the patience sweep puts the one-third form inside the plateau at "
+     "\\QcapPatThirdHit{} of \\QcapPatPoints{} points against \\QcapPatHalfHit{}, so the "
+     "constant is undetermined between a third and a half; what the data does fix is that it is "
+     "not zero"),
+    ("the collapse span depends on the terrain the assets are crossing",
+     "the half-peak span at one-asset resolution on three maps",
+     "\\textsc{refuted}: all three peak at five assets and cross half-peak between six and seven, "
+     "so the collapse span is a console property and the closed form needs no terrain term"),
+    ("the admission test uses only information a message field could carry",
+     "(instrument: separating the test against the mean from the test against the draw)",
+     "\\textsc{repaired and priced}: with them separated, discernment is worth "
+     "\\FsDiscernment{} served per step against consistency's \\FsConsistency{}, and the "
+     "derived bound shrinks discernment's value by a factor of \\FsBoundShrink{}; guarded by "
+     "\\texttt{admit\\_foresight}, which defaults to the console a deadline field can build"),
+    ("a battery measures the console its conjecture was registered against",
+     "(instrument: a shared default that predates the second console)",
+     "\\textsc{repaired}: it did not, and the discrepancy showed only against another battery's "
+     "identical arm; guarded by a named buffer-console macro, since the failure is invisible at "
+     "the call site"),
+    ("a result is attributable to the code state its log header names",
+     "(instrument: a running job reading a directory the sync script rewrites)",
+     "\\textsc{repaired}: the header asserted a hash the run stopped keeping; guarded by a "
+     "per-job source snapshot and a hash re-checked at exit that refuses the log on a mismatch"),
 ]
 
 
