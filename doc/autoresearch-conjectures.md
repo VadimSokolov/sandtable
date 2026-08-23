@@ -3771,3 +3771,63 @@ those are arm-to-arm differences at a common configuration rather than levels ag
 CR-37 confirmed the reduction in six of six pairs. The mechanism is real and well measured. What is
 now in question is its size at the console, which is a different claim and was reported through a
 metric that could not carry it.
+
+---
+
+## CR-34 P6 VERDICT: THE FALSIFIER FIRED, AND IT RETIRES THE WHOLE RESIDUAL ARGUMENT
+
+Job 9446872. The control I omitted from CR-34 and registered afterwards, and it settles two rounds of
+argument about which closed-form floor to use by making the question unnecessary.
+
+**`arrival_excess` levels, both channels, backoff 18:**
+
+| span | memoryless: noretry | jit18 | fix18 | bursty: noretry | jit18 | fix18 |
+|---|---|---|---|---|---|---|
+| 4 | 1.0057 | 0.9940 | 1.0522 | 1.0494 | 1.0430 | 1.1318 |
+| 5 | 1.0122 | 1.0027 | 1.0814 | 1.0642 | 1.0645 | 1.1936 |
+| 6 | 1.0165 | 1.0087 | 1.1162 | 1.0829 | 1.0828 | 1.3331 |
+| 8 | 1.0194 | 1.0126 | 1.2217 | 1.1208 | 1.1178 | 2.1935 |
+| 10 | 1.0209 | 1.0150 | 1.9165 | 1.1456 | 1.1400 | 2.9300 |
+
+**`jit18 - noretry` is null at every span on both channels.** On the bursty link it is essentially
+exactly zero: +0.0004 to -0.0064, $|t|$ at most 1.79, and 14 to 21 of 32 blocks, which is a coin
+flip. On the memoryless link the jittered arm is slightly BELOW the no-retry arm.
+
+**`fix18 - noretry` is gated almost everywhere and grows superlinearly with span:** +4.6, +6.8, +9.8,
++19.9, +87.7 percent on the memoryless link and +7.9, +12.2, +23.1, +95.7, +155.8 percent on the
+bursty one, at $t$ from 21 to 96 with 32 of 32 blocks throughout.
+
+**P6's falsifier fired.** It asked whether `noretry` shows the same excess above the floor as the
+jittered arms. It shows MORE of it on the memoryless link and the same on the bursty one.
+
+### What this retracts, and it is a lot
+
+**CR-34 P1 is retracted.** P1 found the memoryless jittered arm sitting gated above its Bernoulli
+floor and called that a refutation of the "jitter scatters everything" reading. The finding was
+correct and the reference was wrong. Against a measured control rather than a closed form, the
+jittered arm sits at or below a fleet that never retries at all. Fable and I spent Rounds 16 and 17
+arguing which of three closed-form floors was right; the answer is none of them, and the argument was
+avoidable by running the control I had omitted, which is why it was registered the moment I noticed.
+
+**The residual apparatus goes with it.** There is no residual retry cohort surviving jitter. Every
+statement in the ledger about "the part jitter cannot reach," including the CR-34 P2 gap that grows
+with span, is a statement about the difference between two closed-form references and not about the
+fleet.
+
+### What replaces it is stronger and simpler
+
+**A deterministic hold creates a retry cohort whose crowding grows superlinearly with span, and a
+randomized hold of the same mean removes it completely.** At ten assets on a bursty link the fixed
+hold's arrival crowding is 156 percent above a fleet that never retries; the jittered hold is within
+half a percent of that fleet. Randomizing the backoff makes retrying free as far as the console's
+arrival pattern is concerned, at every span and on both channels.
+
+That is the sentence the section should have been carrying, and it needed one control to say.
+
+### A note on the staggered arm, which was not the point of this battery
+
+`noretry_stag` sits BELOW `noretry` at every span, 0.973 to 0.996 on the memoryless link against
+1.006 to 1.021. Synchronized starting phases produce measurable crowding even with the retry loop
+open, which is the initial-condition effect Section~\ref{subsec:band}'s fold band is about, now
+visible on the arrival statistic rather than only on the outcome. Not registered, so it is recorded
+as an observation and not a result.

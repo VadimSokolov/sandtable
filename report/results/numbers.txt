@@ -880,3 +880,40 @@ Jitter on uninflatable metrics (source: tools/make_jitclean_numbers.py)
   jcSuccGated = 2
   jcSuccSpan = Five
   jcSuccSpanNum = 5
+
+
+The no-retry control (source: tools/make_noretry_numbers.py over st-noretry-9446872.out)
+  nrGeBlocks = 32
+  nrGeFixCells = 5
+  nrGeFixGated = 5
+  nrGeFixHiPct = 155.8
+  nrGeFixLoPct = 7.9
+  nrGeFixMaxT = 96
+  nrGeFixMinT = 22
+  nrGeFixRising = 4
+  nrGeFixSteps = 4
+  nrGeJitGated = 0
+  nrGeJitMaxBlocks = 21
+  nrGeJitMaxPct = 0.6
+  nrGeJitMaxT = 1.79
+  nrGeJitMinBlocks = 14
+  nrGeSpanHi = 10
+  nrGeSpanLo = 4
+  nrGeSpans = 5
+  nrMemBlocks = 32
+  nrMemFixCells = 5
+  nrMemFixGated = 4
+  nrMemFixHiPct = 87.7
+  nrMemFixLoPct = 4.6
+  nrMemFixMaxT = 74
+  nrMemFixMinT = 24
+  nrMemFixRising = 4
+  nrMemFixSteps = 4
+  nrMemJitGated = 0
+  nrMemJitMaxBlocks = 29
+  nrMemJitMaxPct = 1.2
+  nrMemJitMaxT = 6.49
+  nrMemJitMinBlocks = 25
+  nrMemSpanHi = 10
+  nrMemSpanLo = 4
+  nrMemSpans = 5

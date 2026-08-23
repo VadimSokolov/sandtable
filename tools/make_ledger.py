@@ -47,6 +47,10 @@ ROWS = [
     ("a consumed refusal beats an ignored one",
      "no gain past collapse, or a cost below it",
      "\\textsc{held}: +0.268 goodput at twelve, and free at four"),
+    ("a residual cohort survives jitter and grows with the dwell",
+     "the no-retry control shows the same crowding as the jittered arm",
+     "\\textsc{refuted}: it shows more, so nothing survives jitter and the residual "
+     "was a gap between two calculated floors"),
     ("jitter helps by desynchronizing from the channel",
      "no Fano reduction in any mean-matched pair",
      "\\textsc{refuted} at the channel's dwell, \\textsc{confirmed} at the benched window: "
