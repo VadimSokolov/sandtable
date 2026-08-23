@@ -1,0 +1,6 @@
+# host=amd002.orc.gmu.edu job=9446583 battery=droop jobs=32 blocks=0-31 reps=64
+# code=c9d5727a1227a459
+OK   tamper guard: 2 frozen path(s) unchanged, 32 seeds fixed at [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+# start 2026-08-23T00:13:34Z
+### BATTERY droop START
+### O1 admission control against the oracle assumption (success)

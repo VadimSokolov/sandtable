@@ -1,0 +1,24 @@
+# host=hop044.orc.gmu.edu job=9448581 battery=sobol jobs=32 blocks=0-31 reps=64
+# code=7454162a760ed584
+OK   tamper guard: 2 frozen path(s) unchanged, 32 seeds fixed at [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+# start 2026-08-23T02:38:23Z
+### BATTERY sobol START
+### G1 Sobol on the collapse threshold, simulator against closed form
+Saltelli design: 768 parameter draws, 8 seeds x 13 spans each = 79872 missions
+running on 32 processes
+
+           parameter    S1 sim     S1 eq     diff      ST sim     ST eq
+        service_rate     0.495     0.458   +0.037       0.479     0.509
+            patience     0.172     0.137   +0.035       0.159     0.138
+   decision_interval     0.158     0.137   +0.021       0.117     0.129
+        comms_p_drop     0.262     0.266   -0.004       0.300     0.300
+
+rank, simulator:   ['service_rate', 'comms_p_drop', 'patience', 'decision_interval']
+rank, closed form: ['service_rate', 'comms_p_drop', 'decision_interval', 'patience']
+rank order identical: False
+largest |S1 difference|: 0.037 (P1 falsifier fires above 0.10)
+correlation of the two responses over the sample: 0.994
+wrote runlogs/sobol_nstar.json
+### BATTERY sobol COMPLETE
+# end 2026-08-23T02:53:05Z
+### ALL BATTERIES COMPLETE

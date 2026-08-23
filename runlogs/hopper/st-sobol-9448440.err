@@ -1,0 +1,15 @@
+/scratch/vsokolov/sandtable-ar/tools/sobol_nstar.py:101: DeprecationWarning: `salib.sample.saltelli` will be removed in SALib 1.5. Please use `salib.sample.sobol`
+  X = saltelli.sample(PROBLEM, a.n, calc_second_order=False)
+Traceback (most recent call last):
+  File "/scratch/vsokolov/sandtable-ar/tools/sobol_nstar.py", line 145, in <module>
+    main()
+  File "/scratch/vsokolov/sandtable-ar/tools/sobol_nstar.py", line 116, in main
+    s = sobol_analyze.analyze(PROBLEM, Y, calc_second_order=False, print_to_console=False)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vsokolov/.conda/envs/pol/lib/python3.11/site-packages/SALib/analyze/sobol.py", line 139, in analyze
+    S["S1"][j] = first_order(A, AB[:, j], B)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vsokolov/.conda/envs/pol/lib/python3.11/site-packages/SALib/analyze/sobol.py", line 203, in first_order
+    if y.ptp() == 0:
+       ^^^^^
+AttributeError: 'numpy.ndarray' object has no attribute 'ptp'

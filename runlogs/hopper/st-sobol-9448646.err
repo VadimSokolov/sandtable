@@ -1,0 +1,4 @@
+/scratch/vsokolov/sandtable-ar/tools/sobol_nstar.py:148: DeprecationWarning: `salib.sample.saltelli` will be removed in SALib 1.5. Please use `salib.sample.sobol`
+  X = saltelli.sample(PROBLEM, a.n, calc_second_order=False)
+/scratch/vsokolov/sandtable-ar/tools/sobol_nstar.py:160: DeprecationWarning: `salib.sample.saltelli` will be removed in SALib 1.5. Please use `salib.sample.sobol`
+  X_eq = saltelli.sample(PROBLEM, a.n_eq, calc_second_order=False)

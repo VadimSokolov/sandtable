@@ -6024,3 +6024,73 @@ channel is mission-null in this simulator at every outage length up to 320 steps
 sentence is not a requirement but a scope boundary, and the boundary is the contribution: a
 mission-level model of this kind cannot carry a controls result about path error, and it can say by
 how much and why.
+
+## CR-55 A1 VERDICT: THE FOLLOW CHANNEL IS MISSION-IMMATERIAL, AND THE POINT ESTIMATE GOES THE WRONG WAY
+
+Job 9449505, F1, full tier, 32 blocks of 64 replications, eight assets, supervisory control so the
+console is not the binding constraint and the ladder reaches the column only through the follow
+channel.
+
+| arm | C0 | C1 | C2 | C3 | C4 | C5 |
+| --- | --- | --- | --- | --- | --- | --- |
+| link + star | 0.8872 | 0.8887 | 0.8892 | 0.8926 | 0.8960 | 0.8926 |
+| behaviour + chain | 0.8740 | 0.8740 | 0.8740 | 0.8740 | 0.8740 | 0.8740 |
+| link + chain | 0.8740 | 0.8726 | 0.8691 | 0.8657 | 0.8809 | 0.8750 |
+| behaviour + star | 0.8594 | 0.8594 | 0.8594 | 0.8594 | 0.8594 | 0.8594 |
+
+**A1 holds, and holds affirmatively rather than by failure to reject.** Against link-plus-star, every
+other arm is TOST-EQUIVALENT at every rung, one-sided statistics 1.73 to 3.89. Nothing gates in
+either direction anywhere on the ladder.
+
+Three readings worth keeping.
+
+**The point estimate has Cheung's sign backwards at mission level.** Behaviour-chain minus link-star
+runs $-0.0132$ at C0 and grows more negative with the rung, to $-0.0220$ at C4. The behaviour arm is
+constant to the last digit across all six rungs, as it must be, since its refresh consults no radio.
+So the ladder does nothing to the arm that depends on it either: link-star is flat at 0.887 to 0.896
+across a ladder that takes the drop rate from 0 to 0.55.
+
+**Topology is worth more than channel here, and both are immaterial.** The channel main effect is
+$-0.014$ and the topology main effect is $+0.001$, but the interaction is larger than either: under
+a link, star beats chain; under on-platform sensing, chain beats star. The mechanism for the worst
+cell is visible in the parameters rather than in the data: a star follower at rank seven stations
+280 m behind the leader against a 250 m sense range, so the deepest vehicles in behaviour-plus-star
+cannot see what they are following at all and age out to waypoint navigation.
+
+**P4 is answered in the letter and not in the spirit.** The channel main effect does exceed the
+topology main effect, which is what P4 asked, but at a magnitude the gate calls equivalent, so the
+answer is not that the channel carries the effect: it is that there is no effect to carry.
+
+## CR-56 B1 VERDICT: TRIAGE IS LINEAR IN ACUITY, AND IT COSTS THE CONSOLE NOTHING
+
+Job 9449506, A1, full tier, buffer console, admitting, $cv = 0.5$.
+
+Delivered service per step against acuity $p$:
+
+| assets | $p = 0$ | 0.25 | 0.5 | 0.75 | 1 |
+| --- | --- | --- | --- | --- | --- |
+| 8 | 0.1182 | 0.1240 | 0.1303 | 0.1368 | 0.1428 |
+| 12 | 0.1229 | 0.1356 | 0.1485 | 0.1620 | 0.1762 |
+| 16 | 0.1185 | 0.1360 | 0.1546 | 0.1742 | 0.1949 |
+
+**B1 HOLDS.** Every step gates up with 32 of 32 blocks agreeing, $t$ from 10.5 to 274. At sixteen
+assets the increments are $+0.0175$, $+0.0186$, $+0.0196$, $+0.0207$, against a perfectly linear
+$+0.0191$ each: the curve is convex and the largest deviation from the chord is 0.0021, against a
+materiality floor of 0.0090. There is no threshold below which triage is worthless. A quarter of the
+capability is worth a quarter of the gain, and it gates up on its own at twelve and sixteen assets.
+That is the answer to the sponsor's actual question, which is whether PARTIAL operator skill is
+worth training rather than whether a perfect operator would be valuable.
+
+**And the effort identity survives the move from policy to capability, in the unit that admits it.**
+Console occupancy is TOST-equivalent across every acuity at every span, one-sided statistics 11.6 to
+186.6; at sixteen assets the effect is $+0.0000$ with $t = 0.01$. On the same runs, delivered service
+gates up at $t = 274$. **An operator who can triage perfectly works exactly as hard as one who cannot
+and delivers 65% more.** The two statistics are 0.01 and 274 on identical missions, which is the
+sharpest form the paper's thesis has taken: capability changes the composition of a fixed quantity,
+never the quantity.
+
+The mechanism is measured directly and is length selection. The mean service of the decisions the
+console SERVES falls monotonically with acuity, 5.538 to 5.092 steps at sixteen assets against a
+population mean of 6.667. Even the console that sees nothing serves 5.538, well below population,
+which is selection by attrition rather than by triage: its long draws overrun the deadline and land
+in the late bin. That distinction is the reviewer's and it is the one the paper had not named.

@@ -1,0 +1,8 @@
+# host=hop044.orc.gmu.edu job=9448440 battery=sobol jobs=32 blocks=0-31 reps=64
+# code=a748247c47da8b7b
+OK   tamper guard: 2 frozen path(s) unchanged, 32 seeds fixed at [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+# start 2026-08-23T02:07:37Z
+### BATTERY sobol START
+### G1 Sobol on the collapse threshold, simulator against closed form
+Saltelli design: 768 parameter draws, 8 seeds x 13 spans each = 79872 missions
+running on 32 processes

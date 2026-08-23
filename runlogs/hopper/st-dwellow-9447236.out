@@ -1,0 +1,6 @@
+# host=amd004.orc.gmu.edu job=9447236 battery=dwellow jobs=32 blocks=0-31 reps=64
+# code=46a42173645be00d
+OK   tamper guard: 2 frozen path(s) unchanged, 32 seeds fixed at [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+# start 2026-08-23T01:36:48Z
+### BATTERY dwellow START
+### D1 the residual below one service (arrival_excess)
