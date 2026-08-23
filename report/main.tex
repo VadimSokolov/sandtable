@@ -110,6 +110,18 @@ The contributions of this paper are the following.
 span of control and a C0--C5 communications/EW ladder, that reproduces a \emph{moving optimum}: the communications level at which autonomy overtakes human control falls as span rises (Section~\ref{subsec:centerpiece}).
 \item The mechanism behind that optimum, stated in closed form and then measured: the operator is
 a server with client abandonment, and one that does not detect abandonment sustains its own overload above a collapse span $n^{\star} = c(P+\tau+1)\mu/d$ and a serviceable-latency ceiling $\ell^{\star} = (P - 1/\mu)/2$. Both thresholds are confirmed against staffing and patience sweeps; explicit admission control is worth \qAdmitClear\% against \qBlindClear\% mission success at the centerpiece operating point, and the same mechanism makes message loss beneficial to an undetecting operator, which separates the two axes an EW ladder normally conflates (Section~\ref{subsec:queue}).
+\item A requirements ladder for the console, priced rather than argued, whose recommendation is
+conditional on the link. Three rungs differ in what the message must carry and not in mechanism:
+bounding the backlog needs the patience, the latency and the service rate and no change to the
+message; capping the request's age needs a send timestamp; refusing on the requester's own deadline
+needs a semantic field. On a clear link the cheapest rung is free, delivering \KpClearSrvBound{}
+served per step against admission control's \KpClearSrvAdmit{}, a gap the gate rejects as
+immaterial; at C3 it is not, giving up \KpJamBoundVsAdmitSixteen{} at both twelve and sixteen
+assets, because a length bound is a proxy for a request's age and the proxy fails as latency eats
+the deadline. Underneath all three the console's total effort is invariant: the four ways a claimed
+service slot can end sum to within \KpClearEffortSpread{} across every policy while delivered
+service spans a factor of \KpClearRatio{}, so these levers change the composition of a fixed
+quantity and working a saturated operator harder is not among them (Section~\ref{subsec:queue}).
 \item An attribution of that span effect, which reverses its own sign under the control every
 span-of-control study needs and few report: sweeping span with the defending force scaled so the ratio never moves turns a \atFixDir{} gain into a \atHeldDir{} loss, a difference in differences of \atDid{} at $t = \atDidT{}$ over \atDidN{} seed-matched blocks. Bounding the console away with supervisory control puts about \atConsoleShare\% of the collapse at the operator's queue and \atScenarioShare\% at the scenario, and the same decomposition holds on the continuous arrival fraction that mission success thresholds, which rules out the metric's own sharpening as its cause (Section~\ref{subsec:attrib}).
 \item A bistability in span of control, derived and then gated: when a vehicle that went
