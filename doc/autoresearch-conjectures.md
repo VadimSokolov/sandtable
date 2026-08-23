@@ -3094,3 +3094,18 @@ simply reported.**
 sponsor's alternative to software is people, and people are the unit the budget is denominated in.
 An equivalence stated in consoles is the only form of this result that can be compared against its
 own cost.
+
+### CR-31 addendum: verifying that `served_per_step` means what the verdict assumed
+
+Before building a correction on it, checked that `n_serviced` counts what the argument needs. It
+increments only in the branch where the request CAN return inside the requester's patience, so it
+counts service whose answer will actually be used. The branch where it cannot increments
+`n_abandon_queue` and does NOT increment `n_serviced`, even under `blind`, where the console still
+burns the slot via `_claim`. So `served_per_step` is a rate of USEFUL work, not of completions.
+
+Two consequences. The metric is semantically correct for the verdict, not merely arithmetically
+immune to the denominator. And the CR-31 result is sharper than first stated: `admit` delivers
+**+1.8% more useful work** than `refund` at twelve assets. Both policies free the slot; admit
+additionally tells the requester. Telling therefore costs nothing in work done and saves nothing
+either. All it changes is WHEN the vehicle comes back, which is the whole of the +32.4% request
+inflation and the whole of the apparent goodput collapse.
