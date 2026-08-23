@@ -4651,9 +4651,13 @@ arrive. A request standing at position $j$ in the waiting line, $j = 1$ next up,
 $2\ell + r + j/\mu$ after issue, where $r$ is the residual of the request in service. Under load
 $r\mu$ is close to uniform on $(0,1)$, so with $\lambda = (P - 2\ell)\mu$ the marginal admission at
 depth $j$ makes its deadline with probability
-$$\Pr[\text{useful at depth } j] = \operatorname{clamp}(\lambda - j + 1,\, 0,\, 1),$$
+$$\Pr[\text{useful at depth } j] = \operatorname{clamp}(\lambda - j,\, 0,\, 1),$$
 a straight line falling from one to zero across a single unit of $\lambda$, not a Poisson tail.
-Admitting while that probability is at least one half gives
+(Written $\lambda - j + 1$ in the first version of this paragraph and caught in review the same day.
+The $k^{\star}$ below was derived from the correct line and is unaffected; the displayed line as
+first written would have given $\lfloor \lambda + 1/2 \rfloor$ and missed both measured points, so
+the error was in the exposition and not in the result, which is the only reason it is a correction
+and not a retraction.) Admitting while that probability is at least one half gives
 $$k^{\star} = \lfloor \lambda + 1/2 \rfloor - 1 ,$$
 which also reproduces both measured points. Two different wrong-or-right mechanisms fitting the same
 two points is exactly the situation in which two points are worth nothing, and it is why the
@@ -4742,16 +4746,36 @@ finding, and it is a caution about mechanism stories rather than a result about 
    hundred; the gain from bounding CORRECTLY, against bounding at a fixed 2, is a few percent
    outside the degraded regime. The recommendation's value is almost entirely in the first step.
 
-2. **The plateau's lower edge is 1 or 2 across the whole range $\lambda \in [1.6, 7.9]$ while its
-   upper edge tracks $\lambda$.** Under-sizing is nearly free and over-sizing is expensive: at
-   $\lambda = 3.0$, one too small costs 3.0 percent of delivered service and one too large costs
-   13.0; at $\lambda = 5.0$, 0.07 percent against 7.2. **When the parameters are uncertain, size the
-   console's backlog below the rule, not above it.** This is the actionable sentence and it does not
-   depend on which of the three rules is used.
+2. **CORRECTED THE SAME DAY, and the correction is the more interesting statement.** The first
+   version of this entry said that under-sizing is nearly free and over-sizing is expensive, and
+   quoted $\lambda = 3.0$ and 5.0 at $n = 12$ as the evidence. Generating the numbers properly, over
+   all 201 grid points rather than two hand-picked ones, says the direction of the risk REVERSES
+   with load:
 
-3. **A fixed bound of 2 sits inside the plateau at every $\lambda \ge 2.0$ and every load tested**,
-   and fails only on degraded links, where the right answer is 1. The published floor rule's four
-   failures are all in that same window and all err toward 0, which is the safe side by point 2.
+   | | mean cost of one too small | mean cost of one too large | over is worse at |
+   |---|---|---|---|
+   | $n = 8$ (1.9x capacity) | 6.7% | 13.0% | 75% of points |
+   | $n = 12$ (2.8x) | 5.2% | 6.8% | 49% |
+   | $n = 24$ (5.6x) | 3.2% | 1.6% | 11% |
+
+   The mechanism is the one CoDel was written about. **A length cap has no fixed meaning in time.**
+   At a high arrival rate a buffer of $k$ is a short delay, because drop-oldest refills it
+   constantly and nothing in it is old; at a low arrival rate the same $k$ is a long one. So a rule
+   phrased in requests cannot be right at two arrival rates at once, and the risk of over-sizing
+   evaporates exactly where the console is busiest. The single-number asymmetry in the first version
+   of this entry was an average over two opposite regimes and meant nothing. This is the argument
+   for controlling sojourn time instead of queue length, and it is now CR-50's motivation rather
+   than a loose end.
+
+3. **CORRECTED. No single fixed bound covers the range.** The first version said a fixed 2 sits
+   inside the plateau at every $\lambda \ge 2.0$; the generated number is 85% of the 201 points, and
+   it fails everywhere up to $\lambda = 2.5$, not 2.0. A fixed 1 covers 61%, a fixed 3 covers 73%.
+   The published floor rule is outside the plateau at 13 of 201 points, all in
+   $\lambda \in [1.5, 1.9]$; the Erlang rule at 4, in $[1.5, 1.6]$; the deterministic rule at 4, in
+   $[2.5, 5.5]$. Every rule and every constant fails somewhere, and where they fail is the degraded
+   link. The plateau is narrow enough for any of this to matter at 33 of 67 points at $n = 8$, 21 at
+   $n = 12$, and 10 at $n = 24$: the sizing question has an answer in a WINDOW of load, roughly one
+   to four times capacity, and outside that window any bound will do.
 
 **CR-49 P5 VERDICT: REFUTED AS STATED, AND WHAT REPLACES IT IS BETTER.** Bounded first-come-first-
 served does not merely behave like unbounded newest-first; at a correctly sized bound it BEATS it,
@@ -4772,3 +4796,94 @@ differ by 0.0069 at worst and never materially. The requirements ladder therefor
 cheapest rung: **the counter is sufficient, and given the counter the stack buys nothing.** That is
 a stronger sponsor recommendation than the one the paper currently carries and it is cheaper to
 implement.
+
+## CR-50. THE CONSOLE SHOULD NOT BE SIZED, IT SHOULD BE TIMED
+
+**Provenance.** Registered before any line of the policy is written. The three facts it builds on are
+read and are stated here so they cannot be re-counted as evidence: bounding the backlog is worth a
+factor of several hundred over not bounding it; the best bound depends on $\lambda = (P-2\ell)\mu$
+and therefore on the link, the deadline and the operator's speed; and a single fixed bound of 2 sits
+inside the plateau at every $\lambda \ge 2.0$ but fails below it, which is the degraded-link case
+this project exists to study.
+
+**The problem with the recommendation as it stands.** "Bound the console's backlog at
+$\lfloor\lambda\rfloor - 1$" asks a program office to know three numbers, one of which, the link
+latency $\ell$, is exactly what a contested environment makes unknowable in advance. A rule that
+needs the parameter that the adversary controls is not a rule a sponsor can ship.
+
+**What the literature already did about this, in a different queue.** CoDel
+\citep{nichols2012codel} does not size a buffer. It measures the queue's own sojourn time, keeps the
+MINIMUM over a sliding interval, and starts dropping when that minimum stays above a target. The
+famous property is that one fixed setting works across link rates spanning orders of magnitude,
+because the controlled quantity is a delay the queue can observe rather than a length that depends
+on parameters it cannot. The console is in the same position: it cannot see $P$ or $\ell$, but it
+can see exactly how long each request has been sitting in front of it.
+
+**The information audit, which is the part that makes this a requirements claim and not a tuning
+exercise.** A CoDel console needs a clock and one target. It does NOT need the requester's deadline
+in the message (that is `admit`), it does NOT need the link latency, and it does NOT need to know
+its own service rate. It is therefore on the same rung of the ladder as the counter, and strictly
+below the message-format change.
+
+**P1.** A CoDel console with ONE fixed setting sits inside the plateau at every $\lambda$ from 1.3
+to 7.9 and at $n = 8, 12, 24$, where the best fixed bound fails at 5 or more of those points.
+  **FALSIFIER.** A CoDel setting that covers the range only after being retuned per $\lambda$ is a
+  tuned parameter wearing a different name, and CR-50 retracts to "bound it at 2 and accept the
+  degraded case."
+
+**P2.** CoDel is not worse than the correctly sized counter, at tier, at every $\lambda$. It should
+not be BETTER: the counter is being handed the right answer for each operating point, so matching it
+is the ceiling.
+  **FALSIFIER.** CoDel beating the sized counter by a gated margin anywhere means the counter is not
+  the right comparison and the sizing analysis above is measuring the wrong thing.
+
+**P3 (the one that decides whether this is worth porting into SandTable).** Under a link whose
+latency CHANGES during the mission, which is what a jammer does, CoDel tracks and the fixed counter
+does not. Registered claim: with $\ell$ stepping between 0 and 4 mid-mission, CoDel's delivered
+service is above every fixed bound's, at tier.
+  **FALSIFIER.** A fixed bound matching CoDel under a moving link removes the only argument for the
+  extra machinery, and the recommendation stays "a counter".
+
+**Instrument gate, first.** The queue-only model must reproduce the fixed-bound plateau it already
+produced before any CoDel arm is read, on the same seeds. A model that has drifted cannot adjudicate
+its own successor.
+
+**Qualifier added before any arm was run, from review of CR-49.** At DETERMINISTIC service a delay
+target and a length cap coincide: holding $k$ requests and holding $k/\mu$ steps of work are the
+same statement. So P1 and P2 are close to tautological on the performance axis and their whole
+content is on the INFORMATION axis, which is that CoDel reaches the same place without being told
+$\lambda$. P3, the moving link, is the only limb whose performance claim can fail, and it is
+therefore the limb that decides whether this is worth porting into SandTable.
+
+**P6 (registered by adversarial review, before the arm is read, and it is the test that decides
+whether the one-half in the rule means anything).** Review's ruling on the threshold: one half is a
+bookkeeping coin, not an optimum. The marginal condition for admitting at depth $j$ is not
+"$q(j) \ge 1/2$" but
+$$q(j) \;\ge\; \pi \cdot \bar{q}_{\text{next}} ,$$
+where $\pi$ is the probability that the slot, if not given to this request, would serve a FRESHER
+arrival rather than sit idle. In a drought $\pi \to 0$ and the console should admit anything; under
+sustained overload $\pi \to 1$ and it should admit only what will certainly land. So the optimal
+threshold $p^{\star}$ is not a constant, it runs from 0 to 1 with load, and the patience sweep
+registered above cannot see this because it holds the arrival rate fixed while moving $P$: it tests
+the FORM of the rule, not the threshold inside it.
+
+The discriminator is therefore a LOAD sweep at fixed $P = 20$ and fixed $\ell = 0$, where $\lambda$
+is pinned at 3.00 and only $\pi$ moves.
+  **Marginal condition predicts:** the argmax falls from 2 toward 1 as $n$ rises.
+  **Constant one-half predicts:** the argmax is flat at 2 across the whole load range.
+  **FALSIFIER, for the constant.** An argmax that moves with $n$ at fixed $\lambda$ refutes any rule
+  of the form $k^{\star} = f(\lambda)$, including all three candidates, and the honest closed form
+  becomes a two-argument one.
+  **PRE-COMMITMENT, owed and recorded before the Hopper battery returns.** $P = 30$ gives
+  $\lambda = 4.50$, where the marginal admission's success probability is exactly one half and the
+  rule is a tie by construction. That cell is scored INCONCLUSIVE whatever its argmax reads.
+
+**Prior art, located by review and owed to the reader.** The rule is a deadline-utility threshold in
+the sense of \citet{naor1969regulation}, and Naor's gap between the individually optimal and the
+socially optimal threshold is exactly the gap between the one-half above and $p^{\star}$. The
+framing "size the buffer to the delay it must not exceed" is \citet{appenzeller2004sizing}. The
+drop-oldest rule is the packet-management line in age of information, \citet{kaul2012real} and
+\citet{costa2016age}, whose replace-oldest results are the closest prior art this paper has. The
+composition is ours; none of the components are. Framed as new queueing theory this dies at review,
+framed as the deadline analogue of buffer sizing, located exactly and confirmed at mission level,
+it survives.
