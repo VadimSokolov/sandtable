@@ -186,8 +186,14 @@ def main() -> None:
     out += [("QcapAgeK", f"{KAGE}")]
     for nn, tag in ((8, "Light"), (24, "Heavy")):
         a, lam = ages[nn]
+        # Two regimes, not one. While the buffer overflows, every arrival evicts the oldest and a
+        # request advances one place per removal at the arrival rate, giving k/Lambda. While it
+        # drains, advancement is by service alone and the age is j/mu, which does not depend on the
+        # load at all. The measured age sits between the two bounds and the mixture weight is what
+        # moves with load; only the inverse dependence on Lambda is claimed in the text.
         out += [(f"QcapAge{tag}", f"{a:.1f}"), (f"QcapAgeRate{tag}", f"{lam:.2f}"),
-                (f"QcapAgeForm{tag}", f"{(KAGE - 1) / lam:.1f}")]
+                (f"QcapAgeForm{tag}", f"{(KAGE - 1) / lam:.1f}"),
+                (f"QcapAgeFlow{tag}", f"{KAGE / lam:.1f}")]
 
     # 8. CR-51: the console in this paper is a metronome, and every closed form was derived on one.
     #    The mean service is held exactly, so anything that moves is variability and not speed.
