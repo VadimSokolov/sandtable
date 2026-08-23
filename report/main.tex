@@ -458,13 +458,22 @@ blind console already reaches \MpBandBlindFull\% success at sixteen assets on th
 win. At the collapse span, where no map has headroom to spare, the mission-level lever converges
 again: \MpBandSucColl{}, \MpChokeSucColl{} and \MpOpenSucColl{} points.
 
-The capacity rule survives the same treatment without qualification. Its argmax is $k^{\star} = 2$ on
-all three maps at all three spans, and the shape of the error is map-invariant as well as the answer:
+The capacity rule survives the same treatment, with one qualification that is worth more than the
+result it qualifies. On delivered service its argmax is $k^{\star} = 2$ on all three maps at all
+three spans, and the shape of the error is map-invariant as well as the answer:
 across \MpCapCells{} cells the derived bound beats one below it at \MpCapLoWin{} of them, by at most
 \MpCapUnderWorst{} served per step, which never reaches the materiality floor, and beats two above it
 by a material margin at \MpCapHiWin{} of \MpCapCells{}, by at least \MpCapOverWorst{}. Under-sizing by
 one is free on every map and over-sizing by two is costly on every map. The closed form carries no
-terrain term and the measurement says it does not need one.
+terrain term and the measurement says it does not need one. The qualification is that on mission
+success, the metric a sponsor will actually read, the rule is not located that sharply at all. There
+the derived bound beats one below it at only \MpSucCapLoWin{} of \MpCapCells{} cells and the largest
+gap either way is \MpSucCapLoGap{}~percentage points, so the argmax flips between them by map and is
+not measuring anything. Two above remains worse at \MpSucCapHiWin{} of \MpCapCells{}. Read on the
+mission, then, the rule's content is not that the bound is two rather than one; it is that the bound
+exists and is small. That is a weaker claim than the console metric supports and it is the one to
+put in front of a program office, because it is the one that survives being measured on the quantity
+they care about.
 
 There is a general point here about how a console result should be measured, and it is the reason
 this paragraph reports the console metric first. A lever that acts on the operator is a lever on the

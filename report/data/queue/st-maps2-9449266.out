@@ -1,0 +1,6 @@
+# host=amd004.orc.gmu.edu job=9449266 battery=maps2 jobs=32 blocks=0-31 reps=64
+# code=6159a1339d4fb2b2 snapshot=/scratch/vsokolov/sandtable-ar/runs/9449266
+OK   tamper guard: 2 frozen path(s) unchanged, 32 seeds fixed at [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+# start 2026-08-23T05:24:56Z
+### BATTERY maps2 START
+### N1 the collapse span at one-asset resolution, reserve (served_per_step)

@@ -1901,3 +1901,6 @@ CR-52, the map robustness check (source: tools/make_maps_numbers.py over st-maps
   MpCapHiWin = 9
   MpCapUnderWorst = 0.0077
   MpCapOverWorst = 0.0483
+  MpSucCapLoWin = 2
+  MpSucCapHiWin = 9
+  MpSucCapLoGap = 1.7

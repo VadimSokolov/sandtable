@@ -64,6 +64,20 @@ def main() -> None:
         out += [("MpCapCells", f"{3 * len(p2)}"), ("MpCapLoWin", f"{lo}"), ("MpCapHiWin", f"{hi}"),
                 ("MpCapUnderWorst", f"{best_lo:.4f}"), ("MpCapOverWorst", f"{worst:.4f}")]
 
+    try:
+        cs = survey(LOG, M2, "success", quiet=True)
+    except SystemExit:
+        cs = None
+    if cs:
+        # The same ladder on the MISSION metric, which has less resolution than the console one and
+        # says so: the argmax flips between k* and one below it by map, while two above stays worse
+        # everywhere. Reporting only the console metric would overstate how sharply k* is located.
+        lo = sum(1 for _, m in MAPS for i in range(len(p2)) if cs[m + "_c2"][i] > cs[m + "_c1"][i])
+        hi = sum(1 for _, m in MAPS for i in range(len(p2)) if cs[m + "_c2"][i] > cs[m + "_c4"][i])
+        gap = max(abs(cs[m + "_c2"][i] - cs[m + "_c1"][i]) for _, m in MAPS for i in range(len(p2)))
+        out += [("MpSucCapLoWin", f"{lo}"), ("MpSucCapHiWin", f"{hi}"),
+                ("MpSucCapLoGap", f"{100 * gap:.1f}")]
+
     dst = ROOT / "report" / "gen" / "maps_numbers.tex"
     dst.write_text("".join(f"\\newcommand{{\\{k}}}{{{v}}}\n" for k, v in out))
     print(f"wrote {dst} with {len(out)} macros")
