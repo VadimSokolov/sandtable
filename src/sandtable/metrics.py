@@ -25,6 +25,18 @@ def blue_at_goal(ent: Entities, scn: Scenario) -> np.ndarray:
 def compute(scn: Scenario, init_counts: dict, ent: Entities,
             t_reached: float | None, t_elapsed: float, assault0: int | None = None,
             air0: int = 0, bhv=None, op=None) -> dict:
+    # The settings the run ACTUALLY used, carried out with its own numbers. Defect 8 was a battery
+    # whose arms named one console and ran the other, and it survived a whole job because nothing in
+    # the output said which console had run. These are RESOLVED settings rather than a digest of the
+    # parameter dict: this codebase's opt-in contract is that many spellings name the same run, and
+    # twenty tests assert exactly that, so a digest of the spelling would be a guard that fires on
+    # the discipline it is meant to protect. Three booleans, each one a knob that has already been
+    # in silent disagreement with a registration.
+    out_cfg = {
+        "queue_buffer": 1.0 if scn.params.get("queue_model", "reserve") == "buffer" else 0.0,
+        "policy_admit": 1.0 if scn.params.get("queue_policy", "blind") == "admit" else 0.0,
+        "channel_bursty": 1.0 if scn.params.get("channel", "bernoulli") == "gilbert_elliot" else 0.0,
+    }
     blue0 = max(init_counts[BLUE], 1)
     red0 = max(init_counts[RED], 1)
     blue_alive = int(ent.side_mask(BLUE).sum())
@@ -54,6 +66,7 @@ def compute(scn: Scenario, init_counts: dict, ent: Entities,
     out_extra = _teaming_metrics(scn, ent, bhv, op, t_elapsed)
 
     return {
+        **out_cfg,
         **out_extra,
         "success": success,                                   # MOE: mission accomplished
         "time_to_objective": tto,                             # MOE: tempo (s)
@@ -128,14 +141,36 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "patience_mean": 0.0, "patience_sd": 0.0, "patience_min": 0.0,
            "stale_frac": 0.0, "stale_per_step": 0.0, "worked_lost_per_step": 0.0,
            "worked_late_per_step": 0.0, "worked_per_step": 0.0,
+           "busy_serviced": 0.0, "busy_stale": 0.0, "busy_lost": 0.0, "busy_late": 0.0,
+           "busy_total": 0.0, "svc_serviced_mean": 0.0, "svc_worked_mean": 0.0,
            "starved_frac": 0.0, "answer_rate_v": 0.0, "backlog_mean": 0.0, "dropped_frac": 0.0,
            "supervised_mean": 0.0, "supervised_frac": 0.0, "demand_norm_goodput": 0.0,
-           "hold_fraction": 0.0, "interaction_steps": 0.0, "neglect_steps": 0.0, "fan_out": 0.0}
+           "hold_fraction": 0.0, "interaction_steps": 0.0, "neglect_steps": 0.0, "fan_out": 0.0,
+           "track_err_mean": 0.0, "station_err_mean": 0.0,
+           "track_stale_frac": 0.0, "follow_lost_frac": 0.0, "turn_rate_mean": 0.0}
 
     if bhv is not None:
         n_ground = max(int(((ent.side == BLUE) & (ent.domain == GROUND)).sum()), 1)
         hours = max(t_elapsed, 1e-9) / 3600.0
         out["interventions"] = float(bhv.interventions.sum())
+        # Following, in the two units the question is asked in. `track_err_mean` is the estimator's
+        # error against the pose it is estimating, which is what Cheung, Rawashdeh and Mohammadi
+        # 2022 report as path error and the only quantity comparable to that literature.
+        # `station_err_mean` is how far the vehicle ends up from where the formation wanted it,
+        # which is the mission-level quantity and the one this simulator exists to reach. The two
+        # need not move together: a follower can hold a perfect track and still be out of position
+        # behind a leader it cannot keep up with.
+        trk_n = float(bhv.trk_steps.sum())
+        if trk_n > 0.0:
+            out["track_err_mean"] = float(bhv.trk_err_sum.sum()) / trk_n
+            out["track_stale_frac"] = float(bhv.trk_stale_steps.sum()) / trk_n
+            out["follow_lost_frac"] = float(bhv.trk_lost_steps.sum()) / trk_n
+        turn_n = float(bhv.turn_steps.sum())
+        if turn_n > 0.0:
+            out["turn_rate_mean"] = float(bhv.turn_sum.sum()) / turn_n
+        st_n = float(bhv.st_steps.sum())
+        if st_n > 0.0:
+            out["station_err_mean"] = float(bhv.st_err_sum.sum()) / st_n
         out["intervention_rate"] = out["interventions"] / (n_ground * hours)
         held = float(bhv.hold_steps.sum())
         live = float(bhv.alive_steps.sum())
@@ -244,6 +279,27 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
         out["worked_late_per_step"] = op.n_worked_late / op.total_steps
         out["worked_per_step"] = (op.n_serviced + op.n_stale + op.n_worked_lost
                                   + op.n_worked_late) / op.total_steps
+        # The same partition weighted by the console-steps each fate CONSUMED rather than by the
+        # jobs it finished. These are the bins the invariance claim belongs in: `worked_per_step`
+        # is conserved only when service is a metronome, because a console that admits on a
+        # deadline test selects short jobs and can finish more of them per busy step. Time cannot
+        # be selected. `busy_total` is therefore the console's utilization, reached by summing the
+        # four fates, and it is the quantity to compare against `operator_utilization`, which
+        # reaches the same number by counting busy steps and so rounds each service up.
+        out["busy_serviced"] = op.t_serviced / op.total_steps
+        out["busy_stale"] = op.t_stale / op.total_steps
+        out["busy_lost"] = op.t_worked_lost / op.total_steps
+        out["busy_late"] = op.t_worked_late / op.total_steps
+        out["busy_total"] = (op.t_serviced + op.t_stale + op.t_worked_lost
+                             + op.t_worked_late) / op.total_steps
+        # Length selection, the mechanism a variable console's admission test acts through. At
+        # `service_cv = 0` this is exactly `1 / service_rate`; below it, the console is choosing.
+        if op.n_serviced > 0:
+            out["svc_serviced_mean"] = op.t_serviced / op.n_serviced
+        worked_jobs = op.n_serviced + op.n_stale + op.n_worked_lost + op.n_worked_late
+        if worked_jobs > 0:
+            out["svc_worked_mean"] = (op.t_serviced + op.t_stale + op.t_worked_lost
+                                      + op.t_worked_late) / worked_jobs
         # Starvation in the unit the harm is in. Mean backlog counts requests that never leave,
         # which is a memory statistic and can be large for a policy that is doing well; whether a
         # VEHICLE ever gets an answer is the statistic a sponsor is entitled to. Under newest-first

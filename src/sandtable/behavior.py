@@ -59,6 +59,17 @@ class Behavior:
     trk_vx: np.ndarray
     trk_vy: np.ndarray
     trk_age: np.ndarray           # int32: steps since the track was last refreshed
+    topology: str                 # "star" | "chain": what a follower stations on
+    sense_range: float            # metres a behaviour follower can see the vehicle ahead
+    trk_err_sum: np.ndarray       # float per entity: summed |track - truth| over followed steps
+    trk_steps: np.ndarray         # int32 per entity: follower steps with a reference to hold
+    trk_stale_steps: np.ndarray   # int32 per entity: follower steps running on a dead-reckoned track
+    trk_lost_steps: np.ndarray    # int32 per entity: follower steps handed back to waypoint
+    st_err_sum: np.ndarray        # float per entity: summed |position - commanded station|
+    st_steps: np.ndarray          # int32 per entity: steps with a commanded station
+    prev_heading: np.ndarray      # float per entity: heading at the previous tick
+    turn_sum: np.ndarray          # float per entity: summed |heading change| (rad)
+    turn_steps: np.ndarray        # int32 per entity: ticks the turn sum was taken over
 
 
 def build_behavior(scn: Scenario, ent: Entities) -> Behavior | None:
@@ -101,6 +112,22 @@ def build_behavior(scn: Scenario, ent: Entities) -> Behavior | None:
         trk_x=ent.x.copy(), trk_y=ent.y.copy(),
         trk_vx=np.zeros(n), trk_vy=np.zeros(n),
         trk_age=np.zeros(n, np.int32),
+        # The topology DEFAULTS TO THE CHANNEL rather than to a value, because the channel is what
+        # decides which vehicle can be followed at all: a broadcast pose is the column leader's, a
+        # sensor return is the vehicle immediately ahead. Setting it explicitly breaks that tie and
+        # is how the 2x2 that separates channel from geometry is run.
+        topology=str(scn.params.get(
+            "follow_topology",
+            "star" if str(scn.params.get("follow_mode", "behavior")) == "link" else "chain")),
+        sense_range=float(scn.params.get("follow_sense_range", 250.0)),
+        trk_err_sum=np.zeros(n), trk_steps=np.zeros(n, np.int32),
+        trk_stale_steps=np.zeros(n, np.int32), trk_lost_steps=np.zeros(n, np.int32),
+        st_err_sum=np.zeros(n), st_steps=np.zeros(n, np.int32),
+        # How hard the thing being tracked is to extrapolate. A dead-reckoned track is a constant
+        # velocity assumption, so its error is a function of how much the reference TURNS, and a
+        # follow-channel result that does not report the turn rate is not reporting its own
+        # covariate. Radians per tick, over blue ground.
+        prev_heading=ent.heading.copy(), turn_sum=np.zeros(n), turn_steps=np.zeros(n, np.int32),
     )
 
 
@@ -128,6 +155,12 @@ def step(ent: Entities, bhv: Behavior, op, comms, scn: Scenario, k: int,
     elif bhv.mode == LEADER_FOLLOW:
         _follow(ent, bhv, comms, scn, rng, blue_ground)
 
+    d = np.abs(ent.heading - bhv.prev_heading)
+    d = np.minimum(d, 2 * np.pi - d)          # wrapped, so a heading crossing pi is not a half turn
+    bhv.turn_sum += np.where(blue_ground, d, 0.0)
+    bhv.turn_steps += blue_ground
+    bhv.prev_heading = ent.heading.copy()
+
     bhv.holding = hold
     # Rising edge only, so a long hold counts as one intervention rather than one per tick.
     np.add.at(bhv.interventions, np.nonzero(hold & ~bhv.was_holding)[0], 1)
@@ -136,35 +169,80 @@ def step(ent: Entities, bhv: Behavior, op, comms, scn: Scenario, k: int,
     bhv.alive_steps += blue_ground
 
 
+def _predecessor(ent: Entities, bhv: Behavior, i: int) -> int:
+    """The vehicle entity `i` stations on, given the topology.
+
+    Star hands back the column leader, which is what a broadcast pose names. Chain hands back the
+    nearest LIVING vehicle ahead in the column, which is what a sensor can see: a chain that loses
+    its third vehicle closes up on its second rather than stopping, and that closing-up is a
+    manoeuvre a star follower never has to perform because its reference never changes.
+    """
+    ldr = int(ent.leader[i])
+    if bhv.topology == "star" or ldr < 0:
+        return ldr
+    for j in range(i - 1, ldr - 1, -1):
+        if ent.alive[j]:
+            return j
+    return ldr
+
+
 def _follow(ent: Entities, bhv: Behavior, comms, scn: Scenario,
             rng: np.random.Generator, blue_ground: np.ndarray) -> None:
-    """Refresh each follower's picture of its leader (CR-3).
+    """Refresh each follower's picture of the vehicle it stations on (CR-3, instrument defect 10).
 
-    Both variants draw the same number of uniforms so the two are paired on a shared seed:
+    Both variants run the SAME estimator: refresh the track when the channel delivers, dead reckon
+    it forward when the channel does not, and hand back to waypoint navigation once the track is
+    older than `track_timeout`. Only the CHANNEL differs, and that is the whole of the comparison:
 
-    - ``follow_mode="link"``   the follower needs the leader's live pose over the comms link. A
-      dropped message leaves it on a stale station, which drifts as the leader moves.
-    - ``follow_mode="behavior"`` the follower keeps an on-platform track and dead-reckons the
-      leader forward, so it continues the column with no live message.
+    - ``follow_mode="link"``     the leader's pose arrives over the comms link, so the refresh test
+      is exactly `comms.delivered`. Jamming ages the track.
+    - ``follow_mode="behavior"`` the follower sees the vehicle ahead with its own sensors, so the
+      refresh test is a range test and no message is involved. Distance ages the track.
+
+    The first version of this function had no estimator at all. Its behaviour branch read
+    ``if follow_mode == "behavior" or got``, which refreshed from ground truth on every step, so the
+    dead-reckoning lines beneath it were unreachable, `trk_age` was identically zero, and
+    `track_timeout` could never fire. That arm was not on-platform following, it was omniscience,
+    and running it against a lossy link would have measured the value of telepathy. Instrument
+    defect 10, and the same genus as 7 and 8: a convention that was right for its first use (a
+    placeholder while the link path was written) carried silently into a second where it was the
+    entire treatment.
+
+    Both paths draw the same uniform whatever the mode, so the two are paired on a shared seed.
     """
     dt = scn.dt
     for i in np.nonzero(blue_ground & (ent.role == 1))[0]:
-        ldr = int(ent.leader[i])
-        got = comms.delivered(rng)          # drawn on BOTH paths: keeps the streams aligned
-        if ldr < 0 or not ent.alive[ldr]:
-            # HALT_ON_LEADER_LOSS: no leader to follow, so hold the route independently.
+        ref = _predecessor(ent, bhv, int(i))
+        got_link = comms.delivered(rng)     # drawn on BOTH paths: keeps the streams aligned
+        if ref < 0 or not ent.alive[ref]:
+            # HALT_ON_LEADER_LOSS: nothing to follow, so hold the route independently.
             bhv.state[i] = WAYPOINT
             continue
-        if bhv.follow_mode == "behavior" or got:
-            bhv.trk_x[i], bhv.trk_y[i] = ent.x[ldr], ent.y[ldr]
-            bhv.trk_vx[i] = ent.speed[ldr] * np.cos(ent.heading[ldr])
-            bhv.trk_vy[i] = ent.speed[ldr] * np.sin(ent.heading[ldr])
+        bhv.trk_steps[i] += 1
+        if bhv.follow_mode == "link":
+            got = got_link
+        else:
+            got = float(np.hypot(ent.x[ref] - ent.x[i],
+                                 ent.y[ref] - ent.y[i])) <= bhv.sense_range
+        if got:
+            bhv.trk_x[i], bhv.trk_y[i] = ent.x[ref], ent.y[ref]
+            bhv.trk_vx[i] = ent.speed[ref] * np.cos(ent.heading[ref])
+            bhv.trk_vy[i] = ent.speed[ref] * np.sin(ent.heading[ref])
             bhv.trk_age[i] = 0
+            if bhv.state[i] == WAYPOINT:
+                bhv.state[i] = LEADER_FOLLOW     # re-acquired, so following resumes
         else:
             bhv.trk_age[i] += 1
-            if bhv.follow_mode == "behavior":
-                bhv.trk_x[i] += bhv.trk_vx[i] * dt      # dead reckon forward
-                bhv.trk_y[i] += bhv.trk_vy[i] * dt
+            bhv.trk_stale_steps[i] += 1
+            bhv.trk_x[i] += bhv.trk_vx[i] * dt   # dead reckon forward
+            bhv.trk_y[i] += bhv.trk_vy[i] * dt
+        # Estimator error against the truth it is estimating, which is the quantity Cheung et al.
+        # 2022 report as path error. Accumulated whether or not the track is being used, so it is a
+        # property of the channel and not of what the planner did with it.
+        bhv.trk_err_sum[i] += float(np.hypot(bhv.trk_x[i] - ent.x[ref],
+                                             bhv.trk_y[i] - ent.y[ref]))
         if bhv.trk_age[i] > bhv.track_timeout:
-            bhv.state[i] = WAYPOINT                      # track too stale to follow
-            bhv.interventions[i] += 1
+            if bhv.state[i] != WAYPOINT:
+                bhv.state[i] = WAYPOINT          # track too stale to station on
+                bhv.interventions[i] += 1        # rising edge only
+            bhv.trk_lost_steps[i] += 1

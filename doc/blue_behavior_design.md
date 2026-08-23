@@ -1,6 +1,24 @@
 # Thickened blue behavior layer: design
 
-Status: design, not implemented. Companion to idea I16 in `doc/lit-ideas.md`.
+Status: IMPLEMENTED in `src/sandtable/behavior.py`, with the follower path corrected on 2026-08-23
+(instrument defect 10). Companion to idea I16 in `doc/lit-ideas.md`.
+
+What landed, and where it differs from this design. The four modes, the recovery triggers, the
+teleoperation stop (CR-2), the hold durations behind the fan-out estimate (CR-11) and the
+leader-follow station keeping (CR-3) are all in the module. Two things are NOT as designed below:
+
+- The follower's channel is a real estimator now, not a switch. Both variants refresh a track when
+  their channel delivers, dead reckon forward when it does not, and hand back to waypoint navigation
+  past `track_timeout`. The first implementation refreshed the behaviour arm from ground truth on
+  every step, which made it omniscient rather than on-platform, and would have made C5 unfalsifiable.
+- Topology follows the channel. A broadcast pose is the column leader's, so a link follower holds a
+  star; a sensor return is the vehicle immediately ahead, so a behaviour follower holds a chain.
+  `follow_topology` can override it, which is how the 2x2 separating channel from geometry is run.
+
+The measurement is registered as CR-55 in `doc/autoresearch-conjectures.md` and is a transfer
+threshold rather than a sign test: the follow channel reaches the mission only through station error,
+and the outage duration needed to move station error to the scale the mission responds to is about a
+minute of continuous loss, which an i.i.d. ladder never produces.
 
 ## The problem
 

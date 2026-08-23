@@ -113,6 +113,19 @@ class Operator:
     # implementation detail is the point: the difference between them is an OPERATOR CAPABILITY
     # requirement, and pricing it is a different question from pricing a deadline field.
     admit_foresight: bool = False
+    # The same capability as a PROBABILITY, which is the form a human-subject arm can estimate and
+    # the only form that is not an oracle. On each decision the console sees the realization with
+    # probability `admit_acuity` and otherwise sees the mean, so 0.0 is the deadline-field console
+    # and 1.0 is exactly `admit_foresight`. Every operator worth modelling is in between: the
+    # boolean measures the value of PERFECT triage, which is an upper bound on the value of any
+    # real triage and has to be labelled as one. No uniform is drawn at 0.0 or 1.0, so both ends
+    # stay bit-identical to the paths measured before this parameter existed.
+    admit_acuity: float = 0.0
+    # The admissible null the training recommendation has to beat. A console that tests against a
+    # QUANTILE of the service distribution rather than its mean needs no capability at all, only a
+    # number written on the console: it is a constant, not a skill, and it costs nothing to field.
+    # Zero leaves the mean test in place, so it is off by default and takes no draw either way.
+    admit_quantile: float = 0.0
     queue_model: str = "reserve"   # "reserve" | "buffer"
     # A real console's backlog is bounded. `queue_capacity < 0` leaves it unbounded, which is the
     # default and the regime a newest-first discipline is most flattered by, since it never has to
@@ -179,6 +192,16 @@ class Operator:
     # a busy console's time actually goes needs the consuming paths counted separately, so:
     n_worked_lost: int = 0         # slot spent, then the DOWNLINK dropped the reply
     n_worked_late: int = 0         # slot spent, and the reply arrived after the requester had gone
+    # Busy-weighted twins of the four bins above. Those count JOBS; these count the console-steps
+    # each fate consumed. The two coincide, up to the factor `mu`, only when service is a metronome.
+    # At `service_cv > 0` they come apart in the one direction that matters: a console admitting on
+    # a deadline test selects SHORT jobs, so jobs per step rises while busy steps per step cannot.
+    # The conserved quantity is TIME, and only these four sum to it. Reading the job counts as
+    # effort at `service_cv > 0` is the same error as reading throughput as utilization.
+    t_serviced: float = 0.0
+    t_stale: float = 0.0
+    t_worked_lost: float = 0.0
+    t_worked_late: float = 0.0
     # Per-vehicle answer bookkeeping, for starvation. Mean backlog counts requests that never leave,
     # which is a memory statistic; whether any VEHICLE goes unanswered is the harm statistic, and
     # under newest-first they need not be the same thing, because a re-ask lands on top of the pile.
@@ -265,6 +288,8 @@ def build_c2(scn: Scenario, ent: Entities,
         service_rate=float(scn.params.get("service_rate", 0.5)),
         service_cv=float(scn.params.get("service_cv", 0.0)),
         admit_foresight=bool(scn.params.get("admit_foresight", False)),
+        admit_acuity=float(scn.params.get("admit_acuity", 0.0)),
+        admit_quantile=float(scn.params.get("admit_quantile", 0.0)),
         q_operator=q_operator_eff,
         q_auto=q_auto,
         q_fallback=float(scn.params.get("q_fallback", 0.50)),
@@ -372,6 +397,39 @@ def build_c2(scn: Scenario, ent: Entities,
         op.decision_cooldown_seed = rng.integers(0, max(op.decision_interval, 1), size=blue.size)
         ent.decision_cooldown[blue] = op.decision_cooldown_seed
     return op
+
+
+def _sees_the_draw(op: "Operator", rng: np.random.Generator) -> bool:
+    """Whether this decision's feasibility test is made against the realization or the mean.
+
+    `admit_foresight` is the oracle end of the same axis and stays the switch the earlier batteries
+    were run on. `admit_acuity` fills it in: the console recognises a hard request with probability
+    p and otherwise treats it as average. The uniform is drawn ONLY in the interior, so both ends
+    consume exactly the randomness they consumed before the parameter existed and every number
+    measured on them still reproduces.
+    """
+    if op.admit_foresight or op.admit_acuity >= 1.0:
+        return True
+    if op.admit_acuity <= 0.0:
+        return False
+    return bool(rng.random() < op.admit_acuity)
+
+
+def _admit_budget(op: "Operator") -> float:
+    """The service time the console BUDGETS for a decision it cannot see.
+
+    The mean is what a deadline field alone would give it, and it is what every number in this paper
+    was measured against. A quantile is the same test with a safety margin: budget the time that
+    covers a q fraction of decisions, refuse anything that will not fit, and accept that a
+    q-quantile console refuses more work than it has to. No capability is required, which is the
+    point of having it as a null: a recommendation to train triage has to beat a number.
+    """
+    mean = 1.0 / op.service_rate
+    if op.admit_quantile <= 0.0 or op.service_cv <= 0.0:
+        return mean
+    shape = 1.0 / (op.service_cv * op.service_cv)
+    from scipy.stats import gamma           # imported here: unused on every published path
+    return float(gamma.ppf(op.admit_quantile, shape, scale=mean / shape))
 
 
 def _claim(op: Operator, console: int, done: float) -> None:
@@ -640,7 +698,7 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
             # capability into an apparent argument that erratic operators do better.
             svc = _service_time(op, rng)
             reply = start + svc + lat
-            test = reply if op.admit_foresight else start + 1.0 / op.service_rate + lat
+            test = reply if _sees_the_draw(op, rng) else start + _admit_budget(op) + lat
             if test > deadline and op.queue_policy != "blind":
                 # Head-of-line admission control against the delay this console actually has. No
                 # service time is claimed, so the next request is considered on the same step.
@@ -656,16 +714,19 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
             down_ok = comms.reply_survives(rng, svc)
             if stale:
                 op.n_stale += 1                       # worked, and nobody is holding it
+                op.t_stale += svc
                 continue
             if not down_ok:
                 op.n_abandon_link += 1
                 op.n_worked_lost += 1                 # the slot was spent; the reply was not
+                op.t_worked_lost += svc
                 _give_up(op, ent, i, arrive, int(op.patience_v[i]), rng)
                 continue
             if reply > deadline:  # worked, and answered too late. `blind` always; an admitting
                                   # console only when it admitted on the mean and the draw overran
                 op.n_abandon_queue += 1
                 op.n_worked_late += 1
+                op.t_worked_late += svc
                 _give_up(op, ent, i, arrive, int(op.patience_v[i]), rng)
                 continue
             ent.await_until[i] = int(math.ceil(reply))
@@ -676,6 +737,7 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
             op.resolved_quality[i] = q
             op.waits.append(float(reply - arrive))
             op.n_serviced += 1
+            op.t_serviced += svc
             op.n_ans_v[int(i)] += 1
             op.retry_streak[i] = 0
             if op.admit_response == "aimd":
@@ -871,7 +933,8 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
         else:
             console = int(np.argmin(op.crew_free_at))         # earliest-free console (CR-14)
             start = max(op.crew_free_at[console], recv)
-        done = start + _service_time(op, rng)                 # operator finishes this decision
+        svc = _service_time(op, rng)
+        done = start + svc                                    # operator finishes this decision
         reply = done + lat                                    # reply travels back
         down_ok = comms.reply_survives(rng, done - k)
         link_ok = op.ew_immune or (up_ok and down_ok)
@@ -885,7 +948,8 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
             # The same foresight question the buffer path answers, answered the same way. The
             # reservation console tests feasibility once, at arrival, and by default it tests
             # against the mean service time rather than the realization it has not experienced.
-            test_wait = wait if op.admit_foresight else (start + 1.0 / op.service_rate + lat) - k
+            test_wait = wait if _sees_the_draw(op, rng) \
+                else (start + _admit_budget(op) + lat) - k
             if test_wait <= op.patience_v[i]:
                 _claim(op, console, done)
                 ent.await_until[i] = int(math.ceil(reply))
@@ -908,11 +972,13 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                     # the point: it is spent either way. Unreachable at `service_cv = 0`.
                     op.n_abandon_queue += 1
                     op.n_worked_late += 1
+                    op.t_worked_late += svc
                     _give_up(op, ent, int(i), k, int(op.patience_v[i]), rng)
                     ent.control_quality[i] = op.q_stall
                     continue
                 op.waits.append(float(wait))          # attention-switching wait, serviced only
                 op.n_serviced += 1
+                op.t_serviced += svc
                 op.n_ans_v[int(i)] += 1
                 op.retry_streak[i] = 0        # answered, so the doubling rule resets
                 if op.admit_response == "aimd":   # additive increase on a good answer (CR-26)
@@ -933,6 +999,11 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 #             `patience` steps. Explicit admission control.
                 if op.queue_policy == "blind":
                     _claim(op, console, done)
+                    # Worked, and answered after the requester had gone. Same fate as the buffer
+                    # console's late bin, and it was previously counted nowhere, so the
+                    # reservation console's effort did not close against its utilization.
+                    op.n_worked_late += 1
+                    op.t_worked_late += svc
                 # Under `admit` the refusal rides the link home, so the agent learns at
                 # `2*lat`. On a slow enough link that is LATER than the agent's own patience
                 # timer, at which point it has already given up unaided: capping at `patience`

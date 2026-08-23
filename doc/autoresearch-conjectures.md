@@ -41,7 +41,7 @@ promotion criteria in the integrity rule.
 | C8 | **CONFIRMED AT FULL TIER.** **Congestion collapse by unrefunded abandonment.** The operator spends a service slot on every request it receives, including requests whose answer will arrive after the requester has given up. At large span the offered load exceeds capacity, almost every request is abandoned, and packet loss then acts as unintended admission control. Explicit admission control should remove the interior optimum and dominate at every rung. | **confirmed, full tier, 32 blocks x 64 reps** | |
 | C9 | **Fan-out overpredicts.** The Olsen-Goodrich duty-cycle capacity `1 + NT/IT`, measured from SandTable's own hold durations, exceeds the span at which measured mission success actually peaks, and the gap widens with jamming. | instrumented (CR-11), untested | |
 | C4 | Correcting teleoperation stop semantics (CR-2) moves the crossover toward cleaner links, because a severed-link teleoperated vehicle currently keeps driving at 54.5% speed. | queued | |
-| C5 | A behaviour-based follower (on-platform dead reckoning) degrades less than a link-based follower as the ladder worsens, matching the sign of Cheung et al. 2022 at mission rather than path-error level. | queued (needs CR-1, CR-3) | |
+| C5 | A behaviour-based follower (on-platform dead reckoning) degrades less than a link-based follower as the ladder worsens, matching the sign of Cheung et al. 2022 at mission rather than path-error level. **The only lever in this paper that acts on the platform rather than the console, so the one that can COMPOSE with admission control instead of substituting for it.** | registered CR-55, battery queued | |
 | C6 | Network robustness (r-robustness) and algebraic connectivity rank the same formations differently, so a formation tuned for connectivity is not thereby robust. | queued (CR-8) | |
 
 ## Log
@@ -5748,3 +5748,183 @@ floor should be. That makes the plateau narrower and the test harder, so the ver
 conservative, but a battery that swept service rate and wanted a generous floor would be reading the
 wrong number. Tenth candidate for the instrument-defect genus, and the first found by asking where
 else a constant that was right once is now being carried.
+
+## INSTRUMENT DEFECT 10: THE ON-PLATFORM FOLLOWER WAS NOT ON-PLATFORM, IT WAS OMNISCIENT
+
+`behavior._follow` refreshed a follower's leader track with
+
+```python
+if bhv.follow_mode == "behavior" or got:
+```
+
+so the behaviour arm took the leader's true pose every step, the dead-reckoning lines in the `else`
+branch were unreachable, `trk_age` was identically zero, and `track_timeout` could never fire. C5 is
+registered as "on-platform dead reckoning degrades less than link-based following". What that code
+would have measured is telepathy against a lossy radio, which no channel can lose to, and the
+conjecture would have "held" without ever running its mechanism.
+
+Same genus as 7 and 8: a convention that was right for its first use, here a placeholder while the
+link path was being written, carried silently into a second use where it was the entire treatment.
+Tenth of the genus and the sixth found by reading code that no published number depends on: nothing
+in `report/` sets `follow_mode`, and the only batteries that touch this layer use `blue_behavior` of
+`auto` or `teleop`, which never enter `_follow`. The defect cost nothing because it was found before
+the battery, which is the first time in this ledger that has been true.
+
+**The fix, and what it commits to.** Both arms now run the SAME estimator: refresh when the channel
+delivers, dead reckon forward when it does not, hand back to waypoint navigation past
+`track_timeout`, re-acquire on the next refresh. Only the channel differs. A link follower refreshes
+on `comms.delivered`; a behaviour follower refreshes when the vehicle it stations on is inside
+`follow_sense_range` (250 m), which no message is needed for and no jamming can reach.
+
+That forces a second commitment, and it is the more interesting one. The channel decides WHAT can be
+followed. A broadcast pose is the column leader's, so a link follower holds a STAR: every follower
+stations `rank * gap` behind one vehicle. A sensor return is the vehicle immediately ahead, so a
+behaviour follower holds a CHAIN. Topology is therefore not an independent modelling choice, it is a
+consequence of the channel, and `follow_topology` defaults to the channel. It can still be set
+explicitly, because an effect that belongs to the geometry and an effect that belongs to the channel
+are different findings and a 2x2 is the only way to tell them apart.
+
+## CR-55 (C5). THE FIRST LEVER IN THIS PAPER THAT IS NOT THE CONSOLE
+
+Every lever the queue section priced acts on the OPERATOR: what it admits, what order it works, how
+deep its backlog runs. They are one mechanism seen four ways, which is why breaking FIFO recovers
+5% of what refusing stale work recovers, and why the requirements ladder collapses to a single
+question about staleness. A sponsor reading only that section would conclude that the answer to a
+degraded link is always a better console.
+
+Leader-following is the counter-case, and it is the one thread with real GVSC operational history
+(Brendle and Jaczkowski 2002 for the Robotic Follower ATD; Pirozzo et al. 2019 for the AMAS-into-RTK
+consolidation). The lever is on the PLATFORM: where the follower gets its picture of the vehicle
+ahead. Cheung, Rawashdeh and Mohammadi 2022 measured 13.33% to 86.61% reductions in PATH ERROR for a
+behaviour-based convoy controller against a delayed-follower one under jamming. That licenses a
+mechanism and a sign, not a mission-level magnitude, and this paper is at mission level.
+
+Configuration. `blue_behavior="leader_follow"` with `control_mode="supervisory"`, so the console is
+not the binding constraint and the ladder reaches the column through the follow channel and nothing
+else. Arms are the 2x2 of channel (`follow_mode`) and geometry (`follow_topology`), with the fielded
+diagonal being `link`+`star` and `behavior`+`chain`.
+
+- **P1, Cheung's sign at mission level.** `behavior`+`chain` minus `link`+`star` in mission success
+  is non-negative at every rung and GATES UP at at least one degraded rung, full tier.
+- **P2, the hump.** The gap is TOST-equivalent to zero on a clear link, because a link that delivers
+  needs no help, and it FALLS again at the worst rungs, because a link follower whose track has
+  timed out is navigating by waypoint, which is a floor and not a collapse. Non-monotone in rung.
+- **P3, the price of the chain.** The advantage SHRINKS as the column lengthens: a chain follower's
+  station error is its predecessor's error plus its own, so it accumulates down the column, while a
+  star follower's does not. Read as `station_err_mean` against `n_blue` on each arm.
+- **P4, channel not geometry.** In the 2x2, the channel main effect exceeds the topology main
+  effect at a degraded rung. If the topology carries it instead, the finding is about formation
+  geometry, the Cheung framing is withdrawn, and C5 is restated as a formation result.
+- **P5, and this is the one worth having: the platform lever COMPOSES.** Every console lever
+  substitutes for every other, because they all buy the same thing. A platform lever buys something
+  the console cannot, so at direct control the joint gain of admission control plus behaviour
+  following should be the SUM of the two separately, within MPE, rather than the max.
+
+**FALSIFIER for P1**, which is the conjecture: if `behavior`+`chain` minus `link`+`star` is negative
+or immaterial at EVERY rung, C5 is retracted and the record says on-platform following does not
+transfer from path error to mission outcome at this fidelity. That negative is worth as much as the
+positive, because it is the boundary of what a mission-level simulator can carry from a controls
+result, and this paper's own scope note already says that boundary exists.
+
+**FALSIFIER for P5**: if the joint gain is below the sum by more than MPE, the platform lever is
+buying queue relief by another route, the "not the console" framing is wrong, and the levers are one
+mechanism after all.
+
+**Registered before the battery ran.** Instrument defect 10 was fixed first and the fix is described
+above; no arm here was run on the omniscient follower.
+
+## CR-55 AMENDED BEFORE ITS BATTERY: THE FOLLOW CHANNEL HAS A THRESHOLD, AND IT IS FAR AWAY
+
+The predictions above were written against a mechanism that turned out to be missing a variable, and
+this is the amendment, made before any arm was scored and with the exploratory evidence named.
+
+**What a scouting run at sixteen replications showed.** With the fixed estimator, the link follower
+at C5 runs on a dead-reckoned track 55% of the time, and its track error against the truth is
+**0.6 m**. Station error moves 12.9 to 15.8 m. Mission success does not move at all. The reason is
+arithmetic, not simulation: an i.i.d. channel at drop rate $p$ produces outages of mean length
+$1/(1-p)$, which is 2.2 steps at the worst rung, and a constant-velocity extrapolation of a vehicle
+turning at 20 mrad per step is accurate to under a metre over two steps.
+
+**The missing variable is therefore not the channel's RATE, it is its OUTAGE LENGTH.** Leading order,
+a track $a$ steps stale, following a reference at speed $v$ turning at $\omega$ rad per step, is
+wrong by about $v \omega a^2 / 2$. The square is what matters: doubling the outage quadruples the
+error. Under Gilbert-Elliot at the same mean drop rate, mean outage $L$, the scouting run gives track
+error 0.19 m at $L = 4$, 1.18 m at $L = 20$, 2.81 m at $L = 60$, which is the quadratic.
+
+**And the mission's own sensitivity is separately measurable.** Sweeping `formation_spread` on the
+scripted path, success runs 0.906 at 10 m, 0.781 at 40 m, 0.812 at 120 m, 0.781 at 300 m and 0.562
+at 600 m, with losses 0.352 to 0.480 and time to objective 991 s to 1572 s. Mission outcome responds
+to column geometry at the scale of HUNDREDS of metres. The follow channel moves geometry by ones of
+metres. That gap, two orders of magnitude, is the finding, and it is a composition of two slopes
+measured on different arms rather than a null someone failed to reject.
+
+C5 restated: **the follow channel reaches the mission only through station error, and the outage
+duration needed to move station error to the scale the mission responds to is about a minute of
+continuous loss.** At $v = 12$, $\omega = 0.02$, reaching 300 m of error needs $a \approx 50$ steps.
+An i.i.d. channel at $p = 0.55$ produces a 50-step outage with probability $0.55^{50} \approx
+10^{-13}$: never, in any mission anyone will run. A bursty channel with mean bad run 60 produces one
+routinely. So this is C1's claim, that mean drop rate is not a sufficient statistic, carried from the
+console to the platform, and it comes with a requirement a sponsor can write down: **specify a
+follow radio on its worst-case outage duration, not on its packet delivery ratio.**
+
+Amended predictions, replacing P1 to P5 above. P4 and P5 are unchanged in intent.
+
+- **A1, the null the mechanism predicts.** Under the Bernoulli ladder, behaviour-chain minus
+  link-star in SUCCESS is TOST-equivalent to zero at every rung. FALSIFIER: any rung where it gates.
+- **A2, the quadratic.** In the link arm under Gilbert-Elliot at C3 with the step clock, the
+  log-log slope of `track_err_mean` against `ge_burst_len` over {4, 20, 60, 120, 240} is 2 within
+  [1.5, 2.5]. FALSIFIER: a slope outside that band, which would say the estimator error is not
+  dominated by the curvature term and the closed form above is wrong.
+- **A3, the threshold, and the number the sponsor gets.** There is an outage length $L^*$ at which
+  behaviour-chain minus link-star gates UP in success, and it is between 40 and 120 steps.
+  FALSIFIER: no gate at any $L$ up to 240, which retracts the transfer entirely and leaves A1 plus
+  A2 as a scope boundary: the mechanism is real, quantitative, and does not reach the mission.
+- **A4, matched means.** At C3 the Bernoulli and the Gilbert-Elliot channel deliver the same mean
+  rate by construction; if their follow outcomes differ, mean drop rate is not a sufficient
+  statistic for the PLATFORM either. FALSIFIER: no difference at $L = 240$.
+- **A5, composition.** At the burst length A3 finds, and at direct control where the console binds,
+  the platform lever and the admission lever compose ADDITIVELY rather than substituting.
+  FALSIFIER: joint gain below the sum by more than MPE. Conditional on A3; unrunnable if A3 fails.
+
+**Provenance of the amendment.** The scouting numbers above are 8 to 32 replications on a laptop,
+which is below proxy tier and is not evidence for anything. They are recorded because they changed
+the design, and a registration that hides the pilot that shaped it is not a registration. Every
+number the paper uses comes from the battery, at full tier, on the gate.
+
+## CR-56. THE VALUE OF TRIAGE, PRICED FOR AN OPERATOR WHO IS NOT AN ORACLE
+
+Fable's Round 25 audit of the discernment result, taken in full. The +0.0764 that `admit_foresight`
+buys is the value of PERFECT triage: the console sees the exact service time before committing. No
+human does. The defensible parameter is an acuity mixture, now implemented as `admit_acuity`: the
+console sees the realization with probability $p$ and the mean otherwise, with the same Bayes rule
+either way. It is bit-identical to the old switch at $p = 1$ and to the deadline-field console at
+$p = 0$, so the measured numbers still reproduce and the interior is new.
+
+- **B1, linearity.** Delivered service is LINEAR in $p$ across {0, 0.25, 0.5, 0.75, 1}. There is no
+  threshold below which triage is worthless, which matters because the sponsor's question is
+  whether PARTIAL operator skill is worth training. FALSIFIER: a fitted quadratic term significant
+  against the block noise, or any non-monotone cell.
+- **B2, the value-of-information scaling.** The full-triage gain equals $\mu \cdot cv$: 0.075 at
+  $cv = 0.5$ against a measured 0.0764, and 0.150 at $cv = 1$ against a measured 0.1498, with the
+  origin forced by the metronome identity. The registered new point is $cv = 0.25$, predicted
+  0.0375. FALSIFIER: outside 2 MPE of 0.0375.
+- **B3, the mislabelled arm.** The published sentence says the backlog bound substitutes for
+  discernment. The arms it was measured on were `queue_capacity` PLUS `queue_policy = "admit"`, not
+  the counter alone, and `admit_foresight` is bit-inert on a blind console because the deadline test
+  is never reached. So the cheap-counter rung of the requirements ladder was never measured against
+  triage at all. This battery measures it: bound-alone with and without foresight must be exactly
+  equal, and if they are not, the inertness reasoning is wrong and something else is moving.
+- **B4, the direction, which the manuscript currently has backwards.** Bound-plus-triage is bounded
+  above by roughly 0.16 while triage alone reaches 0.1949, so the counter does not substitute for
+  discernment, it FORECLOSES most of it. The sentence to publish is that the counter substitutes for
+  the operator you did not train and handicaps the one you did. FALSIFIER: bound-plus-triage at or
+  above triage alone, which would restore the published direction.
+- **B5, the admissible null the recommendation has to beat.** A console that tests against a
+  $q$-quantile of the service distribution rather than the mean needs no triage capability at all,
+  only a number. If it recovers most of the acuity gain, no training recommendation survives.
+  Predicted best $q$ in 0.6 to 0.8. FALSIFIER for the recommendation, not for the conjecture.
+
+**Blocking dependency, already discharged.** Every cell here runs at $cv > 0$, where the four-bin
+effort identity is stated in JOBS and jobs are selectable: a triaging console finishes short ones.
+The busy-weighted bins landed before this battery was written, and the identity now reads on
+`busy_total`, which no admission rule can select.

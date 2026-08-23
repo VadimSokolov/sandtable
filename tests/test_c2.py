@@ -581,3 +581,37 @@ def test_foresight_is_worth_something_only_when_service_is_variable():
 
     blind_test, seeing = go(False), go(True)
     assert seeing > blind_test, f"foresight {seeing:.4f} did not beat the mean test {blind_test:.4f}"
+
+
+def test_busy_bins_partition_the_console_and_jobs_do_not():
+    """Effort is conserved in TIME, not in jobs, and the two only agree on a metronome.
+
+    The four fates a claimed slot exits through were first counted as jobs, and at `service_cv = 0`
+    that is a faithful effort measure because every job costs `1 / service_rate`. Above zero it
+    stops being one: a console that admits on a deadline test finishes SHORT jobs and refuses long
+    ones, so jobs per busy step rises with nothing added to the console. The busy-weighted bins
+    cannot be gamed that way, and this test pins both halves.
+    """
+    from sandtable.sim import run_mission
+
+    base = {"control_mode": "direct", "queue_model": "buffer", "n_blue": 12, "comms_level": 0}
+
+    m = run_mission(_span_scenario(**base), seed=3)
+    parts = m["busy_serviced"] + m["busy_stale"] + m["busy_lost"] + m["busy_late"]
+    assert abs(parts - m["busy_total"]) < 1e-9
+    # On a metronome each of the four jobs costs exactly 1 / mu, so the two partitions agree.
+    assert abs(m["busy_total"] - m["worked_per_step"] / 0.15) < 1e-6
+    assert abs(m["svc_worked_mean"] - 1 / 0.15) < 1e-6
+
+    def go(**extra):
+        runs = [run_mission(_span_scenario(**base, **extra), seed=s) for s in range(6)]
+        return {k: sum(r[k] for r in runs) / len(runs)
+                for k in ("worked_per_step", "busy_total", "svc_serviced_mean")}
+
+    var = go(service_cv=0.5, queue_policy="admit")
+    fore = go(service_cv=0.5, queue_policy="admit", admit_foresight=True)
+    # Triage buys jobs, not time: it finishes more of them while occupying the same console.
+    assert fore["worked_per_step"] > var["worked_per_step"] * 1.1
+    assert abs(fore["busy_total"] - var["busy_total"]) < 0.05
+    # And the mechanism is visible directly: the jobs it serves are shorter than the population.
+    assert fore["svc_serviced_mean"] < 1 / 0.15 * 0.95

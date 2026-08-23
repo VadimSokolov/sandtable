@@ -145,11 +145,30 @@ def _behavior_targets(ent: Entities, scn: Scenario, bhv, tx_new, ty_new):
         # lead vehicle, so `i - leader[i]` is its place in the column. That star topology is the
         # fielded leader-follower arrangement, and it is what makes the column comms-dependent:
         # every follower needs the same lead vehicle's pose.
-        rank = max(int(i - ent.leader[i]), 1)
+        # A chain follower stations one gap behind the vehicle it can see, a star follower
+        # `rank` gaps behind the one vehicle whose pose is broadcast. The two describe the same
+        # column when nothing is lost, and come apart the moment a track goes stale: a star's
+        # error is the LEADER's staleness multiplied by nothing, a chain's is its predecessor's
+        # staleness plus its own, which is where string instability enters.
+        ref = _behavior._predecessor(ent, bhv, int(i))
+        rank = 1 if bhv.topology == "chain" else max(int(i - ent.leader[i]), 1)
         v = np.hypot(bhv.trk_vx[i], bhv.trk_vy[i])
         ux, uy = (bhv.trk_vx[i] / v, bhv.trk_vy[i] / v) if v > 1e-6 else (1.0, 0.0)
         tx_new[i] = bhv.trk_x[i] - rank * gap * ux
         ty_new[i] = bhv.trk_y[i] - rank * gap * uy
+        # Station-keeping error against the TRUE pose of the reference, not the tracked one: how
+        # far this vehicle is from where the formation wants it, which is the mission-level
+        # quantity a path error is a proxy for. Zero when the column is closed up and driving.
+        rv = np.hypot(ent.speed[ref] * np.cos(ent.heading[ref]),
+                      ent.speed[ref] * np.sin(ent.heading[ref]))
+        if rv > 1e-6:
+            rux = ent.speed[ref] * np.cos(ent.heading[ref]) / rv
+            ruy = ent.speed[ref] * np.sin(ent.heading[ref]) / rv
+        else:
+            rux, ruy = 1.0, 0.0
+        bhv.st_err_sum[i] += float(np.hypot(ent.x[i] - (ent.x[ref] - rank * gap * rux),
+                                            ent.y[i] - (ent.y[ref] - rank * gap * ruy)))
+        bhv.st_steps[i] += 1
 
     held = np.nonzero(bhv.holding)[0]
     tx_new[held] = ent.x[held]
