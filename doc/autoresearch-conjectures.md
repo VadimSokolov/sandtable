@@ -6574,8 +6574,15 @@ of Lee and See. Neither can be measured against a console that cannot be wrong.
 
 **The mechanism, four knobs and a confusion matrix.** `auto_error` $q$ is the probability the
 autonomy's proposed answer is wrong. `check_rate` $r$ is the base rate at which an uninformed
-operator checks rather than shipping it. `check_acuity` $a$ is the share of decisions on which the
-operator holds a valid cue and therefore checks exactly the wrong ones. `comply_frac` is what
+operator checks rather than shipping it. The operator's decision is a
+textbook signal-detection one and is written that way deliberately, because the claim it feeds is a
+discrimination score and a score computed off anything else is not comparable to the literature it
+answers. The operator observes a cue drawn from a unit normal shifted by `check_dprime` when the
+answer is wrong, and checks when the cue clears a criterion named by the false-alarm rate it would
+produce at zero sensitivity, which is what `check_rate` means. An earlier version had the cued
+operator check EXACTLY the wrong ones, which puts it on a chord between two ROC corners rather than
+on an ROC, conflates sensitivity with the decision rule, and would not survive a referee who works
+in signal detection. It was replaced before its battery ran. `comply_frac` is what
 shipping costs as a fraction of checking, default a quarter, and it is the whole reason the choice is
 interesting: at a saturated console a check is not free, it is a slot. The four cells are counted in
 the operator's own decision units, which is what makes $d'$ a property of the operator rather than of
@@ -6608,12 +6615,20 @@ and 0.1054 served per step with mission success identical at 0.625 throughout. A
   no value in the sweep makes always-check beat never-check, in which case over-trust is never
   punished in this model, the knob cannot change a mission outcome, and by the project's own test it
   is not a design variable and CR-61 is withdrawn.
-- **P4. D7, AND THE REASON IT NEEDS A DISCRIMINATION SCORE RATHER THAN A RATE.** At matched checking
-  rate an operator with a valid cue ships strictly fewer wrong answers and delivers strictly more,
-  and $d'$ separates the arms while `check_frac` does not: the pilot has 0.403 checking at $d' =
-  1.36$ shipping 7.5 percent wrong against 0.496 checking at $d' = 0.03$ shipping 16.0 percent.
-  FALSIFIER: `check_frac` orders the arms as well as $d'$ does, which would make the extra
-  instrument unnecessary and would be worth saying.
+- **P0, THE INSTRUMENT CHECK, WHICH IS NOT A RESULT.** The measured $d'$ must recover
+  `check_dprime`, and the measured false-alarm rate must equal `check_rate` and not move with
+  sensitivity. Verified at 32 replications: set 0.0, 0.5, 1.0 and 2.0 recover $-0.026$, 0.523, 1.029
+  and 2.006 at false-alarm rates 0.502, 0.495, 0.493 and 0.489 against a criterion set at 0.5. At
+  `check_dprime` 3.0 the hit rate saturates at 0.997 and the log-linear correction compresses the
+  estimate to 2.559, which is the standard ceiling; sensitivities above 2 are therefore not quoted
+  as point estimates.
+- **P4. D7, AND THE REASON IT NEEDS A DISCRIMINATION SCORE RATHER THAN A RATE.** Sensitivity and
+  checking rate are separately purchasable and only one of them is expensive. At a fixed criterion,
+  raising $d'$ from 0 to 2 leaves served per step flat, 0.1804 to 0.1833 across the ladder, while
+  the hit rate runs 0.492 to 0.976 and the false-alarm rate does not move at all. Registered:
+  throughput is equivalent across the sensitivity ladder while correctness gates up, so sensitivity
+  is free in throughput and checking rate is not. FALSIFIER: `check_frac` orders the arms as well as
+  $d'$ does, which would make the extra instrument unnecessary and would be worth saying.
 - **P5. THE ONE THAT MAKES THIS THE CENTREPIECE AND NOT A SIDE RESULT.** $h^\star$ moves with the
   comms ladder, through the console's load and not through anything about the autonomy. Under a
   degraded link fewer requests arrive per step, the console is less saturated, a slot is cheaper,

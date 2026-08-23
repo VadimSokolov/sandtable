@@ -49,6 +49,8 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
+from scipy.special import ndtri as _ndtri
+
 import numpy as np
 
 from sandtable.comms_ew import Comms
@@ -153,15 +155,21 @@ class Operator:
     # which is the console every battery before this one measured. These four knobs give it one
     # that can be wrong, an operator who can check, and the four cells of a confusion matrix.
     #
-    # `auto_error` is the probability the proposed answer is wrong. `check_rate` is the base rate at
-    # which an uninformed operator checks rather than shipping it. `check_acuity` is the share of
-    # decisions on which the operator has a valid cue and therefore checks exactly the wrong ones,
-    # which is what makes the discrimination score move independently of the checking rate.
+    # `auto_error` is the probability the proposed answer is wrong. The operator's decision is a
+    # textbook signal-detection one and is written that way on purpose, because the claim it feeds
+    # is a discrimination score and a score computed off anything else is not comparable to the
+    # literature it is answering. The operator observes a cue drawn from a unit normal shifted by
+    # `check_dprime` when the answer is wrong, and checks when the cue clears a criterion. The
+    # criterion is named by the rate it WOULD produce on an operator with no information, which is
+    # what `check_rate` means: sensitivity and criterion then move independently, the operator
+    # traverses a real ROC rather than a chord between two corners, and the measured $d'$ recovers
+    # `check_dprime` exactly, which is a check on the instrument rather than a result from it.
+    #
     # `comply_frac` is what shipping costs as a fraction of checking, and it is the whole reason the
     # choice is interesting: at a saturated console a check is not free, it is a slot.
     auto_error: float = 0.0
     check_rate: float = 1.0
-    check_acuity: float = 0.0
+    check_dprime: float = 0.0
     comply_frac: float = 0.25
     # What a wrong answer costs the vehicle that acted on it, as a multiple of the patience an
     # UNANSWERED vehicle waits before asking again. At 1.0 a wrong answer is exactly as expensive as
@@ -348,7 +356,7 @@ def build_c2(scn: Scenario, ent: Entities,
         admit_cap=float(scn.params.get("admit_cap", 0.0)),
         auto_error=float(scn.params.get("auto_error", 0.0)),
         check_rate=float(scn.params.get("check_rate", 1.0)),
-        check_acuity=float(scn.params.get("check_acuity", 0.0)),
+        check_dprime=float(scn.params.get("check_dprime", 0.0)),
         comply_frac=float(scn.params.get("comply_frac", 0.25)),
         bad_answer_hold=float(scn.params.get("bad_answer_hold", 1.0)),
         q_operator=q_operator_eff,
@@ -491,13 +499,17 @@ def _supervise(op: "Operator", svc: float, rng: np.random.Generator) -> tuple[fl
     if op.auto_error <= 0.0 and op.check_rate >= 1.0:
         return svc, True
     wrong = rng.random() < op.auto_error
-    # A cue is valid on a share `check_acuity` of decisions. Where it is valid the operator checks
-    # exactly the wrong ones, which is perfect discrimination at zero excess checking; everywhere
-    # else the operator checks at a base rate that carries no information about this decision. The
-    # two knobs therefore move the discrimination score and the checking rate independently, which
-    # is the whole point: a console cannot be scored on how OFTEN it checks.
-    cued = op.check_acuity > 0.0 and rng.random() < op.check_acuity
-    checked = wrong if cued else (op.check_rate >= 1.0 or rng.random() < op.check_rate)
+    if op.check_rate >= 1.0:
+        checked = True
+    elif op.check_rate <= 0.0:
+        checked = False
+    else:
+        # Criterion named by the false-alarm rate it produces at zero sensitivity, so that raising
+        # `check_dprime` moves hits up without moving the criterion, and raising `check_rate` walks
+        # the criterion down the ROC the sensitivity defines.
+        crit = _ndtri(1.0 - op.check_rate)
+        cue = rng.standard_normal() + (op.check_dprime if wrong else 0.0)
+        checked = cue > crit
     if checked:
         if wrong:
             op.n_check_hit += 1

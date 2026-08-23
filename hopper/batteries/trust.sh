@@ -43,13 +43,14 @@ done
 # cannot? This is the section the gap is closed by, and the confusion matrix is carried with it so
 # the ROC point is in the log rather than reconstructed from a summary.
 for M in trust_dprime trust_hit_rate trust_fa_rate check_frac answer_correct_frac served_per_step success; do
-echo "### R3 discrimination at matched checking rate ($M)"
+echo "### R3 discrimination against criterion, which is the ROC the gap asks for ($M)"
 $PY tools/ar_eval.py $S --metric $M $B --sweep 'n_blue=8,12,16' \
-  --arm "a00={$T,\"check_rate\":0.5}" \
-  --arm "a25={$T,\"check_rate\":0.5,\"check_acuity\":0.25}" \
-  --arm "a50={$T,\"check_rate\":0.5,\"check_acuity\":0.5}" \
-  --arm "a75={$T,\"check_rate\":0.5,\"check_acuity\":0.75}" \
-  --arm "a100={$T,\"check_rate\":0.5,\"check_acuity\":1.0}"
+  --arm "d00={$T,\"check_rate\":0.5}" \
+  --arm "d05={$T,\"check_rate\":0.5,\"check_dprime\":0.5}" \
+  --arm "d10={$T,\"check_rate\":0.5,\"check_dprime\":1.0}" \
+  --arm "d20={$T,\"check_rate\":0.5,\"check_dprime\":2.0}" \
+  --arm "d10lo={$T,\"check_rate\":0.25,\"check_dprime\":1.0}" \
+  --arm "d10hi={$T,\"check_rate\":0.75,\"check_dprime\":1.0}"
 done
 
 # R4, P5. The centrepiece. If the price of checking is the price of a slot and the slot's price is
