@@ -90,7 +90,20 @@ class Operator:
     immune_latency: int = 1        # fixed one-way latency of the immune link, off the comms ladder
     queue_policy: str = "blind"    # "blind" | "refund" | "admit"; see `step`
     terrain_demand: float = 0.0    # >0 makes difficult ground raise the call-for-help rate (CR-15)
-    queue_discipline: str = "fcfs"  # "fcfs" | "random" | "hard_first" | "easy_first"; see `step`
+    queue_discipline: str = "fcfs"  # see DISCIPLINES and `service_order`
+    # `reserve` (default, and the published model) decides a request's fate at ARRIVAL: it reads
+    # the console's free time, computes the reply, and either claims the slot or refuses on the
+    # spot. That makes the console a reservation system rather than a queue, with two consequences
+    # we did not see until CR-46 went looking for a discipline to test. There is nothing for a
+    # discipline to order, since a request never waits in a place where it could be reordered; and
+    # the admission test is made against a FORECAST of the console's own delay rather than against
+    # the delay itself. `buffer` is the queue: an arrival joins a pending list, the console picks
+    # from it when it frees, and the admission test is applied at the head with the delay known.
+    queue_model: str = "reserve"   # "reserve" | "buffer"
+    pending: list = field(default_factory=list)   # buffer: [i, arrive, recv, deadline, seq]
+    req_seq: np.ndarray = None     # buffer: per-vehicle request counter, for the staleness test
+    n_stale: int = 0               # buffer: requests worked after their requester had moved on
+    backlog_sum: float = 0.0       # buffer: pending length summed over steps
     # Closed-loop reliance (CR-17). A vehicle that asked for help and did not get it does not
     # necessarily settle into autonomy for a full decision interval: an operator-reliant one asks
     # again sooner. `retry_prob` is the fraction of abandoned requests that come back on the short
@@ -254,6 +267,7 @@ def build_c2(scn: Scenario, ent: Entities,
     if not 0.0 <= op.stall_decay <= 1.0:
         raise ValueError(f"stall_decay must lie in [0, 1], got {op.stall_decay}")
     op.cadence_rate = np.ones(ent.n)
+    op.req_seq = np.zeros(ent.n, dtype=int)
     # Heterogeneous patience (CR-46). A mixed fleet does not wait the same length of time: an air
     # vehicle orbiting a target has a long window before its request is stale, a ground vehicle
     # halted in contact has a short one. The guard is the `retry_spread` lesson applied in advance:
@@ -295,6 +309,9 @@ def build_c2(scn: Scenario, ent: Entities,
     if op.admit_response == "aimd" and op.queue_policy != "admit":
         raise ValueError("admit_response='aimd' needs queue_policy='admit'; the other policies "
                          "emit no refusal for the vehicle to respond to")
+    op.queue_model = str(scn.params.get("queue_model", "reserve"))
+    if op.queue_model not in ("reserve", "buffer"):
+        raise ValueError(f"queue_model must be reserve|buffer, got {op.queue_model!r}")
     if op.queue_discipline not in DISCIPLINES:
         raise ValueError(f"queue_discipline must be one of {sorted(DISCIPLINES)}, "
                          f"got {op.queue_discipline!r}")
@@ -453,18 +470,149 @@ def _patience_vector(n_ent: int, blue_idx: np.ndarray, mean: int, spread: int,
     return v
 
 
+def _pick(op: Operator, ready: list[int], rng: np.random.Generator,
+          difficulty: dict) -> int:
+    """Which pending request the freed console takes next.
+
+    Under `reserve` a discipline can only permute requests that arrived on the same tick, because
+    a request's slot is committed the instant it arrives. Here there is a real backlog, so the
+    discipline is doing what its name says. The keys are the same ones `service_order` uses, read
+    off the pending record rather than off the arrival order.
+    """
+    d = op.queue_discipline
+    if d == "fcfs":
+        return ready[0]                      # the list is append-ordered, so index 0 is the oldest
+    if d == "random":
+        return ready[int(rng.integers(len(ready)))]
+    if d in ("edf", "patient_first"):
+        sign = 1 if d == "edf" else -1
+        return min(ready, key=lambda r: (sign * op.pending[r][3], r))
+    if d in ("hard_first", "easy_first") and difficulty:
+        sign = -1.0 if d == "hard_first" else 1.0
+        return min(ready, key=lambda r: (sign * difficulty.get(int(op.pending[r][0]), 0.0), r))
+    return ready[0]
+
+
+def _give_up(op: Operator, ent: Entities, i: int, arrive: float, hold: int,
+             rng: np.random.Generator) -> None:
+    """A request that will not be answered in time. The requester falls back to autonomy `hold`
+    steps after it asked, which is one round trip under `admit` and its full patience otherwise."""
+    ent.await_until[i] = int(arrive) + int(hold)
+    op.resolved_quality[i] = op.q_fallback
+    _arm_retry(op, rng, i)
+
+
+def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
+                  rng: np.random.Generator, difficulty: dict) -> None:
+    """Work the backlog for one step, under `queue_model = "buffer"`.
+
+    This is the part of a console that `reserve` does not have. A freed operator looks at what is
+    actually waiting, applies `queue_policy` to the HEAD rather than to the arrival, and only then
+    chooses by `queue_discipline`. Three differences follow, and all three are why the arm exists:
+
+    * The admission test uses the delay the request has actually suffered rather than a forecast of
+      it. Under `reserve` the console reads `operator_free_at`, which is a perfect prediction of its
+      own queueing delay; here it reads the clock.
+    * A request can wait, so a discipline has something to order.
+    * `blind` means what it says: the console works the head even when the answer will be discarded,
+      and the slot is gone. That is also where a STALE request comes from, since a requester whose
+      patience ran out re-arms and asks again while its first request is still in the buffer. The
+      console cannot tell, spends the slot, and the answer lands on a request nobody is holding any
+      more. `reserve` cannot represent that at all, and it is the sharpest form of the waste the
+      whole paper is about.
+
+    Consoles are worked in index order, which reproduces `reserve`'s `argmin` over free times when
+    they are all free and is a documented tie-break when they are not.
+    """
+    lat = op.immune_latency if op.ew_immune else comms.latency
+    svc = 1.0 / op.service_rate
+    # There is deliberately no background reaper. A console that swept its whole backlog every
+    # step and released every expired requester would be a STRONGER console than the one being
+    # modelled: it would be refusing work it has not looked at yet. Admission control here happens
+    # where a person's does, at the head, when the console picks the request up. The cost is that
+    # an expired request occupies the queue until the console reaches it, and its requester waits
+    # out its full patience, which is the honest consequence of the policy and not an artifact.
+    n_con = 1 if op.crew_free_at is None else int(op.crew_free_at.size)
+    for console in range(n_con):
+        c = -1 if op.crew_free_at is None else console
+        while op.pending:
+            free_at = op.operator_free_at if c < 0 else op.crew_free_at[c]
+            # The console frees at a fractional time, because one service is 1/mu steps and 1/mu
+            # is not an integer. Dispatching only at integer steps would round every service up and
+            # cost real capacity: at mu = 0.15 the console would deliver 1/7 rather than 0.15, a
+            # four percent capacity cut that has nothing to do with queueing. The condition is
+            # therefore "frees before this step ends", and the start is the fractional free time.
+            if free_at >= k + 1:
+                break
+            ready = [r for r, rec in enumerate(op.pending) if rec[2] <= k]
+            if not ready:
+                break
+            r = _pick(op, ready, rng, difficulty)
+            i, arrive, recv, deadline, seq = op.pending.pop(r)
+            i = int(i)
+            # A request still in flight is not the console's to work, which is what makes latency
+            # cost throughput here and not only delay.
+            start = max(float(free_at), float(recv))
+            reply = start + svc + lat
+            if reply > deadline and op.queue_policy != "blind":
+                # Head-of-line admission control against the delay this console actually has. No
+                # service time is claimed, so the next request is considered on the same step.
+                op.n_abandon_queue += 1
+                if op.admit_response == "aimd":
+                    op.cadence_rate[i] = max(_AIMD_FLOOR, op.cadence_rate[i] * _AIMD_BETA)
+                hold = min(2 * lat, int(op.patience_v[i])) if op.queue_policy == "admit" \
+                    else int(op.patience_v[i])
+                _give_up(op, ent, i, arrive, hold, rng)
+                continue
+            _claim(op, c, start + svc)               # the slot is spent from here on, always
+            stale = seq != op.req_seq[i]
+            down_ok = comms.reply_survives(rng, svc)
+            if stale:
+                op.n_stale += 1                       # worked, and nobody is holding it
+                continue
+            if not down_ok:
+                op.n_abandon_link += 1
+                _give_up(op, ent, i, arrive, int(op.patience_v[i]), rng)
+                continue
+            if reply > deadline:                      # `blind` only: worked, and answered too late
+                op.n_abandon_queue += 1
+                _give_up(op, ent, i, arrive, int(op.patience_v[i]), rng)
+                continue
+            ent.await_until[i] = int(math.ceil(reply))
+            q = op.q_operator
+            if op.q_droop > 0.0:
+                util = op.busy_steps / max(op.total_steps, 1)
+                q = op.q_operator - op.q_droop * util * (op.q_operator - op.q_auto)
+            op.resolved_quality[i] = q
+            op.waits.append(float(reply - arrive))
+            op.n_serviced += 1
+            op.retry_streak[i] = 0
+            if op.admit_response == "aimd":
+                op.cadence_rate[i] = min(1.0, op.cadence_rate[i] + _AIMD_ALPHA)
+            if arrive >= op.late_from:
+                op.n_serviced_late += 1
+
+
 def service_order(op: Operator, blue: np.ndarray, difficulty: dict,
                   rng: np.random.Generator) -> np.ndarray:
     """The order the operator works this tick's arrivals in (CR-16).
 
     `fcfs` returns `blue` untouched, which is what keeps the default path byte-identical.
 
-    Ordering cannot change how MANY requests the operator serves WHEN EVERY REQUESTER CARRIES THE
-    SAME PATIENCE. A request's completion time is fixed at arrival, so reordering two feasible
-    requests only swaps which vehicle is served. That is a statement about a homogeneous fleet, not
-    about queues, and it is the reason `hard_first` and `easy_first` key on the ground under the
-    vehicle rather than on anything intrinsic to the request: with a common deadline the only thing
-    left to prioritize is whose decision is worth more.
+    An earlier version of this docstring said ordering cannot change how many requests the operator
+    serves, because every requester carries the same patience. That is wrong twice over and both
+    errors are worth leaving on the record, because the wrong version is the intuitive one.
+
+    It is wrong as queueing. Under a common deadline, first-come-first-served already IS
+    earliest-deadline-first, which is the order that maximizes the number of deadlines met, so a
+    worse order does not reshuffle the beneficiaries: it strands earlier arrivals past their
+    deadlines and serves FEWER. Ordering changes how many, downward.
+
+    And it names the wrong reason for the null it was explaining. Under `queue_model = "reserve"`
+    a request is committed to a slot at ARRIVAL, so nothing ever waits in a place where it could
+    be reordered and a discipline can only permute requests that arrive on the same step. That is
+    a property of this simulator, not of consoles, and `queue_model = "buffer"` is the arm that
+    removes it.
 
     `patience_spread` removes the assumption. Once requesters carry different deadlines, ordering
     changes the COUNT, because a short-deadline request placed late in the tick no longer fits and
@@ -607,6 +755,24 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
         # (CR-18). Reading the queue consumes no randomness, so moving it above the second draw
         # leaves the stream exactly where it was.
         recv = k + lat                                        # request reaches operator
+        if op.queue_model == "buffer":
+            # The request joins the backlog and its fate is decided at the head, by `_drain_buffer`.
+            # Until then the requester waits on its own deadline, so a request that is never picked
+            # up costs exactly what an unanswered one always cost.
+            op.n_request += 1
+            if k >= op.late_from:
+                op.n_request_late += 1
+            op.req_seq[i] += 1
+            if up_ok or op.ew_immune:
+                op.pending.append([int(i), float(k), float(recv),
+                                   float(k + int(op.patience_v[i])), int(op.req_seq[i])])
+                ent.await_until[i] = k + int(op.patience_v[i])
+                op.resolved_quality[i] = op.q_fallback
+            else:
+                op.n_abandon_link += 1
+                _give_up(op, ent, int(i), k, int(op.patience_v[i]), rng)
+            ent.control_quality[i] = op.q_stall
+            continue
         if op.crew_free_at is None:
             console = -1
             start = max(op.operator_free_at, recv)            # single shared server
@@ -680,3 +846,9 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
             _arm_retry(op, rng, i)
 
         ent.control_quality[i] = op.q_stall                   # now awaiting
+
+    if op.queue_model == "buffer":
+        op.backlog_sum += float(len(op.pending))
+        # After the arrivals, so a request that reaches a free console on the step it was sent is
+        # served on that step, which is what `reserve` does with `start = max(free_at, recv)`.
+        _drain_buffer(op, ent, comms, k, rng, difficulty)

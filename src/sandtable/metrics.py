@@ -126,6 +126,7 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "arrival_distinct": 0.0, "arrival_repeat": 0.0, "arrival_repeat_frac": 0.0,
            "arrival_ge2": 0.0, "arrival_ge3": 0.0, "arrival_ge4": 0.0,
            "patience_mean": 0.0, "patience_sd": 0.0, "patience_min": 0.0,
+           "stale_frac": 0.0, "backlog_mean": 0.0,
            "supervised_mean": 0.0, "supervised_frac": 0.0, "demand_norm_goodput": 0.0,
            "hold_fraction": 0.0, "interaction_steps": 0.0, "neglect_steps": 0.0, "fan_out": 0.0}
 
@@ -147,6 +148,14 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
 
     if op is not None and op.total_steps > 0:
         out["operator_utilization"] = op.busy_steps / op.total_steps
+        if op.n_request > 0:
+            # Only `queue_model = "buffer"` can produce these. A request is STALE when the console
+            # works it after its requester's patience ran out and the requester asked again: the
+            # slot is spent on an answer nobody is holding. The reservation model cannot represent
+            # it, because there a request's fate is settled at arrival and a vehicle can never have
+            # two outstanding.
+            out["stale_frac"] = op.n_stale / op.n_request
+        out["backlog_mean"] = op.backlog_sum / op.total_steps
         if op.patience_v is not None:
             # The dispersion arm prints its own assumption. A `patience_spread` sweep is a pure
             # second-moment manipulation only if the first moment holds, and the way that stops

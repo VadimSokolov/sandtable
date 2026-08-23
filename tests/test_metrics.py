@@ -47,6 +47,8 @@ EXPECTED_KEYS = {
     "patience_mean",
     "patience_sd",
     "patience_min",
+    "stale_frac",
+    "backlog_mean",
     "supervised_mean",
     "supervised_frac",
     "demand_norm_goodput",

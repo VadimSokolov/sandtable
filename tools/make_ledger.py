@@ -85,6 +85,10 @@ ROWS = [
     ("the burstiness window belongs to the channel",
      "(instrument, not a claim)",
      "\\textsc{repaired}: benched against an injected cohort, it belongs to the mechanism"),
+    ("queue discipline moves nothing at the console",
+     "(instrument: there is no queue to order)",
+     "\\textsc{void-unreachable}: service is committed at ARRIVAL, so a discipline can only "
+     "permute same-step arrivals, and where those are common the console is already saturated"),
 ]
 
 
