@@ -1464,3 +1464,31 @@ Queue policies on the absolute rate (source: tools/make_rate_numbers.py over st-
   rtServedStackOverBlindJamTwelveBlocks = 32
   rtServedStackOverBlindJamTwelveGate = yes
   rtServedStackOverBlindJamTwelveT = 479.5
+
+
+Operator quality droop (source: tools/make_droop_numbers.py over st-droop-9446590.out)
+  drAdmitGoodBlocks = 32
+  drAdmitGoodFull = +0.571
+  drAdmitGoodShrink = -1
+  drAdmitGoodZero = +0.565
+  drAdmitSuccBlocks = 31
+  drAdmitSuccFull = +0.182
+  drAdmitSuccShrink = 23
+  drAdmitSuccZero = +0.237
+  drBlocks = 32
+  drChecked = 5
+  drLevels = 5
+  drNoRetryBlocks = 32
+  drNoRetryFull = +0.179
+  drNoRetryShrink = 18
+  drNoRetryZero = +0.218
+  drRefundSuccBlocks = 31
+  drRefundSuccFull = +0.176
+  drRefundSuccShrink = 21
+  drRefundSuccZero = +0.223
+  drReversals = 0
+  drSupOverDirBlocks = 32
+  drSupOverDirFull = +0.239
+  drSupOverDirShrink = -23
+  drSupOverDirZero = +0.195
+  drVerdict = none

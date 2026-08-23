@@ -3109,3 +3109,41 @@ immune to the denominator. And the CR-31 result is sharper than first stated: `a
 additionally tells the requester. Telling therefore costs nothing in work done and saves nothing
 either. All it changes is WHEN the vehicle comes back, which is the whole of the +32.4% request
 inflation and the whole of the apparent goodput collapse.
+
+---
+
+## CR-30 VERDICT (full tier). THE ORACLE ASSUMPTION IS CONSERVATIVE, NOT LOad-BEARING
+
+Job 9446590, 32 blocks x 64 reps, five droop levels from the shipped model to an operator whose
+answers decay all the way to the autonomous baseline at full utilization.
+
+**Falsifier does not fire. Zero of five orderings reverses sign at any droop level**, every cell at
+31 or 32 of 32 blocks. The 48-seed pilot is confirmed.
+
+| ordering | droop 0 | droop 1 | change |
+|---|---|---|---|
+| admit over blind, success | +0.237 | +0.182 | **-23%** |
+| refund over blind, success | +0.223 | +0.176 | **-21%** |
+| no-retry over rho=4, success | +0.218 | +0.179 | **-18%** |
+| admit over blind, goodput | +0.565 | +0.571 | **+1%** |
+| supervisory over direct, success | +0.195 | +0.239 | **+23%** |
+
+**The three families move differently and the differences are the mechanism, which is more than the
+registration asked for.** A droop degrades the quality of decisions the console DOES serve. So it
+erodes the mission value of every policy that works by serving more (all three success orderings
+lose a fifth of their value), leaves the congestion effect those policies act on untouched (the
+goodput ordering is flat to +1%), and strengthens the case for removing the operator from the loop
+entirely (supervisory over direct GROWS by a fifth, one-sided by construction since a droop can only
+harm the direct arm, and reported rather than counted).
+
+**The conclusion is therefore that every result in this paper is conservative with respect to the
+oracle assumption rather than dependent on it.** That is the stronger of the two things this check
+could have established, and it is worth being clear that it was registered as a falsification test
+and not as a demonstration: the falsifier was a sign reversal in any one of five cells at any of
+five levels, twenty-five chances to fail.
+
+**Caveat carried forward.** The goodput row is an `admit` against `blind` contrast and CR-31 showed
+that metric inflatable by anything that changes the asking. Here the contamination runs AGAINST the
+conclusion, since `admit` returns a vehicle to autonomy after one round trip rather than after full
+patience and therefore asks MORE often, so the +0.565 is measured against an inflated denominator
+and the true advantage is larger. `absrate` re-reads it on the absolute rate.
