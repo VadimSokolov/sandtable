@@ -816,3 +816,67 @@ Waiting priced by mobility (source: tools/make_teleop_numbers.py over st-teleop_
   tpStopRZeroFourNSixPct = -100
   tpStopRZeroFourNSixT = -37.3
   tpSuccClosed = 83
+
+
+Jitter on uninflatable metrics (source: tools/make_jitclean_numbers.py)
+  jcCapacity = 0.15
+  jcFloor = 0.009
+  jcGeCells = 5
+  jcGeGated = 0
+  jcGeMax = +0.0054
+  jcGeMaxShare = 3.6
+  jcGeMaxT = 11.4
+  jcGeRelHi = +27
+  jcGeRelLo = +8
+  jcMemCells = 5
+  jcMemGated = 0
+  jcMemMax = +0.0065
+  jcMemMaxShare = 4.3
+  jcMemMaxT = 21.7
+  jcMemRelHi = +14
+  jcMemRelLo = +7
+  jcSuccBest = +2.8
+  jcSuccBestBlocks = 24
+  jcSuccBestN = 32
+  jcSuccBestT = 2.35
+  jcSuccCells = 6
+  jcSuccGated = 2
+  jcSuccSpan = Five
+  jcSuccSpanNum = 5
+
+
+Jitter on uninflatable metrics (source: tools/make_jitclean_numbers.py)
+  jcCapacity = 0.15
+  jcFloor = 0.009
+  jcGeCells = 5
+  jcGeGated = 0
+  jcGeMax = +0.0054
+  jcGeMaxShare = 3.6
+  jcGeMaxT = 11.4
+  jcGeRelHi = +27
+  jcGeRelLo = +8
+  jcGeSix = +0.0026
+  jcGeSixBlocks = 26
+  jcGeSixN = 32
+  jcGeSixRel = +8
+  jcGeSixT = 5.3
+  jcMemCells = 5
+  jcMemGated = 0
+  jcMemMax = +0.0065
+  jcMemMaxShare = 4.3
+  jcMemMaxT = 21.7
+  jcMemRelHi = +14
+  jcMemRelLo = +7
+  jcMemSix = +0.0058
+  jcMemSixBlocks = 32
+  jcMemSixN = 32
+  jcMemSixRel = +12
+  jcMemSixT = 13.8
+  jcSuccBest = +2.8
+  jcSuccBestBlocks = 24
+  jcSuccBestN = 32
+  jcSuccBestT = 2.35
+  jcSuccCells = 6
+  jcSuccGated = 2
+  jcSuccSpan = Five
+  jcSuccSpanNum = 5

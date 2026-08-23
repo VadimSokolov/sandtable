@@ -3717,3 +3717,57 @@ predicted value guarantees failure. Its NECESSARY half is what fails: below $h^{
 arrive at $n=8$ against 0.694 at $n=5$, so the geometry is a bound and the console decides everything
 inside it. A budget that predicts an upper limit and not the operating point is not a closed form for
 the cliff, which is what was claimed and what is now withdrawn.
+
+---
+
+## CR-44. THE JITTER HEADLINE, READ ON EVERY METRIC THAT IS NOT INFLATABLE
+
+The cohort battery (job 9446609) carries `served_per_step` alongside `operator_goodput` for the exact
+arms the manuscript's jitter paragraph quotes. Together with `desync` D1's success sweep this is the
+first complete uncontaminated read of that recommendation, and it is much narrower than what ships.
+
+The manuscript says jitter at a matched mean hold "is worth \jiGeGoodWideFive{} of operator goodput
+at five assets and \jiGeGoodWideSix{} at six." `\Wide` is the width-18 pair. What the uncontaminated
+metrics say about that same pair:
+
+| metric | $n=4$ | $n=5$ | $n=6$ | $n=8$ | $n=10$ |
+|---|---|---|---|---|---|
+| served/step, memoryless | +0.0028 | +0.0044 | +0.0058 | +0.0065 | +0.0025 |
+| relative | +6.8% | +9.9% | +11.7% | +14.2% | +12.6% |
+| $t$ | 9.8 | 13.4 | 13.8 | 21.7 | 5.8 |
+| gates against capacity? | no | no | no | no | no |
+| served/step, bursty | +0.0046 | +0.0054 | +0.0026 | +0.0032 | +0.0021 |
+| gates against capacity? | no | no | no | no | no |
+| mission success | | **+0.028** | -0.006 | | |
+| $t$, blocks | | 2.35, 24/32 | -0.39, 14/32 | | |
+
+**Nothing gates on the absolute service rate at any span on either channel.** The largest effect
+anywhere is +0.0065 decisions per step, against a capacity floor of $0.06 \times 0.15 = 0.009$. The
+effects are statistically unambiguous, $t$ up to 21.7 at 32 of 32 blocks, and every one of them is
+under four percent of what one console can deliver.
+
+**On mission success the recommendation holds at one span and only one.** Of the six mean-matched
+cells in D1, two gate: width 4 at $n=5$ (+0.022, $t=2.06$, 20/32) and width 18 at $n=5$ (+0.028,
+$t=2.35$, 24/32). At $n=6$ two of the three pairs go the other way, ungated.
+
+**This is the capacity-anchored floor, adopted three hours ago on adversarial review, taking down a
+result of ours at its first real test.** That is what a materiality floor is for and I am not going
+to make an exception for our own paragraph. But the choice of floor decides this outcome, so the
+choice is registered rather than exercised quietly:
+
+**P1. The claim that survives is: at the span where the queue is near its threshold, a randomized
+hold is worth about three points of mission success over a fixed hold of the same mean, and it is
+not measurable on what the console delivers.**
+  **FALSIFIER.** If CR-40's G2 section shows a gated `served_per_step` gain for the jit-fix pair at
+  any span against the capacity floor, this narrowing is wrong and the fuller claim comes back.
+
+**P2. The relative reading is worth reporting next to the absolute one and is not a substitute for
+it.** A 7 to 27 percent rise in delivered service at a cost of one random draw is a real engineering
+fact even when the absolute quantity is small, and suppressing it because the console is already
+broken would be the mirror image of the error the floor was adopted to prevent.
+
+**What does not change.** The Fano and multiplicity evidence for the mechanism is unaffected, because
+those are arm-to-arm differences at a common configuration rather than levels against a floor, and
+CR-37 confirmed the reduction in six of six pairs. The mechanism is real and well measured. What is
+now in question is its size at the console, which is a different claim and was reported through a
+metric that could not carry it.
