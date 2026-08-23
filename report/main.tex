@@ -38,6 +38,7 @@
 \input{gen/qcap_numbers}
 \input{gen/lever_numbers}
 \input{gen/maps_numbers}
+\input{gen/foresight_numbers}
 \input{gen/ledger_counts}
 
 \newcommand{\sandtable}{\textsc{SandTable}}
@@ -348,6 +349,43 @@ The moving optimum of Section~\ref{subsec:centerpiece} is usually read as attent
 The direction of the omission is worth stating because it is not neutral, and it favors the levers rather than the argument. An operator whose answers degrade as it saturates is an operator producing rework, and rework is offered load, which is the same quantity Equation~\ref{eq:nstar} thresholds, so a quality droop should move every threshold here to the \emph{left} and make admission control worth more rather than less. We test that rather than assert it. Taking the quality of a serviced decision down toward the autonomous baseline in proportion to the console's running utilization, across \drLevels{} settings up to an operator whose answers decay all the way to that baseline at full utilization, \drVerdict{} of the \drChecked{} orderings this paper ships reverses sign. The three families move differently, and the differences are the mechanism. The mission-metric gains SHRINK: admission control over a blind console falls from \drAdmitSuccZero{} to \drAdmitSuccFull{}, and refunding and the no-retry ordering lose \drRefundSuccShrink\% and \drNoRetryShrink\% of their value the same way. The queue-metric gain does not: admission control's goodput advantage runs \drAdmitGoodZero{} at zero droop and \drAdmitGoodFull{} at full. And the supervisory-over-direct ordering GROWS, from \drSupOverDirZero{} to \drSupOverDirFull{}. A degrading operator costs the policies that work by serving more, leaves the congestion effect they act on untouched, and strengthens the case for taking the operator out of the loop. Every conclusion here is conservative with respect to the oracle assumption rather than dependent on it, and this is a sensitivity analysis of an assumption rather than a model of a person.
 
 \paragraph{The operator is also a metronome, and that assumption is load-bearing in a second way.} The droop check above varies what the operator's answers are worth. It does not vary how long they take, and the console's service time in this model is a constant: Equation~\ref{eq:nstar}, the fan-out floor, the latency ceiling and the capacity rule below were all derived against an exact $1/\mu$, and admission control is a feasibility test that compares a deadline against it. A person is not a metronome. Varying the coefficient of variation of the service time in the auxiliary queue model, holding the mean exactly so that anything that moves is variability rather than speed, the capacity rule's answer computed on the deterministic server stays inside the variable server's plateau in \QcapCvCells{} of \QcapCvCells{} cells up to $cv = \QcapCvMax{}$, which is an exponential operator; the argmax itself moves by up to \QcapCvShiftWorst{} capacities, but the argmax on this response is decided by rounding and the plateau is the readable statistic. The lever survives too, and loses value without approaching a sign change: bounding the backlog is worth \QcapCvBoundMetro{} served per step over the unbounded console at $cv = 0$ and \QcapCvBoundNoisy{} at $cv = \QcapCvMax{}$. Two consequences are worth stating because neither was predicted. First, an erratic operator is a much more expensive operator on a bad link than on a good one: the best achievable service falls \QcapCvLossJam\% across the same range at the C3 deadline and \QcapCvLossLong\% at a long one. Second, the age cap of the previous paragraph degrades far faster than the counter (\QcapCvAgeNoisy{} against \QcapCvBoundNoisy{}), and the reason is structural rather than incidental. Setting a cap at $P - 2\ell - 1/\mu$ embeds a point forecast of service the request has not yet received, and the counter forecasts nothing, so any admission rule that predicts remaining work inherits the variance of that work. That is a second and independent reason the recommendation is the counter.
+
+\paragraph{Two things a program office can buy from an operator, priced against each other.} The
+metronome assumption of the previous paragraph hides a second one that is more interesting and was
+found by accident. When the service time is variable, a console applying admission control has to
+compare the deadline against \emph{something}, and there are two candidates. It can compare against
+the mean, which is all a deadline field in the message could ever give it. Or it can compare against
+what this particular decision will actually take, which is not a message field at all: it is an
+operator who can tell a hard request from an easy one at a glance, and who therefore accepts exactly
+the ones that are quick. Our implementation did the second while its comment claimed the first, and
+the two are separated here as \texttt{admit\_foresight} because they are requirements of completely
+different kinds. They coincide exactly when the service time is constant, which is why every number
+published before this paragraph is unaffected by the distinction.
+
+Priced at sixteen assets on a clear link, with the mean held fixed so nothing moves but variability
+and discernment, the ordering is not the intuitive one. A metronome that cannot triage delivers
+\FsMetro{} served per step. Give it a coefficient of variation of one half and it falls to
+\FsNoisy{}, so consistency is worth \FsConsistency{} and the gate accepts it. Give the variable
+operator the ability to triage and it rises to \FsSeeing{}, so discernment is worth \FsDiscernment{},
+which is \FsRatio{} times what consistency is worth and also gated. The two together are the result:
+a discerning but erratic operator beats a consistent but undiscerning one by \FsNetOverMetro{}
+served per step, and the advantage grows with how erratic they are, reaching \FsSeeingHi{} at an
+exponential service time where the undiscerning console has fallen to \FsNoisyHi{}. Variance is an
+opportunity to whoever can see it and a cost to whoever cannot, and the same dispersion that hurts
+one operator is what gives the other something to select from. Discernment's value also rises with
+span, from \FsDiscernSix{} at six assets to \FsDiscernEight{} at eight and \FsDiscernTwelve{} at
+twelve, for the same reason: triage needs something to triage away.
+
+The corollary is the one to act on, and it puts a human capability on the same requirements ladder as
+a message field. Run the same comparison with the derived backlog bound in place and discernment
+almost stops paying: it is worth \FsBoundDiscernment{} rather than \FsDiscernment{}, smaller by a
+factor of \FsBoundShrink{}, because a console holding $k^{\star}$ requests has very little left to
+choose between. The cheap structural fix substitutes for the expensive human one. That is the same
+substitution the queue discipline showed, one rung further up, and it is the more consequential
+instance: a counter in a configuration file is a procurement item, and an operator who can triage by
+difficulty is a selection and training programme. The measurement says buy the counter first, and
+then ask whether discernment is still worth what it costs.
+
 
 \paragraph{Two thresholds, predicted then measured.} Equation~\ref{eq:nstar} puts the collapse span at $\qNStar{}$ assets on one console and $\qNStarTwo{}$ on two, and $\ell^{\star} = \qLatCut{}$ steps puts a ceiling on serviceable latency. Figure~\ref{fig:queue}(a) and Table~\ref{tab:staffing} are the staffing curve those numbers predict. On one console the operator's goodput, the fraction of its service time that reaches a requester still waiting, is \qGoodOneSix\% at six assets and \qGoodOneEight\% at eight, so the transition brackets $\qNStar{}$. On two consoles it is \qGoodTwoTwelve\% at twelve and \qGoodTwoSixteen\% at sixteen, bracketing $\qNStarTwo{}$. On three consoles, whose predicted threshold is $\qNStarThree{}$, the queue is still healthy at sixteen (\qGoodThreeSixteen\%). Those three readings are on the ratio, and the ratio is the metric this paper has had to correct twice, so they were re-run on the delivered rate. The brackets do not move: one console serves \seSrvOneNSix{} per step at six assets and \seSrvOneNEight{} at eight, two serve \seSrvTwoNTwelve{} at twelve and \seSrvTwoNSixteen{} at sixteen, and three are still rising at sixteen (\seSrvThreeNSixteen{}). Three consoles, three brackets, each containing its own prediction, with no parameter fitted to any of them. That the $c$-scaling survives on a metric with no denominator is the part worth having, because it is the one place in this paper where the equation makes a prediction about a knob the equation was not derived from. Adding a console does not raise goodput a little at every span; it moves a cliff. Staffing and admission control are the two levers the call-center literature puts on the same congestion \citep{ibrahim2018announcements}, and they act differently here: a second console doubles the span the queue can carry, while admission control on a single console converts the cliff into a slope, holding \qGoodOneEightAdmit\% goodput at eight assets where the blind operator has fallen to \qGoodOneEight\%. The latency ceiling shows the same discipline. Because C4 and C5 both sit above $\ell^{\star}$ at the default patience, they are one rung, not two: goodput is \qPatShortCfour\% at both. Raising patience to 30 steps lifts $\ell^{\star}$ past C4's latency and C4 separates (\qPatMidCfour\%) while C5 stays dead (\qPatMidCfive\%); at patience 45 both resolve (\qPatLongCfive\% at C5). The cut-off is a property of the requester's patience, not of the link.
 

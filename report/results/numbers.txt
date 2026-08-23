@@ -1950,3 +1950,23 @@ The five levers in one allocation, four-bin accounting (source: tools/make_lever
   KpJamBoundVsAdmitEight = -0.0049
   KpJamBoundVsAdmitTwelve = -0.0112
   KpJamBoundVsAdmitSixteen = -0.0132
+
+CR-53 v2, consistency against discernment (source: tools/make_foresight_numbers.py over st-svccv-9449062.out), 2026-08-23
+  FsMetro = 0.1490
+  FsNoisy = 0.1185
+  FsSeeing = 0.1949
+  FsSeeingHi = 0.2659
+  FsNoisyHi = 0.1161
+  FsConsistency = +0.0305
+  FsDiscernment = +0.0764
+  FsRatio = 2.5
+  FsNetOverMetro = +0.0459
+  FsMPE = 0.0090
+  FsDiscernSix = +0.0116
+  FsDiscernEight = +0.0246
+  FsDiscernTwelve = +0.0532
+  FsBoundNoisy = 0.1413
+  FsBoundSeeing = 0.1545
+  FsBoundMetro = 0.1476
+  FsBoundDiscernment = +0.0132
+  FsBoundShrink = 5.8

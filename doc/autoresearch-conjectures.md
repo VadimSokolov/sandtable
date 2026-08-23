@@ -5620,3 +5620,47 @@ downlink then dropped. No discipline, bound or admission rule can recover that, 
 happens after the console has finished. It is a communications requirement, not a teaming one, and
 it is why the C3 ceiling sits where it does. Separating it out is only possible because the counters
 were split after adversarial review; on the old two-counter accounting it was invisible.
+
+---
+
+## CR-53 v2 VERDICT: DISCERNMENT IS WORTH 2.5 TIMES CONSISTENCY, AND A COUNTER SUBSTITUTES FOR BOTH
+
+Job 9449062, full tier, complete. All four open limbs hold, and the battery exists only because
+instrument defect 7 turned a wrong number into a parameter.
+
+**P1 HELD** (carried over from v1's refutation, and re-measured on the buffer console). On a blind
+console variability is a gated LOSS below the collapse span and irrelevant above it: cv = 1.0 costs
+0.0205 served per step at four assets and 0.0318 at six, and is TOST-equivalent to the metronome at
+8, 10, 12 and 16. A collapsed console is spending nearly all its time on dead work and how variably
+it does that cannot matter.
+
+**P2 HELD.** On the honest admitting console, which tests the deadline against the mean, variability
+is a loss at every span, because a feasibility test against the mean admits work the draw then fails
+to finish in time. At sixteen assets, 0.1185 at cv = 0.5 and 0.1161 at cv = 1.0 against the
+metronome's 0.1490.
+
+**P3 HELD, and it is the result.** Foresight is worth more than variability costs, by a lot. At
+sixteen assets consistency (cv 0.5 to 0, no triage) is worth +0.0305 and discernment (triage, at
+cv 0.5) is worth +0.0764, a ratio of 2.5, both gated with 32 of 32 blocks. So **a discerning but
+erratic operator beats a consistent but undiscerning one by +0.0459**, and the margin widens with
+dispersion: at an exponential service time the triage console reaches 0.2659 while the undiscerning
+one has fallen to 0.1161. Variance is an opportunity to whoever can see it and a cost to whoever
+cannot, and it is the same variance in both cases.
+
+**P4 HELD.** Discernment's value rises with span: +0.0116 at six assets, +0.0246 at eight, +0.0532 at
+twelve, +0.0764 at sixteen. Triage needs something to triage away.
+
+**P5 HELD, and it is the corollary worth acting on.** Under the derived backlog bound, discernment is
+worth +0.0132 rather than +0.0764, smaller by a factor of 5.8, because a console holding $k^{\star}$
+requests has almost nothing left to choose between. **The cheap structural fix substitutes for the
+expensive human one.** This is the same substitution the queue discipline showed, one rung up the
+ladder, and the more consequential instance: a counter in a configuration file is a procurement item
+and an operator who can triage by difficulty is a selection and training programme.
+
+**Why this is worth having and was nearly lost.** The number that exposed the defect, an admitting
+console apparently delivering 27 percent more when its operator became erratic, was absurd on its
+face, which is what sent me to the source instead of to the manuscript. Had it been merely
+surprising rather than absurd it would have shipped. The fix was to make the hidden assumption a
+parameter rather than to remove it, and the parameter turned out to price a real and separable
+capability. Three of the nine instrument defects in this project were found this way and none were
+found by a test.
