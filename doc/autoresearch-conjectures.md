@@ -6176,3 +6176,34 @@ replications under the burstiest channel this paper has, Gilbert-Elliot with mea
 optimum and nothing above noise. Under the forced outage the same sweep is noise as well, 0.719 to
 0.938 with no monotone trend. So the staleness cut-off is a BINARY design choice, have one or not,
 and not a scalar to tune. CR-57's finding should be stated that way and not as an optimum.
+
+## CR-56 B2 VERDICT: THE VALUE OF TRIAGE HAS A CLOSED FORM, AND IT IS THE CONSOLE'S CAPACITY TIMES ITS COEFFICIENT OF VARIATION
+
+Job 9449506, A2, full tier, sixteen assets, buffer console, admitting. The prediction was registered
+before the run with the origin forced by an identity (at $cv = 0$ the foresight switch is bit-inert,
+so the gain is exactly zero and no fitting is possible there) and one point already measured.
+
+| $cv$ | mean test | perfect triage | gain | predicted $\mu \cdot cv$ | error |
+| --- | --- | --- | --- | --- | --- |
+| 0.25 | 0.1270 | 0.1634 | +0.0364 | 0.0375 | 0.0011 |
+| 0.50 | 0.1185 | 0.1949 | +0.0764 | 0.0750 | 0.0014 |
+| 1.00 | 0.1161 | 0.2659 | +0.1498 | 0.1500 | 0.0002 |
+
+**B2 HOLDS.** Three points, no fitted constant, largest error 0.0014 against a materiality floor of
+0.0090. The registered new point, $cv = 0.25$, was predicted at 0.0375 and measured at 0.0364.
+
+$$\text{value of perfect triage} = \mu \cdot cv$$
+
+This is the fourth closed form in the paper and the first that prices a CAPABILITY rather than
+locating a failure. The other three say where a console breaks; this one says what an operator is
+worth, from two numbers a program can measure about its own people without running any simulator:
+how fast they decide, and how variable that is. At $cv = 1$ the gain is the console's entire nominal
+capacity, so an operator who can triage an exponentially variable workload is worth a second console.
+
+**Scope condition, stated because the data states it.** The law is exact at the SATURATED operating
+point. At twelve assets the same three gains are 0.0248, 0.0533 and 0.1052, and at eight assets
+0.0108, 0.0246 and 0.0563, both below the law and falling with occupancy, which runs 0.991, 0.970 and
+0.867. That is the same scope condition the effort-invariance result carries and for the same reason:
+triage reallocates a fixed quantity, and below saturation the quantity is not fixed because the
+console is waiting for work. The law is therefore a ceiling that is reached exactly when the console
+is the binding constraint, which is the regime the span-of-control question lives in.
