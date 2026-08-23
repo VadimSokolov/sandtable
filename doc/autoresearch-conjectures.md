@@ -4631,3 +4631,144 @@ sentence is unchanged in form, "bound the console's backlog at $\lfloor(P - 2\el
 1$", and unchanged in value at the published operating point, where both rules say 2. It changes on
 degraded links and short deadlines, which is where the console is under the most pressure and where
 the older rule would have told an operator to hold nothing at all.
+
+**CR-49 CORRECTION, WRITTEN THE SAME DAY AND BEFORE ANY OF ITS ARMS RETURNED. The premise was
+false and the conclusion survived it, which is the order that should make a reader most suspicious.**
+
+`c2.py` line 565 and line 819 both read `svc = 1.0 / op.service_rate`. Service in this console is
+DETERMINISTIC. The queue is M/D/1, not M/M/1. So the wait behind $k$ requests is not
+$\mathrm{Erlang}(k+1,\mu)$, its mean equals its median, and the Erlang-skew argument above does not
+explain the observed $+1$ at C3 or anything else. The paper already states the $M/D/1$ limitation in
+its own limitations paragraph. I derived against the textbook queue instead of against the one in
+the source file, which is the instrument-defect genus this paper has now caught four times: a
+convention correctly derived for its first use case, carried silently into a second where it does
+not hold. This is the first instance where the carrier was a piece of theory rather than a piece of
+code, and the first where the defect was mine and found within the hour.
+
+**The mechanism, redone against the deterministic server.** With deterministic service the only
+randomness in a marginal admission's wait is where in the current service cycle it happens to
+arrive. A request standing at position $j$ in the waiting line, $j = 1$ next up, is answered at
+$2\ell + r + j/\mu$ after issue, where $r$ is the residual of the request in service. Under load
+$r\mu$ is close to uniform on $(0,1)$, so with $\lambda = (P - 2\ell)\mu$ the marginal admission at
+depth $j$ makes its deadline with probability
+$$\Pr[\text{useful at depth } j] = \operatorname{clamp}(\lambda - j + 1,\, 0,\, 1),$$
+a straight line falling from one to zero across a single unit of $\lambda$, not a Poisson tail.
+Admitting while that probability is at least one half gives
+$$k^{\star} = \lfloor \lambda + 1/2 \rfloor - 1 ,$$
+which also reproduces both measured points. Two different wrong-or-right mechanisms fitting the same
+two points is exactly the situation in which two points are worth nothing, and it is why the
+prospective arms matter more than they did an hour ago.
+
+**What the running battery can and cannot settle.** The floor rule and both corrections split at
+$P \in \{12, 25, 38, 45\}$, so Hopper job 9448688 still adjudicates the registered P1. But the two
+corrections split only when $\mathrm{frac}(\lambda) \in [1/2, 2/3)$, and the sweep's single such
+point, $P = 30$ with $\lambda = 4.50$, puts the deterministic rule on an exact boundary where it
+predicts nothing. The battery therefore CANNOT separate the two mechanisms. That is a design gap,
+recorded here rather than discovered later.
+
+**P4 (new, and the reason this correction is not just an erratum).** The gap is closed outside
+SandTable. `tools/queue_kstar.py` is a second, independent implementation of the console queue,
+written from the model description rather than from `c2.py`, carrying no terrain, sensing, combat,
+or vehicle state. It costs 0.09 seconds a run, so $\lambda$ can be swept on a grid fine enough to
+locate the STEPS in $k^{\star}$ directly, and the three rules predict steps in three different
+places: at integer $\lambda$ (floor), at $\lambda \equiv 2/3$ (Erlang), at $\lambda \equiv 1/2$
+(deterministic). Registered claim: on a grid of step 0.1 from $\lambda = 1.3$ to 7.9, the measured
+steps land at the half-integers.
+  **FALSIFIER.** Steps at the integers restore the published rule and retract both corrections.
+  Steps at $\lambda \equiv 2/3$ would mean the deterministic derivation is wrong in a way I cannot
+  currently explain, since the server demonstrably does not draw its service times.
+  **PREREGISTERED AGREEMENT CHECK, which is the point of writing a second implementation at all.**
+  The queue-only model already reproduces SandTable's two measured argmaxes exactly, 2 at
+  $\lambda = 3.0$ and 1 at $\lambda = 1.8$, at both $n = 8$ and $n = 16$. Any disagreement between
+  the two implementations at the operating points the battery returns is a bug in one of them and
+  is to be reported as such, not averaged.
+
+**P5 (open, and worth more than the sizing rule if it holds).** Bounding the buffer and dropping the
+OLDEST arrival means that under load the head is evicted repeatedly, so the console picks up work far
+fresher than "the request that has waited $k$ services". In the saturated limit a drop-oldest
+first-come-first-served queue should therefore behave like a newest-first one. If that is right it
+merges CR-47 P7, where a two-deep oldest-first queue reached an unbounded newest-first one, into this
+conjecture as one mechanism rather than two coincidences, and it means the depth-$j$ analysis above
+describes a line the marginal request never actually stands in.
+  **FALSIFIER.** Bounded first-come-first-served and unbounded newest-first separating by a gated
+  margin in the queue-only model at high load leaves them as two mechanisms, and the merge is off.
+
+**CR-45 VERDICT: HELD, at the sample size that was the point of rerunning it.** Job 9448646, Saltelli
+design, 3072 parameter draws, 8 seeds and 13 spans each, 319488 missions, against the closed form
+estimated at `--n-eq 65536` rather than at the simulator's own sample size, which was the instrument
+defect that made the first run unreadable.
+
+| parameter | $S_1$ sim | $S_1$ eq | $S_T$ sim | $S_T$ eq |
+|---|---|---|---|---|
+| service_rate | 0.443 | 0.456 | 0.462 | 0.480 |
+| comms_p_drop | 0.294 | 0.270 | 0.307 | 0.290 |
+| patience | 0.176 | 0.136 | 0.165 | 0.146 |
+| decision_interval | 0.063 | 0.107 | 0.113 | 0.115 |
+
+Rank order identical on both index families. Largest total-effect gap 0.020, largest first-order gap
+0.044 against a falsifier at 0.10. Correlation of the two responses over the sample 0.994. The
+simulator's global sensitivity structure over these four parameters is the closed form's, which is
+the strongest validation statement this paper has, and it is worth noting that the first-order
+confidence intervals are wide enough (patience $\pm 0.162$) that only the total-effect comparison
+carries weight. The rank agreement is reported on both and claimed on neither alone.
+
+**CR-49 P4 VERDICT: THE RULE IS RIGHT WHERE IT MATTERS AND THE QUESTION IT WAS ASKING IS BENEATH THE
+RESOLUTION OF THE ANSWER.** `tools/queue_kstar.py`, 67 values of $\lambda$ from 1.3 to 7.9 in steps
+of 0.1, 12 replications a point, 40000-step horizon, at $n = 8, 12, 24$.
+
+The registered test was where the STEPS in $k^{\star}$ land, and the registered answer was the
+half-integers. That test cannot be run as posed, because a point argmax over this response is noise
+dressed as a decision: the response is a plateau, not a peak, and it widens with $\lambda$. At
+$\lambda = 7.9$ six different capacities deliver service within one material effect of each other.
+Scoring a rule by whether its prediction lands in the PLATEAU, which is the only question a
+practitioner can act on, gives
+
+| rule | $n=8$ | $n=12$ | $n=24$ |
+|---|---|---|---|
+| $\lfloor\lambda\rfloor - 1$ (published) | 4/37 outside | 4/67 outside | 5/11 outside |
+| $\lfloor\lambda + 1/3\rfloor - 1$ (Erlang, premise false) | 1/37 | 1/67 | 2/11 |
+| $\lfloor\lambda + 1/2\rfloor - 1$ (deterministic, premise true) | 3/37 | 0/67 | 0/11 |
+
+and every failure of the published rule, at every load, lies in $\lambda \in [1.5, 1.9]$. So the
+three rules are separated by at most one capacity and the plateau is one to six capacities wide: the
+mechanism question, $1/3$ against $1/2$, is below the resolution of the measurement, and the rule
+whose premise I proved false performs no worse than the one whose premise is true. That is the
+finding, and it is a caution about mechanism stories rather than a result about queues.
+
+**Three things the scan settles that are not about which constant is right, and are worth more.**
+
+1. **The unbounded buffer is catastrophic at every $\lambda$ in the range**, delivering 0.0000 to
+   0.0004 against roughly 0.15 for any bound at all. The gain from bounding is a factor of several
+   hundred; the gain from bounding CORRECTLY, against bounding at a fixed 2, is a few percent
+   outside the degraded regime. The recommendation's value is almost entirely in the first step.
+
+2. **The plateau's lower edge is 1 or 2 across the whole range $\lambda \in [1.6, 7.9]$ while its
+   upper edge tracks $\lambda$.** Under-sizing is nearly free and over-sizing is expensive: at
+   $\lambda = 3.0$, one too small costs 3.0 percent of delivered service and one too large costs
+   13.0; at $\lambda = 5.0$, 0.07 percent against 7.2. **When the parameters are uncertain, size the
+   console's backlog below the rule, not above it.** This is the actionable sentence and it does not
+   depend on which of the three rules is used.
+
+3. **A fixed bound of 2 sits inside the plateau at every $\lambda \ge 2.0$ and every load tested**,
+   and fails only on degraded links, where the right answer is 1. The published floor rule's four
+   failures are all in that same window and all err toward 0, which is the safe side by point 2.
+
+**CR-49 P5 VERDICT: REFUTED AS STATED, AND WHAT REPLACES IT IS BETTER.** Bounded first-come-first-
+served does not merely behave like unbounded newest-first; at a correctly sized bound it BEATS it,
+paired over common random numbers, 24 replications:
+
+    lambda=3.0  n= 8:  fifo@2 0.1474  lifo(inf) 0.1373   +0.0101  t=110.6  GATED
+    lambda=1.8  n= 8:  fifo@1 0.1281  lifo(inf) 0.1134   +0.0147  t= 89.8  GATED
+    lambda=3.0  n=12:  fifo@2 0.1497  lifo(inf) 0.1466   +0.0031  t= 62.8  not material
+    lambda=3.0  n=24:  fifo@2 0.1500  lifo(inf) 0.1499   +0.0001  t=  6.4  not material
+
+Two of sixteen contrasts clear the material-practical-effect floor and both are at moderate load;
+the rest are differences with enormous $t$ statistics and no operational size, which is what the
+floor is for. And the sharper result is the one on the other side of the same table: **once the
+backlog is bounded at $k^{\star}$, the discipline stops mattering.** At $\lambda = 1.8$, where
+$k^{\star} = 1$, bounded newest-first and bounded oldest-first are identical to every digit at every
+load, because a buffer holding one waiting request has no order to permute. At $\lambda = 3.0$ they
+differ by 0.0069 at worst and never materially. The requirements ladder therefore collapses to its
+cheapest rung: **the counter is sufficient, and given the counter the stack buys nothing.** That is
+a stronger sponsor recommendation than the one the paper currently carries and it is cheaper to
+implement.
