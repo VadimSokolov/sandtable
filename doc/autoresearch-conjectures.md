@@ -4989,3 +4989,84 @@ surviving its strongest challenger. A sponsor asked to bound a console's backlog
 that the obvious next step, delay-based active queue management with a timestamped message format,
 was implemented and measured and buys nothing inside the envelope. Negative results about
 interventions somebody would otherwise fund are the useful kind.
+
+## CR-51. THE OPERATOR IS A METRONOME, AND EVERY CLOSED FORM IN THIS PAPER WAS DERIVED ON ONE
+
+**Provenance.** Proposed by adversarial review as the strongest weakness not yet asked about, and
+registered here before any arm is run. The predictions below are review's, not mine, which is worth
+recording because it is the first conjecture in this file whose falsifier I did not write.
+
+**The defect.** `c2.py` sets `svc = 1.0 / service_rate`. The console's service time is a constant.
+Equation~nstar, the fan-out floor, the latency ceiling and the buffer bound $k^{\star}$ were all
+derived against that constant, and admission control, the paper's headline lever, is a feasibility
+test that compares a deadline against an exact $1/\mu$. A person is not a metronome. If any of these
+results is a property of the zero-variance server rather than of the queue, the paper is a study of
+a machine that does not exist.
+
+The instrument is `cv`, the coefficient of variation of the service time, added to
+`tools/queue_kstar.py` and holding the MEAN exactly: 0 is the shipped console, 1 is exponential, and
+the values between are a gamma with the same mean. Anything that moves is variability and not speed.
+
+**P1 (robustness of the sizing rule).** Across the $\lambda$ ladder, the argmax of delivered useful
+service shifts DOWN by at most one capacity at $cv = 1$ relative to $cv = 0$.
+  **FALSIFIER.** A shift of two or more capacities at any $\lambda$ says $k^{\star}$ is a property of
+  the deterministic server, and the rule ships with a variability correction or does not ship. In
+  that case the Erlang reasoning retracted in CR-49 returns, with the right premise this time.
+
+**P2 (robustness of the headline lever).** The advantage of admission control over a blind console
+degrades toward zero as $cv$ rises, without changing sign.
+  **FALSIFIER.** A sign change at any $cv \le 1$ means the lever is an artifact of a predictable
+  server, which is the most damaging single result this paper could produce about itself.
+
+**P3 (mine, added because P1 and P2 are both one-sided).** The DIRECTION of the shift is down. A
+noisier server makes a long wait more likely at every depth, so the console should hold less, not
+more.
+  **FALSIFIER.** An argmax that rises with $cv$ anywhere refutes the residual argument in CR-49 as
+  well, since that argument is what makes depth cost time at all.
+
+**CR-51 VERDICT. P1's FALSIFIER FIRES ON THE LETTER AND NOT ON THE SUBSTANCE, AND THE REASON IS A
+DEFECT IN THE FALSIFIER I ACCEPTED WITHOUT APPLYING MY OWN LESSON TO IT.** $n = 12$, mean service
+held at $1/\mu = 6.67$ throughout, 12 replications, $\lambda$ from 1.8 to 6.0, $cv$ from 0 to 1.
+
+The argmax shifts down by at most one capacity everywhere except $\lambda = 6.0$, where it goes from
+5 to 3 at $cv = 1$. Read literally, P1 is refuted. Read against the plateau, which is what the CR-49
+P4 verdict established four hours earlier as the only readable statistic on this response, nothing
+happens at all: at $\lambda = 6.0$ and $cv = 1$ the plateau is $[2, 5]$ and the deterministic rule's
+answer, 5, is inside it. **At every $\lambda$ and every $cv$ tested, the answer computed on the
+deterministic server is still inside the variable server's plateau.** P1 is accepted in its plateau
+form and its argmax form is recorded as a badly written falsifier. It came from review, I did not
+write it, and I published it without noticing that I had spent the afternoon proving that the
+statistic it names is noise. Registering someone else's falsifier does not exempt it from the
+standards the file applies to mine.
+
+**P3 HELD.** Every shift is downward or zero; none is upward, at any $\lambda$ or any $cv$. A noisier
+server makes a long wait likelier at every depth, so the console should hold less, and it does.
+
+**P2 HELD.** Paired on common random numbers, 24 replications, against the unbounded backlog the
+console ships with:
+
+| $\lambda$ | $cv = 0$ | 0.25 | 0.5 | 1.0 |
+|---|---|---|---|---|
+| bound minus blind | +0.1496 | +0.1470 | +0.1417 | +0.1292 |
+| age cap minus blind | +0.1494 | +0.1305 | +0.1213 | +0.1184 |
+
+at $\lambda = 3.0$. The sign never changes and the advantage is never close to changing; the lever
+loses 14 percent of its value across the whole range from a metronome to an exponential server. The
+paper's headline is not an artifact of a predictable operator.
+
+**Two things the registered arms paid for that were not registered, labelled as such.**
+
+1. **Operator variability costs more when the link is worse.** The best achievable delivered service
+   falls from 0.1387 to 0.1092 as $cv$ goes 0 to 1 at $\lambda = 1.8$, a loss of 21 percent, against
+   0.1500 to 0.1465 at $\lambda = 6.0$, a loss of 2.3 percent. An operator whose pace is erratic is
+   a much more expensive operator on a degraded link than on a clear one. That is a human-machine
+   teaming statement with a queueing mechanism behind it, and it is the first result in this paper
+   that is about the person rather than about the protocol.
+
+2. **The age cap is markedly less robust to variability than the counter**, and there is a reason
+   rather than a coincidence. Setting the cap at $P - 1/\mu - \ell$ embeds a POINT FORECAST of the
+   service the request has not yet received; the counter forecasts nothing. So the age cap collapses
+   from a dead heat at $cv = 0$ to 0.1306 against the counter's 0.1471 at $cv = 0.25$, before either
+   has lost much absolute ground. Any rule that admits work on a prediction of the remaining service
+   inherits the variance of that service, and this is the second independent reason, after the
+   moving-link null, that the recommendation is the counter.

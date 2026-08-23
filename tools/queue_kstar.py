@@ -31,7 +31,7 @@ ISSUE, ARRIVE, ABANDON, DONE = 0, 1, 2, 3
 
 
 def simulate(n, P, L, mu, cap, Z, horizon, seed, discipline="fifo", drop="oldest", age_cap=None,
-             lat_switch=None):
+             lat_switch=None, cv=0.0):
     """`age_cap` in steps, measured from when the request was SENT, is the middle rung of the
     requirements ladder: it needs a send timestamp in the message and nothing about the link. It
     composes with `cap`; pass `cap=-1` to test it alone. `lat_switch`, a pair (period, other_L),
@@ -39,6 +39,10 @@ def simulate(n, P, L, mu, cap, Z, horizon, seed, discipline="fifo", drop="oldest
     parameter the length cap depends on and the age cap does not."""
     rng = np.random.default_rng(seed)
     svc = 1.0 / mu
+    shape = (1.0 / (cv * cv)) if cv > 0 else None
+
+    def draw_svc():
+        return svc if shape is None else float(rng.gamma(shape, svc / shape))
 
     def lat_at(now):
         if lat_switch is None:
@@ -84,7 +88,7 @@ def simulate(n, P, L, mu, cap, Z, horizon, seed, discipline="fifo", drop="oldest
         rec = buf.pop(0) if discipline == "fifo" else buf.pop()
         issue, i, g = rec
         age_sum += now - issue
-        busy_until = now + svc
+        busy_until = now + draw_svc()
         push(busy_until, DONE, (i, issue, g))
 
     t = 0.0
@@ -116,7 +120,7 @@ def simulate(n, P, L, mu, cap, Z, horizon, seed, discipline="fifo", drop="oldest
         else:
             i, issue, g = pl
             served += 1
-            work_time += svc
+            work_time += svc          # nominal; exact only at cv = 0
             back = lat_at(t)
             if t + back <= issue + P and gen[i] == g:
                 useful += 1

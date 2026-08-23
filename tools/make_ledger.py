@@ -116,6 +116,11 @@ ROWS = [
      "(instrument: the server does not draw its service times)",
      "\\textsc{repaired}: the console is $M/D/1$, so the correction term is the residual of a "
      "deterministic service and not the skew of an Erlang"),
+    ("every closed form here was derived on a metronome",
+     "an answer that leaves the plateau, or a lever that changes sign, at exponential service",
+     "\\textsc{held}: the deterministic answer stays inside the variable server\'s plateau in "
+     "\\QcapCvCells{} of \\QcapCvCells{} cells, and the lever loses value without approaching "
+     "a sign change"),
 ]
 
 

@@ -189,6 +189,48 @@ def main() -> None:
         out += [(f"QcapAge{tag}", f"{a:.1f}"), (f"QcapAgeRate{tag}", f"{lam:.2f}"),
                 (f"QcapAgeForm{tag}", f"{(KAGE - 1) / lam:.1f}")]
 
+    # 8. CR-51: the console in this paper is a metronome, and every closed form was derived on one.
+    #    The mean service is held exactly, so anything that moves is variability and not speed.
+    CVS = (0.0, 0.25, 0.5, 1.0)
+    ladder = (1.8, 3.0, 6.0)
+    caps8 = list(range(8))
+    plate0, worst_shift, outside = {}, 0, 0
+    for lam in ladder:
+        pp = lam / MU
+        k0 = None
+        for cv in CVS:
+            vv = {c: float(np.mean([simulate(NN, pp, 0.0, MU, c, 22.0, H, 1000 + sd, "fifo",
+                                             cv=cv)["useful"] for sd in range(R)]))
+                  for c in caps8}
+            best = max(vv.values())
+            pl = [c for c, x in vv.items() if best - x <= MPE]
+            am = max(vv, key=lambda c: vv[c])
+            if cv == 0.0:
+                k0, plate0[lam] = am, best
+            else:
+                worst_shift = min(worst_shift, am - k0)
+                outside += k0 not in pl
+            if cv == CVS[-1]:
+                out += [(f"QcapCvBest{'Jam' if lam < 2 else ('Pub' if lam < 4 else 'Long')}",
+                         f"{best:.4f}"),
+                        (f"QcapCvLoss{'Jam' if lam < 2 else ('Pub' if lam < 4 else 'Long')}",
+                         f"{100 * (1 - best / plate0[lam]):.0f}")]
+    out += [("QcapCvShiftWorst", f"{abs(worst_shift)}"), ("QcapCvOutside", f"{outside}"),
+            ("QcapCvCells", f"{len(ladder) * (len(CVS) - 1)}"), ("QcapCvMax", f"{CVS[-1]:.2f}")]
+
+    # And whether the lever itself survives a variable operator.
+    pp = 3.0 / MU
+    k = math.floor(3.0 + 0.5) - 1
+    for cv, tag in ((0.0, "Metro"), (1.0, "Noisy")):
+        b = np.array([simulate(NN, pp, 0.0, MU, -1, 22.0, H, 1000 + sd, "fifo", cv=cv)["useful"]
+                      for sd in range(24)])
+        g = np.array([simulate(NN, pp, 0.0, MU, k, 22.0, H, 1000 + sd, "fifo", cv=cv)["useful"]
+                      for sd in range(24)])
+        a = np.array([simulate(NN, pp, 0.0, MU, -1, 22.0, H, 1000 + sd, "fifo",
+                               age_cap=pp - 1 / MU, cv=cv)["useful"] for sd in range(24)])
+        out += [(f"QcapCvBound{tag}", f"{(g - b).mean():+.4f}"),
+                (f"QcapCvAge{tag}", f"{(a - b).mean():+.4f}")]
+
     dst = ROOT / "report" / "gen" / "qcap_numbers.tex"
     dst.write_text("".join(f"\\newcommand{{\\{k}}}{{{v}}}\n" for k, v in out))
     print(f"wrote {dst} with {len(out)} macros")
