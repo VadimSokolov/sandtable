@@ -5237,3 +5237,59 @@ waiting for them.
 **This is the second time in this session that a claim I had already written into the manuscript was
 narrowed by a check adversarial review asked for and I had not thought to run.** The first was the
 plateau. Both were riders on results that were correct as far as they went.
+
+---
+
+## CR-47 P1-P6 VERDICT: NEWEST-FIRST WORKS, AND THE BOUND DOMINATES IT
+
+Job 9448647 (full tier, 32 blocks a point) closes every limb registered in `hopper/batteries/lifo.sh`.
+Read with `tools/ar_survey.py`, paired by block, gated at |t| > 1.70 with the capacity-anchored rate
+floor. Contrasts are `patient_first` minus `fcfs` on the blind console unless another arm is named.
+
+**P1 (registered as confirmation) HELD.** The contrast on `served_per_step` is +0.0788 at n=8,
++0.1232 at n=10, +0.1371 at n=12 and +0.1441 at n=16, all gated up with 32 of 32 blocks agreeing.
+At n=16 the ordering rule alone lifts a console that had collapsed to 0.0023 served/step back to
+0.1464, which is 98 percent of what admission control gets (0.1490) and 99 percent of what the
+derived buffer bound gets (0.1476).
+
+**P2 HELD.** Mission success moves with it: +0.1470 at n=8, +0.1265 at n=10, +0.0874 at n=12, all
+gated. At n=16 the two arms are equivalent, because by then both reach the objective and the
+headroom has been spent. Below n=8 the contrast is inconclusive.
+
+**P3 FAILS ON ITS LETTER, HOLDS ON ITS SHAPE.** The registration said the sign is negative at n <= 6.
+Measured: −0.0021 at n=4, −0.0040 at n=5, and **+0.0080 at n=6**, inconclusive rather than negative.
+So the sign change brackets at 5 to 6 against a predicted collapse span of 6.45. The prediction is
+off by one span in the direction that matters least (the crossing is early, not late), but it is off,
+and P3 is recorded as failed rather than rounded into a pass. What survives is the qualitative claim
+the registration was built on: below collapse, working newest-first costs a little; above it, a lot
+is gained.
+
+**P4 HELD, AND IT IS THE USEFUL ONE.** Under `admit`, the same contrast is negative at every span
+(−0.0020 to −0.0079), with 32 of 32 blocks agreeing at n >= 8, and **equivalent by TOST at all seven
+spans**. The direction is real and the magnitude is immaterial. So the two levers substitute: once
+the console can refuse work, reordering what it accepted buys nothing and costs slightly. This is
+the same result the queue-only model gave and it is what makes the requirements ladder decidable
+rather than a menu.
+
+**P5 HELD.** With the reliance loop closed (`lifo_rt` against `fifo_rt`), newest-first is the argmax
+at every span and the margin widens with load: +0.0401 at n=5, +0.1053 at n=8, +0.1373 at n=12, all
+gated with 32 of 32 blocks. The effect is not an artifact of operators and vehicles being decoupled.
+
+**P6 HELD, AND IT IS THE PRICE.** Mean backlog is larger under newest-first from n=5 upward, +19.2
+requests at n=8 falling to +14.3 at n=16, gated throughout. That is the tail being starved, stated
+in the unit the sponsor will actually feel. The derived bound does not pay it: it caps the backlog by
+construction at k* + 1.
+
+**G2 (unregistered, and it dates the effect).** Across the comms ladder the advantage decays
+monotonically: +0.1232 at C0, +0.1060 at C1, +0.0899 at C2, +0.0544 at C3, and exactly 0.0000 at C4.
+At C4 nothing is serviceable inside the deadline, so there is no order in which to work an
+unanswerable queue. Newest-first is a congestion remedy, not a comms remedy, and the ladder shows
+where it stops being either.
+
+**What CR-47 and CR-48 together say, which is more than either says alone.** Three levers reach
+nearly the same throughput on a collapsed console: refuse work at the door (0.1490), work the queue
+newest-first (0.1464), bound the queue at k* (0.1476). They are not equally priced. Admission control
+needs a semantic field in the message. Newest-first needs no message change but starves the tail by
+14 to 19 requests. The bound needs no message change, starves nothing, and its setting is a closed
+form in quantities a program office already has. **The recommendation is the bound**, and P4 is why
+it is a recommendation rather than a list: the levers substitute, so stacking them buys nothing.
