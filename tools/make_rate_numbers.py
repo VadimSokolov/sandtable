@@ -39,24 +39,36 @@ def load(sec: str, metric: str) -> dict:
 def main() -> None:
     m: dict[str, str] = {}
     for sec, rung in (("E0", "Clear"), ("E2", "Jam")):
-        for metric, mtag in (("served_per_step", "Served"), ("requests_per_step", "Asked")):
+        for metric, mtag in (("served_per_step", "Served"), ("requests_per_step", "Asked"),
+                             ("blue_loss_frac", "Loss"), ("success", "Succ")):
             d = load(sec, metric)
             if not d:
                 continue
             for (hi, lo), ctag in ((("admit", "refund"), "AdmitOverRefund"),
-                                   (("aimd", "admit"), "AimdOverAdmit")):
+                                   (("aimd", "admit"), "AimdOverAdmit"),
+                                   # The full software stack against no policy at all. This is the
+                                   # comparison a program office is actually choosing between, and
+                                   # on `blue_loss_frac` it has no denominator anything can move.
+                                   (("aimd", "blind"), "StackOverBlind")):
                 for n, w in WORD.items():
                     if (hi, n) not in d or (lo, n) not in d:
                         continue
                     e, t, wins, N = paired({"vals": d[(hi, n)]}, {"vals": d[(lo, n)]})
                     ref = sum(d[(lo, n)]) / len(d[(lo, n)])
                     key = f"rt{mtag}{ctag}{rung}{w}"
-                    # Relative, because these are rate metrics: the MPE for them is 6% of the
-                    # control arm, not an absolute constant calibrated on [0,1] near 0.5.
-                    m[key] = f"{100 * e / ref:+.1f}\\%"
+                    # Rate metrics take the relative MPE of 6% of the control arm; metrics on
+                    # [0,1] take the absolute 0.03 they were calibrated on, and are reported in
+                    # percentage points rather than as a percentage of themselves.
+                    absolute = metric in ("blue_loss_frac", "success")
+                    if absolute:
+                        m[key] = f"{100 * e:+.1f}"
+                        mpe = 0.03
+                    else:
+                        m[key] = f"{100 * e / ref:+.1f}\\%"
+                        mpe = 0.06 * ref
                     m[key + "T"] = f"{t:.1f}"
                     m[key + "Blocks"] = str(wins)
-                    m[key + "Gate"] = ("yes" if abs(t) > 1.70 and abs(e) >= 0.06 * ref
+                    m[key + "Gate"] = ("yes" if abs(t) > 1.70 and abs(e) >= mpe
                                        and wins / N >= 0.6 else "no")
                     m["rtBlocks"] = str(N)
     # The two facts the rewritten prose turns on, computed rather than asserted.
