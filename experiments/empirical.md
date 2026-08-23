@@ -1621,3 +1621,48 @@ forecloses most of triage rather than substituting for it (bounded-and-triaging 
 unbounded-and-triaging 0.1949), and it lifts only the console that cannot triage (0.1185 to 0.1413).
 The effort-invariance claim was scoped to intensity rather than capacity, to a saturated console, and
 to the unit it is stated in.
+
+## 2026-08-23. CR-59 and CR-60: two new mechanisms, one retraction, and the fairness column at full tier
+
+**Jobs.** 9449430 `capacity2` COMPLETED (2h05, the five levers read four more ways). 9449524 `stale`
+COMPLETED. 9449525 `worked` COMPLETED but killed during its last section, so W2's `starved_frac` cell
+is missing and was not re-run: the same quantity at higher power is in `capacity2`. Running: 9449639
+`bridge` (256 blocks, CR-58's arithmetic prediction), 9449800 `bias` (CR-59), 9449936 `capped`
+(CR-59's control), 9449937 `cross` (CR-60). Everything on Hopper, `pol` env, 32 CPUs.
+
+**New model surface.** `admit_bias` and `admit_sigma` describe the residual error of whatever
+produced the console's difficulty estimate; `admit_cap` is the honest rule-repair that refuses long
+jobs without being wrong about anything. `station_along_mean` and `station_cross_mean` resolve
+station-keeping error onto the reference's heading and its normal; `fleet_spread_mean`,
+`fleet_along_mean`, `fleet_cross_mean` and `support_frac` are the same question asked of the force's
+own geometry rather than its commanded one. All six knobs are inert at their identity values and the
+331-test byte-identity suite passes unchanged.
+
+**The one that died.** CR-59 F6, the accuracy paradox, was retracted on the control the reviewer
+demanded and before its own battery landed. A capped console that is wrong about nothing reaches
+0.2167 served per step against the inflated console's 0.2180, inside the 0.0090 rate floor, so
+"the most accurate estimator is beaten" is a re-tuned threshold and not a paradox. What replaces it:
+two mechanically unrelated repairs land on the same value, and the honest one refuses 0.481 of
+requests against the miscalibrated one's 0.538 at matched throughput.
+
+| quantity | value |
+| --- | --- |
+| served per step at $b$ = 0.6 / 1.0 / 2.5 / 4.0 / 12.0, sixteen assets | 0.114 / 0.195 / 0.219 / 0.170 / 0.012 |
+| the same ladder at four assets | . / 0.087 / 0.075 / 0.041 / 0.002 |
+| capped console at cap 5 / 7 / 8 / 10 / 12 | 0.192 / 0.217 / 0.210 / 0.199 / 0.199 |
+| starved fraction, sixteen assets, clear: fifo / rand / lifo / bound / admit | 0.8125 / 0.4420 / 0.0001 / 0.0002 / 0.0000 |
+| operator utilization, same five | 0.9938 / 0.9937 / 0.9941 / 0.9859 / 0.9846 |
+| mean backlog, same five | 132.0 / 130.6 / 146.2 / 2.0 / 5.2 |
+| answer rate per vehicle, same five | 0.0118 / 0.0329 / 0.3920 / 0.4000 / 0.4141 |
+| station error / cross component / fleet cross, outage 320 | 222.3 / 53.8 / 12.3 m at success 0.833 |
+| the same three, commanded spread 300 | 191.2 / 145.3 / 74.9 m at success 0.667 |
+| fleet cross at route bias 0.0, spread 300 | 2.9 m at success 0.208 |
+
+**The registered counterexample, found in a pilot and recorded before its battery.** At a fixed 300 m
+spread, route bias 0.0 gives tighter cross-track dispersion than the undisturbed formation and
+mission success of 0.208. A formation metric is blind to a route error in exactly the way a tracking
+metric is blind to a commanded-geometry error, which bounds CR-60's claim rather than breaking it.
+
+**Pending.** Score 9449639 against the registered $[-0.021, -0.007]$ window. Check CR-56 A3's
+bit-identity result. Replicate the starvation reversal across the three terrain maps before any
+Discussion paragraph generalizes from it.

@@ -124,6 +124,24 @@ def main() -> None:
             for a2 in arms:
                 out.append((f"Kp{tag}Starve{a2.capitalize()}",
                             f"{100 * at(st, a2, PC, '16'):.1f}"))
+            # THE THREE READINGS OF ONE ALLOCATION. Utilization is referenced to the console's
+            # clock, backlog to the console's queue, and neither can see the requester; the answer
+            # rate is the same runs read from the vehicle's end. All three come from the same job
+            # so the comparison is paired, and the disagreement is the point.
+            for m, mac in (("operator_utilization", "Util"), ("backlog_mean", "Back"),
+                           ("answer_rate_v", "Ans")):
+                t = survey("st-capacity2-9449430.out", sec, m, quiet=True)
+                fmt = "{:.4f}" if m == "operator_utilization" else \
+                      ("{:.1f}" if m == "backlog_mean" else "{:.4f}")
+                for a2 in arms:
+                    out.append((f"Kp{tag}{mac}{a2.capitalize()}",
+                                fmt.format(at(t, a2, PC, '16'))))
+            # The ratio is the sentence, so generate it rather than letting prose do the division.
+            af = at(survey("st-capacity2-9449430.out", sec, "answer_rate_v", quiet=True),
+                    "fifo", PC, '16')
+            al = at(survey("st-capacity2-9449430.out", sec, "answer_rate_v", quiet=True),
+                    "lifo", PC, '16')
+            out.append((f"Kp{tag}AnsRatio", f"{al / af:.0f}"))
             # The three fair policies are all at the resolution floor, so quote their worst case
             # once rather than three indistinguishable zeros.
             out.append((f"Kp{tag}StarveFair",

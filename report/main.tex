@@ -584,7 +584,22 @@ no policy strands anybody through six assets, and at eight oldest-first is alrea
 \KpClearStarveOnsetHi\%. Jamming does not reorder the column, it only sharpens it, to
 \KpJamStarveFifo\% against \KpJamStarveFair\% at C3. The backlog under newest-first is memory, not
 harm, and the honest statement of its price is that it holds a large dead queue rather than that it
-starves a tail. The substitution is
+starves a tail.
+
+That correction generalizes past this one policy, and the generalization is the more useful half of
+it. One allocation at sixteen assets admits three readings, all from the same runs. Operator
+utilization puts oldest-first at \KpClearUtilFifo{} and newest-first at \KpClearUtilLifo{}, which is
+the same console to four figures. Mean backlog puts them at \KpClearBackFifo{} and
+\KpClearBackLifo{}, which favours oldest-first. The fraction of its own requests that a vehicle ever
+gets an answer to puts them at \KpClearAnsFifo{} and \KpClearAnsLifo{}, a factor of
+\KpClearAnsRatio{}. Two of the three readings say the two policies are equivalent or that the wrong
+one is better, and the third says one of them answers \KpClearAnsRatio{} times as much of what its
+force asked for. The two that fail are the two referenced to the console: utilization is measured against the console's clock and
+backlog against the console's queue, and neither has the requester in it. The one that works is
+measured from the vehicle's end. This is not a defect of those two statistics, which are correct
+about what they measure. It is that a metric cannot audit a decision that sets its own reference,
+and a scheduling discipline sets both the clock's occupancy and the queue's contents. The
+substitution is
 measurable rather than argued: once the console can refuse, reordering what it accepted is worth
 \LvSubEight{} served per step at eight assets and \LvSubSixteen{} at sixteen, negative at every span
 in the sweep and equivalent to zero at every one. Two levers aimed at the same waste do not add.
