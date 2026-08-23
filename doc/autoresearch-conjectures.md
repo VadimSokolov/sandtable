@@ -5664,3 +5664,41 @@ surprising rather than absurd it would have shipped. The fix was to make the hid
 parameter rather than to remove it, and the parameter turned out to price a real and separable
 capability. Three of the nine instrument defects in this project were found this way and none were
 found by a test.
+
+---
+
+## CR-52 P3 RETRACTED ON ITS OWN FALSIFIER, AND THE NEGATIVE IS THE BETTER RESULT
+
+Job 9449266, full tier, one-asset resolution from four to ten, both consoles.
+
+P3 said the collapse span is smaller on `chokepoint` than on `band`. The registered falsifier said:
+if the half-peak span is the same on all three maps to within one sweep step, P3 is retracted and the
+record says the collapse span is a console property that terrain does not reach.
+
+**It is the same on all three maps, and not to within one step but exactly.** Delivered service peaks
+at five assets on band (0.1032), choke (0.1004) and open (0.0994), and crosses half its peak between
+six and seven on all three: band 0.0904 then 0.0388, choke 0.0888 then 0.0361, open 0.0801 then
+0.0268. Three maps, one collapse span. **P3a RETRACTED.**
+
+**P3b refuted, and its framing was wrong as well as its prediction.** The mechanism P3 needed was a
+burstier arrival process at the same mean. The mean is not the same: `requests_per_step` at eight
+assets is 0.1331 on band, 0.1305 on choke and 0.1220 on open, so the maps differ in first moment and
+a second-moment story cannot be isolated from this sweep at all. Mean backlog does separate at nine
+and ten assets (choke above band, gated) but with the rate moving too, that is not evidence of
+clumping.
+
+**P3c refuted with the sign wrong.** Starvation at the collapse span is LOWER on chokepoint (0.2058
+of assets never once answered at eight assets) than on band (0.2581), where the prediction was
+higher.
+
+**What the battery bought instead, and it is worth more than P3 was.** First, the closed form is now
+confirmed at one-asset resolution rather than bracketed at two. Equation `n* = c(P+tau+1)mu/d`
+predicts 6.45 and the measurement puts the peak at five and the half-peak crossing at seven, so the
+predicted threshold sits inside the interval where the fall actually happens, on every map. Second,
+the negative itself: **the collapse span is a property of the console and terrain does not reach it.**
+The equation has no terrain term, three maps that differ enormously in mission outcome collapse
+together, and that is a stronger statement about the closed form's generality than P3 could have made
+if it had held. Third, a number a sponsor can feel: on the blind buffer console the fraction of
+assets that ask at least once and are never once answered runs 0.00 at six assets, 0.06 at seven,
+0.26 at eight, 0.56 at nine and 0.64 at ten. Two thirds of the force unanswered, at ten assets, on
+one console.
