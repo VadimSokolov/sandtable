@@ -2041,3 +2041,65 @@ that can show a hump at all, and it shows one.
 optimum at 8 of 4/8/12, in people), Giachetti (capacity one, sign only). Three independent sources,
 three scales, one shape. None of them was built to test a queue account and none of them can be
 explained by an attention account that predicts monotone decline.
+
+---
+
+### D4c: Deadline-aware service order, and the paper that had it in 1983 (added 2026-08-23, drives CR-47/CR-54)
+
+CR-47 measured that a console which cannot detect abandonment recovers almost all of admission
+control's throughput by working its backlog newest-first, and that RANDOM order recovers about five
+percent of that, so the mechanism is the age of the work in service rather than the breaking of
+first-come-first-served. Before writing that as a finding, the obvious question is who has it
+already. Two answers, both closer than the abandonment literature already catalogued in D4a.
+
+**Doshi 1983, "An M/G/1 Queue With a Hybrid Discipline"** (`10.1002/j.1538-7305.1983.tb02297.x`,
+Bell System Technical Journal 62(5) 1251-1271). The server, on becoming free, takes the OLDEST
+customer whose current delay is below a threshold `T`, and if there is no such customer takes the
+YOUNGEST customer already past `T`. Written out, that is our rule with the deadline made explicit:
+serve what can still be answered in time, oldest first for fairness, and when nothing can, take the
+freshest. Doshi solves the delay distribution exactly. This is the single closest piece of prior art
+to the discipline half of CR-47 and it predates every supervisory-control paper the project cites.
+
+**And it is closer than that.** The abstract's last sentence, read on the second search rather than
+the first, says the paper compares the hybrid discipline against last-in-first-out **with respect to
+the throughput of successfully served customers**. That is `served_per_step` under a different name,
+and it is the exact comparison CR-47 ran, made analytically in 1983. The paper also names its
+motivating applications, telephone call processing and steel rolling, and states the condition that
+makes the discipline worth having: the success or failure of a service depends on the delay in
+providing it. That is our deadline, in one clause.
+
+**Ross 2015, "A Sequential Scheduling Problem with Impatient Jobs"** (`10.1002/nav.21670`, Naval
+Research Logistics 62(8) 659-663). Jobs abandon after an exponential impatience time, each carries a
+reward, and the paper derives the list policy maximising expected total return. It is the optimality
+statement behind the empirical one.
+
+**What this changes about how CR-47 is written.** It stops being a discovery and becomes a
+rediscovery, which is the stronger position for a simulator paper: a mission-level model, built for
+an unrelated purpose, reproduced a scheduling result from the queueing literature without being told
+about it. The honest framing is corroboration by structure, exactly as with Floyd and Fall in D4b.
+
+**And it marks the boundary sharply.** Both papers give their server information ours does not have.
+Doshi's server knows each customer's current delay and compares it against `T`; Ross's list policy
+is computed from known impatience rates and rewards. The console in this study is `blind`: it cannot
+tell that a requester has given up, which is the whole premise of the collapse. So newest-first is
+not an approximation to the optimal policy, it is **the best rule available to a server that knows
+only arrival order**, and that is the sentence the paper should carry. It also explains why the
+capacity bound of CR-48 is the better recommendation: bounding the backlog reaches the same
+throughput while needing even less, namely a counter rather than an order.
+
+**Question (b) searched and NOT found, which is a result.** Random order of service is well analysed
+(Kawasaki et al. 2000 `10.1155/S1048953300000320` for waiting-time moments under ROS with priorities
+and vacations; Resing and Rietman 2004 `10.1046/j.0039-0402.2003.00112.x` for gated ROS), but the
+analyses are of *waiting time*, without abandonment. Nobody in what the search reached reports the
+thing CR-47's control arm measured, that ROS with abandonment lands next to FCFS rather than halfway
+to LCFS. The variance ordering is known and points the other way (Kingman: FCFS minimises the
+variance of the wait; Tambouratzis: LCFS maximises it; ROS is between them), which makes the
+throughput result non-obvious from the wait distribution and worth reporting.
+
+**Still open.** Does anyone report the utilization-invariance observation, that a server under all
+these disciplines is equally busy and the entire throughput spread is composition rather than
+effort? Not found so far, and it is the sharpest sentence CR-54 has.
+
+**Also verified and not used.** He and Alfa 2000 (`10.1002/1520-6750(200008)47:5<399::AID-NAV3>3.0.CO;2-9`)
+computes a mixed FCFS/LCFS discipline for MMAP[K]/PH[K]/1 but has no abandonment, so it is the
+wrong half of the problem.

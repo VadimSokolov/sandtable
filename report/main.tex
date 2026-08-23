@@ -374,7 +374,19 @@ newest-first recovers \LvSrvLifo{}. Three policies with different information re
 oldest-first is simply a bad order and that anything else is better, and the control arm refutes it:
 service in \emph{random} order recovers \LvRandGain{} against newest-first's \LvLifoGain{}, which is
 \LvRandShare\% of it and is equivalent to zero at the same span. Breaking first-come-first-served is
-not the mechanism. What the three working levers share is visible in the console's own accounting.
+not the mechanism. That the mechanism is the deadline rather than the order is not a new claim, and
+the prior art is closer than any of the supervisory-control literature this paper otherwise engages
+with. \citet{doshi1983hybrid} analyses an $M/G/1$ queue whose server takes the oldest customer whose
+delay is under a threshold and, failing that, the youngest customer already past it, and compares it
+against last-in-first-out on exactly the quantity used here, the throughput of successfully served
+customers. He states the condition that makes such a discipline worth having in one clause, that the
+success or failure of a service depends on the delay in providing it, and the optimality side of the
+same problem is \citet{ross2015sequential}, where impatient jobs carry rewards and the list policy
+maximising expected return is derived. What is new here is the console \emph{below} that information
+level. Doshi's server reads each customer's current delay; ours cannot tell that a requester has
+given up at all, which is the premise of the collapse. Newest-first is therefore not an
+approximation to the optimal policy but the best rule available to a server that knows only arrival
+order, and the reason the bound is preferred to it is that a counter is less than an order. What the three working levers share is visible in the console's own accounting.
 The fraction of the console's requests that it eventually works after the requester has given up and
 asked again is \LvStaleFifo\% under oldest-first and \LvStaleRand\% under random order, against
 \LvStaleLifo\% under newest-first and \LvStaleAdmit\% under admission control. The console's capacity
