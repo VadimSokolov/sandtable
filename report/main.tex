@@ -37,6 +37,7 @@
 \input{gen/staffeq_numbers}
 \input{gen/qcap_numbers}
 \input{gen/lever_numbers}
+\input{gen/maps_numbers}
 \input{gen/ledger_counts}
 
 \newcommand{\sandtable}{\textsc{SandTable}}
@@ -438,6 +439,42 @@ Booking the wait differently does not rescue it, and we report the alternatives 
 \paragraph{The queue reaches into terrain and route choice.} Operator demand is not exogenous. When the request rate is tied to trafficability, so that an asset in difficult ground asks for help more often (\texttt{terrain\_demand}), the collapse threshold moves left: at six assets, goodput falls from \qTerrainFlatSix\% on easy ground to \qTerrainHardSix\% under the strongest coupling, which is the behavior the flat-ground model shows only at eight. The route-choice study of Section~\ref{subsec:uc3} changes character as a result. There, more cover was monotonically better, and the best route bias was full cover. Under direct control with terrain-correlated demand the covered lane is both slower and harder ground, so it costs attention the operator does not have, and success peaks at a bias of \qRouteDirectArgmax{} (\qRouteDirectBest\%) before falling to \qRouteDirectFull\% at full cover. The interior optimum needs both halves of the coupling: on flat ground the same direct arm still prefers full cover (\qRouteFlatFull\%), and on the same difficult terrain so do supervisory control (\qRouteSupFull\%) and admission control (\qRouteAdmFull\%). Route planning under direct control is therefore an operator-load decision as much as a survivability one, and the interior optimum is an artifact of the human in the loop rather than of the ground.
 
 \paragraph{What the deadline does, and does not, do.} One correction belongs in the record because a cheap robustness check overturned a stronger reading. At the centerpiece's \qDeadline{}~s mission window, \texttt{blind} direct control delivers \qArrivedSix{} vehicles at six assets, \qArrivedEight{} at eight, and \qArrivedTwelve{} at twelve, which reads as a capacity cliff at the predicted span. Re-running the same configurations at a \qLongWindow{}~s window removes the cliff: the same twelve-asset case then delivers \qArrivedTwelveLong{} vehicles and ten delivers \qArrivedTenLong{}, and delivery becomes monotone increasing in span again. What the queue actually imposes is a tempo penalty, and the deadline is what converts tempo into failure. The \texttt{admit} arm is identical at all three windows tested, which is the cleaner statement of the result: admission control removes the dependence on how long the mission is allowed to run. The claim the model supports is about tempo under a deadline, not about a throughput ceiling, and the window has to be named whenever the delivered-vehicle numbers are quoted.
+
+\paragraph{Every number above was found on one map, and two more say which half of it travels.}
+\sandtable{}'s terrain until now was a single profile: a lateral Gaussian band of cover with no
+longitudinal structure, so a route choice is a choice of latitude. Two further profiles were built to
+attack the queue results from opposite sides. \texttt{open} has no cover anywhere and is the negative
+control for anything terrain is claimed to do; \texttt{chokepoint} is a transverse ridge with one gap,
+so a dispersed force converges where the map chooses rather than where the operator does. Re-running
+the section's main lever on all three separates two things that a single map holds together, and they
+travel differently. On the console's own metric the lever is very nearly map-invariant: at sixteen
+assets admission control is worth \MpBandSrvFull{} served per step over the blind console on the
+band, \MpChokeSrvFull{} on the chokepoint and \MpOpenSrvFull{} in the open, a spread of
+\MpSrvSpread{} against a materiality floor of \MpMPE{}. On mission success the same lever is worth
+\MpBandSucFull{}, \MpChokeSucFull{} and \MpOpenSucFull{} percentage points on the same three maps,
+which is a factor of nearly five. The mechanism is headroom and it is visible in the baseline: the
+blind console already reaches \MpBandBlindFull\% success at sixteen assets on the band and
+\MpOpenBlindFull\% in the open, so on the easy map there is almost nothing left for a console fix to
+win. At the collapse span, where no map has headroom to spare, the mission-level lever converges
+again: \MpBandSucColl{}, \MpChokeSucColl{} and \MpOpenSucColl{} points.
+
+The capacity rule survives the same treatment without qualification. Its argmax is $k^{\star} = 2$ on
+all three maps at all three spans, and the shape of the error is map-invariant as well as the answer:
+across \MpCapCells{} cells the derived bound beats one below it at \MpCapLoWin{} of them, by at most
+\MpCapUnderWorst{} served per step, which never reaches the materiality floor, and beats two above it
+by a material margin at \MpCapHiWin{} of \MpCapCells{}, by at least \MpCapOverWorst{}. Under-sizing by
+one is free on every map and over-sizing by two is costly on every map. The closed form carries no
+terrain term and the measurement says it does not need one.
+
+There is a general point here about how a console result should be measured, and it is the reason
+this paragraph reports the console metric first. A lever that acts on the operator is a lever on the
+operator whatever the ground looks like, but its consequence for the mission is bounded by how much
+of the mission was at risk. A study that measures only the mission metric, on a map where the mission
+succeeds anyway, will report that a real fix does not matter, and will be wrong for a reason that has
+nothing to do with the fix. That is not a caveat about our maps. It is a claim about what any
+span-of-control result means when it is quoted without the scenario it was measured in, and it is the
+same failure the fan-out result of Section~\ref{subsec:queue} exhibits one level down.
+
 
 \begin{figure}[H]
 \centering

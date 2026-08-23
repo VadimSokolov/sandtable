@@ -1877,3 +1877,27 @@ Sharp-cell counts for the capacity rule (source: tools/make_qcap_numbers.py over
   StQcapJamSharpHit = 4
   StQcapJamSoleWidth = 4
   StQcapJamWidestPlateau = 8
+
+CR-52, the map robustness check (source: tools/make_maps_numbers.py over st-maps-9448824.out), 2026-08-23
+  MpBandSrvColl = +0.1179
+  MpBandSucColl = +23.7
+  MpBandSrvFull = +0.1495
+  MpBandSucFull = +3.0
+  MpBandBlindFull = 96.1
+  MpChokeSrvColl = +0.1125
+  MpChokeSucColl = +26.7
+  MpChokeSrvFull = +0.1494
+  MpChokeSucFull = +5.5
+  MpChokeBlindFull = 92.6
+  MpOpenSrvColl = +0.1048
+  MpOpenSucColl = +27.7
+  MpOpenSrvFull = +0.1481
+  MpOpenSucFull = +14.0
+  MpOpenBlindFull = 71.4
+  MpSrvSpread = 0.0014
+  MpMPE = 0.0090
+  MpCapCells = 9
+  MpCapLoWin = 9
+  MpCapHiWin = 9
+  MpCapUnderWorst = 0.0077
+  MpCapOverWorst = 0.0483
