@@ -1558,3 +1558,66 @@ console's total effort is invariant and only its composition moves.
 with no line in `results/numbers.txt`. The generated half of that file is now rebuilt mechanically
 from `report/gen/*.tex`; used-and-defined macros with no ledger line are 0 in both the manuscript and
 the companion.
+
+## 2026-08-23 (evening). A lever on the platform, an effort identity in the wrong unit, and two nulls
+
+Same harness as above: `sc_span_control.json`, blocks 0-31, 64 reps, 32 jobs, Hopper `interactive`,
+conda env `pol`, scratch `/scratch/vsokolov/sandtable-ar`, 5 h wall.
+
+| job | battery | tier | registered | outcome |
+| --- | --- | --- | --- | --- |
+| 9449505 | `follow` | full | CR-55 A1-A5 | running |
+| 9449506 | `acuity` | full | CR-56 B1-B6 | running |
+| 9449430 | `capacity2` | full | CR-54 P1, P6, P7 | running |
+
+Both new batteries were registered in `doc/autoresearch-conjectures.md` before submission, and
+CR-55 was AMENDED before submission after a laptop pilot refuted its first mechanism. The pilot
+numbers are recorded in the registration itself rather than hidden, because they changed the design.
+
+**Source changes upstream of both, none of which touch a published path.**
+
+- Busy-weighted bins. `op.t_serviced`, `t_stale`, `t_worked_lost`, `t_worked_late` accumulate the
+  service time each of the four fates consumed; `metrics` reports `busy_*` and `busy_total`, plus
+  `svc_serviced_mean` and `svc_worked_mean`. The reservation console's `blind` branch claimed a slot
+  and counted it in no bin, which is now `n_worked_late`. At `service_cv = 0` every busy bin is the
+  job bin over $\mu$ and nothing moves.
+- `admit_acuity` (probability of seeing the draw), `admit_quantile` (budget a q-quantile instead of
+  the mean) and `admit_refuse` (refuse a fixed fraction at random). All three take no uniform at
+  their off values, so every measured path stays bit-identical.
+- `behavior._follow` rewritten (instrument defect 10). New instruments: `track_err_mean`,
+  `station_err_mean`, `track_stale_frac`, `follow_lost_frac`, `turn_rate_mean`.
+- Metrics now carry three resolved settings, `queue_buffer`, `policy_admit` and `channel_bursty`, so
+  a log says which console and which channel actually ran. A digest of the parameter DICT was tried
+  first and rejected: it fired on twenty byte-identity tests, which assert this codebase's opt-in
+  contract that many spellings name one run.
+
+Suite: 331 tests, 330 passed and 1 skipped before the follow rewrite; the two tests that then failed
+were the two that compare whole metric dicts across different spellings, and they now compare on
+`conftest.same_run`, which drops configuration markers and layer-only observers.
+
+**Pilot numbers that shaped the two registrations.** Laptop, 8 to 32 replications, below proxy tier,
+recorded because they changed the design and for no other purpose.
+
+| quantity | value |
+| --- | --- |
+| link follower at C5: stale fraction, track error | 0.55, 0.6 m |
+| track error at Gilbert-Elliot mean bad-run 4 / 20 / 60 | 0.19 / 1.18 / 2.81 m |
+| mission success against `formation_spread` 10 / 40 / 120 / 300 / 600 m | 0.906 / 0.781 / 0.812 / 0.781 / 0.562 |
+| served per step against acuity $p$ = 0 / .25 / .5 / .75 / 1 | 0.1220 / 0.1377 / 0.1501 / 0.1648 / 0.1740 |
+| served per step, random refusal 0.10 / 0.25 / 0.50 / 0.75 | 0.1225 / 0.1246 / 0.1141 / 0.0794 |
+| served per step, quantile 0.95 console | 0.1399 |
+| abandoned per step, mean test against foresight | 0.1326 against 0.0915 |
+| jobs per step, blind / admit / foresight at cv = 0.5 | 0.1439 / 0.1460 / 0.1772 |
+| busy fraction, same three | 0.962 / 0.985 / 0.980 |
+| mean service of SERVED decisions, same three | 6.70 / 5.85 / 5.54 against a population 6.667 |
+
+**Instrument defect 10.** `behavior._follow` refreshed the behaviour arm from ground truth every
+step, so its dead-reckoning branch was unreachable and `track_timeout` could never fire. Found by
+reading the code before writing the battery, which is the first time in this ledger a defect has
+been caught before it cost a job.
+
+**Two manuscript corrections.** The discernment corollary had its direction reversed: a backlog bound
+forecloses most of triage rather than substituting for it (bounded-and-triaging 0.1545 against
+unbounded-and-triaging 0.1949), and it lifts only the console that cannot triage (0.1185 to 0.1413).
+The effort-invariance claim was scoped to intensity rather than capacity, to a saturated console, and
+to the unit it is stated in.
