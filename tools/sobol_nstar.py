@@ -25,7 +25,6 @@ import pathlib
 import sys
 
 import numpy as np
-from SALib.analyze import sobol as sobol_analyze
 from SALib.sample import saltelli
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
@@ -39,6 +38,46 @@ PROBLEM = {
     "names": ["service_rate", "patience", "decision_interval", "comms_p_drop"],
     "bounds": [[0.10, 0.22], [12.0, 30.0], [14.0, 30.0], [0.0, 0.25]],
 }
+
+
+def sobol_indices(Y: np.ndarray, d: int, resamples: int = 200,
+                  seed: int = 0) -> dict[str, list[float]]:
+    """First-order and total Sobol indices from a Saltelli sample, estimated here rather than
+    called out to.
+
+    SALib's own `analyze` is unusable on NumPy 2: it calls `ndarray.ptp()`, removed in 2.0, and the
+    job that produced this sample died on that line after running 79,872 missions. The estimators
+    are four lines each and are worth owning, because an index this paper reports should not depend
+    on a third party's guard clause.
+
+    The layout `saltelli.sample(..., calc_second_order=False)` writes is, per base draw, one row of
+    A, then `d` rows of AB, then one row of B. Reshaping to (N, d+2) recovers the three matrices.
+
+    S1 is Saltelli et al. (2010): E[B (AB_j - A)] / Var Y. ST is Jansen (1999):
+    E[(A - AB_j)^2] / 2 Var Y. Both are benched against the Ishigami function's analytic values in
+    tests/test_sobol.py, because an estimator with no bench point is a number with no error bar.
+    """
+    Y = np.asarray(Y, dtype=float).reshape(-1, d + 2)
+    rng = np.random.default_rng(seed)
+
+    def one(rows: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        a, b = Y[rows, 0], Y[rows, d + 1]
+        var = np.var(np.r_[a, b])
+        if var <= 0.0:
+            return np.zeros(d), np.zeros(d)
+        ab = Y[rows, 1:d + 1]
+        s1 = np.mean(b[:, None] * (ab - a[:, None]), axis=0) / var
+        st = 0.5 * np.mean((a[:, None] - ab) ** 2, axis=0) / var
+        return s1, st
+
+    full = np.arange(Y.shape[0])
+    s1, st = one(full)
+    # The confidence interval is a bootstrap over base draws, which is the resampling unit: a draw's
+    # A, AB and B rows share a parameter vector and cannot be resampled apart.
+    bs = [one(rng.integers(0, full.size, full.size)) for _ in range(resamples)]
+    return {"S1": list(map(float, s1)), "ST": list(map(float, st)),
+            "S1_conf": [float(1.96 * v) for v in np.std([b[0] for b in bs], axis=0)],
+            "ST_conf": [float(1.96 * v) for v in np.std([b[1] for b in bs], axis=0)]}
 
 
 def closed_form(x: np.ndarray, consoles: int = 1) -> np.ndarray:
@@ -113,10 +152,11 @@ def main() -> None:
 
     res = {}
     for tag, Y in (("simulator", Y_sim), ("closed_form", Y_eq)):
-        s = sobol_analyze.analyze(PROBLEM, Y, calc_second_order=False, print_to_console=False)
-        res[tag] = {"S1": list(map(float, s["S1"])), "S1_conf": list(map(float, s["S1_conf"])),
-                    "ST": list(map(float, s["ST"])), "ST_conf": list(map(float, s["ST_conf"])),
-                    "mean": float(Y.mean()), "std": float(Y.std())}
+        s = sobol_indices(Y, PROBLEM["num_vars"])
+        res[tag] = {**s, "mean": float(Y.mean()), "std": float(Y.std()),
+                    # The raw responses ride along, 768 floats, so the decomposition can be redone
+                    # without re-running 79,872 missions. That is what the first attempt cost.
+                    "Y": list(map(float, Y))}
     res["names"] = PROBLEM["names"]
     res["bounds"] = PROBLEM["bounds"]
     res["n_draws"] = len(X)
