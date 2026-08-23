@@ -5212,3 +5212,28 @@ and capacity two are EQUIVALENT on success at all five spans, with the weaker on
 from 2.03 to 13.19. The honest statement is that the plateau on the mission metric contains both,
 and that where the two metrics disagree the mission metric prefers the SMALLER bound, which is the
 direction the queue-only model's load analysis also pointed.
+
+**CR-38 RIDER VERDICT: P1 REFUTED ON ITS OWN FALSIFIER, P2 HELD, AND THE SPONSOR SENTENCE IS
+NARROWED.** Job 9448805, full tier, `wait_p95`, one console with the rate rule against two blind
+consoles:
+
+    rung 0   n= 8      10      12      16          C3   n= 8      10      12      16
+    one    18.93   19.36   19.55   19.71            19.02   19.23   19.33   19.44
+    two    13.09   16.03   19.16   19.48            16.86   17.95   18.61   19.28
+    verdict LONGER  LONGER   equiv   equiv         LONGER  LONGER   equiv   equiv
+
+Two of the six registered cells fail equivalence, which is exactly what the falsifier said would
+narrow the claim, so it is narrowed. **P2, the direction limb, holds at all eight cells: where the
+tails differ the single console's is the longer one**, which is the queueing reading and would have
+been alarming the other way.
+
+The magnitude matters more than the gate here, and the scale is the requester's own patience of 20
+steps. At ten assets two consoles leave the ninety-fifth-percentile requester at 16.0 steps, with
+four steps of slack; one console leaves it at 19.4, at the edge of giving up. The throughput
+equivalence is real and the tail equivalence is not, and a console sized on the first would be
+delivering the same number of decisions to a population a twentieth of which is about to stop
+waiting for them.
+
+**This is the second time in this session that a claim I had already written into the manuscript was
+narrowed by a check adversarial review asked for and I had not thought to run.** The first was the
+plateau. Both were riders on results that were correct as far as they went.

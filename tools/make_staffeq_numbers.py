@@ -89,6 +89,25 @@ def main() -> None:
                 m[f"se{tag}Ai{mtag}{WORDS[n]}T"] = f"{t:+.1f}"
                 m[f"se{tag}Ai{mtag}{WORDS[n]}Gate"] = "gated" if ok else "null"
 
+    # The rider adversarial review attached to the equivalence before it could ship: two queues can
+    # match on throughput and differ entirely in what a requester waits. `wait_p95` was already in
+    # metrics.py and no battery had ever logged it. This one does, on the same arms.
+    from ar_survey import survey  # noqa: PLC0415
+
+    try:
+        for tag, sec in (("Clear", "G0 the tail"), ("Jam", "G3 the tail")):
+            lv = survey("st-waittail-9448805.out", sec, "wait_p95", quiet=True)
+            ct = survey("st-waittail-9448805.out", sec, "wait_p95", ref="c2_blind", quiet=True)
+            for n, i in (("10", 1), ("12", 2), ("16", 3)):
+                w = WORDS[n]
+                m[f"se{tag}Tail{w}One"] = f"{lv['c1_aimd'][i]:.1f}"
+                m[f"se{tag}Tail{w}Two"] = f"{lv['c2_blind'][i]:.1f}"
+                m[f"se{tag}Tail{w}Diff"] = f"{ct[('c1_aimd', n)][0]:+.1f}"
+                m[f"se{tag}Tail{w}V"] = ct[("c1_aimd", n)][4].replace("GATE up", "longer")
+        m["qDeadlineP"] = "20"        # the requester's patience, the scale these tails live on
+    except (SystemExit, KeyError, IndexError):
+        pass
+
     # The staffing curve itself, on the metric with no denominator. The manuscript reads these
     # brackets on `operator_goodput`, which is the contaminated metric, and the point of re-reading
     # them here is that the brackets do not move: the c-scaling of Equation nstar is not an artifact
