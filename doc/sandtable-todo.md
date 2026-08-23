@@ -1179,3 +1179,66 @@ its whole backlog would be refusing work it has not looked at).
 - Whether the LIFO recommendation survives a bounded backlog (P7), which decides whether the paper
   says "invert your queue" or "bound it."
 - Backlog: CR-8, C5.
+
+## State, 2026-08-23
+
+### The queue result finished, and it ended one rung lower than expected
+
+The console holds an unbounded backlog, which is bufferbloat, and the size it should hold falls out
+of the deadline algebra already in the paper: $k^{\star} = \lfloor(P-2\ell)\mu + 1/2\rfloor - 1$,
+which is 2 at the published operating point and 1 at C3. Measured argmax matches at three spans on
+each rung. Bounding at all is worth a median factor of 750 in delivered service; sizing exactly is
+worth a few percent on top.
+
+**A second, independent implementation of the console queue** now lives in `tools/queue_kstar.py`.
+It carries no terrain, sensing, combat or vehicle state, costs 0.09 s a run, was written from the
+model description rather than from `c2.py`, and reproduces SandTable's argmaxes exactly. That is
+what made the rest of this possible: a 201-point sweep of $\lambda$ at three loads, a link sweep, a
+moving-link experiment and a policy comparison, all in an afternoon.
+
+### What it overturned, including two of my own claims from the same day
+
+- The response is a **plateau, not a peak**, one capacity wide at small $\lambda$ and six wide at
+  large. Scoring a rule by its argmax is scoring noise; scoring by plateau membership is the only
+  question a practitioner can act on.
+- **Which way to err reverses with load.** At twice capacity, over-sizing is the worse error at 75%
+  of grid points; at five times capacity, at 11%. The mechanism is measured, not asserted: the work
+  the console picks up is about $(k-1)/\Lambda$ old, so the same cap is a different deadline at each
+  arrival rate. This is the bufferbloat argument in one line.
+- **CR-50 retracted on its own falsifier.** Capping the request's AGE, which needs only a send
+  timestamp and no knowledge of the link, covers 6 of 7 link latencies against the best counter's 5
+  and delivers 71% more at a latency of six steps. But that cliff is outside this study's ladder,
+  and under a link stepping between clear and C3 mid-mission the fixed counter matches it. The
+  recommendation stays: bound the backlog with a counter, do not change the message format.
+- **Given the counter, the discipline stops mattering.** At C3 the bound is 1 and a buffer holding
+  one request has no order to permute. The newest-first recommendation and the bound are
+  substitutes, and the bound is the one with a closed form behind it.
+- The Erlang correction I derived was **against the wrong queue**: `c2.py` line 565 sets
+  `svc = 1.0 / service_rate`, so the console is $M/D/1$ and the mean is the median. Sixth instance
+  of the same genus, and the first where the carrier was theory rather than code.
+
+### Instruments added
+
+- `ar_gate.tost()` and `ar_gate.margin()`. A failure to separate two arms gets EASIER the fewer
+  replications we choose to run, which in a simulator is a real hazard. The margin is deliberately
+  the gate's own materiality floor, fixed long before any of these contrasts ran. CR-38's null is
+  now an affirmative equivalence at six operating points, weaker one-sided statistic 3.45 to 10.68.
+- Plateau scoring in `tools/queue_kstar.py`, because an argmax over a flat ridge is a decision made
+  by rounding.
+- `tools/make_qcap_numbers.py` regenerates every number in the three new manuscript paragraphs,
+  running the link sweep and the moving-link experiment itself rather than parsing a log.
+
+### Running
+
+`st-qcap` 9448688 (CR-48/CR-49 at full tier in SandTable), `st-lifo` 9448647 (CR-47 P1-P6).
+`st-sobol` 9448646 landed: rank order identical to the closed form on both index families, largest
+total-effect gap 0.020 against a falsifier at 0.10.
+
+### Open
+
+- CR-47 P1 through P6 once 9448647 lands; the instrument gate blocks all of them.
+- The SandTable confirmation of the sizing rule at full tier, from 9448688. Everything in the paper
+  about it is currently from the auxiliary model plus a 32-replication local run.
+- Whether the paper should be cut to its spine (span collapse is congestion, located by closed
+  forms, moved by software) and the cohort, dwell and Fano apparatus moved out. Under review.
+- Backlog: CR-8, C5.
