@@ -253,3 +253,118 @@ def test_q_droop_never_takes_a_serviced_answer_below_the_autonomous_one(skirmish
         except ValueError:
             continue
         raise AssertionError(f"q_droop={bad} was accepted")
+
+
+# ---- heterogeneous patience and the two deadline disciplines (CR-46) --------
+
+def test_patience_spread_zero_is_the_published_constant_fleet(skirmish_scenario, rng):
+    """The published model gives every requester the same deadline. Spread zero must reproduce it
+    as a constant vector, because every claim about ordering rests on that being exact rather
+    than nearly so."""
+    from sandtable.c2 import _patience_vector
+
+    v = _patience_vector(8, np.arange(6), 20, 0)
+    assert v.tolist() == [20] * 8
+
+
+@pytest.mark.parametrize("m", [2, 5, 6, 8, 10])
+@pytest.mark.parametrize("spread", [3, 6, 9, 12])
+def test_patience_spread_holds_the_fleet_mean_exactly(m, spread):
+    """A dispersion sweep is a second-moment manipulation only if the first moment does not move.
+    The collapse span of Equation nstar is linear in patience, so a spread that shifted the mean
+    would move the operating point and the contrast would mix two things. The offsets are
+    symmetric by construction; this pins that they stay symmetric after rounding."""
+    from sandtable.c2 import _patience_vector
+
+    v = _patience_vector(m, np.arange(m), 20, spread)[:m]
+    assert abs(float(v.mean()) - 20.0) < 1e-9
+    assert v.min() == 20 - spread and v.max() == 20 + spread
+    assert list(v) == sorted(v)          # assignment is by position, so the vector is ordered
+
+
+def test_patience_spread_is_rejected_when_the_floor_truncates_the_low_tail():
+    """The `retry_spread` lesson, applied before it can cost anything: a width bound is not a mean
+    guard. A spread at or above the mean clips at one step and the arm silently stops holding the
+    mean it claims."""
+    scn = _span_scenario(control_mode="direct", patience=20, patience_spread=25)
+    rng = make_rng(0, scn.id)
+    ent = build_entities(scn, rng)
+    with pytest.raises(ValueError, match="realized fleet mean"):
+        build_c2(scn, ent)
+
+
+def test_deadline_disciplines_are_identity_orders_on_a_constant_fleet():
+    """`edf` and `patient_first` sort on a key that is constant until the fleet is mixed, and the
+    sort is stable, so at spread zero both must return the arrival order untouched. This is what
+    makes the dispersion sweep identify the ordering effect on its own: the same arm is the
+    control at its own zero."""
+    from sandtable.c2 import service_order
+
+    class Op:
+        queue_discipline = "edf"
+        patience_v = np.full(9, 20)
+
+    op, blue = Op(), np.array([3, 1, 7, 4])
+    assert service_order(op, blue, {}, None).tolist() == blue.tolist()
+    op.queue_discipline = "patient_first"
+    assert service_order(op, blue, {}, None).tolist() == blue.tolist()
+
+
+def test_deadline_disciplines_are_exact_reverses_under_dispersion():
+    """The two rules are the prescriptions of two literatures that disagree, so on a fleet with no
+    tied deadlines they must be exact opposites. A test that only checked `edf` would pass on an
+    implementation where `patient_first` silently fell through to arrival order."""
+    from sandtable.c2 import service_order
+
+    class Op:
+        queue_discipline = "edf"
+        patience_v = np.array([30, 10, 25, 5, 15])
+
+    op, blue = Op(), np.array([0, 1, 2, 3, 4])
+    early = service_order(op, blue, {}, None).tolist()
+    assert early == [3, 1, 4, 2, 0]            # ascending patience: 5, 10, 15, 25, 30
+    op.queue_discipline = "patient_first"
+    assert service_order(op, blue, {}, None).tolist() == early[::-1]
+
+
+def test_a_requester_is_held_to_its_own_deadline_not_the_fleet_mean(skirmish_scenario):
+    """The whole mechanism is that `wait <= patience` reads the REQUESTER's patience. A fleet with
+    dispersion whose short-deadline members are never refused would mean the vector was built and
+    then ignored."""
+    from sandtable.sim import run_mission
+
+    flat = run_mission(_span_scenario(control_mode="direct", n_blue=8, patience=20,
+                                      queue_policy="admit"), seed=11)
+    mixed = run_mission(_span_scenario(control_mode="direct", n_blue=8, patience=20,
+                                       patience_spread=12, queue_policy="admit"), seed=11)
+    assert flat["patience_sd"] == 0.0 and flat["patience_mean"] == 20.0
+    assert mixed["patience_sd"] > 0.0 and abs(mixed["patience_mean"] - 20.0) < 1e-9
+    assert mixed["patience_min"] == 8.0
+    assert mixed["abandon_queue_frac"] != flat["abandon_queue_frac"]
+
+
+def test_patience_layout_is_permuted_but_the_multiset_and_mean_are_not():
+    """The values are fixed and only their assignment is drawn, because a fleet laid out in index
+    order would make `edf` identical to `fcfs` by construction: the operator walks its arrivals in
+    index order. This pins that the draw moves WHO gets what and nothing else."""
+    from sandtable.c2 import _patience_vector
+    from sandtable.seeding import make_rng
+
+    blue = np.arange(8)
+    fixed = _patience_vector(8, blue, 20, 12)
+    drawn = [_patience_vector(8, blue, 20, 12, make_rng(s, 1)) for s in range(6)]
+    assert all(sorted(d.tolist()) == sorted(fixed.tolist()) for d in drawn)
+    assert all(abs(float(d.mean()) - 20.0) < 1e-9 for d in drawn)
+    assert any(d.tolist() != fixed.tolist() for d in drawn)      # the layout really is permuted
+
+
+def test_patience_layout_draws_from_a_child_stream_and_leaves_the_parent_alone():
+    """A dispersed fleet and a uniform one must see the same mission, otherwise the sweep's own
+    baseline contrast is unpaired. `rng.spawn` takes a child of the seed sequence rather than
+    drawing, so the parent stream is where it was."""
+    from sandtable.c2 import _patience_vector
+    from sandtable.seeding import make_rng
+
+    a, b = make_rng(4, 2), make_rng(4, 2)
+    _patience_vector(6, np.arange(6), 20, 9, a)
+    assert np.allclose(a.random(5), b.random(5))

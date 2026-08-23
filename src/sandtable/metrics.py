@@ -125,6 +125,7 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "arrival_rate": 0.0, "arrival_excess": 0.0,
            "arrival_distinct": 0.0, "arrival_repeat": 0.0, "arrival_repeat_frac": 0.0,
            "arrival_ge2": 0.0, "arrival_ge3": 0.0, "arrival_ge4": 0.0,
+           "patience_mean": 0.0, "patience_sd": 0.0, "patience_min": 0.0,
            "supervised_mean": 0.0, "supervised_frac": 0.0, "demand_norm_goodput": 0.0,
            "hold_fraction": 0.0, "interaction_steps": 0.0, "neglect_steps": 0.0, "fan_out": 0.0}
 
@@ -146,6 +147,17 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
 
     if op is not None and op.total_steps > 0:
         out["operator_utilization"] = op.busy_steps / op.total_steps
+        if op.patience_v is not None:
+            # The dispersion arm prints its own assumption. A `patience_spread` sweep is a pure
+            # second-moment manipulation only if the first moment holds, and the way that stops
+            # being an argument is to log both and read them off the run (CR-46).
+            pv = op.patience_v[ent.side == BLUE].astype(float)
+            out["patience_mean"] = float(pv.mean()) if pv.size else 0.0
+            out["patience_sd"] = float(pv.std()) if pv.size else 0.0
+            # The floor matters on its own: a vehicle whose patience is below the
+            # round trip plus one service time cannot be served on ANY link, and a
+            # deadline rule that puts it first is prioritizing doomed work.
+            out["patience_min"] = float(pv.min()) if pv.size else 0.0
         out["queue_depth_mean"] = op.queue_depth_sum / op.total_steps
         # The demand the goodput was earned against. `operator_goodput` is endogenous to attrition:
         # a mission that destroys half the force halves the offered load and the console looks

@@ -4094,3 +4094,106 @@ reviewer's, was a disagreement about which of these four things the word residua
 **Outstanding:** the battery has no in-battery `noretry` arm, so line 2's identity with the no-retry
 baseline is established across batteries at one point rather than at every dwell. That is a one-arm
 addition and it is the last thing this mechanism needs.
+
+---
+
+## CR-46. QUEUE ORDERING IS WORTH EXACTLY THE DISPERSION IN PATIENCE, AND THE STANDARD RULE IS BACKWARDS
+
+Registered 2026-08-22, before any run. The model's own docstring carries the assumption this
+conjecture attacks, which is the cleanest possible provenance for it:
+
+> Ordering cannot change how MANY requests the operator serves. Every requester carries the same
+> patience and a request's completion time is fixed at arrival, so reordering two feasible requests
+> only swaps which vehicle is served.
+
+That is a statement about a homogeneous fleet, not about queues, and the manuscript currently reads
+the triage null as though it were about queues: "reordering a queue whose clients all carry the same
+patience changes which vehicle is helped, never how many." The clause is right there in the sentence
+and nothing in the paper tests it. It is also false of exactly the fleets this sponsor cares about.
+An air vehicle orbiting a target has a long window before its request goes stale; a ground vehicle
+halted in contact has a short one; a mixed formation is the whole point of the program.
+
+**Two literatures give opposite prescriptions for this queue, and they cannot both be right here.**
+
+- The **cmu/theta rule** \citep{atar2010cmutheta}: in an overloaded many-server queue with
+  abandonment, serve the class with the largest $c_k \mu_k / \theta_k$. With equal decision value
+  and equal service time that is the class with the smallest abandonment rate, so **serve the MOST
+  patient first** and let the impatient abandon, because a class that empties itself needs no
+  server.
+- **Deadline scheduling** (Moore's algorithm for minimizing late jobs; earliest-deadline-first):
+  **serve the LEAST patient first**, because among feasible jobs the greedy earliest-deadline order
+  maximizes the number that meet their deadlines.
+
+The rules differ because they assume different information. cmu/theta is derived where the server
+observes an abandonment HAZARD and cannot see any individual deadline; EDF where the deadline is
+known at arrival. **A console running admission control has already assumed the second**, because
+`wait <= patience` is exactly the test that the requester's own deadline is visible. So this model
+should sit in the deadline regime, and the standard queueing prescription should be the wrong one
+for a supervisory console. If that is right it is a requirement, not a curiosity: **a request
+message must carry the requester's time-to-autonomy, and the console must sort on it.**
+
+EDF also has a known failure mode that this model should reproduce. Earliest-deadline-first is
+optimal for an underloaded system and can be arbitrarily bad for an overloaded one, because it
+spends the server on the job nearest to missing, which under overload is the job most likely to miss
+anyway. `blind` IS the overloaded regime in this paper's language, since the console spends slots on
+work whose answer will be discarded. So the prediction is not "sort by deadline" but **"discard,
+then sort by deadline,"** which is the same ordering the Discussion already recommends for a
+different reason.
+
+### The manipulation
+
+`patience_spread` assigns per-vehicle patience deterministically and symmetrically about the mean:
+vehicle $j$ of $m$ gets $P + s(2j/(m-1) - 1)$, floored at one step. No RNG is drawn, the fleet mean
+is exactly $P$ in every replication, and at $s = 0$ the vector is constant, so every deadline
+discipline is a stable sort on a constant key and returns the identity permutation. **The published
+path is reproduced exactly rather than approximately, and each arm is its own control at its own
+zero.** Because $n^{\star} = c(P + \tau + 1)\mu/d$ is LINEAR in patience, a symmetric spread at held
+mean leaves the collapse span where it was, so this is a pure second-moment manipulation.
+
+Sweep $s \in \{0, 3, 6, 9, 12, 16\}$ at $P = 20$, service time $1/\mu = 6.67$. The minimum patience
+runs 20, 17, 14, 11, 8, 4. **The last level crosses a physical floor**: a vehicle with patience 4
+cannot be served on any link at any load, since one service alone takes 6.67 steps. That level is in
+the sweep on purpose, as the overload limb, and `patience_min` is logged so the crossing is read off
+the run rather than asserted.
+
+### Predictions, each with the falsifier written before the run
+
+**P1. The zero is an identity, not a null.** At $s = 0$, `edf`, `patient_first` and `fcfs` return
+bit-identical metrics.
+  **FALSIFIER.** Any difference at all means the ordering arm moves something besides the order
+  (the RNG assignment is the known candidate, which is what `random` exists to control), and the
+  whole battery is void until it is found.
+
+**P2. Ordering becomes a lever, and its size scales with dispersion.** Under `admit`, `edf - fcfs`
+on `served_per_step` is positive and gated at the collapse span, and rises monotonically in $s$
+across the serviceable levels $s \le 12$.
+  **FALSIFIER.** A null at $s = 12$ **refutes** "ordering is worth exactly the dispersion" and
+  restores the manuscript's unconditional null. Non-monotonicity across the serviceable ladder
+  refutes the scaling claim while leaving the existence claim standing.
+
+**P3. The standard rule is backwards for a console.** `patient_first - fcfs` on `served_per_step` is
+NEGATIVE and gated at the cells where `edf` is positive.
+  **FALSIFIER.** `patient_first` at or above `fcfs` **refutes** the claim that a console with
+  admission control sits in the deadline regime, and the two literatures are then not in conflict on
+  this model, which would itself be worth reporting.
+
+**P4. Discard first, then sort: EDF is second to admission and not a substitute for it.**
+`edf - fcfs` under `blind` is SMALLER than `edf - fcfs` under `admit` at the same cell.
+  **FALSIFIER.** EDF worth as much or more under `blind` **refutes** the ordering of the
+  recommendation, and the deadline rule would then be a standalone lever rather than a follow-on.
+
+**P5. The overload limb.** At $s = 16$, where the shortest-patience vehicle is unserviceable on any
+link, `edf - fcfs` under `blind` falls relative to its $s = 12$ value.
+  **FALSIFIER.** A monotone rise straight through the unserviceable level **refutes** the account
+  that EDF's advantage comes from meeting deadlines rather than from some other property of sorting
+  on patience, since a deadline nobody can meet should not be worth prioritizing.
+
+**P6 (instrument). The mean is what sets the threshold.** `fcfs` at $s = 12$ minus `fcfs` at $s = 0$
+on `served_per_step` is null.
+  **FALSIFIER.** A gated move in the `fcfs` arm alone means dispersion changes the operating point
+  itself, and P2's contrast is then mixing an ordering effect with a threshold shift. Every other
+  prediction here would have to be re-read against the moved baseline.
+
+Metrics logged: `served_per_step` (the gate), `success`, `operator_goodput` (recorded and NOT gated
+on, because the disciplines change the asking), `patience_mean`, `patience_sd`, `patience_min` (the
+arm printing its own assumption), `abandon_queue_frac`.

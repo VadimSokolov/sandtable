@@ -36,7 +36,8 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
     world = build_world(scn, rng)
     ent = build_entities(scn, rng)
     comms = build_comms(scn)
-    op = c2.build_c2(scn, ent)
+    op = c2.build_c2(scn, ent, rng)   # same signature as sim.run_mission, so a
+                                  # staggered or mixed-patience fleet replays as it ran
 
     init_counts = {BLUE: int((ent.side == BLUE).sum()), RED: int((ent.side == RED).sum())}
     blue_mask0 = ent.side == BLUE

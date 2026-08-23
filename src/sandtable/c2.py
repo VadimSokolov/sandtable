@@ -60,7 +60,14 @@ from sandtable.scenario import Scenario
 # and the default. `random` exists as the NULL CONTROL: reordering the loop also reassigns which
 # entity draws which random number, so a priority arm moves two things at once; `random` moves only
 # the RNG assignment. `easy_first` is the adversarial control for `hard_first`.
-DISCIPLINES = ("fcfs", "random", "hard_first", "easy_first")
+#
+# `edf` and `patient_first` sort on the requester's own patience, which is a constant across the
+# fleet until `patience_spread` is set and therefore a no-op until then: a stable sort on a
+# constant key returns the identity permutation, so both arms are byte-identical to `fcfs` at
+# spread zero. That is the point. The two rules are the prescriptions of two literatures that
+# disagree about an overloaded server with abandonment, and the disagreement is only visible in a
+# fleet whose members do not all wait the same length of time.
+DISCIPLINES = ("fcfs", "random", "hard_first", "easy_first", "edf", "patient_first")
 
 
 @dataclass
@@ -71,8 +78,11 @@ class Operator:
     q_auto: float                 # control quality of a supervisory-autonomous decision
     q_fallback: float             # control quality of a DIRECT-mode agent forced autonomous
     q_stall: float                # control quality while awaiting a pending request
-    patience: int                 # steps an agent waits before giving up -> fallback
+    patience: int                 # MEAN steps an agent waits before giving up -> fallback
     decision_interval: int        # mean steps between an agent's decision events
+    # Per-vehicle patience, built by `_patience_vector`; a constant vector until
+    # `patience_spread` is set, which is what keeps the published path byte-identical.
+    patience_v: np.ndarray = field(default=None)
     operator_free_at: float = 0.0  # step at which the (first) server clears its queue
     crew_free_at: np.ndarray = None  # per-console free times when n_operators > 1 (CR-14)
     resolved_quality: np.ndarray = field(default=None)  # per-agent between-decision quality
@@ -244,6 +254,24 @@ def build_c2(scn: Scenario, ent: Entities,
     if not 0.0 <= op.stall_decay <= 1.0:
         raise ValueError(f"stall_decay must lie in [0, 1], got {op.stall_decay}")
     op.cadence_rate = np.ones(ent.n)
+    # Heterogeneous patience (CR-46). A mixed fleet does not wait the same length of time: an air
+    # vehicle orbiting a target has a long window before its request is stale, a ground vehicle
+    # halted in contact has a short one. The guard is the `retry_spread` lesson applied in advance:
+    # a spread that reaches the floor at one step no longer holds its mean, so the arm is rejected
+    # on the realized mean rather than on the nominal width.
+    _ps = int(scn.params.get("patience_spread", 0))
+    if _ps < 0:
+        raise ValueError(f"patience_spread must be at least 0, got {_ps}")
+    op.patience_v = _patience_vector(ent.n, np.flatnonzero(ent.side == BLUE), op.patience,
+                                    _ps, rng)
+    if _ps > 0:
+        _realized = float(op.patience_v[ent.side == BLUE].mean())
+        if abs(_realized - op.patience) > 0.02 * max(op.patience, 1):
+            raise ValueError(
+                f"patience_spread {_ps} at patience {op.patience} delivers a realized fleet mean "
+                f"of {_realized:.2f}, a {100 * (_realized - op.patience) / max(op.patience, 1):.0f}% "
+                f"shift; the floor at one step has truncated the low tail. A dispersion arm must "
+                f"hold its mean, so use patience_spread <= patience - 1")
     op.retry_mode = str(scn.params.get("retry_mode", "fixed"))
     if op.retry_mode not in ("fixed", "double"):
         raise ValueError(f"retry_mode must be 'fixed' or 'double', got {op.retry_mode!r}")
@@ -391,17 +419,62 @@ def _arm_retry(op: Operator, rng: np.random.Generator, i: int) -> None:
         op.n_retry += 1
 
 
+def _patience_vector(n_ent: int, blue_idx: np.ndarray, mean: int, spread: int,
+                     rng: np.random.Generator | None = None) -> np.ndarray:
+    """Per-vehicle patience: a balanced spread about the mean, laid out on a side stream.
+
+    The SET of values is fixed rather than drawn. A fleet whose patiences are sampled has a
+    realized mean that wanders block to block, which puts a nuisance variance into a paired
+    contrast whose entire subject is the second moment; and a real mixed fleet is not a sample,
+    since a program knows it is flying vehicles that can sit and vehicles that cannot. The offsets
+    run -spread..+spread in equal steps, so they sum to zero and the fleet mean is exactly `mean`
+    in every replication. Because the collapse span of Equation nstar is LINEAR in patience, that
+    makes the sweep a pure second-moment manipulation.
+
+    What IS drawn is which vehicle gets which value. Laying the values out in index order would
+    make the deadline order identical to the arrival order, since the operator walks its arrivals
+    in index order, and `edf` would then be `fcfs` by construction rather than by measurement.
+    The permutation comes from `rng.spawn`, a CHILD stream, so the parent's draws are untouched
+    and a dispersed fleet and a uniform one see the same mission: every contrast in the sweep,
+    including the one that reads the uniform arm against a dispersed one, stays paired.
+
+    `spread = 0` returns a constant vector and spawns nothing, so every deadline discipline is a
+    stable sort on a constant key and returns the identity permutation. The published path is
+    reproduced exactly, not approximately.
+    """
+    v = np.full(n_ent, int(mean), dtype=int)
+    m = int(blue_idx.size)
+    if spread <= 0 or m < 2:
+        return v
+    offs = [spread * (2.0 * j / (m - 1) - 1.0) for j in range(m)]
+    order = rng.spawn(1)[0].permutation(m) if rng is not None else np.arange(m)
+    for slot, j in enumerate(order):
+        v[int(blue_idx[slot])] = max(1, int(round(mean + offs[int(j)])))
+    return v
+
+
 def service_order(op: Operator, blue: np.ndarray, difficulty: dict,
                   rng: np.random.Generator) -> np.ndarray:
     """The order the operator works this tick's arrivals in (CR-16).
 
     `fcfs` returns `blue` untouched, which is what keeps the default path byte-identical.
 
-    Ordering cannot change how MANY requests the operator serves. Every requester carries the same
-    patience and a request's completion time is fixed at arrival, so reordering two feasible
-    requests only swaps which vehicle is served. What ordering can change is whether the vehicle
-    that gets helped is one for which operator quality is worth much, which is why the priority
-    arms key on the ground under the vehicle rather than on anything intrinsic to the request.
+    Ordering cannot change how MANY requests the operator serves WHEN EVERY REQUESTER CARRIES THE
+    SAME PATIENCE. A request's completion time is fixed at arrival, so reordering two feasible
+    requests only swaps which vehicle is served. That is a statement about a homogeneous fleet, not
+    about queues, and it is the reason `hard_first` and `easy_first` key on the ground under the
+    vehicle rather than on anything intrinsic to the request: with a common deadline the only thing
+    left to prioritize is whose decision is worth more.
+
+    `patience_spread` removes the assumption. Once requesters carry different deadlines, ordering
+    changes the COUNT, because a short-deadline request placed late in the tick no longer fits and
+    a long-deadline one placed late still does. `edf` serves the earliest deadline first, which is
+    the shortest remaining patience; `patient_first` serves the longest, which is the cmu/theta
+    prescription of Atar, Giat and Shimkin for a many-server queue with abandonment. The two rules
+    are exact opposites and they come from literatures that assume different information: cmu/theta
+    is derived where the server sees an abandonment HAZARD, deadline scheduling where it sees the
+    DEADLINE. A console running admission control has already assumed the second, because
+    `wait <= patience` is that test, so this model should sit in the deadline regime.
 
     The priority sorts are stable, so vehicles on identical ground keep their index order and the
     discipline degenerates to `fcfs` rather than to an arbitrary permutation. That is what makes a
@@ -409,6 +482,9 @@ def service_order(op: Operator, blue: np.ndarray, difficulty: dict,
     """
     if op.queue_discipline == "random":
         return rng.permutation(blue)
+    if op.queue_discipline in ("edf", "patient_first"):
+        sign = 1.0 if op.queue_discipline == "edf" else -1.0
+        return blue[np.argsort(sign * op.patience_v[blue], kind="stable")]
     if op.queue_discipline in ("hard_first", "easy_first") and difficulty:
         sign = -1.0 if op.queue_discipline == "hard_first" else 1.0
         keys = np.array([sign * difficulty.get(int(i), 0.0) for i in blue])
@@ -496,7 +572,7 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
             q = op.q_stall
             if op.stall_decay > 0.0:
                 left = max(0.0, float(ent.await_until[i] - k))
-                frac = 1.0 - min(1.0, left / max(1.0, float(op.patience)))
+                frac = 1.0 - min(1.0, left / max(1.0, float(op.patience_v[i])))
                 q = op.q_stall - op.stall_decay * frac * (op.q_stall - op.stall_floor)
             ent.control_quality[i] = q
             continue
@@ -547,7 +623,7 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
             op.n_request_late += 1
         if link_ok:
             wait = reply - k
-            if wait <= op.patience:
+            if wait <= op.patience_v[i]:
                 _claim(op, console, done)
                 ent.await_until[i] = int(math.ceil(reply))
                 # The published operator is an ORACLE: its answers never degrade, however hard
@@ -589,7 +665,8 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 # keeps admission control from ever being worse than not being told. Without the
                 # cap, C5 (one-way latency 16) would hold an agent 32 steps against a patience of
                 # 20. No published number changes, because every gated cell runs at C0 or C2.
-                hold = min(2 * lat, op.patience) if op.queue_policy == "admit" else op.patience
+                pat = int(op.patience_v[i])
+                hold = min(2 * lat, pat) if op.queue_policy == "admit" else pat
                 if op.admit_response == "aimd":   # multiplicative decrease on a refusal (CR-26)
                     op.cadence_rate[i] = max(_AIMD_FLOOR, op.cadence_rate[i] * _AIMD_BETA)
                 ent.await_until[i] = k + hold                 # gives up waiting -> poor autonomy
@@ -597,7 +674,7 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 op.n_abandon_queue += 1
                 _arm_retry(op, rng, i)
         else:
-            ent.await_until[i] = k + op.patience              # message dropped -> poor autonomy
+            ent.await_until[i] = k + int(op.patience_v[i])    # message dropped -> poor autonomy
             op.resolved_quality[i] = op.q_fallback
             op.n_abandon_link += 1
             _arm_retry(op, rng, i)
