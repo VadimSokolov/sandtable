@@ -99,6 +99,11 @@ class Operator:
     # the admission test is made against a FORECAST of the console's own delay rather than against
     # the delay itself. `buffer` is the queue: an arrival joins a pending list, the console picks
     # from it when it frees, and the admission test is applied at the head with the delay known.
+    # Coefficient of variation of the SERVICE time. Zero is the published console, a metronome, and
+    # is the case every closed form in this paper was derived against. Above zero the time is drawn
+    # from a gamma with the SAME MEAN, so anything that moves is variability and not speed. The
+    # draw is skipped entirely at zero so the published path does not consume the stream.
+    service_cv: float = 0.0
     queue_model: str = "reserve"   # "reserve" | "buffer"
     # A real console's backlog is bounded. `queue_capacity < 0` leaves it unbounded, which is the
     # default and the regime a newest-first discipline is most flattered by, since it never has to
@@ -238,6 +243,7 @@ def build_c2(scn: Scenario, ent: Entities,
     op = Operator(
         mode=mode,
         service_rate=float(scn.params.get("service_rate", 0.5)),
+        service_cv=float(scn.params.get("service_cv", 0.0)),
         q_operator=q_operator_eff,
         q_auto=q_auto,
         q_fallback=float(scn.params.get("q_fallback", 0.50)),
@@ -504,6 +510,16 @@ def _pick(op: Operator, ready: list[int], rng: np.random.Generator,
     return ready[0]
 
 
+def _service_time(op: Operator, rng: np.random.Generator) -> float:
+    """One service duration. Constant unless `service_cv` is set, and no draw is taken when it is
+    not, which is what keeps every published number bit-identical."""
+    mean = 1.0 / op.service_rate
+    if op.service_cv <= 0.0:
+        return mean
+    shape = 1.0 / (op.service_cv * op.service_cv)
+    return float(rng.gamma(shape, mean / shape))
+
+
 def _trim(op: Operator, ent: Entities, k: int, rng: np.random.Generator) -> None:
     """Hold the backlog to `queue_capacity` by dropping the OLDEST pending request.
 
@@ -562,7 +578,6 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
     they are all free and is a documented tie-break when they are not.
     """
     lat = op.immune_latency if op.ew_immune else comms.latency
-    svc = 1.0 / op.service_rate
     # There is deliberately no background reaper. A console that swept its whole backlog every
     # step and released every expired requester would be a STRONGER console than the one being
     # modelled: it would be refusing work it has not looked at yet. Admission control here happens
@@ -590,6 +605,10 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
             # A request still in flight is not the console's to work, which is what makes latency
             # cost throughput here and not only delay.
             start = max(float(free_at), float(recv))
+            # Drawn per decision, so a variable console's admission test is made against the time
+            # this decision will actually take. That is the honest reading of a feasibility test: a
+            # console that could forecast its own service exactly would be a stronger console.
+            svc = _service_time(op, rng)
             reply = start + svc + lat
             if reply > deadline and op.queue_policy != "blind":
                 # Head-of-line admission control against the delay this console actually has. No
@@ -816,7 +835,7 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
         else:
             console = int(np.argmin(op.crew_free_at))         # earliest-free console (CR-14)
             start = max(op.crew_free_at[console], recv)
-        done = start + 1.0 / op.service_rate                  # operator finishes this decision
+        done = start + _service_time(op, rng)                 # operator finishes this decision
         reply = done + lat                                    # reply travels back
         down_ok = comms.reply_survives(rng, done - k)
         link_ok = op.ew_immune or (up_ok and down_ok)

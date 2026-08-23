@@ -5117,3 +5117,44 @@ control I want is the absence of a route CHOICE, not the absence of protection, 
 carries the band profile's own mean cover, concealment and trafficability, uniformly. Nothing about
 P1, P2 or P3 was read when this was changed; the smoke run that motivated it was on `success` at a
 span outside the registered contrast and is reported here rather than used.
+
+## CR-53. AN ERRATIC OPERATOR JITTERS THE ARRIVAL STREAM BY ACCIDENT
+
+**Provenance, stated first because it decides how much of this counts.** `service_cv` was ported
+from the queue-only model into `c2.py` as a robustness instrument for CR-51, not as a conjecture. The
+first eight-seed smoke run at ten assets on a blind console was read before this was written and is
+the reason it exists:
+
+    cv=0.0  served 0.0024  goodput 0.0121  success 1.000
+    cv=0.5  served 0.0152  goodput 0.1174  success 0.500
+    cv=1.0  served 0.0090  goodput 0.0678  success 0.750
+
+Those three rows are a CONFIRMATION limb and are labelled as one. Everything below them is
+prospective.
+
+**The mechanism, which is one this paper already owns.** A console whose service times vary finishes
+its decisions at irregular moments, so the requesters it releases return on irregular schedules. That
+is the same desynchronization a randomized backoff buys deliberately, arriving here as a side effect
+of the operator being human. The paper's own recommendation, randomize the hold, and the defect,
+an erratic operator, are the same intervention with opposite intent.
+
+**And the two metrics disagree, which is this paper's recurring problem in a new place.** Delivered
+service goes UP six-fold and mission success goes DOWN by half. A console statistic and a mission
+statistic point opposite ways because the console's gain is bought by serving requesters that would
+otherwise have gone autonomous and won anyway.
+
+**P1 (open).** The console-metric gain from $cv > 0$ is largest at spans where the blind console is
+collapsed and vanishes where it is not, because there is no cohort to break up on an uncongested
+console. Nothing outside $n = 10$ has been read.
+  **FALSIFIER.** A gain that is flat in span, or largest below the collapse threshold, refutes the
+  desynchronization mechanism and the effect is something else.
+
+**P2 (open, and the one that tests the mechanism rather than the pattern).** On a console that
+already randomizes, or that already runs admission control, the gain from $cv > 0$ is smaller,
+because the cohort it breaks up has already been broken.
+  **FALSIFIER.** An equal or larger gain on top of jitter or admission control means service
+  variability is not acting through the arrival stream at all.
+
+**P3 (open).** The mission-metric LOSS is real and gated, not the small sample above.
+  **FALSIFIER.** A null on mission success at tier makes this a console-statistic curiosity and it
+  is reported in one sentence rather than as a finding.

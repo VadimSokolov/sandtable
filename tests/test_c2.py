@@ -498,3 +498,52 @@ def test_a_length_cap_measured_in_time_is_the_arrival_rate_in_disguise():
         assert 0.85 < a8 / ((k - 1) / lam8) < 1.15      # the form holds at both ends
         assert 0.85 < a24 / ((k - 1) / lam24) < 1.35
         assert a24 < 0.5 * a8                           # same cap, less than half the delay
+
+
+def test_a_metronome_console_takes_no_draw_and_stays_bit_identical():
+    """Service variability is an instrument, not a change to the model, so the published path must
+    not move. It must also not CONSUME the stream, or every downstream draw shifts and the
+    published path moves without any number in it changing on purpose."""
+    from sandtable.scenario import load_scenario
+    from sandtable.sim import run_mission
+
+    scn = load_scenario("scenarios/sc_span_control.json")
+    from dataclasses import replace
+
+    for seed in (0, 3, 7):
+        a = run_mission(scn, seed=seed)
+        b = run_mission(replace(scn, params={**scn.params, "service_cv": 0.0}), seed=seed)
+        assert a == b
+
+
+def test_service_variability_holds_the_mean_and_delivers_the_asked_for_spread():
+    """A gamma with the same mean: the console must not get faster or slower, only less
+    predictable. Checked on the draws themselves rather than on a mission aggregate, where the
+    per-decision variance averages out and the test would be measuring mission noise instead."""
+    import numpy as np
+
+    from sandtable.c2 import Operator, _service_time
+
+    for cv in (0.0, 0.25, 0.5, 1.0):
+        op = Operator(mode="direct", service_rate=0.15, q_operator=0.95, q_auto=0.7,
+                      q_fallback=0.5, q_stall=0.3, patience=20, decision_interval=22,
+                      service_cv=cv)
+        rng = np.random.default_rng(0)
+        d = np.array([_service_time(op, rng) for _ in range(20000)])
+        assert d.mean() == pytest.approx(1 / 0.15, rel=0.03)
+        assert (d.std() / d.mean()) == pytest.approx(cv, abs=0.03)
+
+
+def test_a_metronome_takes_nothing_from_the_stream():
+    """The reason the published path is bit-identical: at zero there is no draw at all, so every
+    downstream consumer of the same generator sees the same numbers it always did."""
+    import numpy as np
+
+    from sandtable.c2 import Operator, _service_time
+
+    op = Operator(mode="direct", service_rate=0.15, q_operator=0.95, q_auto=0.7,
+                  q_fallback=0.5, q_stall=0.3, patience=20, decision_interval=22)
+    rng = np.random.default_rng(0)
+    before = rng.bit_generator.state
+    [_service_time(op, rng) for _ in range(50)]
+    assert rng.bit_generator.state == before
