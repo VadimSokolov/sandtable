@@ -241,6 +241,7 @@ Compile and pre-flight the manuscript from `report/`:
 ```bash
 cd report
 latexmk -pdf -outdir=build -interaction=nonstopmode main.tex   # -> report/build/main.pdf
+latexmk -pdf -outdir=build_comp -interaction=nonstopmode companion.tex   # the companion
 python3 tools/audit.py                                         # 5 mechanical checks, exit 0 = pass
 ```
 
