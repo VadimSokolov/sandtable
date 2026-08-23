@@ -3243,3 +3243,66 @@ confirm. Abstract and results now lead with success and carry losses alongside.
 The two are genuinely separate measurements and the manuscript says why: `success` thresholds the
 assault, `blue_loss_frac` counts the force that does not come back, and both are fractions of what
 was FIELDED rather than of what was requested, which is the property that makes them immune.
+
+---
+
+## CR-37 VERDICT. P1R CONFIRMED, AND THE ORIGINAL REFUTATION WAS THE WINDOW IN FULL
+
+Job 9446726, F1/F2 complete. The prediction was registered blind, before any Fano-at-7 number from
+the simulator was looked at, with the window taken from the bench power curve.
+
+**Every pair shows a gated Fano reduction on the bursty link. Six of six.**
+
+| pair | n | fix arm's Fano | jit - fix | t | rel |
+|---|---|---|---|---|---|
+| rho=4 | 5 | 2.174 | -0.770 | -64.8 | -35% |
+| rho=4 | 6 | 2.988 | -1.415 | -89.0 | -47% |
+| rho=10 | 5 | 1.579 | -0.320 | -27.3 | -20% |
+| rho=10 | 6 | 2.887 | -1.532 | -85.0 | -53% |
+| rho=18 | 5 | 1.583 | -0.364 | -40.9 | -23% |
+| rho=18 | 6 | 2.091 | -0.789 | -52.9 | -38% |
+
+All 32/32 blocks. The memoryless control shows the same thing at four of four pairs, smaller in both
+absolute and relative terms (-0.047 to -0.349, -4% to -24%).
+
+**At the deployed window of 120 the largest reduction anywhere was -0.130 and nothing gated. At the
+service-time window the smallest is -0.320 and everything gates at |t| above 27.** The refutation
+was the window, in full, and nothing else. P1 moves from VOID to **CONFIRMED**.
+
+### What this does to the manuscript's account, which is now on its fourth version
+
+The published narrative reads: the bursty link showed no Fano reduction, the memoryless control did,
+therefore the synchronization is among the retrying vehicles rather than between them and the
+channel. **The premise is false.** Both links show it, and the bursty link shows MORE, in absolute
+terms and relative to its own baseline.
+
+That is not a retreat, because it now agrees with every other instrument:
+
+| instrument | says |
+|---|---|
+| multiplicity | GE more clustered (+0.19 to +1.05) |
+| excess, net of rate | GE more clustered (1.21/1.35 against 1.10/1.10) |
+| Fano at w=7 | GE has more to dissolve, and jitter dissolves more of it |
+| excess residual at matched rate | GE keeps more after jitter, gap growing with span |
+
+**The account that fits all four.** Deterministic holds create a retry cohort on both links. The
+bursty link's gate adds further clustering on top of it, so there is more there to begin with.
+Jitter dissolves the part the hold controls, which is larger on the bursty link because more of the
+total is cohort. A residual survives on both, larger on the bursty one, and the gap grows with span
+because a gate can only release what a backlog gave it to hold.
+
+**The memoryless control is still the informative arm**, but for a different reason than the one
+shipped. It does not show that channel coupling is absent. It shows that a retry cohort forms and
+matters with no channel structure at all, which is what makes the mechanism a property of the retry
+rule rather than of the link, and therefore what makes the recommendation portable.
+
+### The methodological point, now paid for twice
+
+This section's story has been revised four times: fade-edge pump, drowning, born-pre-scattered,
+two-synchronizers. Three of the four revisions were forced by instruments, not by physics: a window
+with no power, an estimator with a gate-induced bias, and a floor with the wrong reference process.
+**Every substantive error in this section came from an instrument setting asserted by an argument
+instead of measured against injected ground truth.** The two benches now exist and the rule is
+written down. It is worth stating in the paper that the mechanism was found by fixing the
+instruments, because a reader deciding whether to trust the account should know which parts were
+measured and at what settings.
