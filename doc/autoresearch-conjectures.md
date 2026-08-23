@@ -3676,3 +3676,44 @@ denominator, the missing $(1-h)$ in the tempo budget, and now a burstiness null 
 computed. The common shape every time: a reference value correct in the setting it was derived for,
 carried unexamined into a setting where it is a function rather than a constant. The paper should say
 that plainly, because it is the most transferable thing in it.
+
+---
+
+## CR-43 VERDICT: BOTH FALSIFIERS FIRED. THE TEMPO BUDGET IS DEAD AND WHAT KILLED IT IS THE ANSWER
+
+Third and final registration, as declared. 640 runs per span, $v_{\text{eff}} = 6.12$~m/s estimated
+at $n=6$ and $n=6$ held out of the test entirely, predicted $h^{\star} = 0.5143$ with nothing fitted.
+
+| span | runs below $h^{\star}$ | arrive | runs at or above | arrive | best separator | miss |
+|---|---|---|---|---|---|---|
+| $n=5$ | 359 | 0.694 | 281 | 0.278 | 0.5819 | 0.068 |
+| $n=8$ | 134 | 0.396 | 506 | 0.000 | 0.4561 | 0.058 |
+
+**P1 FIRED.** Both misses exceed the registered 0.05. **P2 FIRED.** The separating hold moves from
+0.582 at five assets to 0.456 at eight, a shift of 0.126, which is two and a half times the tolerance
+the prediction allowed for it to be a constant.
+
+**The budget account is dead and does not come back.** Three registrations, and the third was
+declared final in advance precisely so that a fourth could not be talked into existence.
+
+**What killed it is the finding.** A tempo budget is a statement about one vehicle and a route: it
+knows the distance, the speed, and the clock, and it does not know how many other vehicles share a
+console. The separating hold moved with span, and it moved DOWNWARD as span grew, which is the
+signature of a shared server and the opposite of what a geometric budget predicts. Under stop-dead
+physics, where a purely mechanical tempo story is at its most tempting, the collapse is still the
+console.
+
+That is worth more than the budget would have been. The paper's queue mechanism was established on
+the published physics, where a vehicle with no answer keeps driving and the damage is congestion. The
+obvious objection, and Fable's, is that the model prices waiting too cheaply. Priced by mobility
+instead, the damage roughly doubles and the recommendation gets stronger, **and it is still the same
+mechanism**: the threshold that governs it tracks span, not distance. Two physics, two apparent
+mechanisms, one shared server underneath both.
+
+**Direction of the miss, recorded because it constrains what could rescue a budget-like account.** At
+$n=8$ the predicted hold separates almost perfectly in one direction: of 506 runs at or above
+$h^{\star}$, exactly zero arrive. The budget's SUFFICIENT half holds, in that a hold above the
+predicted value guarantees failure. Its NECESSARY half is what fails: below $h^{\star}$ only 0.396
+arrive at $n=8$ against 0.694 at $n=5$, so the geometry is a bound and the console decides everything
+inside it. A budget that predicts an upper limit and not the operating point is not a closed form for
+the cliff, which is what was claimed and what is now withdrawn.

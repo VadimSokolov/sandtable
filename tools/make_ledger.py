@@ -60,6 +60,13 @@ ROWS = [
     ("contribution pointers all resolve",
      "(instrument, not a claim)",
      "\\textsc{repaired}: the checker truncated long lists"),
+    ("a scattered arrival stream reads one",
+     "(instrument, not a claim)",
+     "\\textsc{repaired}: a gated stream does not, and the null moves with dwell and rate"),
+    ("the stop-dead cliff has a closed form in route, speed and clock",
+     "a separating hold more than 0.05 from the prediction, or one that moves with span",
+     "\\textsc{refuted} on both, in three registrations declared final in advance; "
+     "the threshold tracks span, so the console decides it"),
     ("the burstiness window belongs to the channel",
      "(instrument, not a claim)",
      "\\textsc{repaired}: benched against an injected cohort, it belongs to the mechanism"),
