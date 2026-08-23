@@ -387,9 +387,15 @@ must instead be priced. \sandtable{} prices them at the same operating point. Ad
 a semantic deadline field in the message and leaves a mean backlog of \LvBackAdmit{} requests. The
 counter needs no change to the message and bounds the backlog at $k^{\star}+1$ by construction.
 Newest-first also needs no change to the message, and its backlog is \LvBackLifo{} requests against
-oldest-first's \LvBackFifo{}: it is \emph{larger} than the policy it beats, and larger for a reason
-that is the whole of its cost. The requests newest-first never serves are the requests that never
-leave. Its throughput is bought by starving the tail, and the counter's is not. The substitution is
+oldest-first's \LvBackFifo{}: it is \emph{larger} than the policy it beats. That reads as a cost and
+we first reported it as one, which was wrong, and the correction is worth stating because the wrong
+version is the intuitive one. A mean backlog counts requests that never leave. It does not count
+requesters who never get an answer, and under newest-first those are not the same set, because a
+requester whose first request is buried asks again and its new request lands on \emph{top} of the
+pile it was buried under. Measured directly, as the fraction of assets that asked at least once and
+were never once answered, newest-first starves nobody at all and neither do the bound or admission
+control, while oldest-first abandons most of the force and random order abandons half of it. The backlog under newest-first is memory, not harm, and the honest
+statement of its price is that it holds a large dead queue rather than that it starves a tail. The substitution is
 measurable rather than argued: once the console can refuse, reordering what it accepted is worth
 \LvSubEight{} served per step at eight assets and \LvSubSixteen{} at sixteen, negative at every span
 in the sweep and equivalent to zero at every one. Two levers aimed at the same waste do not add.
