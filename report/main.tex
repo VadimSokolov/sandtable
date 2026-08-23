@@ -40,6 +40,7 @@
 \input{gen/maps_numbers}
 \input{gen/foresight_numbers}
 \input{gen/acuity_numbers}
+\input{gen/bias_numbers}
 \input{gen/follow_numbers}
 \input{gen/ledger_counts}
 
@@ -484,6 +485,59 @@ It does not merely fail to add: it changes sign. The measurement also closes the
 argument the caveat rested on, since a counter-only console with and without the triage capability
 switched on differs by \AcInertGap{} served per step, exactly and in every block, which is what it
 means for a deadline test never to be reached.
+
+\paragraph{What an admission rule has to know, priced rung by rung.} The consoles above differ in
+whether they can see a decision's difficulty. A programme has to decide what to buy, and the four
+things it could buy are separable and separately priced at sixteen assets. A console with no
+admission rule at all delivers \BiRungNone{} served per step. Refusing a fixed fraction at random,
+at the best fraction in the sweep, delivers \BiRungRandom{} and gates DOWN by
+\BiRungRandomGap{}: admission tightness with no information in it is not a weak lever, it is a
+negative one at every fraction and every span we ran. Budgeting a quantile of the service
+distribution instead of its mean delivers \BiRungQuantile{}, worth \BiRungQuantileGap{} and gated,
+and it needs no per-job information at all because it selects on the requester's slack. Seeing this
+decision's own length is worth far more, \BiRungSeeing{}. And a console that sees the length and
+also demands slack in proportion to it reaches \BiRungPriced{}. The last of those four is the one
+that needed a control, because it can be produced either by an estimator that reads high or by a
+rule that prices the slot, and the two are not the same recommendation.
+
+The reason tightness alone is worthless is visible at matched refusal rate rather than at matched
+parameter. The selective console turns away \BiRefuseSel{} of requests and delivers
+\BiMatchedSel{}; the random one turns away \BiRefuseRand{} and delivers \BiMatchedRand{}. They
+refuse nearly the same amount of work and differ by which work. The mechanism is length selection
+and the instrument reads it: mean service of a SERVED decision falls from \BiSvcOne{} to
+\BiSvcBest{} steps as the console tightens. It is not working more, it is working shorter. Two
+boundaries make that concrete. At zero service variability the ladder is a step rather than a curve,
+\BiFlatOne{} and \BiFlatBest{} and then exactly \BiFlatOff{}, with mean served service at exactly
+\BiFlatSvc{} throughout: with every decision the same length there is nothing to select on and the
+rule admits all or refuses all. And a noisy estimate cannot select at all: mean served service falls
+from \BiSelClean{} to \BiSelCleanTop{} steps under an exact estimate and RISES from
+\BiSelNoisy{} to \BiSelNoisyTop{} under a noisy one, which is why the peak value collapses from
+\BiPeakClean{} to \BiPeakMid{} to \BiPeakNoisy{} as the estimate's spread grows while the peak's
+LOCATION barely moves. For a specification that separates cleanly: the offset is a constant, the
+spread is the requirement, and the value of getting either right scales with how variable the work
+is, \BiCvLow{}, \BiCvMid{} and \BiCvHigh{} at coefficients of variation of a quarter, a half and
+one.
+
+Where the optimum sits is a property of the load and not of the console. The best offset is
+\BiArgFour{} at four assets and \BiArgSix{} at six, moves to \BiArgEight{} at eight,
+\BiArgTwelve{} at twelve and \BiArgSixteen{} at sixteen. It leaves one between six and eight
+assets, which brackets the collapse span of Equation~\ref{eq:nstar}, though the first gated
+improvement does not appear until twelve (\BiGainTwelve{}) and reaches \BiGainSixteen{} at sixteen,
+so the bracket is on an argmax and is written as the weaker statement it is. The cheap side of the
+ladder says the same thing more sharply. An optimistic console, one that under-demands slack, is
+free at four assets (\BiOptGapFour{}, equivalent) and ruinous at sixteen (\BiOptGapSixteen{}). A
+refusal costs the console nothing when there is something else to serve and costs it a delivery when
+there is not, so what the offset is really pricing is the slot, and a slot is worth what the queue
+behind it is worth.
+
+One result here does not survive to the mission, and saying so changes the recommendation rather
+than weakening it. None of the throughput gains above reach mission success at this tier: the best
+cell is \BiMissBest{} at eight assets and the gate calls it \BiMissBestVerdict{}, with every other
+cell equivalent. The losses do reach it. Over-tightening at four assets costs \BiMissHarm{} of
+mission success and the gate accepts that one. So the asymmetry, not the throughput number, is what
+belongs in guidance: pricing the slot is a console-level gain this study cannot show converting into
+mission outcome, and over-tightening a console that is not busy is a mission-level loss it can. A
+rule of this kind should be fielded with the span it was sized for attached to it.
 
 
 \paragraph{Two thresholds, predicted then measured.} Equation~\ref{eq:nstar} puts the collapse span at $\qNStar{}$ assets on one console and $\qNStarTwo{}$ on two, and $\ell^{\star} = \qLatCut{}$ steps puts a ceiling on serviceable latency. Figure~\ref{fig:queue}(a) and Table~\ref{tab:staffing} are the staffing curve those numbers predict. On one console the operator's goodput, the fraction of its service time that reaches a requester still waiting, is \qGoodOneSix\% at six assets and \qGoodOneEight\% at eight, so the transition brackets $\qNStar{}$. On two consoles it is \qGoodTwoTwelve\% at twelve and \qGoodTwoSixteen\% at sixteen, bracketing $\qNStarTwo{}$. On three consoles, whose predicted threshold is $\qNStarThree{}$, the queue is still healthy at sixteen (\qGoodThreeSixteen\%). Those three readings are on the ratio, and the ratio is the metric this paper has had to correct twice, so they were re-run on the delivered rate. The brackets do not move: one console serves \seSrvOneNSix{} per step at six assets and \seSrvOneNEight{} at eight, two serve \seSrvTwoNTwelve{} at twelve and \seSrvTwoNSixteen{} at sixteen, and three are still rising at sixteen (\seSrvThreeNSixteen{}). Three consoles, three brackets, each containing its own prediction, with no parameter fitted to any of them. That the $c$-scaling survives on a metric with no denominator is the part worth having, because it is the one place in this paper where the equation makes a prediction about a knob the equation was not derived from. Adding a console does not raise goodput a little at every span; it moves a cliff. Staffing and admission control are the two levers the call-center literature puts on the same congestion \citep{ibrahim2018announcements}, and they act differently here: a second console doubles the span the queue can carry, while admission control on a single console converts the cliff into a slope, holding \qGoodOneEightAdmit\% goodput at eight assets where the blind operator has fallen to \qGoodOneEight\%. The latency ceiling shows the same discipline. Because C4 and C5 both sit above $\ell^{\star}$ at the default patience, they are one rung, not two: goodput is \qPatShortCfour\% at both. Raising patience to 30 steps lifts $\ell^{\star}$ past C4's latency and C4 separates (\qPatMidCfour\%) while C5 stays dead (\qPatMidCfive\%); at patience 45 both resolve (\qPatLongCfive\% at C5). The cut-off is a property of the requester's patience, not of the link.

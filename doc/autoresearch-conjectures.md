@@ -6809,3 +6809,75 @@ succeeding arms reads zero whatever the arms did, and a contrast across the thre
 bound. No published claim is overturned, because every reported contrast on it is of the third kind
 and is therefore understated rather than overstated; the manuscript now says so. Guarded by a test
 asserting the pinning at three thresholds.
+
+## CR-59 VERDICT: FOUR PREDICTIONS HELD, ONE PARTIAL, AND THE KNOB'S DOWNSIDE REACHES THE MISSION WHILE ITS UPSIDE DOES NOT
+
+Full tier, 32 blocks of 64, job 9449800. F6 was already retracted on its own control before this
+landed; what follows is everything else.
+
+**H1, the offset ladder against the load ladder, served per step.**
+
+    b        n=4      n=6      n=8     n=12     n=16
+    0.60  0.0849   0.1066   0.1176   0.1201   0.1137
+    0.80  0.0864   0.1109   0.1293   0.1471   0.1520
+    1.00  0.0873   0.1174   0.1428   0.1762   0.1949
+    1.25  0.0862   0.1164   0.1457   0.1822   0.2030
+    1.60  0.0847   0.1165   0.1462   0.1876   0.2111
+    2.00  0.0791   0.1112   0.1425   0.1892   0.2174
+    2.50  0.0711   0.1009   0.1330   0.1856   0.2193
+    4.00  0.0400   0.0588   0.0829   0.1308   0.1706
+    argmax  1.00     1.00     1.60     2.00     2.50
+
+- **F1 HELD.** At sixteen assets $b = 1.6$, 2.0 and 2.5 all gate up over $b = 1$, at $+0.0161$,
+  $+0.0225$ and $+0.0244$.
+- **F2 HELD.** At four assets nothing beats $b = 1$: every offset is equivalent or gates down, and
+  $b = 2.5$ gates DOWN at $-0.0163$. The optimum is a property of the load.
+- **F9 HELD in the argmax and not yet in the gate**, and both halves are reported. The argmax leaves
+  $b = 1$ between six and eight assets, bracketing the collapse span $n^\star = 6.45$, which is the
+  reviewer's registered prediction and it is the location it named. The first GATED improvement over
+  $b = 1$ appears at twelve assets ($+0.0115$ at $b = 1.6$). A bracket on an argmax is a weaker
+  statement than a gated crossing and is written as one.
+- **F10 HELD.** At four assets the ladder is flat BELOW $b = 1$ rather than falling: $b = 0.6$ is
+  $-0.0025$ and $b = 0.8$ is $-0.0009$, both equivalent. The same $b = 0.6$ gates down at $-0.0108$,
+  $-0.0252$ and $-0.0812$ at six, eight and sixteen. Optimism is free at an idle server and ruinous
+  at a busy one, which is the shadow price of a slot appearing on the cheap side of the ladder.
+- **F11 HELD, and exactly rather than approximately.** At $cv = 0$ the ladder runs 0.1490, 0.1481,
+  0.1416 and then **0.0000**, with `svc_serviced_mean` at exactly 6.6667 for the first three and
+  0.0000 for the last. With every job the same length a price knob admits all or refuses all. It is
+  a step.
+- **F7 HELD.** `svc_serviced_mean` falls monotonically with $b$ at every span, 5.0923 to 3.3186 at
+  sixteen assets. The console is not working more, it is working shorter.
+
+**F3 and F4, PARTIAL, and the mechanism explains which half failed.** The requirements curve over
+$(b, \sigma)$ at sixteen assets peaks at $b = 2.5$, 2.0, 2.5 and 3.2 for $\sigma = 0$, 0.35, 0.70 and
+1.40, which is not the clean rise F3 registered; the peaks are broad and the location barely moves.
+The peak VALUE falls hard: 0.2193, 0.2021, 0.1790, 0.1493. Offset therefore recovers 60 percent of
+the exact console's advantage at $\sigma = 0.7$, above F4's falsifier of half but outside the
+registered two thirds, so **F4 is partial**. The instrument says why: `svc_serviced_mean` under
+$b$ falls 5.09 to 3.32 at $\sigma = 0$ and RISES 5.20 to 5.35 at $\sigma = 1.40$. A noisy estimator
+cannot select on length at all, so no offset can buy back what spread destroys. Spread is binding
+and offset is not, which is what F4 claimed; it simply compensates less than registered.
+
+**F8 HELD EMPHATICALLY, and it is the cleanest section in the battery.** Random refusal gates DOWN
+at every fraction and every span: $-0.0111$, $-0.0271$ and $-0.0524$ at sixteen assets for refusal
+rates of 0.2, 0.4 and 0.6. Selective pessimism at a MATCHED refusal rate gates up $+0.0244$. Refusing
+0.54 of requests selectively delivers 0.2193; refusing 0.58 of them at random delivers 0.1679. The
+entire gain is in the selectivity and none of it is in the tightness.
+
+**The requirements ladder that comes out of it, priced, at sixteen assets.**
+
+    rung                                              served/step   against nothing
+    no admission rule at all                             0.1185           .
+    refuse at random, best fraction                      0.1074          gates DOWN
+    budget a quantile: select on the REQUESTER's slack   0.1407          +0.0222 gated
+    see this job's length: select on the JOB             0.1949          +0.0764 gated
+    see it and price the slot as well                    0.2193          +0.1008 gated
+
+**H6, and it is the finding a programme should act on rather than the throughput number.** The
+offset does NOT reach mission success at full tier: $b = 1.6$ at eight assets is $+0.0288$ and
+INCONCLUSIVE, and every other cell is equivalent. But $b = 4.0$ at four assets gates DOWN at
+$-0.1206$. **The knob's downside reaches the mission and its upside does not.** So the honest
+recommendation is asymmetric: pricing the slot is a console-level gain that this study cannot show
+converting into mission outcome, while over-tightening at low span is a mission-level loss that it
+can. That asymmetry is the sentence, and it is the opposite of the sentence a throughput number
+alone would have produced.

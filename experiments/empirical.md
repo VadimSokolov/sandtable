@@ -1666,3 +1666,47 @@ metric is blind to a commanded-geometry error, which bounds CR-60's claim rather
 **Pending.** Score 9449639 against the registered $[-0.021, -0.007]$ window. Check CR-56 A3's
 bit-identity result. Replicate the starvation reversal across the three terrain maps before any
 Discussion paragraph generalizes from it.
+
+## 2026-08-23 (later). CR-59 at full tier, and CR-61 rewritten twice before it ran
+
+**Jobs.** 9449800 `bias` COMPLETED (CR-59, 20 sections). 9449639 `bridge` COMPLETED and RETRACTED on
+its registered window. 9449505 `follow` and 9449506 `acuity` COMPLETED. Running: 9449936 `capped`,
+9449945 `cross`, 9449946 `maps`, 9450073 `trust`. 9450017 was cancelled and rebuilt after the
+registration it served was rewritten.
+
+**CR-59 verdicts.** F1, F2, F7, F9 (argmax), F10 and F11 held; F3 and F4 partial; F6 already
+retracted on its control; F8 held emphatically. The requirements ladder, sixteen assets:
+
+| rung | served/step | against nothing |
+| --- | --- | --- |
+| no admission rule | 0.1185 | . |
+| refuse at random, best fraction | 0.1839 | -0.0111, gates DOWN |
+| budget a quantile (the requester's slack) | 0.1407 | +0.0222 gated |
+| see this job's length | 0.1949 | +0.0764 gated |
+| see it and price the slot | 0.2193 | +0.1008 gated |
+
+| quantity | value |
+| --- | --- |
+| best offset at 4 / 6 / 8 / 12 / 16 assets | 1.00 / 1.00 / 1.60 / 2.00 / 2.50 |
+| optimism ($b$ = 0.6) at four assets, at sixteen | -0.0025 equivalent, -0.0812 gated down |
+| matched refusal: selective 0.5423 refused, random 0.5837 | 0.2193 against 0.1679 |
+| peak value at $\sigma$ = 0 / 0.7 / 1.4 | 0.2193 / 0.1790 / 0.1493 |
+| served service under $b$, exact estimate / noisy | 5.09 to 3.32 / 5.20 to 5.35 |
+| $cv$ = 0 ladder | 0.1490, 0.1416, then exactly 0.0000 |
+| offset value at $cv$ = 0.25 / 0.5 / 1.0 | +0.0087 / +0.0244 / +0.0423 |
+| the mission end: best cell, worst cell | +0.0288 inconclusive, -0.1206 gated |
+
+**The sentence that changed because of the mission column.** No throughput gain here reaches mission
+success at this tier and one loss does, so the recommendation is asymmetric: price the slot for the
+console, and never field the rule without the span it was sized for.
+
+**CR-61 rewritten twice, before running.** The `bad_answer_hold` sweep was withdrawn because a time
+price cannot represent a harm that makes a vehicle fight worse; the replacement is a quality channel
+with two derived endpoints and no dial. My own closed form $q^\star = 1 - c$ was withdrawn because
+shipping wins at every error rate including 0.9 under the reflecting endpoint. The term it omitted:
+a conscientious operator at the collapse span scores 0.719 against no operator's 0.891, and pricing
+waiting at $q_{\text{auto}}$ takes the same console to 0.922. The stall is four times the
+correctness term.
+
+**Instrument defect 12.** `arrived_frac` is pinned at `survive_fraction` whenever the mission
+succeeds: 0.3125, 0.5000, 0.7500 against thresholds 0.3, 0.5, 0.7. Contrasts on it are lower bounds.
