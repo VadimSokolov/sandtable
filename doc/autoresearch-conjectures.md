@@ -2561,3 +2561,47 @@ CR-23 v2 ladder was.
 recommendation, which is the kind of qualification a sponsor needs and a paper usually omits. If it
 is refuted, a metric this project reports in six places is shown to be inflatable by a second
 mechanism, and every refusal contrast in the manuscript has to be re-read on the absolute rate.
+
+---
+
+## CR-32. THE LEWIS 2010 RETRODICTION, REGISTERED BEFORE THE SOURCE TEXT IS READ
+
+`10.1177/0018720810366859`, Lewis, Wang, Chien, Velagapudi, Scerri and Sycara, *Choosing Autonomy
+Modes for Multirobot Search*, Human Factors 52(2):225-233. Multirobot foraging at 4, 8 and 12
+robots, between-groups repeated measures, comparing full-task performance against exploration alone
+and perceptual search alone.
+
+**What the abstract already gives away, and therefore cannot be predicted.** Operators in the
+full-task condition could not manage 12 robots and found half as many victims as perceptual-search
+operators; exploration performance was about the same in the full-task and exploration-only
+conditions; the authors conclude navigation is the limiting subtask. All of that is read, so none of
+it is a prediction.
+
+**What the abstract does NOT give, and what the two accounts disagree about: the shape between 4
+and 8.** This is the discriminating quantity and it is registered here before the source text is
+obtained.
+
+- An **attention** account has the operator's per-robot quality declining as soon as the robots
+  compete for a fixed budget. Yield per robot should therefore fall monotonically from 4 onward, so
+  4 to 8 already shows loss and 12 is the continuation of a trend.
+- A **queue** account has nothing bind until the server saturates. Below `n*` the console clears its
+  backlog between requests and added robots are close to free, so total yield should RISE from 4 to
+  8. At and above `n*` unrefunded abandonment turns the queue unstable and yield collapses. 12 is
+  not the continuation of a trend, it is the other side of a threshold.
+
+**PREDICTION.** Total full-task yield rises (or is statistically flat, not falling) from 4 to 8
+robots, and falls at 12. Equivalently: the 4-to-8 step and the 8-to-12 step have opposite signs.
+
+**FALSIFIER.** If full-task yield declines monotonically across 4, 8 and 12, the queue account gains
+nothing over the attention account on this dataset, and Lewis is recorded as compatible-but-not-
+discriminating, in the same status class as the wait-time entry. It is NOT reported as support.
+
+**Second falsifier, on their own mediator.** Their report that exploration performance is unchanged
+between the full-task and exploration-only conditions is, on the queue reading, the more important
+number: an operator who is not degraded at the subtask still produces the aggregate collapse, which
+is this paper's sufficiency thesis measured in a human experiment rather than a simulator. But if
+the source text shows exploration performance in fact declining with team size and the abstract's
+"roughly the same" refers only to the 4-robot cell, that reading is withdrawn.
+
+**Status until the source text is in hand: OPEN.** Nothing from this paper enters the manuscript
+until both falsifiers have been checked against the actual numbers, not the abstract.

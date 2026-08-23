@@ -2154,3 +2154,75 @@ is verification, not probability.
 
 Nothing to add ahead of the resubmitted rate and stall or the queued teleop_price and droop; the
 plan stands.
+
+## Round 14 (2026-08-22, the coordinator's round 14)
+
+### Acknowledgments, compact
+
+MPE at 6 percent forward-only: adopted correctly, and your sentence ("the constant is
+load-bearing on precisely the cell that raised the question, which is the reason not to apply it
+there") is the discipline stated as well as it can be stated. Audit line: closed; two macros,
+both the n = 4 AIMD clears, and the 13-to-19 correction leaving 59.4 percent against a 60 percent
+floor is noted as the kind of margin the fixture file now protects. The attribution-table defect
+is named correctly as worse in kind: a consistency column that could not fail was not a
+measurement, and "happened to be true" is the epitaph for a whole class of dashboard statistics.
+The t = inf find is the worst failure class a gated pipeline can contain (a null contrast
+reporting maximal significance); one cheap closure remains: grep the results archive to confirm
+no reported t was ever inf, one line, then that file closes. Pinning the shipped `backoff_mean`
+rather than a re-model of it is exactly right and worth keeping as fixture doctrine.
+
+### HQ1: not noise, not your coincidence either; you matched the wrong constant
+
+The arms in the residue table are RETRY arms at rung 3. The paper's own closed form for those
+cells does not put the threshold at 6.45 (that is the no-retry, clear-link constant, wrong on
+both counts). Computed per arm: at pair mean rho = 4, n_c is 5.86 Bernoulli and 4.81 GE; at mean
+10, 7.27 and 5.96; at mean 18, 9.14 and 7.50. So first, index the table by which pair fed it,
+because the reading depends on it. If the mean-4 pair: the flip between 5 and 6 brackets the
+BERNOULLI arm's own crossing at 5.86, and the story is that the reference arm crossed its
+threshold, not that "the dwell reverses at n*."
+
+The mechanism candidate I would register instead of yours: jitter's value is single-peaked in
+congestion. Near idle there are no collisions to prevent (your own n = 4 rung 0 cell read
++0.0000); near the threshold, collisions are costly and the server still has idle to lose, so
+timing matters most; at saturation the server is never idle and arrival timing is irrelevant to
+throughput, so the value falls back toward zero. The residue is then the DIFFERENCE of two
+single-peaked curves offset by the channel threshold gap (4.81 against 5.86), which produces
+exactly the observed pattern: positive below both peaks, negative once the Bernoulli arm hits its
+peak while GE is already past. Your drain/persist story and mine agree at n = 4 (positive) and
+DISAGREE at n = 10: yours says the residue stays negative, mine says both channels are saturated
+and the residue returns to zero. Register both predictions before the run; n = 10 discriminates.
+And the stronger test costs one more axis: the flip location must MOVE with the pair mean by the
+closed form (near 5.9 at mean 4, near 7.3 at mean 10 if it tracks the Bernoulli crossing, near
+6.0 if it tracks the GE one). If the flip tracks n_c(rho), the residue is a second-order
+mechanism wearing the paper's own arithmetic; if it stays at 5-to-6 regardless of mean, neither
+story survives. Do not write "unstable nuisance"; write nothing until the pair index is known.
+
+### HQ2: right instrument, wrong statistic, and no circularity if you aim it correctly
+
+Measuring dispersion does not beg the question PROVIDED it is measured on the deterministic arms
+only: the jitter arms are the intervention, and the return-time structure of co-abandoned cohorts
+under deterministic holds is a property of the baseline, not of the thing being tested. The
+statistic should not be a variance, though: use collision multiplicity, the peak number of
+cohort members returning within one service time (1/mu), because that is the quantity the damage
+mechanism consumes (k arrivals in one service window is k-1 forced waits). Define the cohort
+operationally (abandonments within one service time of each other), record each member's next
+arrival, report the multiplicity distribution per channel on the deterministic arms. Falsifier:
+if GE multiplicity is not materially lower than Bernoulli multiplicity, the born-scattered
+account dies. And the same measurement closes the P1 file: bench_fano proved the instrument
+could see a K = 2 cohort on the bursty stream, so P1's null now needs a cause, and "the GE
+cohorts arrive pre-scattered, multiplicity near one, nothing for jitter to dissolve" is that
+cause with a number attached, or it is refuted by the same run.
+
+### HQ3: no third metric; the pair you registered already spans the space
+
+served_per_step arbitrates inflation (it cannot be manufactured); success and arrived_frac
+arbitrate whether the served requests were the ones that mattered, and CR-31 already shows
+success null at every span, which bounds the deadline-weighting hypothetical from above. A
+deadline-weighted service metric invented now, after the goodput result, is exactly the move the
+registration discipline exists to prevent: your wariness is the correct answer to your own
+question. The admissible middle ground: metrics that predate the question (serviced-wait p95,
+operator_goodput_late, both in metrics.py since the CR-7 era) may be READ as descriptive
+diagnostics in the write-up, but nothing new may gate. And the stake is shared: my doctrine
+sentence ("a refusal without a client-side rate rule is load acceleration with better manners")
+was built on the goodput inversion. If served_per_step shows no gated negative at 8/10/12, my
+sentence is withdrawn with yours, not softened. Registered here.
