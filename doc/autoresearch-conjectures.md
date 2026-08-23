@@ -6249,3 +6249,50 @@ runs at 256 blocks of 64 replications, which is eight times the standard tier on
 stack rests on a probe that no channel produces. If the probe predicts the channel, the probe is an
 instrument and the paper may use it. If it does not, one paragraph comes out and an instrument
 claim comes out with it.
+
+## CR-57 D1 VERDICT: STATION-KEEPING ERROR DOES NOT PREDICT MISSION OUTCOME, AND THE COUNTEREXAMPLE IS INSIDE ONE ARM
+
+Job 9449524, G1 and G2, full tier, eight assets, supervisory, leader-follow, link and star. The two
+sweeps differ in ONE thing: G1 disturbs the follower's ESTIMATE of where its station is, G2 moves
+where the station IS. Everything else, including the metric, is identical, so the comparison needs no
+composition and no second experiment.
+
+| mean station error (m) | produced by a stale estimate | produced by a commanded spread |
+| --- | --- | --- |
+| 8 to 13 | 0.8872 | 0.8955 |
+| 46 | | 0.8242 |
+| 73 | 0.8765 | |
+| 173 | | 0.4341 |
+| 187 | 0.8726 | |
+| 401 | 0.8540 | |
+| 819 | | 0.4468 |
+| 1254 | 0.7915 | |
+
+**At 173 m of station error the mission succeeds 43% of the time and at 187 m of station error it
+succeeds 87% of the time.** The difference is not the magnitude of the error, which is the same. It
+is what produced it. Read the other pair the same way: 819 m of commanded spread scores 0.4468 and
+1254 m of estimator error scores 0.7915, so the larger error is worth nearly twice the mission.
+
+**The mechanism, and why this is not a curiosity.** A commanded spread of 300 m is a column DESIGNED
+to be strung out: every vehicle drives to a station 300 m from the next and holds it, so the force
+arrives piecemeal and fights alone. An estimator error of 300 m is a vehicle CHASING a point that is
+wrong, along a trajectory that still tracks the leader's route and closes the moment the track
+refreshes. Mean position error is the same number for both and describes only one of them.
+
+**What this bounds.** Cheung, Rawashdeh and Mohammadi 2022 report path error, which is the quantity
+the convoy-control literature optimises, and it is the quantity this paper cannot carry to mission
+outcome. Not because the effect is small, but because the statistic is not a function of the thing:
+two mechanisms produce identical mean station error and mission outcomes differing by a factor of
+two. Any mission-level claim inherited from a path-error result inherits that ambiguity, and the
+right response is the one this section performs, which is to measure the transfer rather than assume
+it. This is the paper's only place where it bounds its own inheritance with a number, and the
+negative is worth more than the positive it replaced.
+
+**A third reading, and it retires the behaviour layer as a design variable in this scenario.** Under
+the cut-off, the fleet spends 47%, 72% and 84% of its follower-time NOT following at $a$ = 80, 160
+and 320, having reverted to waypoint navigation, and mission success across those three points is
+0.8643, 0.8613 and 0.8726 against 0.8872 with no disturbance at all. Leader-following can be off
+five sixths of the time at no measurable cost. By the project's own test, that a knob which cannot
+change a mission outcome is not a design variable, the follow behaviour is not one here, and the
+scenario that would make it one has to be named before the layer is worth further work: a mission
+whose success depends on the force being concentrated when it arrives rather than on its arriving.
