@@ -942,3 +942,37 @@
   year    = {2016},
   doi     = {10.1109/TIT.2016.2533395}
 }
+
+% verified: CrossRef 2026-08-23, DOI 10.1002/j.1538-7305.1983.tb02297.x, Bell System Technical
+% Journal 62(5) 1251-1271, Doshi, "An M/G/1 Queue With a Hybrid Discipline". The closest prior art
+% to this paper's discipline result, and it is closer than any of the abandonment literature: the
+% server takes the OLDEST customer whose delay is under a threshold T and, failing that, the
+% YOUNGEST customer already past it. That is our newest-first rule with the deadline made explicit,
+% analysed exactly, twenty-five years before anyone put a console behind it.
+@article{doshi1983hybrid,
+  author  = {Doshi, B. T.},
+  title   = {An {M/G/1} Queue With a Hybrid Discipline},
+  journal = {Bell System Technical Journal},
+  volume  = {62},
+  number  = {5},
+  pages   = {1251--1271},
+  year    = {1983},
+  doi     = {10.1002/j.1538-7305.1983.tb02297.x}
+}
+
+% verified: CrossRef 2026-08-23, DOI 10.1002/nav.21670, Naval Research Logistics 62(8) 659-663,
+% Ross, "A sequential scheduling problem with impatient jobs". The optimality side of the same
+% question: jobs abandon after an exponential impatience time, each carries a reward, and the paper
+% derives the list policy that maximises expected total return. It is the reason our discipline
+% result is a rediscovery rather than a discovery, and it is also the boundary of the analogy, since
+% our console cannot observe which request is about to abandon.
+@article{ross2015sequential,
+  author  = {Ross, Sheldon M.},
+  title   = {A Sequential Scheduling Problem With Impatient Jobs},
+  journal = {Naval Research Logistics},
+  volume  = {62},
+  number  = {8},
+  pages   = {659--663},
+  year    = {2015},
+  doi     = {10.1002/nav.21670}
+}

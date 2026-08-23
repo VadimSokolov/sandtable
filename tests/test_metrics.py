@@ -48,6 +48,16 @@ EXPECTED_KEYS = {
     "patience_sd",
     "patience_min",
     "stale_frac",
+    # The four bins a claimed slot exits through, plus their sum, so that an audit of where a busy
+    # console's time goes does not have to be reconstructed from counters that also fire on paths
+    # where nothing was served.
+    "stale_per_step",
+    "worked_lost_per_step",
+    "worked_late_per_step",
+    "worked_per_step",
+    # Starvation in the unit the harm is in rather than in queue length.
+    "starved_frac",
+    "answer_rate_v",
     "backlog_mean",
     "dropped_frac",
     "supervised_mean",
