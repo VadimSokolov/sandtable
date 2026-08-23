@@ -3887,3 +3887,96 @@ with itself, so "the benefit is vehicles desynchronizing from each other" is mea
 inferred. Together with CR-34 P6, the picture is complete: a fixed hold crowds the console with a
 cohort of DIFFERENT vehicles that grows superlinearly with span, and a randomized hold of the same
 mean takes that crowding back to the level of a fleet that never retries.
+
+---
+
+## CR-45. THE GLOBAL SENSITIVITY ANALYSIS THE DISCUSSION PROMISES, RUN AS A TEST RATHER THAN A SURVEY
+
+The Discussion names a global sensitivity analysis over the operator parameters and the comms ladder
+as the cheapest available hardening. Run the usual way it produces a bar chart of which knob matters,
+which is a description and not a claim, and this project does not report descriptions as results.
+
+There is a sharper version available here because the collapse threshold has a closed form:
+
+$$n^{\star} = \frac{c\,(P + \tau + 1)\,\mu}{d}, \qquad d = (1 - p_{\text{drop}})^2 .$$
+
+**Run the identical Saltelli design twice, once on the simulator and once on the closed form, and
+compare the index vectors.** Same sample points, same ranges, no elasticity approximation and no
+appeal to local derivatives. If the simulator's variance decomposition matches the equation's, that
+is independent validation of the mechanism at a level the point check in
+Section~\ref{subsec:validation} cannot reach: it says the equation is right about how the threshold
+RESPONDS, not merely about where it sits at one operating point. If they diverge, the divergence
+localizes what the equation omits, by parameter.
+
+**Response variable.** The empirical collapse span, measured per parameter draw by sweeping the span
+and locating where `served_per_step` falls below half its own maximum. The closed form predicts
+$n^{\star}$ directly, so both sides produce the same quantity in the same units.
+
+**Ranges**, chosen to keep $n^{\star}$ inside a span grid the sweep can resolve and to cover the
+ladder the paper actually reports: $\mu \in [0.10, 0.22]$, $P \in [12, 30]$, $\tau \in [14, 30]$,
+$p_{\text{drop}} \in [0, 0.25]$.
+
+**P1. The two first-order index vectors agree: identical rank order, and every parameter's index
+within 0.10 of the closed form's.**
+  **FALSIFIER.** Any rank inversion, or any index differing by more than 0.10, means the simulator's
+  threshold has a sensitivity structure the equation does not capture. Equation~\ref{eq:nstar} would
+  then be reported as locally accurate at the operating point rather than as the mechanism, which is
+  a substantially weaker claim than the one the paper currently makes, and the divergent parameter is
+  named in the text.
+
+**P2. Total-order indices exceed first-order by less than 0.10 for every parameter, in the simulator
+as in the closed form.** The equation is a product of separable terms, so it has one interaction
+(the $\mu$ against $P + \tau + 1$ product) and no others.
+  **FALSIFIER.** A total-minus-first gap above 0.10 present in the simulator and absent in the closed
+  form localizes an interaction the equation omits. It is reported as a named limitation rather than
+  folded into the average.
+
+**Registered before the design is drawn.** The closed form's own indices are not computed until the
+simulator's are, so neither can be tuned toward the other. Battery `sobol.sh`.
+
+---
+
+## CR-39 P2 RECLASSIFIED: **VOID-UNREACHABLE**, WITH THE FOUR FIELDS THE CATEGORY REQUIRES
+
+Adversarial review endorsed the decline and rejected my derivation, correctly. I had written the
+refusal turnaround as latency, service, latency, then the hold. **There is no service in the refusal
+path**, and the hold is policy-specific. `c2.py` line 592:
+
+    hold = min(2 * lat, op.patience) if op.queue_policy == "admit" else op.patience
+
+**Field 1, constants-based computation.** Cycle from a refusal to the next delivered request, against
+a measurement window of 7:
+
+| policy | hold | at rung 1, $\rho=4$ | at rung 3, $\rho=4$ | reachable? |
+|---|---|---|---|---|
+| blind, refund | $P$ | $20 + 4 = 24$ | $24$ | no, at any latency |
+| admit | $\min(2\lambda, P)$ | $2 + 4 = 6$ | $8 + 4 = 12$ | **yes at rung 1** |
+
+So the quantity is unreachable in **this battery**, which ran `blind` at rung 3, and reachable in
+**this model**. My original claim overstated the scope, and the corrected statement is narrower.
+
+**Field 2, instrument coherence.** `arrival_distinct` (bitmask popcount) and `arrival_multiplicity`
+(independent increment counter) agree to machine precision in all sixteen cells, which two correct
+implementations must produce when nothing repeats and no broken counter delivers.
+
+**Field 3, positive control, RUN and PASSED.** Twelve cells across three policies, two rungs, two
+backoffs:
+
+    blind  rung 1/3, rho 4/18 : cycle 24 or 38, repeat_frac 0.00000   (4 cells)
+    refund rung 1/3, rho 4/18 : cycle 24 or 38, repeat_frac 0.00000   (4 cells)
+    admit  rung 3, rho 4/18   : cycle 12 or 26, repeat_frac 0.00000   (2 cells)
+    admit  rung 1, rho 18     : cycle 20,       repeat_frac 0.00000   (1 cell)
+    admit  rung 1, rho 4      : cycle  6,       repeat_frac 0.01671   **counter live**
+
+**The counter is zero in every one of the eleven cells the arithmetic forbids and nonzero in the one
+it permits.** The metric is not an assert-style invariant and needs no reclassification: it is a live
+instrument whose value is zero for a reason.
+
+**Field 4, infection scope.** P2's void touches nothing else. No other claim in the ledger reads
+`arrival_repeat`, and P1 and P3 rest on `arrival_distinct`, which varies over four orders of $t$.
+
+**Conversion clause, checked.** The clause converts a void to a retroactive FIRED if the positive
+control shows the antecedent was reachable in the original battery. `cohsplit` ran `blind` at rung 3,
+where the cycle is 24 against a window of 7. **Not reachable. The void stands**, and it stands on a
+computation I got wrong once and had corrected for me, which is why the category carries the
+requirement to publish the computation rather than the conclusion.

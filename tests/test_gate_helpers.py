@@ -272,7 +272,17 @@ def test_a_level_needs_its_nulls_arguments_in_the_same_run():
 
 
 def test_a_level_passes_when_every_argument_is_logged():
-    check_level("arrival_excess", {"ge_burst_len", "arrival_rate"})
+    check_level("arrival_excess", {"ge_burst_len", "arrival_rate", "comms_p_drop", "mult_window"})
+
+
+def test_a_constant_shared_by_every_arm_is_still_an_argument():
+    # The duty cycle and the measurement window look like settings rather than arguments, which is
+    # where this genus hides. The bench moves 46 percent with the duty and the whole Fano episode
+    # turned on the window, so both are required even when one battery holds them fixed.
+    with pytest.raises(NullUnavailable, match="comms_p_drop"):
+        check_level("arrival_excess", {"ge_burst_len", "arrival_rate", "mult_window"})
+    with pytest.raises(NullUnavailable, match="mult_window"):
+        check_level("arrival_excess", {"ge_burst_len", "arrival_rate", "comms_p_drop"})
 
 
 def test_a_ratio_whose_reference_is_a_treatment_effect_has_no_level_reading():

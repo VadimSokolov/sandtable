@@ -63,9 +63,13 @@ RATE_METRICS = {"served_per_step", "requests_per_step", "abandoned_per_step"}
 NULL_ARGS: dict[str, tuple[str, ...] | None] = {
     # A gated source's excess is neither one nor constant; tools/bench_gate.py computes it from
     # the dwell and the delivered rate, so both have to be in the same log.
-    "arrival_excess": ("ge_burst_len", "arrival_rate"),
-    "arrival_multiplicity": ("ge_burst_len", "arrival_rate"),
-    "arrival_fano": ("ge_burst_len", "arrival_rate", "fano_window"),
+    # Four arguments, not two. The bench moves 46 percent with the duty cycle, which the rung's
+    # stationary drop rate sets, and the window is the axis the whole Fano episode turned on. A
+    # constant shared by every arm in a battery is exactly where this genus hides: it looks like a
+    # setting rather than an argument until one battery varies it.
+    "arrival_excess": ("ge_burst_len", "arrival_rate", "comms_p_drop", "mult_window"),
+    "arrival_multiplicity": ("ge_burst_len", "arrival_rate", "comms_p_drop", "mult_window"),
+    "arrival_fano": ("ge_burst_len", "arrival_rate", "comms_p_drop", "fano_window"),
     # Serviced over requested has no admissible level: the denominator is a treatment effect.
     "operator_goodput": None,
 }

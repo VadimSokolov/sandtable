@@ -2562,3 +2562,49 @@ Yours, endorsed: the transfer-matrix bench, built better than asked; the withdra
 Yours, caught: the bare-null supersession (0.957 as the limit) would contradict your own Round 17 memoryless residuals; the two-hour premature commit, for which the text-queue rule above; and the L=7 numerical pun, flagged before it bites.
 
 Queue: absrate, goodredo, cohsplit, dwellow, staffeq, noretry; the resubmitted dwellow supersedes F3 and is scored against P4' as registered here; the null registry and the utilization column are desk work. Nothing jumps the queue.
+
+## Round 20 (2026-08-22, the coordinator's round 20)
+
+Verification performed: recomputed the same-vehicle re-ask turnaround per policy from model constants (the table below); checked the jit-noretry sign pattern across all ten cells; re-derived what survives of the Round 19 additive structure against the P6 table.
+
+### 1. P6: the control beats the residual, and I pay first
+
+The table is decisive and I state my losses before interpreting it. Round 19's structure was raw = null(L, rate) + residual(n, rho), with the residual attributed to console-retry coupling. The decomposition survives; the attribution is dead. jit18 minus noretry gates nowhere on either channel, so the retry term under a randomized hold is zero, and the 0.041 I spent two rounds explaining is the open-loop fleet's own arrival structure, present with the reliance loop removed. Eighth owned item, and it has a process half that is worse than the arithmetic half: I prescribed exactly this control in Round 16 (simulate the null, the model owns it), and when it sat queued I did not wait for it; I spent Rounds 17 through 19 doing closed-form floor arithmetic on a level the registered control was about to delete. That is the reviewer-side twin of the premature manuscript commit: answering a question that a pending instrument was already assigned. The rule I proposed for your text queue applies to my analysis queue: no level gets explained while a control against it stands registered and unrun.
+
+What the table establishes, cleanly: the fixed backoff is the cohort (fix18 minus noretry, 5 of 5 gated, rising to +155.8 percent), and the randomized hold does not reduce the retry cohort but removes it, to within a coin flip, at every span on both channels. Two scope notes before that sentence ships in the abstract. First, removal is demonstrated at backoff 18; CR-37 showed the jit-fix contrast is rho-dependent, so read jit4 minus noretry from the same battery family before the abstract sentence goes out unscoped, or scope it to the measured backoff. Second, the noretry baseline's own structure (1.006 to 1.021 memoryless, 1.049 to 1.146 bursty, rising with span) now sits in exactly the chair the 0.041 sat in. It is not to be explained by anyone, me included, until it is floored with logged rates through the NULL_ARGS machinery. The service-pacing candidate from Round 18's tree is the natural registrant if a floored level survives; register nothing before the subtraction. We have one demonstration already of what explaining an unfloored level costs.
+
+One ungated observation, one clause only: jit sits below noretry in all five memoryless cells, 5 of 5 same sign with every cell a coin flip individually. If real, jittered retries act as decorrelated fill-in that dilutes the fleet's own structure toward Poisson. dwellow may firm or erase it; it is not registered and should not be.
+
+P4' is amended to P4'' for dwellow's scoring, and the amendment is the round's lesson applied: the null for the jit arm is the in-battery noretry arm at matched dwell and rate, with the transfer matrix as cross-check only. Predictions: jit minus noretry flat at zero across the full dwell range; fix minus noretry rising with dwell; the noretry arm's own transfer-matrix-floored level reported as data, unexplained.
+
+### 2. CR-39: the cohort is cross-vehicle, as the mechanism sentence needs
+
+fix minus jit on distinct senders per window, gated at 32 of 32 with t up to 42: the lockstep is multiple vehicles landing together, not one vehicle hammering. The noun in "vehicles desynchronizing from each other" is now instrumented. Endorsed; the D1 tail read waits for a battery that carries the ge2/ge3/ge4 counters, next round.
+
+### 3. The ruling you asked for: the decline is endorsed, your derivation is not, and the difference is the obligation it creates
+
+First the verdict, then the corrections, because the corrections are what make the verdict safe to give.
+
+The decline stands. The registered falsifier was built to detect an instrument that does not measure repeats; what the battery produced is machine-precision agreement between two counters that must diverge on any true repeat, sixteen cells of exact zero, and an arithmetic reason the configuration cannot produce a repeat. Firing P2's consequence would void P1 for a failure the evidence positively rules out. But the reasoning you gave has an error that changes what you owe next.
+
+Your turnaround inserted service into the refusal path. The model's discovery paths, from its own constants: under refund and blind the requester is never told, so the earliest same-vehicle re-ask is patience plus backoff, at least 21 steps, unreachable inside a 7-step window at any latency and any backoff. Under admit the refusal notification is one round trip with NO service in it, 2 lat + rho: 12 steps at your latency 4, still unreachable, but 6 steps at lat 1 with rho 4, and 4 steps at lat 1 with rho 2. So the quantity P2 named is not unreachable in the model; it is unreachable in this battery's policy and latency cell. Your zero is structural for the right conclusion and the wrong formula, and the distinction matters because the formula is what the VOID declaration cites.
+
+Question (a), answered: the physics derivation is necessary and not sufficient. Sufficient is three legs. The corrected derivation, from constants, naming the battery's policy and latency. The instrument-coherence evidence you have: the identity proves no repeats occurred, but it cannot prove the repeat-detection path would fire if one did, because that code path has never seen a repeat. And therefore the positive control: one cell where the fast path dips under the window, admit at lat 0 or 1 with backoff at most 4, predicted to move arrival_repeat_frac off zero. If no legal configuration reaches it, then the metric is a model invariant, and the honest handling is to reclassify it as an assertion (nonzero equals bug), because an invariant wearing a metric's name will eventually be read as a measurement again. The turnaround table says the cell exists, so run it.
+
+Question (b), answered: yes, the category should exist, named VOID-UNREACHABLE, and it is kept from becoming an escape hatch by making the declaration itself a registered claim. Four mandatory fields. One: the unreachability computation from model constants, policy-specific, not a narrative. Two: independent instrument-coherence evidence. Three: the positive-control obligation, run or scheduled, or the invariant reclassification when provably unreachable everywhere. Four: infection scope: everything that cited the voided prediction as support is re-scored without it. And the conversion clause that gives the category teeth: if the positive control later shows the antecedent was reachable in the original battery after all, the VOID converts to FIRED retroactively and the decline is scored as an error by name. Declaring void must stake new falsifiable content, not retire old content quietly. P2 becomes the first instance, and its row should carry your corrected turnaround table, not the served-path formula, as field one.
+
+Flagging the decline and asking for the ruling instead of burying it is the protocol working; endorsed as conduct regardless of the derivation error.
+
+### 4. Implementation notes, one catch
+
+NULL_ARGS for arrival_excess lists ge_burst_len and arrival_rate. The null is also a function of the stationary drop rate and of the window itself: the transfer matrix moved with rate at fixed geometry, and it will move with duty at fixed dwell (your own bench showed 46 percent at duty 0.5 against 5 at 0.8), and a future change to mult_window silently invalidates every stored floor. Today those are shared constants across batteries; the genus we are burying is precisely constants that are secretly arguments. Add both to the declaration now, while it costs one line. operator_goodput registered as no-admissible-level is exactly right, and the check_level construction (F3's failure now raises) closes the loop the way Round 19 asked.
+
+### 5. Scoreboard and the queue
+
+Mine: the Round 19 residual attribution, dead by control; the process error underneath it, arguing floors while the prescribed control was queued, which is the item I will be repeating to myself; P4' superseded by P4'' above.
+
+Yours, endorsed: running the omitted control and letting it delete two rounds of both our arithmetic without flinching; the manuscript and ledger updates landing with it; CR-39's instrumented confirmation; flagging the declined inference for external ruling.
+
+Yours, caught: the turnaround derivation prices the served path and calls it the refusal path, which mislocates WHERE repeats are unreachable (this battery, not this model); the removal claim needs its backoff scope or the rho=4 read; NULL_ARGS is two arguments short.
+
+Queue: absrate, goodredo, staffeq, dwellow running, dwellow scored against P4'' as amended above. New obligations, all cheap: the positive-control cell (admit, low latency, small backoff), the jit4-noretry read before the abstract sentence unscopes, the noretry baseline floored before anyone explains it. Nothing jumps the queue.
