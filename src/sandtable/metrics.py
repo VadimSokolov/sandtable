@@ -126,7 +126,9 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "arrival_distinct": 0.0, "arrival_repeat": 0.0, "arrival_repeat_frac": 0.0,
            "arrival_ge2": 0.0, "arrival_ge3": 0.0, "arrival_ge4": 0.0,
            "patience_mean": 0.0, "patience_sd": 0.0, "patience_min": 0.0,
-           "stale_frac": 0.0, "backlog_mean": 0.0, "dropped_frac": 0.0,
+           "stale_frac": 0.0, "stale_per_step": 0.0, "worked_lost_per_step": 0.0,
+           "worked_late_per_step": 0.0, "worked_per_step": 0.0,
+           "starved_frac": 0.0, "answer_rate_v": 0.0, "backlog_mean": 0.0, "dropped_frac": 0.0,
            "supervised_mean": 0.0, "supervised_frac": 0.0, "demand_norm_goodput": 0.0,
            "hold_fraction": 0.0, "interaction_steps": 0.0, "neglect_steps": 0.0, "fan_out": 0.0}
 
@@ -231,6 +233,28 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
         # differ has to be read here as well, or congestion and denominator inflation are mixed.
         out["served_per_step"] = op.n_serviced / op.total_steps
         out["requests_per_step"] = op.n_request / op.total_steps
+        # The four bins a CLAIMED slot exits through, as rates, so that they are commensurable with
+        # each other and with the capacity they partition. `served` is the only one that reaches a
+        # requester still waiting; the other three are the console's time spent and nothing
+        # delivered, by three different routes. `n_abandon_queue` and `n_abandon_link` cannot stand
+        # in for the last two, because each of them also counts paths where no slot was claimed at
+        # all (a head-of-line refusal, an uplink loss), which is why the counters are separate.
+        out["stale_per_step"] = op.n_stale / op.total_steps
+        out["worked_lost_per_step"] = op.n_worked_lost / op.total_steps
+        out["worked_late_per_step"] = op.n_worked_late / op.total_steps
+        out["worked_per_step"] = (op.n_serviced + op.n_stale + op.n_worked_lost
+                                  + op.n_worked_late) / op.total_steps
+        # Starvation in the unit the harm is in. Mean backlog counts requests that never leave,
+        # which is a memory statistic and can be large for a policy that is doing well; whether a
+        # VEHICLE ever gets an answer is the statistic a sponsor is entitled to. Under newest-first
+        # the two need not agree, because a starved requester re-asks and its new request lands on
+        # top of the pile it was buried under.
+        if op.n_ask_v is not None:
+            asked = (op.n_ask_v > 0) & (ent.side == BLUE)
+            if asked.any():
+                out["starved_frac"] = float((op.n_ans_v[asked] == 0).mean())
+                out["answer_rate_v"] = float(
+                    (op.n_ans_v[asked] / np.maximum(op.n_ask_v[asked], 1)).mean())
         # Absolute abandonment, for the same reason. `abandon_queue_frac` divides by
         # `n_request`, so a treatment that suppresses requests can lower the FRACTION while
         # abandoning exactly as often, or raise it while abandoning less. The rate cannot be

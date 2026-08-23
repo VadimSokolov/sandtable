@@ -5240,7 +5240,7 @@ plateau. Both were riders on results that were correct as far as they went.
 
 ---
 
-## CR-47 P1-P6 VERDICT: NEWEST-FIRST WORKS, AND THE BOUND DOMINATES IT
+## CR-47 P1-P6 VERDICT: NEWEST-FIRST WORKS, AND THE BOUND IS THE CHEAPEST OF ITS EQUALS
 
 Job 9448647 (full tier, 32 blocks a point) closes every limb registered in `hopper/batteries/lifo.sh`.
 Read with `tools/ar_survey.py`, paired by block, gated at |t| > 1.70 with the capacity-anchored rate
@@ -5293,6 +5293,10 @@ needs a semantic field in the message. Newest-first needs no message change but 
 14 to 19 requests. The bound needs no message change, starves nothing, and its setting is a closed
 form in quantities a program office already has. **The recommendation is the bound**, and P4 is why
 it is a recommendation rather than a list: the levers substitute, so stacking them buys nothing.
+The word for that relation is not "dominates", which adversarial review struck out and correctly:
+the three gaps at n=16 are 0.0014, 0.0012 and 0.0026 served per step, all inside one materiality
+floor of 0.0090, so they are throughput-equivalent and the ladder is a price list among equals.
+Two of the prices in that list were also wrong, and are corrected below.
 
 ---
 
@@ -5381,3 +5385,66 @@ silently into a second where it does not hold". At `service_cv = 0` drawing befo
 choice at all, because there is nothing to foresee; the moment variability was added it became one,
 and nothing in the code marked the transition. Three of the seven are now mine and all three were
 caught by reading a number that was too good and going to the source instead of to the manuscript.
+
+---
+
+## FABLE ROUND 24: TWO CORRECTIONS THAT COST A PUBLISHED SENTENCE EACH
+
+Both were confirmed against the source before being accepted, and both had already reached the
+manuscript.
+
+**1. The partition has four bins, not two, so CR-54 as registered was wrong.** A claimed slot exits
+`_drain_buffer` four ways: serviced, stale, a reply the downlink dropped, and a reply that arrived
+after its requester had gone. My registered identity had only the first two. Worse, `n_abandon_queue`
+and `n_abandon_link` cannot be substituted for the missing bins, because each of them also
+increments on paths where no slot was claimed at all: a head-of-line refusal claims nothing, and an
+uplink loss never reaches the console. The identity was therefore **not auditable from the counters
+as logged**, and the battery would have read a residual it could not attribute.
+
+The reviewer also disposed of my one defence. I had argued that the identity is not a tautology
+because `requests_per_step` is inflated by retries, so `stale_frac`'s denominator is a different
+population. That is algebraically empty: `stale_frac * requests_per_step` is `n_stale / steps` and
+`n_request` cancels. The identity is not a tautology, but for a different reason: it is a partition
+whose bins were not all being counted.
+
+`n_worked_lost` and `n_worked_late` now count only the consuming paths. Smoke-tested at n=16 on one
+seed, the four bins close against `mu * utilization` to within 0.0011 in all five arms, and the
+residual is the service still in progress when the mission clock stops, which is one of the three
+leaks the reviewer named in advance.
+
+**2. Mean backlog is the wrong unit for starvation, and the manuscript's claim is backwards.** I
+wrote that newest-first buys its throughput by starving the tail, and priced it at a mean backlog of
+146 requests against oldest-first's 132. The reviewer's objection was that 146 zombies measure
+memory rather than harm, and that newest-first starves *requests* while a starved requester re-asks
+and its new request lands on top of the pile it was buried under, so the *vehicles* may be fine.
+
+They are more than fine. Measured on one seed at sixteen assets with the new `starved_frac` (asked
+at least once, never once answered):
+
+    oldest-first  0.812      newest-first  0.000
+    random        0.500      bound k*=2    0.000
+                             admission     0.000
+
+and the mean per-vehicle answered-over-asked rate runs 0.009, 0.023, 0.409, 0.394, 0.395 in the same
+order. **Newest-first starves nobody, and has the highest per-vehicle answer rate of the five.** It
+is oldest-first that abandons four fifths of the force. The manuscript paragraph has the sign of the
+harm claim inverted and will be rewritten against the full-tier battery rather than patched.
+
+**3. The finding is utilization invariance, and that is a better sentence than any of mine.** The
+five arms run the console at 0.994, 0.994, 0.994, 0.985 and 0.983 utilization. The console is flat
+out under every policy. So the sixty-fold spread in delivered service is **composition, not effort**,
+and no amount of working the operator harder is available as a lever. That is the one-line version
+of everything CR-47 and CR-48 measured, and it is registered as P6 of the rewritten battery.
+
+**4. Accepted without argument.** "Dominates" is struck: the three levers' gaps sit inside one
+materiality floor and the relation is a price list among equals. "10 of 10 argmaxes" is inflated as
+stated and needs the sharp-cell count, meaning the subset of cells whose plateau is at most two wide.
+P3's one-span miss is the already-documented optimistic bias in `n*` recurring, not a new mystery,
+and `k*` is separable from it because one is cycle arithmetic carrying `tau` and `d` and the other is
+deadline arithmetic carrying neither.
+
+**5. Declined, with reasons.** The reviewer's headline recommendation is a cross-tier confirmation
+against ProjectGL itself, on the grounds that the sponsor's blocked decision is "may I act on this
+simulator at all" and that zero cross-tier points exist. That is the right experiment and it is not
+ours to run: ProjectGL is Government-furnished and not in hand. It is recorded as the top ask for the
+sponsor rather than as a battery. The reviewer's own named fallback, CR-46 v2, stays in the backlog.

@@ -121,6 +121,17 @@ ROWS = [
      "\\textsc{held}: the deterministic answer stays inside the variable server\'s plateau in "
      "\\QcapCvCells{} of \\QcapCvCells{} cells, and the lever loses value without approaching "
      "a sign change"),
+    ("the admission test uses only what the console can know",
+     "(instrument: a variable service time drawn before the feasibility test)",
+     "\\textsc{repaired}: it tested the deadline against the realized draw, so the console "
+     "accepted precisely the decisions that happened to be quick, and the service it gained that "
+     "way belongs to a triage capability rather than to a deadline field; guarded by "
+     "\\texttt{admit\\_foresight}, which now makes the two consoles separate arms and defaults "
+     "to the one that tests against the mean"),
+    ("newest-first works because it breaks first-come-first-served",
+     "a random-order console that recovers what newest-first recovers",
+     "\\textsc{refuted}: random order recovers \\LvRandShare\\% of it, so the mechanism is the "
+     "age of the work in service and not the order"),
 ]
 
 

@@ -18,8 +18,27 @@
 # The three working levers each drive it to near zero by a different route, which is why they
 # substitute (CR-47 P4) rather than stack.
 #
-#   P1 confirmation: the identity closes. |LHS - RHS| < 2 * the gate's materiality floor at every
-#     cell, and the residual is not ordered by arm (no arm systematically over- or under-shoots).
+# v2, AFTER ADVERSARIAL REVIEW AND BEFORE ANY FULL-TIER ROW WAS READ. Two corrections, both from
+# the reviewer, both confirmed against the source rather than accepted:
+#
+#   (a) THE PARTITION HAS FOUR BINS, NOT TWO. A claimed slot exits as serviced, as stale, as a reply
+#   the DOWNLINK dropped, or as a reply that arrived after its requester had gone. `n_abandon_queue`
+#   and `n_abandon_link` cannot stand in for the last two, because each also counts paths where no
+#   slot was claimed at all. `n_worked_lost` and `n_worked_late` were added for exactly this and the
+#   battery reads them as rates.
+#
+#   (b) MEAN BACKLOG IS THE WRONG UNIT FOR STARVATION. It counts requests that never leave, which is
+#   a memory statistic, and under newest-first a starved requester re-asks and its new request lands
+#   on top of the pile it was buried under, so the requests starve and the VEHICLES may not.
+#   `starved_frac` (asked at least once, never once answered) and `answer_rate_v` are the harm
+#   statistics and are read here for the first time.
+#
+#   The reviewer also timestamped a prediction against P1, recorded here before the run: the
+#   residual is rank-ordered fifo ~ rand > lifo > admit, peaks at n = 6 to 10, and nearly closes at
+#   n = 16.
+#
+#   P1 confirmation: the identity closes on FOUR bins. |LHS - RHS| < 2 * the gate's materiality
+#     floor at every cell, where LHS is served + stale + worked_lost + worked_late.
 #   P2 open: stale_frac at n=16 clear is ordered fifo > rand >> lifo > bound > admit, and the
 #     ordering of served_per_step is its exact inverse at every span.
 #   P3 open: the three working levers are TOST-equivalent to each other on served_per_step at
@@ -28,6 +47,14 @@
 #     ABOVE fifo, because the requests it never serves are the ones that never leave.
 #   P5 open: on a C3 link the identity still closes but the split moves, because utilization itself
 #     falls and there is less capacity to misspend.
+#   P6 open, AND IT IS THE ONE THAT CAN COST A PUBLISHED SENTENCE: operator_utilization is
+#     INVARIANT across the five arms at n >= 8, within one materiality floor. If it is, then the
+#     spread in delivered service is composition and not effort, and that is the sentence rather
+#     than any of the per-arm numbers.
+#   P7 open, and it contradicts a paragraph already in the manuscript: newest-first does NOT starve
+#     vehicles. starved_frac is near zero under newest-first, the bound and admission control, and
+#     LARGE under oldest-first and random order, so the manuscript's "throughput bought by starving
+#     the tail" is backwards and the backlog figure it cites is measuring zombie requests.
 #
 # FALSIFIER for P1, which is the only limb that can void the framing: if the identity misses by more
 # than 2 * MPE at more than 2 of the cells, or if the residuals are rank-ordered by arm, then
@@ -38,7 +65,9 @@ CD='"control_mode":"direct","queue_model":"buffer"'
 AD='"queue_policy":"admit"'
 LI='"queue_discipline":"patient_first"'
 
-for M in served_per_step requests_per_step stale_frac operator_utilization backlog_mean; do
+for M in served_per_step stale_per_step worked_lost_per_step worked_late_per_step \
+         worked_per_step operator_utilization starved_frac answer_rate_v \
+         requests_per_step stale_frac backlog_mean; do
 echo "### K1 the five levers, clear link ($M)"
 $PY tools/ar_eval.py $S --metric $M $B --sweep 'n_blue=4,5,6,8,10,12,16' \
   --arm "fifo={$CD,\"comms_level\":0}" \

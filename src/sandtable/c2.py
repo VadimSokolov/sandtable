@@ -173,6 +173,17 @@ class Operator:
     n_serviced: int = 0            # ... that came back with an operator decision
     n_abandon_queue: int = 0       # ... that reached the operator but could not be served in time
     n_abandon_link: int = 0        # ... that the link dropped
+    # A CLAIMED SLOT exits through four bins, not two, and the two counters above cannot see the
+    # difference because each of them also increments on paths where no service was spent (a
+    # head-of-line refusal claims nothing; an uplink loss never reaches the console). Auditing where
+    # a busy console's time actually goes needs the consuming paths counted separately, so:
+    n_worked_lost: int = 0         # slot spent, then the DOWNLINK dropped the reply
+    n_worked_late: int = 0         # slot spent, and the reply arrived after the requester had gone
+    # Per-vehicle answer bookkeeping, for starvation. Mean backlog counts requests that never leave,
+    # which is a memory statistic; whether any VEHICLE goes unanswered is the harm statistic, and
+    # under newest-first they need not be the same thing, because a re-ask lands on top of the pile.
+    n_ask_v: np.ndarray = None
+    n_ans_v: np.ndarray = None
     decision_cooldown_seed: np.ndarray = None   # staggered starting phases, when opted in
     # Operator-load accumulators (CR-7). Read out by `metrics.compute`; every one of them is a
     # by-product of state this model already carried, so nothing here changes any decision.
@@ -294,6 +305,8 @@ def build_c2(scn: Scenario, ent: Entities,
         raise ValueError(f"stall_decay must lie in [0, 1], got {op.stall_decay}")
     op.cadence_rate = np.ones(ent.n)
     op.req_seq = np.zeros(ent.n, dtype=int)
+    op.n_ask_v = np.zeros(ent.n, dtype=int)
+    op.n_ans_v = np.zeros(ent.n, dtype=int)
     # Heterogeneous patience (CR-46). A mixed fleet does not wait the same length of time: an air
     # vehicle orbiting a target has a long window before its request is stale, a ground vehicle
     # halted in contact has a short one. The guard is the `retry_spread` lesson applied in advance:
@@ -646,11 +659,13 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
                 continue
             if not down_ok:
                 op.n_abandon_link += 1
+                op.n_worked_lost += 1                 # the slot was spent; the reply was not
                 _give_up(op, ent, i, arrive, int(op.patience_v[i]), rng)
                 continue
             if reply > deadline:  # worked, and answered too late. `blind` always; an admitting
                                   # console only when it admitted on the mean and the draw overran
                 op.n_abandon_queue += 1
+                op.n_worked_late += 1
                 _give_up(op, ent, i, arrive, int(op.patience_v[i]), rng)
                 continue
             ent.await_until[i] = int(math.ceil(reply))
@@ -661,6 +676,7 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
             op.resolved_quality[i] = q
             op.waits.append(float(reply - arrive))
             op.n_serviced += 1
+            op.n_ans_v[int(i)] += 1
             op.retry_streak[i] = 0
             if op.admit_response == "aimd":
                 op.cadence_rate[i] = min(1.0, op.cadence_rate[i] + _AIMD_ALPHA)
@@ -835,6 +851,7 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
             # Until then the requester waits on its own deadline, so a request that is never picked
             # up costs exactly what an unanswered one always cost.
             op.n_request += 1
+            op.n_ask_v[int(i)] += 1
             if k >= op.late_from:
                 op.n_request_late += 1
             op.req_seq[i] += 1
@@ -859,6 +876,7 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
         down_ok = comms.reply_survives(rng, done - k)
         link_ok = op.ew_immune or (up_ok and down_ok)
         op.n_request += 1
+        op.n_ask_v[int(i)] += 1
         late = k >= op.late_from
         if late:
             op.n_request_late += 1
@@ -889,11 +907,13 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                     # that cannot foresee its own service. The slot was claimed above, which is
                     # the point: it is spent either way. Unreachable at `service_cv = 0`.
                     op.n_abandon_queue += 1
+                    op.n_worked_late += 1
                     _give_up(op, ent, int(i), k, int(op.patience_v[i]), rng)
                     ent.control_quality[i] = op.q_stall
                     continue
                 op.waits.append(float(wait))          # attention-switching wait, serviced only
                 op.n_serviced += 1
+                op.n_ans_v[int(i)] += 1
                 op.retry_streak[i] = 0        # answered, so the doubling rule resets
                 if op.admit_response == "aimd":   # additive increase on a good answer (CR-26)
                     op.cadence_rate[i] = min(1.0, op.cadence_rate[i] + _AIMD_ALPHA)
