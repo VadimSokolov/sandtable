@@ -249,13 +249,31 @@ def main() -> None:
         except SystemExit:
             continue
         pts = ["6", "8", "10", "12", "16"]
-        names = {0: "cap_zero", 1: "cap_one", 2: "cap_two", 3: "cap_three"}
+        # The FULL ladder, not the four rungs nearest the answer. Searching an argmax over a
+        # truncated ladder is a way of being right by construction, and an earlier version of this
+        # script did it: `names` stopped at three, so a cap of six could never have won even if it
+        # had. Every capacity the battery ran is now a candidate.
+        names = {0: "cap_zero", 1: "cap_one", 2: "cap_two", 3: "cap_three", 4: "cap_four",
+                 5: "cap_five", 6: "cap_six", 10: "cap_ten"}
         idx = {p: i for i, p in enumerate(pts)}
-        arg = [max((c for c in names if names[c] in lv),
-                   key=lambda c: lv[names[c]][idx[p]]) for p in pts]
+        have = [c for c in names if names[c] in lv]
+        arg = [max(have, key=lambda c: lv[names[c]][idx[p]]) for p in pts]
+        # A cell whose plateau is wide cannot discriminate between rules, so counting argmax hits
+        # over such cells inflates the claim: the argmax there is chosen by rounding. A cell is
+        # SHARP when at most two capacities sit within one material effect of the best, and the
+        # honest statement is the hit rate over the sharp cells plus how many cells were sharp.
+        def st_plateau(p):   # named apart from the module-level `plateau`, which is the lam scan
+            best = max(lv[names[c]][idx[p]] for c in have)
+            return [c for c in have if lv[names[c]][idx[p]] >= best - MPE]
+        widths = [len(st_plateau(p)) for p in pts]
+        sharp = [i for i, w in enumerate(widths) if w <= 2]
         out += [(f"StQcap{tag}Argmax", "/".join(str(a) for a in arg)),
                 (f"StQcap{tag}Hit", f"{sum(1 for a in arg if a == kstar)}"),
                 (f"StQcap{tag}Spans", f"{len(pts)}"),
+                (f"StQcap{tag}Sharp", f"{len(sharp)}"),
+                (f"StQcap{tag}SharpHit", f"{sum(1 for i in sharp if arg[i] == kstar)}"),
+                (f"StQcap{tag}SoleWidth", f"{sum(1 for w in widths if w == 1)}"),
+                (f"StQcap{tag}WidestPlateau", f"{max(widths)}"),
                 (f"StQcap{tag}Best", f"{lv[names[kstar]][idx['16']]:.4f}"),
                 (f"StQcap{tag}None", f"{lv['cap_none'][idx['16']]:.4f}"),
                 (f"StQcap{tag}Ratio", f"{lv[names[kstar]][idx['16']] / max(lv['cap_none'][idx['16']], 1e-9):.0f}")]

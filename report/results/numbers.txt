@@ -1867,3 +1867,13 @@ The four levers and the random-order control (source: tools/make_lever_numbers.p
   LvJamFour = +0.0000
   LvSubSixteen = -0.0034
   LvSubEight = -0.0065
+
+Sharp-cell counts for the capacity rule (source: tools/make_qcap_numbers.py over st-qcap-9448688.out), 2026-08-23
+  StQcapClearSharp = 5
+  StQcapClearSharpHit = 5
+  StQcapClearSoleWidth = 1
+  StQcapClearWidestPlateau = 2
+  StQcapJamSharp = 4
+  StQcapJamSharpHit = 4
+  StQcapJamSoleWidth = 4
+  StQcapJamWidestPlateau = 8
