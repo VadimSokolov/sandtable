@@ -5293,3 +5293,42 @@ needs a semantic field in the message. Newest-first needs no message change but 
 14 to 19 requests. The bound needs no message change, starves nothing, and its setting is a closed
 form in quantities a program office already has. **The recommendation is the bound**, and P4 is why
 it is a recommendation rather than a list: the levers substitute, so stacking them buys nothing.
+
+---
+
+## CR-54. THE CONSOLE'S CAPACITY IS CONSERVED, AND POLICY ONLY DECIDES HOW IT IS SPENT
+
+Registered 2026-08-23, before the run, against `hopper/batteries/capacity.sh`.
+
+CR-47's G1 sweep carried an arm I had put in as a control and then nearly failed to read. **Random
+service order recovers almost nothing.** At n=16 on a clear link, oldest-first delivers 0.0023
+served/step, random 0.0100 (gated up at n=10 and n=12 but TOST-equivalent to zero at n=16),
+newest-first 0.1464, the derived bound 0.1476, admission control 0.1490. Random buys about five
+percent of what the working levers buy.
+
+That kills the obvious explanation. If the mechanism were "FIFO is a rigid order and any shake-up
+helps," random would work. It does not. So the mechanism is not the order, and the four results that
+looked like four separate findings are one finding seen from four sides.
+
+**The proposed mechanism is an accounting identity.** Every step the console is busy goes to exactly
+one of two bins: a request someone is still holding for, or a request whose requester has already
+given up and asked again. `metrics.py` counts them separately as `n_serviced` and `n_stale`, so
+
+    served_per_step + stale_frac * requests_per_step = mu * operator_utilization
+
+If that closes, the design problem has one degree of freedom and not four. Oldest-first maximises
+the wasted fraction by construction, because the oldest request is the one most likely to have
+expired. Random draws it at the population rate, which under overload is most of the queue, which is
+why it barely helps. The three working levers each drive it toward zero by a different route: refuse
+the work, serve the freshest, or never let the queue get deep enough for anything in it to be old.
+CR-47 P4 already showed they substitute rather than stack, and this is why.
+
+**Falsifier.** P1 is the only limb that can void the framing. If the identity misses by more than
+2 x MPE at more than two cells, or if the residuals are rank-ordered by arm, then service is leaking
+somewhere these two counters do not see, and the one-degree-of-freedom claim is retracted rather
+than patched. P2 through P5 are open predictions about the ordering, the equivalence of the three
+working levers, their disagreement on backlog, and the behaviour of the split on a degraded link.
+
+This is registered as an identity rather than a hypothesis on purpose. An identity that closes is
+not a discovery, it is a licence: it says the four levers cannot be independently optimised, and it
+tells a program office which single quantity to instrument.
