@@ -82,24 +82,24 @@ ROWS = [
      "\\textsc{cut} before running, on adversarial review"),
     ("jitter arms hold their mean",
      "(instrument, not a claim)",
-     "\\textsc{repaired}: guard checked width, not the realized mean"),
+     "\\textsc{repaired}: guard checked width, not the realized mean; guarded by a fixture that asserts the realized fleet mean, not the spread that was asked for"),
     ("contribution pointers all resolve",
      "(instrument, not a claim)",
-     "\\textsc{repaired}: the checker truncated long lists"),
+     "\\textsc{repaired}: the checker truncated long lists; guarded by the pre-flight audit, which now resolves every pointer rather than the first few"),
     ("a scattered arrival stream reads one",
      "(instrument, not a claim)",
-     "\\textsc{repaired}: a gated stream does not, and the null moves with dwell and rate"),
+     "\\textsc{repaired}: a gated stream does not, and the null moves with dwell and rate; guarded by a null computed from the run's own dwell and rate rather than assumed to be one"),
     ("the stop-dead cliff has a closed form in route, speed and clock",
      "a separating hold more than 0.05 from the prediction, or one that moves with span",
      "\\textsc{refuted} on both, in three registrations declared final in advance; "
      "the threshold tracks span, so the console decides it"),
     ("the burstiness window belongs to the channel",
      "(instrument, not a claim)",
-     "\\textsc{repaired}: benched against an injected cohort, it belongs to the mechanism"),
+     "\\textsc{repaired}: benched against an injected cohort, it belongs to the mechanism; guarded by that bench, which any change to the statistic must still pass"),
     ("queue discipline moves nothing at the console",
      "(instrument: there is no queue to order)",
      "\\textsc{void-unreachable}: service is committed at ARRIVAL, so a discipline can only "
-     "permute same-step arrivals, and where those are common the console is already saturated"),
+     "permute same-step arrivals, and where those are common the console is already saturated; guarded by a fixture pinning the reservation path bit-identical, so a real queue cannot be added without the difference showing"),
     ("the console's backlog has a closed-form size",
      "an argmax outside $\\{1,2\\}$ at the published point, or one that ignores patience",
      "\\textsc{held}: $k^{\\star}=2$ is the argmax at three spans, and the unbounded buffer it "
@@ -115,7 +115,7 @@ ROWS = [
     ("a queue rule derived for exponential service transfers to this console",
      "(instrument: the server does not draw its service times)",
      "\\textsc{repaired}: the console is $M/D/1$, so the correction term is the residual of a "
-     "deterministic service and not the skew of an Erlang"),
+     "deterministic service and not the skew of an Erlang; guarded by a service-variability sweep that now runs the whole family from a metronome to an exponential server"),
     ("every closed form here was derived on a metronome",
      "an answer that leaves the plateau, or a lever that changes sign, at exponential service",
      "\\textsc{held}: the deterministic answer stays inside the variable server\'s plateau in "
@@ -129,6 +129,12 @@ def main() -> None:
              "\\toprule",
              "registered claim & falsifier declared before the run & outcome \\\\",
              "\\midrule"]
+    # Adversarial review's criterion, enforced here rather than remembered: a defect earns
+    # its place in the table only if it can name the guard that makes its recurrence
+    # impossible. A row that cannot is a war story, and war stories get cut.
+    for r in ROWS:
+        if "instrument" in r[1] and "guarded by" not in r[2]:
+            raise SystemExit(f"instrument row names no guard, so it does not ship: {r[0]!r}")
     lines += [" & ".join(r) + " \\\\" for r in ROWS]
     lines += ["\\bottomrule", "\\end{tabular}"]
     out = ROOT / "report" / "gen" / "tab_ledger.tex"

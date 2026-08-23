@@ -341,3 +341,36 @@ def test_the_margin_is_the_gates_own_floor_and_is_capacity_anchored_for_rates():
 
     assert margin("served_per_step", base=0.02) == rate_floor()
     assert margin("success", base=0.5) == pytest.approx(0.06 * 0.5)
+
+
+def test_an_instrument_row_without_a_guard_does_not_ship():
+    """The ledger's own criterion, enforced rather than remembered. A recorded defect earns its
+    place only if it names the guard that makes recurrence impossible; without one it is a war
+    story."""
+    import sys as _sys
+    from pathlib import Path as _P
+
+    _sys.path.insert(0, str(_P(__file__).resolve().parent.parent / "tools"))
+    import make_ledger
+
+    saved = make_ledger.ROWS
+    try:
+        make_ledger.ROWS = [("a defect with no guard", "(instrument, not a claim)",
+                             "\\textsc{repaired}: and nothing stops it happening again")]
+        with pytest.raises(SystemExit, match="names no guard"):
+            make_ledger.main()
+    finally:
+        make_ledger.ROWS = saved
+    make_ledger.main()          # and the real table still builds
+
+
+def test_every_shipped_instrument_row_names_its_guard():
+    import sys as _sys
+    from pathlib import Path as _P
+
+    _sys.path.insert(0, str(_P(__file__).resolve().parent.parent / "tools"))
+    import make_ledger
+
+    for row in make_ledger.ROWS:
+        if "instrument" in row[1]:
+            assert "guarded by" in row[2], row[0]
