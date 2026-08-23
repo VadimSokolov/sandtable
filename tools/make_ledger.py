@@ -100,6 +100,22 @@ ROWS = [
      "(instrument: there is no queue to order)",
      "\\textsc{void-unreachable}: service is committed at ARRIVAL, so a discipline can only "
      "permute same-step arrivals, and where those are common the console is already saturated"),
+    ("the console's backlog has a closed-form size",
+     "an argmax outside $\\{1,2\\}$ at the published point, or one that ignores patience",
+     "\\textsc{held}: $k^{\\star}=2$ is the argmax at three spans, and the unbounded buffer it "
+     "replaces delivers a factor of \\QcapUnboundedGainMed{} less"),
+    ("the sizing rule is a point, and one may err on the safe side",
+     "(retracted before publication, by generating the number over the whole grid)",
+     "\\textsc{refuted}: the response is a plateau, not a peak, and which way to err reverses "
+     "with load, because a cap in requests is a different delay at each arrival rate"),
+    ("capping the request's age beats bounding the backlog",
+     "a fixed counter matching the age cap under a moving link",
+     "\\textsc{refuted}: it does, at every switching period, so the recommendation stays the "
+     "cheapest rung and the message format does not change"),
+    ("a queue rule derived for exponential service transfers to this console",
+     "(instrument: the server does not draw its service times)",
+     "\\textsc{repaired}: the console is $M/D/1$, so the correction term is the residual of a "
+     "deterministic service and not the skew of an Erlang"),
 ]
 
 
