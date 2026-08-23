@@ -5499,3 +5499,41 @@ unrelated reason first. It is the fourth thing wrong with that battery, after th
 the foresight defect, and the P1 registration whose letter was the reverse of the measurement. One
 battery, four defects, all caught before publication, and three of the four were caught only because
 something in the output looked too good or too strange to write up without reading the source.
+
+---
+
+## INSTRUMENT DEFECT 9: A RUNNING BATTERY READ THE SOURCE I WAS EDITING
+
+Found 2026-08-23, immediately after defect 8, by asking what else the same afternoon's habits could
+have broken.
+
+`hopper/sync.sh` rsyncs the working tree into `/scratch/vsokolov/sandtable-ar` with `--delete`, and
+`ar_job.sbatch` ran every battery with that directory as its working directory. A battery invokes
+`tools/ar_eval.py` once per section, so a job in flight picked up whatever source was on scratch at
+the moment each section started. Editing `c2.py` and running `./hopper/sync.sh` to launch a new
+battery therefore changed the code under two batteries that were still running, twice, on jobs
+9448824 and 9448688.
+
+The job header stamps `# code=<hash>` at start, which is the right instrument and is exactly the
+guarantee that was being broken: it asserted a hash the run had stopped keeping.
+
+**Checked before fixed, which is the correct order.** Both affected jobs were re-run locally under
+the current code for one arm each, at three blocks, and reproduced their pre-edit block values bit
+for bit: `band_blind` at eight assets gives 0.020346, 0.020887, 0.021002 on the reservation console
+and `cap_none` gives 0.038507, 0.046060, 0.038577 on the buffer one, identical to the logged values.
+The two edits in flight were `admit_foresight`, which is inert at `service_cv = 0` and both jobs are,
+and four counters, which are pure additions. So nothing was lost. That is luck about the content of
+the edits, not a property of the setup.
+
+**Fixed so it cannot recur.** Every job now copies `src`, `tools`, `scenarios`, `hopper` and
+`.autoresearch` into `runs/$SLURM_JOB_ID/` and runs from there, so `sync.sh` cannot reach it. The
+hash is stamped from the snapshot at the start and re-computed at the end, and a mismatch prints
+`### CODE CHANGED MID-RUN ... DO NOT READ THIS LOG`, which is a louder failure than the silent one it
+replaces. `sync.sh` excludes `runs`, and snapshots older than a week are swept.
+
+**Why this is a defect and not an operational slip.** The whole autoresearch contract is that a
+result is attributable to a named code state. The tamper guard checks the frozen scoring surface
+before the first measurement; the code hash records the rest. Neither was checked again afterwards,
+so a run could satisfy both at second zero and be a different experiment by section three. Two of
+the three guards this project relies on were start-of-run only, and the third, the seed list, is the
+only one that could not drift.

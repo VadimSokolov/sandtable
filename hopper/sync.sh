@@ -7,7 +7,7 @@ DEST=/scratch/vsokolov/sandtable-ar
 ssh hopper "mkdir -p $DEST/runlogs"
 rsync -az --delete \
   --exclude '__pycache__' --exclude '*.pyc' --exclude '.git' \
-  --exclude 'runlogs' --exclude 'report' --exclude 'build' \
+  --exclude 'runlogs' --exclude 'report' --exclude 'build' --exclude 'runs' \
   src tools scenarios tests experiments studies hopper .autoresearch pyproject.toml \
   hopper:$DEST/
 echo "synced to hopper:$DEST"
