@@ -6094,3 +6094,42 @@ console SERVES falls monotonically with acuity, 5.538 to 5.092 steps at sixteen 
 population mean of 6.667. Even the console that sees nothing serves 5.538, well below population,
 which is selection by attrition rather than by triage: its long draws overrun the deadline and land
 in the late bin. That distinction is the reviewer's and it is the one the paper had not named.
+
+## CR-57 D2 AND D3 VERDICT: THE ANSWER TO A DEAD FOLLOW LINK IS A TIMEOUT, NOT A RADIO
+
+Job 9449524, G1, full tier, eight assets, supervisory control, `follow_outage` forcing one refresh
+every $a+1$ steps so the track age is a sawtooth from 0 to $a$ and the channel is out of the picture.
+
+| $a$ | 0 | 20 | 40 | 80 | 160 | 320 |
+| --- | --- | --- | --- | --- | --- | --- |
+| timeout 40 (the fielded design) | 0.8872 | 0.8765 | 0.8726 | 0.8643 | 0.8613 | 0.8726 |
+| timeout infinite | 0.8872 | 0.8765 | 0.8726 | 0.8540 | 0.8232 | 0.7915 |
+
+**D3 HOLDS for the designed system and fails for the undesigned one, which is the better answer.**
+With the staleness cut-off in place, mission success moves by 0.026 across a sixteen-fold range of
+track age, inside a materiality floor of 0.06. Remove the cut-off and it falls 0.096, and the
+contrast against the cut-off arm GATES DOWN at $a = 320$ ($-0.0811$, $t = -7.68$, 27 of 32 blocks).
+The two arms are identical to the last digit for $a \le 40$, as they must be, because a cut-off of
+40 cannot fire before the track is 40 steps old, which is the internal check that the sweep is
+measuring what it says.
+
+**D2 is therefore answered against my reading and for the reviewer's, with a sign nobody registered.**
+The timeout is doing the work, and the work it is doing is protective. A follower that keeps chasing
+a dead-reckoned ghost through a five-minute outage loses 0.081 of mission success; a follower that
+gives up on the track and drives its own route loses nothing measurable. Reversion is not the
+failure mode the conjecture assumed it was. It is the mitigation.
+
+**What this makes the requirement.** CR-55 was heading for a sentence about specifying a follow radio
+on its worst-case outage duration. The measurement says that sentence is wrong twice over: the
+outage duration is mission-immaterial out to 320 steps, and what makes it immaterial is not the radio
+but the platform's own willingness to stop trusting a stale track. The requirement is on the
+behaviour, it is a single scalar, and it is free. That is the same shape as every other result in
+this paper: the lever is software, and it is cheaper than the hardware it replaces.
+
+**And the two paths are now dissociated by measurement rather than by argument.** In job 9449505, the
+link follower's station error rises from 12.99 m to 16.31 m across the ladder while its mission
+success is TOST-equivalent at every rung. Those station errors sit INSIDE the steep segment of the
+commanded-spread curve, where success falls 0.906 to 0.781 between 10 m and 40 m. So commanded
+geometry and estimator error are not the same quantity, exactly as review argued, and the composition
+CR-55 rested on is refuted by the arm it was supposed to predict. Geometry the planner asks for
+changes the mission; geometry the estimator fails to hold does not.
