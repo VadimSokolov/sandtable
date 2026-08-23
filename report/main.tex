@@ -376,15 +376,29 @@ one operator is what gives the other something to select from. Discernment's val
 span, from \FsDiscernSix{} at six assets to \FsDiscernEight{} at eight and \FsDiscernTwelve{} at
 twelve, for the same reason: triage needs something to triage away.
 
-The corollary is the one to act on, and it puts a human capability on the same requirements ladder as
-a message field. Run the same comparison with the derived backlog bound in place and discernment
-almost stops paying: it is worth \FsBoundDiscernment{} rather than \FsDiscernment{}, smaller by a
-factor of \FsBoundShrink{}, because a console holding $k^{\star}$ requests has very little left to
-choose between. The cheap structural fix substitutes for the expensive human one. That is the same
-substitution the queue discipline showed, one rung further up, and it is the more consequential
-instance: a counter in a configuration file is a procurement item, and an operator who can triage by
-difficulty is a selection and training programme. The measurement says buy the counter first, and
-then ask whether discernment is still worth what it costs.
+The corollary is the one to act on, and its direction is the reverse of what we first drew from it.
+Run the same comparison with a backlog bound in place and discernment almost stops paying: it is
+worth \FsBoundDiscernment{} rather than \FsDiscernment{}, smaller by a factor of \FsBoundShrink{},
+because a console holding $k^{\star}$ requests has very little left to choose between. We read that
+as substitution, the cheap structural fix standing in for the expensive human one, and the numbers
+underneath it do not say that. A bounded console that can triage delivers \FsBoundSeeing{} served
+per step; an unbounded one that can triage delivers \FsSeeing{}. The bound does not reach what
+discernment reaches, it forecloses most of it. What it does do is lift the console that cannot
+triage, from \FsNoisy{} to \FsBoundNoisy{}. So the counter substitutes for the operator one did not
+train and handicaps the one one did, and a program office that buys both gets less than it paid for.
+
+Two caveats belong inside that sentence rather than after it, and both are limits on the discernment
+number itself. The bounded arms carry a deadline test as well as a counter, so they price the
+counter as an addition to admission control rather than as the requirements ladder's counter-only
+rung; on a blind console the distinction is inert by construction, because the deadline test it
+changes is never reached. And a console with perfect foresight is an oracle: it sees each decision's
+exact duration before committing to it. That is an upper bound on what any real triage is worth, not
+an estimate of it, and the quantity a human-subjects arm can actually estimate is the probability
+that an operator recognises a hard request at all. \sandtable{} carries that probability, and the
+decomposition it supports, against an admission rule that refuses at random and therefore has the
+same lever with none of the information, is the measurement this section will rest on. Until it is
+made, \FsDiscernment{} should be read as a ceiling with the mechanism identified and the magnitude
+open.
 
 
 \paragraph{Two thresholds, predicted then measured.} Equation~\ref{eq:nstar} puts the collapse span at $\qNStar{}$ assets on one console and $\qNStarTwo{}$ on two, and $\ell^{\star} = \qLatCut{}$ steps puts a ceiling on serviceable latency. Figure~\ref{fig:queue}(a) and Table~\ref{tab:staffing} are the staffing curve those numbers predict. On one console the operator's goodput, the fraction of its service time that reaches a requester still waiting, is \qGoodOneSix\% at six assets and \qGoodOneEight\% at eight, so the transition brackets $\qNStar{}$. On two consoles it is \qGoodTwoTwelve\% at twelve and \qGoodTwoSixteen\% at sixteen, bracketing $\qNStarTwo{}$. On three consoles, whose predicted threshold is $\qNStarThree{}$, the queue is still healthy at sixteen (\qGoodThreeSixteen\%). Those three readings are on the ratio, and the ratio is the metric this paper has had to correct twice, so they were re-run on the delivered rate. The brackets do not move: one console serves \seSrvOneNSix{} per step at six assets and \seSrvOneNEight{} at eight, two serve \seSrvTwoNTwelve{} at twelve and \seSrvTwoNSixteen{} at sixteen, and three are still rising at sixteen (\seSrvThreeNSixteen{}). Three consoles, three brackets, each containing its own prediction, with no parameter fitted to any of them. That the $c$-scaling survives on a metric with no denominator is the part worth having, because it is the one place in this paper where the equation makes a prediction about a knob the equation was not derived from. Adding a console does not raise goodput a little at every span; it moves a cliff. Staffing and admission control are the two levers the call-center literature puts on the same congestion \citep{ibrahim2018announcements}, and they act differently here: a second console doubles the span the queue can carry, while admission control on a single console converts the cliff into a slope, holding \qGoodOneEightAdmit\% goodput at eight assets where the blind operator has fallen to \qGoodOneEight\%. The latency ceiling shows the same discipline. Because C4 and C5 both sit above $\ell^{\star}$ at the default patience, they are one rung, not two: goodput is \qPatShortCfour\% at both. Raising patience to 30 steps lifts $\ell^{\star}$ past C4's latency and C4 separates (\qPatMidCfour\%) while C5 stays dead (\qPatMidCfive\%); at patience 45 both resolve (\qPatLongCfive\% at C5). The cut-off is a property of the requester's patience, not of the link.
@@ -414,15 +428,30 @@ over the same five spans \KpClearSrvSpread{}, a factor of \KpClearRatio{}. The c
 in all five cases and it is saturated to the same degree; nothing any of these policies does makes
 the operator work harder or less hard. What they change is the composition of a fixed quantity, and
 the whole of the span-of-control result in this section is a statement about that composition rather
-than about capacity. It follows that no amount of working the operator harder is available as a
-lever, which is worth saying plainly to a program office that has been offered training as the
-answer.
+than about capacity. It follows that working the operator harder is not available as a lever, which
+is worth saying plainly to a program office that has been offered training as the answer.
+
+Three scope conditions belong on that sentence, because without them it says more than the
+measurement does. It is about INTENSITY and not about capacity: how fast the console works is a
+different parameter, it is a lever, and this paper prices it at one discipline change. It is about a
+SATURATED console: below the collapse span the console is demand-limited and idle time is real, so
+the invariance is a property of the regime the span-of-control question lives in rather than of the
+model. And the four bins count decisions, which is a faithful measure of effort only while every
+decision costs the same. Once service times vary, a console admitting on a deadline test finishes
+short decisions and refuses long ones, so decisions per busy step rises with nothing added to the
+console; time cannot be selected that way, and the invariance is stated here in the unit that
+cannot. The constant-service consoles this section reports are the case where the two units agree.
 
 The same accounting names a loss that no lever in this paper touches, and it is large where the
 paper's advice is weakest. At C3 the best-performing console spends \KpJamLostAdmit{} served per
 step, roughly a fifth of its total effort, on decisions it completed and whose replies the downlink
 then dropped. That slot is gone, the requester is not served, and no queue discipline, bound or
-admission rule can recover it, because the loss happens after the console has finished. It is the
+admission rule can recover it, because the loss happens after the console has finished. One modeling
+choice sets the size of that bin and should be stated with it: replies in \sandtable{} are sent
+once, with no retransmission and no cache, so the number is the cost of a link with no reply-side
+protocol at all. A console that resent a dropped reply would pay for it in service time rather than
+in lost decisions, which moves the loss between bins instead of removing it, but the split is not
+one this study measured and the bin should be read as an upper bound on what reply transport costs. It is the
 reason the C3 ceiling in Figure~\ref{fig:queue} sits where it does, and it is a communications
 requirement rather than a teaming one. Separating it out matters for how the section's advice should
 be read: the levers priced here divide up the console's time, and at a bad enough link the binding

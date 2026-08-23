@@ -154,8 +154,10 @@ ROWS = [
     ("the admission test uses only information a message field could carry",
      "(instrument: separating the test against the mean from the test against the draw)",
      "\\textsc{repaired and priced}: with them separated, discernment is worth "
-     "\\FsDiscernment{} served per step against consistency's \\FsConsistency{}, and the "
-     "derived bound shrinks discernment's value by a factor of \\FsBoundShrink{}; guarded by "
+     "\\FsDiscernment{} served per step against consistency's \\FsConsistency{}, read as a "
+     "ceiling because the foreseeing console is an oracle, and a backlog bound forecloses "
+     "rather than substitutes for it, holding a triaging console to \\FsBoundSeeing{} against "
+     "\\FsSeeing{} unbounded; guarded by "
      "\\texttt{admit\\_foresight}, which defaults to the console a deadline field can build"),
     ("a battery measures the console its conjecture was registered against",
      "(instrument: a shared default that predates the second console)",
