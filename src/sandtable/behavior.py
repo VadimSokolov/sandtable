@@ -61,6 +61,7 @@ class Behavior:
     trk_age: np.ndarray           # int32: steps since the track was last refreshed
     topology: str                 # "star" | "chain": what a follower stations on
     sense_range: float            # metres a behaviour follower can see the vehicle ahead
+    outage: int                   # forced refresh interval: track age sawtooths 0..outage
     trk_err_sum: np.ndarray       # float per entity: summed |track - truth| over followed steps
     trk_steps: np.ndarray         # int32 per entity: follower steps with a reference to hold
     trk_stale_steps: np.ndarray   # int32 per entity: follower steps running on a dead-reckoned track
@@ -120,6 +121,12 @@ def build_behavior(scn: Scenario, ent: Entities) -> Behavior | None:
             "follow_topology",
             "star" if str(scn.params.get("follow_mode", "behavior")) == "link" else "chain")),
         sense_range=float(scn.params.get("follow_sense_range", 250.0)),
+        # The disturbance measured in its own coordinate (CR-57). A channel produces outages of a
+        # DISTRIBUTION; a specification is written about a LENGTH. With `follow_outage = a` the
+        # refresh arrives once every a+1 steps whatever the channel is doing, so the track age is a
+        # sawtooth from 0 to a with mean a/2, exactly and by construction. Zero leaves the channel
+        # in charge and is bit-identical to the path measured before this existed.
+        outage=int(scn.params.get("follow_outage", 0)),
         trk_err_sum=np.zeros(n), trk_steps=np.zeros(n, np.int32),
         trk_stale_steps=np.zeros(n, np.int32), trk_lost_steps=np.zeros(n, np.int32),
         st_err_sum=np.zeros(n), st_steps=np.zeros(n, np.int32),
@@ -153,7 +160,7 @@ def step(ent: Entities, bhv: Behavior, op, comms, scn: Scenario, k: int,
         hold = blue_ground.copy()
 
     elif bhv.mode == LEADER_FOLLOW:
-        _follow(ent, bhv, comms, scn, rng, blue_ground)
+        _follow(ent, bhv, comms, scn, k, rng, blue_ground)
 
     d = np.abs(ent.heading - bhv.prev_heading)
     d = np.minimum(d, 2 * np.pi - d)          # wrapped, so a heading crossing pi is not a half turn
@@ -186,7 +193,7 @@ def _predecessor(ent: Entities, bhv: Behavior, i: int) -> int:
     return ldr
 
 
-def _follow(ent: Entities, bhv: Behavior, comms, scn: Scenario,
+def _follow(ent: Entities, bhv: Behavior, comms, scn: Scenario, k: int,
             rng: np.random.Generator, blue_ground: np.ndarray) -> None:
     """Refresh each follower's picture of the vehicle it stations on (CR-3, instrument defect 10).
 
@@ -219,7 +226,9 @@ def _follow(ent: Entities, bhv: Behavior, comms, scn: Scenario,
             bhv.state[i] = WAYPOINT
             continue
         bhv.trk_steps[i] += 1
-        if bhv.follow_mode == "link":
+        if bhv.outage > 0:
+            got = (k % (bhv.outage + 1)) == 0
+        elif bhv.follow_mode == "link":
             got = got_link
         else:
             got = float(np.hypot(ent.x[ref] - ent.x[i],

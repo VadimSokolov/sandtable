@@ -41,7 +41,7 @@ promotion criteria in the integrity rule.
 | C8 | **CONFIRMED AT FULL TIER.** **Congestion collapse by unrefunded abandonment.** The operator spends a service slot on every request it receives, including requests whose answer will arrive after the requester has given up. At large span the offered load exceeds capacity, almost every request is abandoned, and packet loss then acts as unintended admission control. Explicit admission control should remove the interior optimum and dominate at every rung. | **confirmed, full tier, 32 blocks x 64 reps** | |
 | C9 | **Fan-out overpredicts.** The Olsen-Goodrich duty-cycle capacity `1 + NT/IT`, measured from SandTable's own hold durations, exceeds the span at which measured mission success actually peaks, and the gap widens with jamming. | instrumented (CR-11), untested | |
 | C4 | Correcting teleoperation stop semantics (CR-2) moves the crossover toward cleaner links, because a severed-link teleoperated vehicle currently keeps driving at 54.5% speed. | queued | |
-| C5 | A behaviour-based follower (on-platform dead reckoning) degrades less than a link-based follower as the ladder worsens, matching the sign of Cheung et al. 2022 at mission rather than path-error level. **The only lever in this paper that acts on the platform rather than the console, so the one that can COMPOSE with admission control instead of substituting for it.** | registered CR-55, battery queued | |
+| C5 | A behaviour-based follower (on-platform dead reckoning) degrades less than a link-based follower as the ladder worsens, matching the sign of Cheung et al. 2022 at mission rather than path-error level. Restated twice: first as a transfer threshold (CR-55), then, after review found the threshold was the instrument's own timeout, as a direct sweep of track age (CR-57). | CR-55 A3 withdrawn; CR-57 registered | |
 | C6 | Network robustness (r-robustness) and algebraic connectivity rank the same formations differently, so a formation tuned for connectivity is not thereby robust. | queued (CR-8) | |
 
 ## Log
@@ -5951,3 +5951,76 @@ third, and the remaining two thirds requires knowing this request's difficulty.*
 FALSIFIER for the section, not just the prediction: if random refusal at its best rate recovers more
 than half the foresight gain, the discernment result is an admission-rate artefact, the section comes
 out of the paper, and what survives is a sentence saying admission rate was the confound.
+
+## CR-55 A3 IS CONTAMINATED BY MY OWN TIMEOUT, AND THE SPREAD SLOPE WAS READ OFF THE WRONG SEGMENT
+
+Recorded while 9449505 is still running, so that the prediction is corrected before its data arrives
+rather than after. Two errors, both mine, both found by the reviewer.
+
+**A3's window is not a prediction, it is a parameter.** I registered the transfer threshold at 40 to
+120 steps of outage. Neither of my own laws puts it there. The quadratic $v \omega a^2 / 2$ reaches
+the band where mission outcome responds only at $a \approx 200$; the measured error table, which is
+LINEAR in mean bad-run rather than quadratic, needs about 600. The number 40 is `track_timeout`
+echoing back at me: past it the follower stops following, so of course something changes there. A
+window derived from the instrument's own cut-off cannot be evidence about the world.
+
+**The quadratic and the measurement disagree, and the reconciliation is the interesting part.**
+Pilot track error runs 0.19, 1.18 and 2.81 m at mean bad-run 4, 20 and 60, which is linear within
+25% and misses the quadratic by a factor of 4 at 20 and 15 at 60. The reconciliation is that the
+error is quadratic only WITHIN a turn: once the reference stops turning, the heading error freezes
+and the position error accumulates linearly at $v$ times the frozen heading error. The paper's
+requirement, if it has one, rides on the turn-aligned tail rather than on the mean: outages that
+happen to straddle a turn are the ones that hurt, and at the timeout cap that tail reaches roughly
+19 m of error against a 2.81 m mean.
+
+**The spread slope was read off the plateau, not the operating point.** I wrote that mission outcome
+responds to column geometry at the scale of hundreds of metres. The sweep says the opposite where it
+matters: success falls 0.906 to 0.781 between 10 m and 40 m of commanded spread, and
+`formation_spread` defaults to 30. The steep segment IS the operating point, and the flat middle of
+that curve is what I described. The two-orders-of-magnitude gap that the whole transfer argument
+rested on is not established.
+
+**And station error is not the only path.** Past `track_timeout` a follower reverts to waypoint
+navigation, which is a discrete route-level change that no smooth composition of two slopes can
+represent. Worse for the argument and better for the paper: the reverted fleet is the scripted
+control arm, which scores 0.781 to 0.906, so reversion may be entirely benign. The honest candidate
+conclusion is therefore STRONGER than the one I registered: mission-null on both sides of the
+threshold, with the residual places for an effect to hide being mode chatter around the timeout and
+columns running in mixed modes.
+
+**What 9449505 can and cannot settle.** A1, A2 and A4 stand: they are about the estimator and the
+channel, and the estimator is measured directly. A3 is withdrawn as registered. A5 is conditional on
+A3 and falls with it.
+
+## CR-57. THE DISTURBANCE MEASURED IN ITS OWN COORDINATE
+
+The follow question has been asked through two intermediaries: a channel that produces outages of a
+distribution rather than a length, and a composition of two slopes measured on different arms. Both
+are avoidable. The disturbance is TRACK AGE, so sweep track age.
+
+`follow_outage` forces the refresh to arrive once every $a+1$ steps whatever the channel is doing, so
+the track age is a sawtooth from 0 to $a$ and the mean age is $a/2$, exactly and by construction. No
+channel model, no burst distribution, no composition. Sweeping it against mission outcome is the
+sponsor's specification axis measured in the units the specification would be written in.
+
+- **D1, the leak meter.** Run the end-to-end missions and compare the measured mission difference
+  against the one composed from the two slopes. If they agree within MPE the composition is a valid
+  shortcut and the paper may use it; if they do not, the difference is the size of every path from
+  the channel to the mission that does not run through station error, which is the quantity CR-55's
+  argument assumed was zero. Either answer is publishable, and the second is more useful.
+- **D2, threshold or slope.** Run the sweep twice, once with `track_timeout` at its default and once
+  effectively infinite. If the two curves coincide, the follow channel acts smoothly and the timeout
+  is not doing the work; if they separate, the effect is the mode transition and should be reported
+  as one, with the timeout named as the design parameter it is.
+- **D3, the null the reviewer's reading predicts.** Mission outcome is flat in $a$ across the whole
+  sweep, because a follower that cannot follow reverts to the scripted behaviour this paper measures
+  everywhere else and that behaviour is not much worse. FALSIFIER for D3: any gated separation.
+- **D4, where an effect would have to live.** If D3 holds on the mean, the residual is the turn
+  aligned tail: outages straddling a turn. Read as `station_err_mean` against `turn_rate_mean` on
+  the map axis, since the chokepoint profile turns the column most.
+
+**The registered prediction, which is the reviewer's and not mine**, is that D3 HOLDS and the follow
+channel is mission-null in this simulator at every outage length up to 320 steps. If so, CR-55's
+sentence is not a requirement but a scope boundary, and the boundary is the contribution: a
+mission-level model of this kind cannot carry a controls result about path error, and it can say by
+how much and why.
