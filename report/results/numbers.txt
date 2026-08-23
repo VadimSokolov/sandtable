@@ -579,3 +579,102 @@ P1 re-run at the benched window (source: tools/make_fanoredo_numbers.py over st-
   frMemMinT = 30
   frMemPairs = 4
   frMemRed = 3
+
+
+P1 re-run at the benched window (source: tools/make_fanoredo_numbers.py over st-fanoredo-9446726.out)
+  frExcPairs = 6
+  frExcRed = 6
+  frGeBase = 2.99
+  frGeBlocks = 32
+  frGeBlocksN = 32
+  frGeMax = -1.53
+  frGeMaxPct = -53
+  frGeMaxT = 89
+  frGeMin = -0.32
+  frGeMinPct = -20
+  frGeMinT = 27
+  frGePairs = 6
+  frGeRed = 6
+  frGoodDown = 0
+  frGoodMax = +0.051
+  frGoodPairs = 6
+  frGoodUp = 4
+  frMemBase = 1.46
+  frMemBlocks = 32
+  frMemBlocksN = 32
+  frMemMax = -0.35
+  frMemMaxPct = -24
+  frMemMaxT = 52
+  frMemMin = -0.23
+  frMemMinPct = -18
+  frMemMinT = 30
+  frMemPairs = 4
+  frMemRed = 3
+
+
+P1 re-run at the benched window (source: tools/make_fanoredo_numbers.py over st-fanoredo-9446726.out)
+  frExcPairs = 6
+  frExcRed = 6
+  frGeBase = 2.99
+  frGeBlocks = 32
+  frGeBlocksN = 32
+  frGeMax = -1.53
+  frGeMaxPct = -53
+  frGeMaxT = 89
+  frGeMin = -0.32
+  frGeMinPct = -20
+  frGeMinT = 27
+  frGePairs = 6
+  frGeRed = 6
+  frMemBase = 1.46
+  frMemBlocks = 32
+  frMemBlocksN = 32
+  frMemMax = -0.35
+  frMemMaxPct = -24
+  frMemMaxT = 52
+  frMemMin = -0.23
+  frMemMinPct = -18
+  frMemMinT = 30
+  frMemPairs = 4
+  frMemRed = 3
+
+
+P1 re-run at the benched window (source: tools/make_fanoredo_numbers.py over st-fanoredo-9446726.out)
+  frDwellBlocks = 32
+  frDwellBlocksN = 32
+  frDwellFixHi = 1.419
+  frDwellFixLo = 1.227
+  frDwellGapHi = -0.325
+  frDwellGapLo = -0.164
+  frDwellHi = 240
+  frDwellLo = 7
+  frDwellMinT = 30
+  frDwellMono = 5
+  frDwellN = 6
+  frDwellResidHi = +0.0941
+  frDwellResidLo = +0.0622
+  frDwellSteps = 5
+  frExcPairs = 6
+  frExcRed = 6
+  frGeBase = 2.99
+  frGeBlocks = 32
+  frGeBlocksN = 32
+  frGeMax = -1.53
+  frGeMaxPct = -53
+  frGeMaxT = 89
+  frGeMin = -0.32
+  frGeMinPct = -20
+  frGeMinT = 27
+  frGePairs = 6
+  frGeRed = 6
+  frMemBase = 1.46
+  frMemBlocks = 32
+  frMemBlocksN = 32
+  frMemMax = -0.35
+  frMemMaxPct = -24
+  frMemMaxT = 52
+  frMemMin = -0.23
+  frMemMinPct = -18
+  frMemMinT = 30
+  frMemPairs = 4
+  frMemRed = 3

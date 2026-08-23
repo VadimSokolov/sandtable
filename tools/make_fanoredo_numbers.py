@@ -78,19 +78,42 @@ def main() -> None:
         m[f"fr{tag}BlocksN"] = str(rows[0][6])
         # The largest fix-arm Fano, which is what the jitter is working against.
         m[f"fr{tag}Base"] = f"{max(r[2] for r in rows):.2f}"
-    # The goodput at the same settings, to say whether the desynchronization is free here.
-    good = pairs(load("F1", "operator_goodput"))
-    if good:
-        m["frGoodPairs"] = str(len(good))
-        m["frGoodUp"] = str(sum(1 for r in good if r[3] > 0 and gated(r)))
-        m["frGoodDown"] = str(sum(1 for r in good if r[3] < 0 and gated(r)))
-        m["frGoodMax"] = f"{max(r[3] for r in good):+.3f}"
+    # The battery also logs operator_goodput at these settings, and it is deliberately NOT emitted.
+    # A jittered arm and a fixed arm at the same mean hold do not necessarily offer the same load,
+    # and serviced-over-requested cannot be read across arms whose asking differs. The absolute-rate
+    # re-read is CR-40 section G2; until it lands there is no readable console-cost number here, and
+    # a generator that emitted one anyway would be the same defect this paper spent a headline on.
+    good = None
     # Excess at the same window: a Fano is a variance and cannot separate many small clusters
     # from few large ones, so the multiplicity-based statistic runs alongside it.
     exc = pairs(load("F1", "arrival_excess"))
     if exc:
         m["frExcPairs"] = str(len(exc))
         m["frExcRed"] = str(sum(1 for r in exc if r[3] < 0 and gated(r)))
+
+    # F3, CR-34 P4: the residual against the channel's dwell length. Fable predicted this before
+    # the run as a free signature, meaning a consequence the account already implies and that costs
+    # nothing extra to check. A longer dwell releases a larger cohort at each recovery edge, so both
+    # the clustering and the part of it jitter cannot reach should grow with it. Monotonicity across
+    # the whole sweep is the claim, so the generator counts steps rather than quoting endpoints.
+    dw = pairs(load("F3", "arrival_excess"))
+    if dw:
+        dw.sort(key=lambda r: float(r[1]))
+        resid = [r[2] + r[3] - 1.0 for r in dw]        # jitted arm's own excess above one
+        m["frDwellN"] = str(len(dw))
+        m["frDwellLo"] = dw[0][1]
+        m["frDwellHi"] = dw[-1][1]
+        m["frDwellResidLo"] = f"{resid[0]:+.4f}"
+        m["frDwellResidHi"] = f"{resid[-1]:+.4f}"
+        m["frDwellFixLo"] = f"{dw[0][2]:.3f}"
+        m["frDwellFixHi"] = f"{dw[-1][2]:.3f}"
+        m["frDwellGapLo"] = f"{dw[0][3]:+.3f}"
+        m["frDwellGapHi"] = f"{dw[-1][3]:+.3f}"
+        m["frDwellMono"] = str(sum(1 for a, b in zip(resid, resid[1:]) if b > a))
+        m["frDwellSteps"] = str(len(dw) - 1)
+        m["frDwellBlocks"] = str(min(r[5] for r in dw))
+        m["frDwellBlocksN"] = str(dw[0][6])
+        m["frDwellMinT"] = f"{min(abs(r[4]) for r in dw):.0f}"
 
     gen = ROOT / "report" / "gen" / "fanoredo_numbers.tex"
     gen.write_text("".join(f"\\newcommand{{\\{k}}}{{{v}}}\n" for k, v in sorted(m.items())))
@@ -105,8 +128,11 @@ def main() -> None:
                   f"{m[f'fr{tag}Min']} to {m[f'fr{tag}Max']} "
                   f"({m[f'fr{tag}MinPct']}% to {m[f'fr{tag}MaxPct']}%), "
                   f"|t| {m[f'fr{tag}MinT']} to {m[f'fr{tag}MaxT']}")
-    if good:
-        print(f"  goodput: {m['frGoodUp']} up / {m['frGoodDown']} down of {m['frGoodPairs']}")
+    print("  goodput: withheld, denominator unchecked (CR-40 G2)")
+    if dw:
+        print(f"  dwell:   residual {m['frDwellResidLo']} at L={m['frDwellLo']} to "
+              f"{m['frDwellResidHi']} at L={m['frDwellHi']}, "
+              f"{m['frDwellMono']} of {m['frDwellSteps']} steps rising")
     if exc:
         print(f"  excess:  {m['frExcRed']} of {m['frExcPairs']} gated reductions")
 

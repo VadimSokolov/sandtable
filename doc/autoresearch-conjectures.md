@@ -3351,3 +3351,93 @@ with no structure, it is cross-vehicle for the reason we claim.
 
 Registered before any number from `hopper/batteries/cohsplit.sh` exists. The split is measured at the
 same window and the same arms as CR-37 so nothing but the statistic changes.
+
+---
+
+## CR-40. THE REMAINING GOODPUT SITES, RE-READ ON A METRIC NO POLICY CAN INFLATE
+
+The absrate audit's first half is in and it is worse than the triage assumed. I had reasoned that
+`refund` does not tell the requester, so it cannot change the asking. **It changes it anyway, and by
+a lot: +20.6% at n=8, +16.1% at n=10, t above 25 in both.** The channel is service, not notification.
+Freeing the slot serves more vehicles, a served vehicle completes its round trip and comes back to
+ask again, and the denominator moves without anyone being told anything. Every `refund`-versus-
+`blind` goodput number in this manuscript is therefore on a moved denominator, which is two more
+sites than the triage listed.
+
+The same audit says the underlying claim is in no danger at all, which is the useful half:
+
+| contrast, rung 0 | served/step at n=8 | requests/step at n=8 | reads |
+|---|---|---|---|
+| refund - blind | **+0.114 (+578%)** | +0.029 (+20.6%) | massive, and survives the ratio |
+| admit - refund | +0.004 (+2.8%), never gates | +0.021 (+12.7%) | the notification is not material on service |
+| aimd - admit | -0.006 (-4.6%), never gates | -0.037 (-19.4%) | serves less, asks much less |
+
+Read on the absolute rate the three levers separate cleanly and the ordering the Discussion already
+recommends gets stronger, not weaker: **discarding expired work is nearly the whole of it**, at a
+6.4-fold multiple on service rate by n=16, and the other two are not material on what the console
+delivers. That is a better sentence than the one it replaces, and it is the one the sponsor needs,
+because it says which increment to fund first in units of work done rather than of ratio moved.
+
+Two goodput sites remain unread. Both are registered here before their run.
+
+**P1. The burst interaction.** `refund - blind` on `served_per_step` is larger on the bursty link
+than on the memoryless one at n=8, gated, keeping the sign of the goodput difference in differences.
+  **FALSIFIER.** A null or a reversal on `served_per_step` **refutes** "admission control is worth
+  more, not less, as the link gets worse." The claim comes out of Section~\ref{subsec:burst} and out
+  of the Discussion, and the burst section keeps only its success-metric result.
+
+**P2. The self-collision decomposition.** `jit - fix` on `served_per_step` is positive and gated on
+the memoryless link at n=5 and n=6.
+  **FALSIFIER.** A null **refutes** the decomposition's magnitudes. The sentence "self-collision is
+  worth +X of operator goodput" is then restated on the absolute rate or withdrawn, and if the
+  absolute rate is null the mechanism keeps its Fano and multiplicity evidence but loses its console
+  cost, which is the part the recommendation rests on.
+
+**P3. The reliance-loop sign flip.** The C2 goodput difference in differences (retry on versus off,
+bursty versus memoryless) keeps its sign on `served_per_step`.
+  **FALSIFIER.** A reversal **refutes** the sign-flip claim, which is one of the older results and
+  currently reads as established.
+
+Retries change the ask by construction, so P2 and P3 are the two where a null is most likely, and
+they are registered anyway because that is the point of registering.
+
+---
+
+## CR-34 P4 VERDICT. THE FREE SIGNATURE IS THERE, MONOTONE, AND ITS SECOND HALF WAS NEVER TESTED
+
+Fable's P4: the excess residual should GROW with the channel dwell $L$ and COLLAPSE as $L$ approaches
+the service time, because a gate that opens and closes faster than a service cannot hold a cohort
+together across one. Job 9446726, section F3, six dwell levels at $n=6$, backoff 18.
+
+| $L$ | fix excess | jit excess | jit - fix | $t$ | residual, jit - 1 |
+|---|---|---|---|---|---|
+| 7 | 1.2267 | 1.0622 | -0.1645 | -52.3 | +0.0622 |
+| 15 | 1.2441 | 1.0707 | -0.1734 | -52.6 | +0.0707 |
+| 30 | 1.2685 | 1.0769 | -0.1916 | -51.9 | +0.0769 |
+| 60 | 1.2903 | 1.0789 | -0.2114 | -43.6 | +0.0789 |
+| 120 | 1.3331 | 1.0828 | -0.2503 | -39.1 | +0.0828 |
+| 240 | 1.4190 | 1.0941 | -0.3249 | -30.2 | +0.0941 |
+
+**All three columns are monotone in $L$ across all six levels, at 32 of 32 blocks everywhere.** The
+residual grows, the fixed arm's clustering grows, and the amount jitter removes grows. That is the
+growth limb of the prediction, registered by someone who had not seen the data, and it lands clean.
+It is also the strongest evidence yet that the excess statistic measures a real physical quantity
+rather than an artifact, because an artifact has no reason to be monotone in a knob it does not know
+about.
+
+**The collapse limb is NOT tested by this sweep and I should not have said it was.** The prediction is
+about $L$ shorter than a service, and the sweep's lowest point is $L = 7$, which is exactly the
+service window. A dwell equal to the window is the most favorable configuration for producing
+multiplicity that exists, since one ON period fills exactly one window; it is the wrong end of the
+axis to look for a collapse at. The residual at $L=7$ is +0.0622, and that number is evidence about
+neither branch.
+
+**CR-41. The collapse limb, at dwells the prediction actually names.** Extend the sweep to
+$L \in \{1, 2, 3, 5\}$, all below one service.
+  **P1.** The residual falls monotonically below $L = 7$ and is not gated at $L = 1$.
+  **FALSIFIER.** A residual that is flat or still growing below one service **refutes** the gate
+  account of the residual outright, and what survives jitter has to be explained by something other
+  than the channel holding a cohort together. Fable named two candidates already, refusal echo trains
+  and an $lw$-dependent estimator bias, and CR-39 is measuring the first of them.
+
+Status of P4: **growth limb CONFIRMED, collapse limb UNTESTED, extension registered.**
