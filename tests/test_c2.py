@@ -547,3 +547,37 @@ def test_a_metronome_takes_nothing_from_the_stream():
     before = rng.bit_generator.state
     [_service_time(op, rng) for _ in range(50)]
     assert rng.bit_generator.state == before
+
+
+def test_admit_foresight_is_inert_without_service_variability():
+    """The published path cannot move. At `service_cv = 0` there is nothing to foresee, so the two
+    consoles are the same console and every number in the paper is unaffected by which one is set.
+    """
+    from sandtable.sim import run_mission
+
+    base = {"control_mode": "direct", "queue_policy": "admit", "n_blue": 10, "comms_level": 0}
+    for model in ("reserve", "buffer"):
+        a = run_mission(_span_scenario(**base, queue_model=model, admit_foresight=False), seed=7)
+        b = run_mission(_span_scenario(**base, queue_model=model, admit_foresight=True), seed=7)
+        assert a["served_per_step"] == b["served_per_step"], model
+        assert a["success"] == b["success"], model
+
+
+def test_foresight_is_worth_something_only_when_service_is_variable():
+    """And when it is, it is worth a lot, which is why it has to be a parameter and not a default.
+
+    A console that can tell a quick decision from a slow one accepts exactly the quick ones, so it
+    delivers strictly more than one that can only compare a deadline against a mean. The test pins
+    the direction rather than the size, because the size is what the battery measures.
+    """
+    from sandtable.sim import run_mission
+
+    base = {"control_mode": "direct", "queue_model": "buffer", "queue_policy": "admit",
+            "n_blue": 12, "comms_level": 0, "service_cv": 0.5}
+
+    def go(fore):
+        runs = [run_mission(_span_scenario(**base, admit_foresight=fore), seed=s) for s in range(6)]
+        return sum(r["served_per_step"] for r in runs) / len(runs)
+
+    blind_test, seeing = go(False), go(True)
+    assert seeing > blind_test, f"foresight {seeing:.4f} did not beat the mean test {blind_test:.4f}"

@@ -5332,3 +5332,52 @@ working levers, their disagreement on backlog, and the behaviour of the split on
 This is registered as an identity rather than a hypothesis on purpose. An identity that closes is
 not a discovery, it is a licence: it says the four levers cannot be independently optimised, and it
 tells a program office which single quantity to instrument.
+
+---
+
+## INSTRUMENT DEFECT 7: THE ADMISSION TEST COULD SEE THE FUTURE, AND IT WAS WORTH 27 PERCENT
+
+Found 2026-08-23 while reading the partial `st-svccv-9448848.out`, before any of it was written up.
+
+The C2 section prints, on a console with admission control:
+
+    arm            n=8      n=10     n=12
+    admit_cv00   0.1377   0.1469   0.1505
+    admit_cv50   0.1512   0.1744   0.1908
+
+An operator whose service time has a coefficient of variation of one half, at exactly the same mean,
+delivers 27 percent more service at twelve assets than a metronome. Read at face value that says
+erratic operators are better operators, which is absurd, so the next step was to read the code
+rather than to write the paragraph.
+
+`c2.py` drew the service time and then tested the deadline against it:
+
+    svc = _service_time(op, rng)
+    reply = start + svc + lat
+    if reply > deadline and op.queue_policy != "blind":  ... refuse ...
+
+So the console knew, before committing, exactly how long this particular decision was going to take,
+and it accepted precisely the ones that happened to be quick. The comment above those lines said "a
+console that could forecast its own service exactly would be a stronger console", which is true, and
+described the opposite of what the code did.
+
+**Why it matters more than the arithmetic.** This paper's whole argument is a requirements ladder:
+what must the console know, and what must the message carry, for each lever to work. Testing against
+a realization the console has not yet experienced silently adds a requirement that is not in the
+ladder and is not a message field at all. It is an OPERATOR CAPABILITY: the ability to tell a hard
+request from an easy one at a glance. Recommending admission control on the strength of that number
+would have been recommending a triage skill while claiming to recommend a deadline field.
+
+**The fix is a parameter, not a correction.** `admit_foresight` now selects between the two consoles.
+False, the default, tests the deadline against the mean, which is all a deadline field can give.
+True tests against the realization and is the triage operator. The two are identical at
+`service_cv = 0`, so every published number is untouched, and the difference between them becomes a
+measurable price for a capability rather than a hidden assumption. Both paths were patched, buffer
+and reserve, and the reserve path gained the branch it did not have: a request admitted on the mean
+whose draw overruns is worked, its slot is spent, and its answer lands after the requester has gone.
+
+**Genus.** Seventh instance of "a convention correctly derived for its first use case, then carried
+silently into a second where it does not hold". At `service_cv = 0` drawing before testing is not a
+choice at all, because there is nothing to foresee; the moment variability was added it became one,
+and nothing in the code marked the transition. Three of the seven are now mine and all three were
+caught by reading a number that was too good and going to the source instead of to the manuscript.
