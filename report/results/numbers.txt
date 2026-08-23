@@ -1145,3 +1145,35 @@ CR-35, the doomed-service account (source: tools/make_absrate_numbers.py over st
   abJamSpans = 7
   abWfDenom = -40.9
   abWfMove = -68.6
+
+
+The tail of the arrival cohort (source: tools/make_tail_numbers.py over st-dwellnr-9448457.out)
+  tlBlocks = 32
+  tlDwellHi = 240
+  tlDwellLo = 1
+  tlDwells = 10
+  tlExcGated = 10
+  tlExcGrowth = 2.5
+  tlExcHi = +0.3278
+  tlExcHiPct = 30
+  tlExcLo = +0.1327
+  tlExcLoPct = 13
+  tlExcMinT = 31
+  tlFold = 240
+  tlGeThreeGated = 10
+  tlGeThreeGrowth = 2.3
+  tlGeThreeHi = +0.1517
+  tlGeThreeHiPct = 190
+  tlGeThreeLo = +0.0658
+  tlGeThreeLoPct = 112
+  tlGeThreeMinT = 46
+  tlGeTwoGated = 10
+  tlGeTwoGrowth = 1.4
+  tlGeTwoHi = +0.0499
+  tlGeTwoHiPct = 16
+  tlGeTwoLo = +0.0364
+  tlGeTwoLoPct = 14
+  tlGeTwoMinT = 12
+  tlJitGated = 0
+  tlJitMaxAbs = 0.0115
+  tlJitMaxPct = 1.1

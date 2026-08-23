@@ -4321,3 +4321,63 @@ must agree.
   over-commits past the end of the mission, while buffer holds it in a backlog. The smoke test has
   reserve's booking clock at 2273 on an 1800-step mission. `blind` is therefore excluded from the
   gate and the exclusion is stated here rather than discovered later.
+
+---
+
+## CR-35 VERDICT: CONFIRMED. THE SERVICE THE RATE RULE GIVES UP IS SERVICE THAT WAS GOING TO BE WASTED
+
+Job 9446698, sections A0 and A3. The rule's finding had survived the denominator correction as an
+outcome gain with no mechanism, which is a story. The account on offer was that the forgone service
+was doomed service, and it is testable on two absolute rates from the same runs.
+
+`aimd - admit`, clear link:
+
+| $n$ | served/step | abandoned/step | exchange rate |
+|---|---|---|---|
+| 6 | -5.1% | -36.8% | 8 |
+| 8 | -4.6% | -58.2%, GATED | 5 |
+| 10 | -4.2% | -65.6%, GATED | 12 |
+| 12 | -4.0% | -69.9%, GATED | 22 |
+| 16 | -2.7% | -73.2%, GATED | 63 |
+
+**Abandonment falls faster than service in 5 of 6 spans on the clear link and 6 of 7 under jamming.**
+At sixteen assets the rule removes 63 abandoned requests for every one unit of service it costs the
+console. That is the mechanism, and it is a ratio of two absolute rates rather than of a rate to its
+own moving denominator.
+
+**The second limb of the registered falsifier is unreadable, not failed.** It named `wasted_frac`,
+whose denominator is the request count, and the rule moves the request count by construction: it
+reads -68.6% at twelve assets on a denominator that has moved -40.9%. The gate refuses the metric.
+`abandoned_per_step` carries the same question with no denominator, and it is what the verdict rests
+on. Recorded here rather than quietly substituted.
+
+**One cell short of the registration.** The prediction said gated at $n = 8, 10, 12$ on both rungs.
+At rung 3, $n = 8$, abandonment falls 33.2% but the absolute effect is 0.0072, below the capacity
+floor of 0.009. Five of six registered cells, and the relative comparison holds at all six.
+
+---
+
+## CR-41 LINE TWO CLOSED, AND THE TAIL SAYS SOMETHING THE MEAN COULD NOT
+
+Job 9448457. Two results.
+
+**Line two of the four-term decomposition is established at every dwell, not one.** `jit18 - noretry`
+on `arrival_excess` gates at 0 of 10 fade lengths and never differs by more than 1.1%. The registered
+falsifier, a gated gap at any dwell, did not fire. The jittered fleet IS at the no-retry baseline
+across a 240-fold range of fade length.
+
+**And the tail statistic adversarial review asked for turns out to carry a finding.** Against the
+same control, on the fixed-hold arm:
+
+| statistic | shortest fade | longest fade | growth | gated |
+|---|---|---|---|---|
+| windows with two or more senders | +0.0364 (+14%) | +0.0499 (+16%) | 1.4x | 10/10 |
+| windows with three or more | +0.0658 (+112%) | +0.1517 (+190%) | 2.3x | 10/10 |
+| mean excess senders | +0.1327 (+13%) | +0.3278 (+30%) | 2.5x | 10/10 |
+
+**A longer fade does not produce more collisions at the console. It produces deeper ones.** The
+two-or-more share is nearly flat across a 240-fold range while the three-or-more share more than
+doubles, and the mean excess grows by the same factor as the deep tail rather than as the shallow
+one. A mean could not have separated these, which is exactly why the statistic was requested. The
+operational content is that the vehicles at the back of a larger cohort are the ones whose patience
+expires while they wait, so the fade's cost is concentrated rather than spread.
