@@ -170,3 +170,49 @@ def test_a_null_contrast_is_neither_significant_nor_agreeing():
     assert gate(flat, flat, mpe=0.03) == "~"
     _, t, w, _ = report(blocks(flat), blocks(flat))
     assert t == 0.0 and w == 0
+
+
+# ---------------------------------------------------------------------------
+# The denominator rule, made mechanical. `operator_goodput` is serviced over requested, and every
+# queue policy worth recommending moves the request count. The rule was known and written down for
+# a month before a generator quietly broke it, so it is enforced by the gate rather than by memory.
+# ---------------------------------------------------------------------------
+import pytest  # noqa: E402
+
+from tools.ar_gate import DenominatorUnchecked
+from tools.ar_gate import gate as ar_gate  # noqa: E402
+
+
+def test_an_inflatable_ratio_cannot_be_gated_without_its_denominator():
+    with pytest.raises(DenominatorUnchecked):
+        ar_gate("operator_goodput", eff=0.30, t=40.0, won=32, n=32, base=0.50)
+
+
+def test_a_moved_denominator_makes_the_ratio_unreadable():
+    # The real case: admit asks 32 percent more often than refund at twelve assets. Whatever the
+    # ratio does, it cannot be read, and the gate says null rather than reporting a smaller effect.
+    assert ar_gate("operator_goodput", eff=0.30, t=40.0, won=32, n=32, base=0.50,
+                denom=(0.324, 1.0)) is False
+
+
+def test_a_held_denominator_lets_the_ratio_through():
+    assert ar_gate("operator_goodput", eff=0.30, t=40.0, won=32, n=32, base=0.50,
+                denom=(0.01, 1.0)) is True
+
+
+def test_the_rule_is_sign_blind_on_the_denominator():
+    # A rate rule suppresses requests and flatters itself by the same arithmetic in reverse.
+    assert ar_gate("operator_goodput", eff=0.30, t=40.0, won=32, n=32, base=0.50,
+                denom=(-0.324, 1.0)) is False
+
+
+def test_a_non_ratio_metric_needs_no_denominator():
+    assert ar_gate("success", eff=0.30, t=40.0, won=32, n=32, base=0.50) is True
+
+
+def test_the_three_original_parts_still_bind_on_an_inflatable_metric():
+    # A held denominator does not excuse a failing t, block count, or effect size.
+    held = {"denom": (0.0, 1.0)}
+    assert ar_gate("operator_goodput", 0.30, 1.0, 32, 32, 0.50, **held) is False
+    assert ar_gate("operator_goodput", 0.30, 40.0, 15, 32, 0.50, **held) is False
+    assert ar_gate("operator_goodput", 0.001, 40.0, 32, 32, 0.50, **held) is False

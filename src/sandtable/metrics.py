@@ -123,6 +123,7 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "served_per_step": 0.0, "requests_per_step": 0.0,
            "arrival_fano": 0.0, "arrival_multiplicity": 0.0, "arrival_peak": 0.0,
            "arrival_rate": 0.0, "arrival_excess": 0.0,
+           "arrival_distinct": 0.0, "arrival_repeat": 0.0, "arrival_repeat_frac": 0.0,
            "supervised_mean": 0.0, "supervised_frac": 0.0, "demand_norm_goodput": 0.0,
            "hold_fraction": 0.0, "interaction_steps": 0.0, "neglect_steps": 0.0, "fan_out": 0.0}
 
@@ -168,6 +169,15 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
             lw = out["arrival_rate"] * op.mult_window
             pois = lw / (1.0 - math.exp(-lw)) if lw > 0 else 1.0
             out["arrival_excess"] = out["arrival_multiplicity"] / pois
+            # A multiplicity of three can be three vehicles colliding or one vehicle asking three
+            # times, and only the first is the cohort this paper's recommendation addresses. The
+            # distinct-sender count separates them: `arrival_repeat` is the part of the crowding
+            # a single vehicle inflicts on itself, which a jittered hold cannot fix because there
+            # is nothing to desynchronize from. Reporting it is what keeps the mechanism claim
+            # from resting on a statistic that cannot tell the two apart.
+            out["arrival_distinct"] = op._mult_dsum / op._mult_busy
+            out["arrival_repeat"] = out["arrival_multiplicity"] - out["arrival_distinct"]
+            out["arrival_repeat_frac"] = out["arrival_repeat"] / out["arrival_multiplicity"]
         if op.fano_window > 0 and op._fano_n > 1 and op._fano_sum > 0.0:
             mean = op._fano_sum / op._fano_n
             var = op._fano_sumsq / op._fano_n - mean * mean

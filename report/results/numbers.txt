@@ -552,3 +552,30 @@ Congestion-signal numbers (source: tools/make_aimd_numbers.py over st-aimd-94460
 \aiStackJamTwelveT = 12.7
 \aiStackJamTwelveBlocks = 32
 \aiStackJamTwelveGate = yes
+
+
+P1 re-run at the benched window (source: tools/make_fanoredo_numbers.py over st-fanoredo-9446726.out)
+  frExcPairs = 6
+  frExcRed = 6
+  frGeBase = 2.99
+  frGeBlocks = 32
+  frGeBlocksN = 32
+  frGeMax = -1.53
+  frGeMaxPct = -53
+  frGeMaxT = 89
+  frGeMin = -0.32
+  frGeMinPct = -20
+  frGeMinT = 27
+  frGePairs = 6
+  frGeRed = 6
+  frMemBase = 1.46
+  frMemBlocks = 32
+  frMemBlocksN = 32
+  frMemMax = -0.35
+  frMemMaxPct = -24
+  frMemMaxT = 52
+  frMemMin = -0.23
+  frMemMinPct = -18
+  frMemMinT = 30
+  frMemPairs = 4
+  frMemRed = 3

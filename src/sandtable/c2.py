@@ -157,6 +157,13 @@ class Operator:
     _mult_sum: float = 0.0
     _mult_busy: int = 0                   # windows with at least one arrival
     _mult_peak: float = 0.0
+    # Which vehicles arrived in the open window, as a bitmask. A window holding three requests
+    # from three vehicles and one holding three from one vehicle have the same multiplicity and
+    # opposite mechanisms: the first is the retry cohort this paper is about, the second is one
+    # vehicle's own refusal echo bouncing inside a window shorter than its backoff. Counting
+    # distinct senders separates them at no cost, because the mask is one integer.
+    _mult_mask: int = 0
+    _mult_dsum: float = 0.0
     _fano_bin: float = 0.0
     _fano_idx: int = 0
     _fano_n: int = 0
@@ -440,7 +447,9 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 op._mult_sum += op._mult_bin
                 op._mult_busy += 1
                 op._mult_peak = max(op._mult_peak, op._mult_bin)
+                op._mult_dsum += float(int(op._mult_mask).bit_count())
             op._mult_bin = 0.0
+            op._mult_mask = 0
             op._mult_idx += 1
     if op.fano_window > 0:                    # close the bin this step has left behind
         idx = k // op.fano_window
@@ -502,6 +511,7 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
             op._fano_bin += 1.0                  # one arrival at the console on this step
         if op.mult_window > 0 and up_ok:
             op._mult_bin += 1.0
+            op._mult_mask |= 1 << int(i)
         # Read the queue before pricing the reply. The reply is not sent when the request is: it
         # leaves when the operator finishes, so the two messages are separated by `done - k` steps,
         # and on a channel with memory that gap is what decides whether their fates are correlated

@@ -3306,3 +3306,48 @@ instead of measured against injected ground truth.** The two benches now exist a
 written down. It is worth stating in the paper that the mechanism was found by fixing the
 instruments, because a reader deciding whether to trust the account should know which parts were
 measured and at what settings.
+
+---
+
+## CR-39. IS THE COHORT MADE OF DIFFERENT VEHICLES? THE ONE CHECK THE MECHANISM CLAIM HAS NEVER HAD
+
+Fable's Round 17, third hardener, and it goes at the load-bearing sentence rather than at a margin.
+
+The manuscript says, in Section~\ref{subsec:band} and again in the Discussion, that the benefit of a
+jittered hold is **vehicles desynchronizing from each other**. Every statistic supporting it has been
+a count of arrivals per window: Fano, multiplicity, excess. **None of them can tell three vehicles
+arriving together from one vehicle arriving three times.** Those are opposite mechanisms with the
+same reading, and only the first is one a jittered backoff can address, because there is nothing to
+desynchronize a vehicle from itself.
+
+The second is not hypothetical here. At `retry_backoff = 4` inside a `mult_window` of 7, one
+vehicle's refused request can come back inside the same window by construction. Fable named it: a
+refusal echo train. If the residual we have been calling a retry cohort is mostly that, the
+recommendation is still right (jitter still helps) but the reason we give for it is wrong, and the
+portability argument, that the mechanism belongs to the retry rule rather than to the link, goes
+with it.
+
+`arrival_distinct` counts senders per busy window rather than arrivals, from a bitmask that costs one
+integer. `arrival_repeat = multiplicity - distinct` is the self-inflicted part.
+
+**P1. At `retry_backoff = 18`, longer than the window, the fixed-minus-jittered contrast is carried
+by `arrival_distinct`: gated, and the same sign as the multiplicity contrast.**
+  **FALSIFIER.** If the `arrival_distinct` contrast is ungated at backoff 18 while `arrival_repeat`
+  carries the multiplicity contrast, the cohort is one vehicle's echo and not a crowd. The sentence
+  "the whole of the benefit that survives the gate is vehicles desynchronizing from each other" is
+  then **refuted**, and the mechanism paragraph is rewritten to say so, at whatever cost to the
+  Ethernet analogy that currently frames the whole subsection.
+
+**P2. `arrival_repeat_frac` is HIGHER at backoff 4 than at backoff 18, gated.** This is an instrument
+check with an answer known in advance from arithmetic: 4 is inside a window of 7 and 18 is not.
+  **FALSIFIER.** If it does not fall with backoff, the split is not measuring what its name says and
+  P1's reading is void rather than either confirmed or refuted. This is the same discipline the Fano
+  window episode should have had and did not.
+
+**P3. The memoryless control shows the same P1 pattern.** If the cohort is cross-vehicle on a link
+with no structure, it is cross-vehicle for the reason we claim.
+  **FALSIFIER.** A cross-vehicle contrast on the bursty link only would make the effect channel-borne
+  after all, which contradicts CR-33's decomposition, and one of the two would have to be withdrawn.
+
+Registered before any number from `hopper/batteries/cohsplit.sh` exists. The split is measured at the
+same window and the same arms as CR-37 so nothing but the statistic changes.

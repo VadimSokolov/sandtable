@@ -49,7 +49,8 @@ ROWS = [
      "\\textsc{held}: +0.268 goodput at twelve, and free at four"),
     ("jitter helps by desynchronizing from the channel",
      "no Fano reduction in any mean-matched pair",
-     "\\textsc{refuted}; the null control carried the effect and renamed the mechanism"),
+     "\\textsc{refuted} at the channel's dwell, \\textsc{confirmed} at the benched window: "
+     "\\frGeRed{} of \\frGePairs{} pairs, and the refutation was the instrument"),
     ("wait priced by a self-authored knob",
      "(none: the design was the problem)",
      "\\textsc{cut} before running, on adversarial review"),
@@ -59,6 +60,9 @@ ROWS = [
     ("contribution pointers all resolve",
      "(instrument, not a claim)",
      "\\textsc{repaired}: the checker truncated long lists"),
+    ("the burstiness window belongs to the channel",
+     "(instrument, not a claim)",
+     "\\textsc{repaired}: benched against an injected cohort, it belongs to the mechanism"),
 ]
 
 
@@ -71,7 +75,16 @@ def main() -> None:
     lines += ["\\bottomrule", "\\end{tabular}"]
     out = ROOT / "report" / "gen" / "tab_ledger.tex"
     out.write_text("\n".join(lines) + "\n")
-    print(f"wrote {out} with {len(ROWS)} rows")
+    # The prose says how many entries there are and how many failed. Counting them here keeps
+    # those two sentences from drifting the next time a row is added.
+    claims = [r for r in ROWS if "instrument" not in r[1]]
+    failed = [r for r in claims if "refuted" in r[2] or "cut" in r[2] or "partial" in r[2]]
+    counts = {"ldRows": len(ROWS), "ldClaims": len(claims), "ldInstr": len(ROWS) - len(claims),
+              "ldFailed": len(failed), "ldHeld": len(claims) - len(failed)}
+    (ROOT / "report" / "gen" / "ledger_counts.tex").write_text(
+        "".join(f"\\newcommand{{\\{k}}}{{{v}}}\n" for k, v in counts.items()))
+    print(f"wrote {out} with {len(ROWS)} rows "
+          f"({counts['ldClaims']} claims, {counts['ldFailed']} failed, {counts['ldInstr']} instruments)")
 
 
 if __name__ == "__main__":
