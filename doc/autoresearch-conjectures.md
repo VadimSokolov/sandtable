@@ -3055,3 +3055,42 @@ it.
 is the better instrument, because a Fano is a variance and cannot distinguish many small clusters
 from few large ones. If the two disagree, the excess is the finding and the Fano is reported as the
 weaker statistic that motivated it.
+
+---
+
+## CR-38. WHAT IS THE SOFTWARE LEVER WORTH IN OPERATORS?
+
+The staffing table is the most sponsor-legible object in this paper, and it is built on
+`operator_goodput`. At eight assets it reads 17.0 for one blind console, 73.4 for one console with
+admission control, and 99.0 for two blind consoles. The natural reading, which the paper does not
+currently state and a program office certainly will, is that admission control buys most of a
+second operator.
+
+CR-31 makes that reading unsafe in a known direction: `admit` inflates its own denominator by up to
+32%, so its column is flattered, while a second console changes nothing about the asking and its
+column is not. **The comparison is between an arm whose denominator moved and an arm whose
+denominator did not, which is the exact configuration CR-31 showed produces a spurious gap.**
+
+**PREDICTION.** On `served_per_step` and on `success`, both immune to the denominator, the
+one-console admission-control arm still sits between one and two blind consoles at n = 8, 10 and 12.
+The equivalence survives; only its size changes.
+
+**FALSIFIER.** If on the absolute rate the one-console admit arm falls at or below the one-console
+blind arm at those spans, the staffing equivalence is an artifact of the metric and the table is
+withdrawn from the paper rather than restated.
+
+**Second prediction, on the lever the correction made interesting.** CR-31 showed the AIMD rule
+makes the console serve LESS while winning more missions. So on `served_per_step` the rule should
+look WORSE than plain admit while on `success` it looks better, and the staffing question then has
+two different answers depending on which is asked. **That is the finding to report if it holds**,
+because it is the difference between buying throughput and buying outcomes, and a program that
+staffs consoles is buying the second.
+
+**FALSIFIER for the second: if the rule beats plain admit on both metrics, or loses on both, the
+"different answers to different questions" framing is dropped and whichever metric it wins on is
+simply reported.**
+
+**Why the equivalence is worth stating in operators at all.** The three levers are software. A
+sponsor's alternative to software is people, and people are the unit the budget is denominated in.
+An equivalence stated in consoles is the only form of this result that can be compared against its
+own cost.
