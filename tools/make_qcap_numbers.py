@@ -279,6 +279,35 @@ def main() -> None:
                 (f"StQcap{tag}Ratio", f"{lv[names[kstar]][idx['16']] / max(lv['cap_none'][idx['16']], 1e-9):.0f}")]
         if kstar == 1 and "cap_zero" in lv:
             out.append(("StQcapJamFloorGap", f"{lv['cap_one'][idx['16']] - lv['cap_zero'][idx['16']]:+.4f}"))
+    # --- the three rounding constants, scored on SandTable's own patience sweep -----------------
+    # The queue-only scan ties the 1/3 and 1/2 forms at four misses each out of 201 points, so it
+    # cannot choose between them. This sweep can, because it walks lambda from 1.80 to 6.75 through
+    # the operating band, and it is an independent instrument: a different simulator, a different
+    # knob, and the deadline moved rather than the load.
+    try:
+        q3 = survey("st-qcap2-9449271.out", "Q3 the capacity ladder against PATIENCE",
+                    "served_per_step", quiet=True)
+    except SystemExit:
+        q3 = None
+    if q3:
+        caps = {"cap_zero": 0, "cap_one": 1, "cap_two": 2, "cap_three": 3, "cap_four": 4,
+                "cap_five": 5, "cap_six": 6, "cap_ten": 10}
+        pats = [12, 20, 25, 27, 30, 34, 38, 45]
+        hit = {k: 0 for k in RULES}
+        widths = []
+        for j, pa in enumerate(pats):
+            lv = {c: q3[n][j] for n, c in caps.items() if n in q3}
+            best = max(lv.values())
+            pl = [c for c, v in lv.items() if v >= best - MPE]
+            widths.append(len(pl))
+            for k, f in RULES.items():
+                hit[k] += f(0.15 * pa) in pl
+        out += [("QcapPatPoints", f"{len(pats)}"),
+                ("QcapPatLamLo", f"{0.15 * pats[0]:.2f}"), ("QcapPatLamHi", f"{0.15 * pats[-1]:.2f}"),
+                ("QcapPatWidest", f"{max(widths)}"),
+                ("QcapPatThirdHit", f"{hit['third']}"), ("QcapPatHalfHit", f"{hit['half']}"),
+                ("QcapPatFloorHit", f"{hit['floor']}")]
+
     try:
         su = survey(LOG, "Q1 the capacity ladder", "success", quiet=True)
         out += [("StQcapSuccBound", f"{100 * su['cap_two'][1]:.1f}"),

@@ -5702,3 +5702,49 @@ if it had held. Third, a number a sponsor can feel: on the blind buffer console 
 assets that ask at least once and are never once answered runs 0.00 at six assets, 0.06 at seven,
 0.26 at eight, 0.56 at nine and 0.64 at ten. Two thirds of the force unanswered, at ten assets, on
 one console.
+
+---
+
+## CR-49 Q3-Q5 VERDICT: THE CORRECTION TERM MATTERS AND ITS VALUE DOES NOT
+
+Job 9449271, the continuation of the timed-out 9448688, complete and with the new snapshot guard
+reporting `code unchanged through the run`.
+
+**Q3, the patience sweep, is the discriminating instrument and it goes against my own re-derivation.**
+Walking the requester's patience from 12 to 45 steps walks $\lambda$ from 1.80 to 6.75. Scored by
+plateau membership:
+
+    floor(lambda) - 1        7 of 8      (misses at lambda = 1.80)
+    floor(lambda + 1/3) - 1  8 of 8
+    floor(lambda + 1/2) - 1  7 of 8      (misses at lambda = 4.50)
+
+The one-half form is the one in the manuscript and the one CR-49 arrived at by re-deriving against a
+deterministic server after finding the console was M/D/1. It is not the best of the three here. On
+raw argmax it is the worst (4 of 8 against the uncorrected rule's 7 of 8), but argmax on a plateau up
+to five capacities wide is chosen by rounding, which is the whole reason plateau membership is the
+registered statistic, so the argmax count is reported and not used.
+
+**The two scans agree once the misses are located rather than counted.** The queue-only $\lambda$ scan
+ties the one-third and one-half forms at four misses each out of 201 points and therefore cannot
+choose between them. But the one-third form's misses sit near $\lambda \approx 1.5$ and the one-half
+form's over $\lambda \in [2.5, 5.5]$, and the second interval is this study's operating band. The
+patience sweep walks straight through it and finds the miss the first scan could not weight.
+
+**So the honest rule is $k^{\star} = \lfloor \lambda + c \rfloor - 1$ with $c$ between a third and a
+half, undetermined.** What is determined, at 13 misses against 4, is that $c$ is not zero. The
+manuscript now says this rather than asserting one-half, and says why it hardly matters: at the top
+of the sweep the plateau is five capacities wide and the two constants differ by one.
+
+**Q4 confirms and does not discriminate.** Sweeping the service rate instead of the deadline moves
+$\lambda$ to 1.5, 3.0 and 6.0, and both corrected forms are inside the plateau at all three.
+
+**Q5 is the requirements ladder measured directly, and it reproduces the capacity battery from a
+separate job.** At sixteen assets: a deadline field 0.1490, the counter 0.1476, newest-first 0.1464,
+nothing 0.0023. Two independent allocations, same five numbers.
+
+**One instrument note, recorded rather than chased.** `ar_gate.rate_floor()` is `FULL_MPE * CAPACITY`
+with `CAPACITY` a fixed 0.15, so on Q4's $\mu = 0.30$ arm the floor is half what a capacity-anchored
+floor should be. That makes the plateau narrower and the test harder, so the verdict above is
+conservative, but a battery that swept service rate and wanted a generous floor would be reading the
+wrong number. Tenth candidate for the instrument-defect genus, and the first found by asking where
+else a constant that was right once is now being carried.
