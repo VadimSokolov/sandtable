@@ -5576,3 +5576,47 @@ falsified. Recorded as untestable rather than as held, and re-registered as CR-5
 against `hopper/batteries/maps2.sh` (job 9449266) at one-asset resolution, with the mechanism it
 needs to beat the null stated in advance: a chokepoint concentrates the force where the map chooses,
 so the console should see a burstier arrival process at the same mean rate.
+
+---
+
+## CR-54 P1 VERDICT: THE FALSIFIER FIRES ON MY OWN ARITHMETIC, AND WHAT SURVIVES IS BETTER
+
+Job 9449071, full tier, cancelled at its two-hour limit with all four bins complete on both rungs and
+the three utilization and starvation metrics unreached (they are job 9449430).
+
+**P1 as registered cannot be scored yet, and the reason is my error, not the data's.** The registered
+identity is `served + stale*requests = mu * operator_utilization`, and I tested it against a bare
+`mu`. The residual is then exactly `(u - 1) * mu`, which is large and negative wherever the console
+is not saturated: -0.0328 at six assets, -0.0162 at eight, +0.0003 at sixteen. That is a measurement
+of how far from saturated the console is, not of whether the bins partition its time. The falsifier
+fires against a right-hand side that was never registered. Scoring waits for 9449430.
+
+**What does not need the utilization metric is the finding, and it is clean.** The four bins sum to
+the console's total effort. At sixteen assets on a clear link that total is between 0.1490 and 0.1504
+across all five levers, a spread of **0.0014** against a materiality floor of 0.0090. Delivered
+service over the same five spans **0.1467**, a factor of 64. The console is equally saturated under
+every policy and what changes is only the composition of a fixed quantity. That is utilization
+invariance measured without measuring utilization, and it is the one-line version of everything
+CR-47 and CR-48 found: **no amount of working the operator harder is available as a lever.**
+
+**P4 HELD.** The five arms disagree wildly on backlog and not at all on effort, which is the shape
+P4 predicted.
+
+**And the recommendation inverts at C3, which the clear-link measurement could not have shown.**
+Against admission control, the derived bound is -0.0013 at sixteen assets on a clear link, inside
+the floor and TOST-equivalent, and -0.0132 at C3, gated down, with the same gate down at twelve. The
+console's own accounting gives the mechanism: at C3 the bound spends 0.0167 served per step on
+requests answered after their requester had gone and admission control spends 0.0000. A length bound
+is a proxy for the request's age and the proxy holds while the queue is most of the delay; as the
+one-way latency grows, $2\ell$ eats the deadline and the residual the queue may consume shrinks until
+only a direct deadline test can size it. The manuscript's recommendation is now conditional: static
+good link, buy the counter; degrading link, the semantic field earns its cost, crossover between C2
+and C3. Adversarial review predicted this inversion from the CR-50 sweep and it is now measured in
+SandTable rather than in the auxiliary model.
+
+**An unregistered bin that no lever in this paper touches.** At C3 the best console spends 0.0272
+served per step, about a fifth of its total effort, on decisions it completed and whose replies the
+downlink then dropped. No discipline, bound or admission rule can recover that, because the loss
+happens after the console has finished. It is a communications requirement, not a teaming one, and
+it is why the C3 ceiling sits where it does. Separating it out is only possible because the counters
+were split after adversarial review; on the old two-counter accounting it was invisible.

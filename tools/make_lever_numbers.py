@@ -23,6 +23,7 @@ from ar_gate import rate_floor  # noqa: E402
 from ar_survey import survey  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+NAMES = {"8": "Eight", "12": "Twelve", "16": "Sixteen"}   # LaTeX macro names carry no digits
 LIFO, QCAP = "st-lifo-9448647.out", "st-qcap-9448688.out"
 G1 = "G1 newest-first against oldest-first on a blind console, clear link"
 MPE = rate_floor()
@@ -82,6 +83,42 @@ def main() -> None:
     d16 = at(g3, "adm_lifo", pts, "16") - at(g3, "adm_fifo", pts, "16")
     d8 = at(g3, "adm_lifo", pts, "8") - at(g3, "adm_fifo", pts, "8")
     out += [("LvSubSixteen", f"{d16:+.4f}"), ("LvSubEight", f"{d8:+.4f}")]
+
+    # --- the same five levers in ONE allocation, and where the ladder inverts --------------------
+    # The numbers above are cross-battery: the four blind arms come from st-lifo and the bound from
+    # st-qcap, run days apart. st-capacity puts all five in one job so the comparison is paired the
+    # way every other contrast in this paper is, and it carries the C3 rung, which is where the
+    # recommendation changes.
+    CAP, PC = "st-capacity-9449071.out", ["4", "5", "6", "8", "10", "12", "16"]
+    BINS = ["served_per_step", "stale_per_step", "worked_lost_per_step", "worked_late_per_step"]
+    for tag, sec in (("Clear", "K1 the five levers, clear link"), ("Jam", "K2 the five levers, C3")):
+        try:
+            b = {m: survey(CAP, sec, m, quiet=True) for m in BINS}
+        except SystemExit:
+            continue
+        arms = ("fifo", "rand", "lifo", "bound", "admit")
+        for a in arms:
+            out.append((f"Kp{tag}Srv{a.capitalize()}", f"{at(b[BINS[0]], a, PC, '16'):.4f}"))
+        # The sum of the four bins is the console's total effort. It is nearly the same for every
+        # arm while delivered service spans a factor of sixty; that contrast is the whole finding
+        # and it does not need the utilization metric to state.
+        tot = {a: sum(at(b[m], a, PC, "16") for m in BINS) for a in arms}
+        srv = {a: at(b[BINS[0]], a, PC, "16") for a in arms}
+        out += [(f"Kp{tag}EffortSpread", f"{max(tot.values()) - min(tot.values()):.4f}"),
+                (f"Kp{tag}SrvSpread", f"{max(srv.values()) - min(srv.values()):.4f}"),
+                (f"Kp{tag}EffortMin", f"{min(tot.values()):.4f}"),
+                (f"Kp{tag}EffortMax", f"{max(tot.values()):.4f}"),
+                (f"Kp{tag}Ratio", f"{max(srv.values()) / max(min(srv.values()), 1e-9):.0f}")]
+        # The bins that are not delivered service, named, because at C3 one of them is not a
+        # queueing loss at all and no lever in this paper touches it.
+        for a in ("admit", "bound", "fifo"):
+            out += [(f"Kp{tag}Lost{a.capitalize()}", f"{at(b['worked_lost_per_step'], a, PC, '16'):.4f}"),
+                    (f"Kp{tag}Late{a.capitalize()}", f"{at(b['worked_late_per_step'], a, PC, '16'):.4f}"),
+                    (f"Kp{tag}Stale{a.capitalize()}", f"{at(b['stale_per_step'], a, PC, '16'):.4f}")]
+        # And the inversion: bound minus admit, which is inside the floor clear and outside it at C3.
+        for sp in ("8", "12", "16"):
+            out.append((f"Kp{tag}BoundVsAdmit{NAMES[sp]}",
+                        f"{at(b[BINS[0]], 'bound', PC, sp) - at(b[BINS[0]], 'admit', PC, sp):+.4f}"))
 
     dst = ROOT / "report" / "gen" / "lever_numbers.tex"
     dst.write_text("".join(f"\\newcommand{{\\{k}}}{{{v}}}\n" for k, v in out))
