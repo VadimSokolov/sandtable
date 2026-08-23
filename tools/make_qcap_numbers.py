@@ -173,6 +173,22 @@ def main() -> None:
                 (f"QcapDisc{tag}Lifo", f"{l.mean():.4f}"),
                 (f"QcapDisc{tag}Diff", f"{abs(f.mean() - l.mean()):.4f}")]
 
+    # 7. The mechanism behind 2, measured rather than asserted. A request entering a full buffer of
+    #    k advances one place per removal, and at equilibrium removals (services plus drop-oldest
+    #    evictions) happen at the ARRIVAL rate, so the age of the request the console picks up is
+    #    about (k-1)/Lambda. That is what makes a cap in requests a different delay at each load.
+    KAGE = 4
+    ages = {}
+    for nn in (8, 24):
+        r = [simulate(nn, PP, 0.0, MU, KAGE, 22.0, H, 1000 + s, "fifo") for s in range(8)]
+        ages[nn] = (float(np.mean([x["age"] for x in r])),
+                    float(np.mean([x["arr_rate"] for x in r])))
+    out += [("QcapAgeK", f"{KAGE}")]
+    for nn, tag in ((8, "Light"), (24, "Heavy")):
+        a, lam = ages[nn]
+        out += [(f"QcapAge{tag}", f"{a:.1f}"), (f"QcapAgeRate{tag}", f"{lam:.2f}"),
+                (f"QcapAgeForm{tag}", f"{(KAGE - 1) / lam:.1f}")]
+
     dst = ROOT / "report" / "gen" / "qcap_numbers.tex"
     dst.write_text("".join(f"\\newcommand{{\\{k}}}{{{v}}}\n" for k, v in out))
     print(f"wrote {dst} with {len(out)} macros")

@@ -299,3 +299,45 @@ def test_a_level_with_nothing_logged_refuses():
 def test_an_unregistered_metric_is_unaffected():
     check_level("success", set())
     check_level("served_per_step", set())
+
+
+def test_equivalence_is_not_the_same_as_failing_to_separate():
+    """The pair that motivates the instrument: a big noisy difference fails the gate AND fails
+    equivalence, because nothing at all has been established about it."""
+    from ar_gate import tost
+
+    eq, _ = tost(eff=0.0005, t=0.05, n=32, marg=0.009)     # small and imprecise (se 0.010)
+    assert not eq
+    eq, stat = tost(eff=0.0005, t=8.0, n=32, marg=0.009)   # small and precise
+    assert eq and stat > 1.70
+
+
+def test_equivalence_strengthens_with_precision_where_a_null_weakens():
+    """The asymmetry that makes this the only stable form of the claim in a simulator: holding the
+    effect fixed and sharpening it turns a non-result into an equivalence, while the failure to
+    separate would be going the other way."""
+    from ar_gate import tost
+
+    stats = [tost(eff=0.001, t=tt, n=32, marg=0.009)[1] for tt in (1.0, 4.0, 16.0)]
+    assert stats[0] < stats[1] < stats[2]
+
+
+def test_a_difference_at_the_margin_is_not_equivalent_however_precise():
+    from ar_gate import tost
+
+    assert not tost(eff=0.009, t=500.0, n=32, marg=0.009)[0]
+    assert tost(eff=0.0089, t=500.0, n=32, marg=0.009)[0]
+
+
+def test_identical_arms_are_equivalent_and_do_not_divide_by_zero():
+    from ar_gate import tost
+
+    eq, stat = tost(eff=0.0, t=0.0, n=32, marg=0.009)
+    assert eq and stat == float("inf")
+
+
+def test_the_margin_is_the_gates_own_floor_and_is_capacity_anchored_for_rates():
+    from ar_gate import margin, rate_floor
+
+    assert margin("served_per_step", base=0.02) == rate_floor()
+    assert margin("success", base=0.5) == pytest.approx(0.06 * 0.5)

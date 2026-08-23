@@ -149,3 +149,34 @@ def verdict(metric: str, eff: float, t: float, won: int, n: int, base: float, **
     if not gate(metric, eff, t, won, n, base, **kw):
         return "null"
     return "up" if eff > 0 else "down"
+
+
+def margin(metric: str, base: float, *, consoles: int = 1, mpe: float = FULL_MPE) -> float:
+    """The equivalence margin for `metric`, which is the SAME quantity the gate uses to decide a
+    difference is material. Using one number for both directions is the point: it was fixed before
+    any of these contrasts were run, so an equivalence declared against it cannot be a margin chosen
+    to make the equivalence come out."""
+    if metric in RATE_METRICS:
+        return rate_floor(mpe, consoles)
+    return mpe * abs(base)
+
+
+def tost(eff: float, t: float, n: int, marg: float, *, t_min: float = FULL_T) -> tuple[bool, float]:
+    """Two one-sided tests for EQUIVALENCE, returning (equivalent, the weaker of the two statistics).
+
+    A failure to separate two arms is not evidence that they are the same: it gets easier to claim
+    the more carelessly the experiment is run, and in a simulator, where the replication count is
+    ours to choose, that is a real hazard rather than a textbook caveat. Equivalence runs the other
+    way and strengthens with replications, so it is the only form of the claim that is stable under
+    a budget we control.
+
+    Rejecting both one-sided nulls at `t_min` is the same as the two-sided interval at that level
+    lying entirely inside plus or minus `marg`.
+    """
+    if n < 2:
+        raise ValueError("equivalence needs at least two blocks")
+    se = abs(eff) / abs(t) if t not in (0.0,) and abs(t) != float("inf") else 0.0
+    if se <= 0.0:                       # identical arms, or a zero-variance contrast
+        return abs(eff) < marg, float("inf")
+    lo, hi = (eff + marg) / se, (marg - eff) / se
+    return min(lo, hi) > t_min, min(lo, hi)

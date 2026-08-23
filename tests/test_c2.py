@@ -474,3 +474,27 @@ def test_the_derived_bound_sits_on_a_plateau_that_beats_everything_outside_it():
     assert plateau > go(0) * 1.2
     assert plateau > go(3) * 1.2
     assert plateau > go(-1) * 2.0
+
+
+def test_a_length_cap_measured_in_time_is_the_arrival_rate_in_disguise():
+    """The mechanism behind the sizing rule's load dependence, checked in the auxiliary queue model
+    rather than asserted. A request entering a full buffer of k advances one place per removal, and
+    at equilibrium removals (services plus drop-oldest evictions) happen at the ARRIVAL rate, so the
+    age of the request the console picks up is about (k-1)/Lambda. Holding k fixed and tripling the
+    arrival rate should therefore cut that age to about a third."""
+    import sys as _sys
+
+    _sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+    from queue_kstar import simulate
+
+    def age(n, k):
+        r = [simulate(n, 20, 0, 0.15, k, 22.0, 40000, 1000 + s, "fifo") for s in range(4)]
+        return (sum(x["age"] for x in r) / 4, sum(x["arr_rate"] for x in r) / 4)
+
+    for k in (4, 6):
+        a8, lam8 = age(8, k)
+        a24, lam24 = age(24, k)
+        assert lam24 > 2.5 * lam8                       # the load really did move
+        assert 0.85 < a8 / ((k - 1) / lam8) < 1.15      # the form holds at both ends
+        assert 0.85 < a24 / ((k - 1) / lam24) < 1.35
+        assert a24 < 0.5 * a8                           # same cap, less than half the delay

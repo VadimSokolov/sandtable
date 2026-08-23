@@ -21,7 +21,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from ar_gate import FULL_FRAC, FULL_MPE, FULL_T, rate_floor  # noqa: E402
+from ar_gate import FULL_FRAC, FULL_MPE, FULL_T, margin, rate_floor, tost  # noqa: E402
 from ar_read import find, load  # noqa: E402
 from make_queue_numbers import ROOT, paired  # noqa: E402
 
@@ -67,6 +67,16 @@ def main() -> None:
             m[f"se{tag}Stack{WORDS[n]}T"] = f"{t:+.2f}"
             m[f"se{tag}Stack{WORDS[n]}Gate"] = ("gated" if abs(t) > FULL_T and w2 >= FULL_FRAC * N
                                                 and abs(e) > FULL_MPE * base else "null")
+            # A gate that says "null" has established nothing, and in a simulator, where we choose
+            # the replication count, failing to separate two arms gets EASIER the more carelessly
+            # the run is done. The affirmative form is the only one that is stable under a budget we
+            # control, so the same contrast is also read as an equivalence against the same margin
+            # the gate uses to call a difference material. That margin predates every contrast here.
+            marg = margin("success", base)
+            eq, stat = tost(e, t, N, marg)
+            m[f"se{tag}Stack{WORDS[n]}Eq"] = "equivalent" if eq else "inconclusive"
+            m[f"se{tag}Stack{WORDS[n]}EqT"] = f"{stat:.2f}" if stat != float("inf") else "$\\infty$"
+            m[f"se{tag}Stack{WORDS[n]}Marg"] = f"{100 * marg:.1f}"
         # Two different answers to two different questions: the rate rule serves less and wins more.
         for n in ("8", "12"):
             for metric, d, mtag, fl in (("served", srv, "Srv", rate_floor()),

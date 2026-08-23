@@ -46,6 +46,7 @@ def simulate(n, P, L, mu, cap, Z, horizon, seed, discipline="fifo", drop="oldest
         period, other = lat_switch
         return L if int(now // period) % 2 == 0 else other
     ev, ctr = [], 0
+    arrivals = 0
     gen = np.zeros(n, dtype=np.int64)
 
     def push(t, kind, payload):
@@ -63,9 +64,11 @@ def simulate(n, P, L, mu, cap, Z, horizon, seed, discipline="fifo", drop="oldest
     busy_until = -1.0
     useful = served = dropped = 0
     work_time = 0.0
+    age_sum = 0.0                 # age of the request the console picks up, measured from its issue
+    arrivals = 0
 
     def maybe_start(now):
-        nonlocal busy_until, dropped
+        nonlocal busy_until, dropped, age_sum
         if busy_until > now or not buf:
             return
         # The age cap is applied where a console can apply it, at pick-up, on the request in hand.
@@ -80,6 +83,7 @@ def simulate(n, P, L, mu, cap, Z, horizon, seed, discipline="fifo", drop="oldest
             return
         rec = buf.pop(0) if discipline == "fifo" else buf.pop()
         issue, i, g = rec
+        age_sum += now - issue
         busy_until = now + svc
         push(busy_until, DONE, (i, issue, g))
 
@@ -95,6 +99,7 @@ def simulate(n, P, L, mu, cap, Z, horizon, seed, discipline="fifo", drop="oldest
             push(t + P, ABANDON, (i, gen[i]))
         elif kind == ARRIVE:
             i, issue, g = pl
+            arrivals += 1
             buf.append((issue, i, g))
             # Order matters and is inherited from `c2.py`: the console picks work up FIRST, then the
             # bound is applied to what is left waiting. The other order makes a capacity of zero mean
@@ -120,7 +125,8 @@ def simulate(n, P, L, mu, cap, Z, horizon, seed, discipline="fifo", drop="oldest
             maybe_start(t)
 
     return dict(useful=useful / horizon, served=served / horizon,
-                dropped=dropped / horizon, util=work_time / horizon)
+                dropped=dropped / horizon, util=work_time / horizon,
+                age=age_sum / max(served, 1), arr_rate=arrivals / horizon)
 
 
 def kstar_rules(lam):
