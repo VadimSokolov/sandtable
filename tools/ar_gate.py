@@ -45,6 +45,31 @@ FULL_T, FULL_FRAC, FULL_MPE = 1.70, 0.60, 0.06
 CAPACITY = 0.15                      # operator service rate, decisions per step, per console
 RATE_METRICS = {"served_per_step", "requests_per_step", "abandoned_per_step"}
 
+# The null registry, and the rule it enforces.
+#
+# Four separate defects in this project have had one shape: a LEVEL compared against a reference
+# treated as a constant when the reference is a function. Goodput's denominator moves with the
+# treatment. The Fano estimator's power depends on the window. The arrival-excess floor depends on
+# the channel dwell AND on the delivered rate. The tempo budget's reference speed depends on the
+# hold fraction it was supposed to predict. Each was caught by a bench, and each bench was built
+# only after someone demanded it.
+#
+# The rule, from adversarial review: a level may be gated only against a COMPUTED null, and the
+# null is admissible only if every argument of the null function was logged in the same run.
+# Otherwise the claim ships as a difference of two arms sharing the nuisance parameter, or as
+# ungated description. A difference needs no registry entry, because pairing cancels the null.
+#
+# `None` means the metric is difference-only: it has no admissible level reading at all.
+NULL_ARGS: dict[str, tuple[str, ...] | None] = {
+    # A gated source's excess is neither one nor constant; tools/bench_gate.py computes it from
+    # the dwell and the delivered rate, so both have to be in the same log.
+    "arrival_excess": ("ge_burst_len", "arrival_rate"),
+    "arrival_multiplicity": ("ge_burst_len", "arrival_rate"),
+    "arrival_fano": ("ge_burst_len", "arrival_rate", "fano_window"),
+    # Serviced over requested has no admissible level: the denominator is a treatment effect.
+    "operator_goodput": None,
+}
+
 
 def rate_floor(mpe: float = FULL_MPE, consoles: int = 1) -> float:
     """The absolute floor a rate effect must clear: a share of what the console can deliver."""
@@ -53,6 +78,31 @@ def rate_floor(mpe: float = FULL_MPE, consoles: int = 1) -> float:
 
 class DenominatorUnchecked(RuntimeError):
     """Raised when an inflatable ratio is gated without its denominator contrast."""
+
+
+class NullUnavailable(RuntimeError):
+    """Raised when a LEVEL is gated against a null whose arguments were not logged."""
+
+
+def check_level(metric: str, logged: set[str] | None) -> None:
+    """Refuse a level reading whose null cannot be computed from what the run recorded.
+
+    `logged` is the set of metric and sweep names present in the same battery section. Pass None
+    only for a contrast that is a difference of two arms, where the null cancels by pairing.
+    """
+    if metric not in NULL_ARGS:
+        return
+    args = NULL_ARGS[metric]
+    if args is None:
+        raise NullUnavailable(
+            f"{metric} has no admissible level reading: its reference is a treatment effect. "
+            f"Report a difference of two arms, or use an absolute rate.")
+    missing = sorted(set(args) - (logged or set()))
+    if missing:
+        raise NullUnavailable(
+            f"{metric} is a level whose null depends on {', '.join(args)}, and this run did not "
+            f"log {', '.join(missing)}. Log them, or report a paired difference instead, where "
+            f"the null cancels.")
 
 
 def gate(metric: str, eff: float, t: float, won: int, n: int, base: float,

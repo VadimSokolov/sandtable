@@ -3831,3 +3831,59 @@ That is the sentence the section should have been carrying, and it needed one co
 open, which is the initial-condition effect Section~\ref{subsec:band}'s fold band is about, now
 visible on the arrival statistic rather than only on the outcome. Not registered, so it is recorded
 as an observation and not a result.
+
+---
+
+## CR-39 VERDICT: THE COHORT IS ENTIRELY CROSS-VEHICLE, AND I DECLINE ONE REGISTERED INFERENCE
+
+Job 9447167. P1 and P3 confirmed decisively, P2 refuted, and the P2 refutation is the interesting
+part because I am not going to apply the consequence I registered for it.
+
+**P1 CONFIRMED.** `fix18 - jit18` on `arrival_distinct`, the count of distinct SENDERS per busy
+window rather than of arrivals:
+
+| | $n=5$ | $n=6$ |
+|---|---|---|
+| bursty | +0.171 (+12.5%), $t=31.7$ | +0.338 (+23.3%), $t=42.3$ |
+| memoryless | +0.096 (+7.5%), $t=33.0$ | +0.141 (+10.4%), $t=37.7$ |
+
+All 32 of 32 blocks. **P3 CONFIRMED**: the memoryless control shows the same pattern, so the cohort
+is cross-vehicle on a link with no structure at all.
+
+**P2 REFUTED, and the inference it licensed is declined.** P2 predicted `arrival_repeat_frac` would
+be higher at backoff 4 than at 18, and registered that a flat result means "the split is not
+measuring what its name says and P1's reading is void." It is flat. It is **exactly zero in all
+sixteen cells**. I am not voiding P1, and the reason has to be stated plainly enough that a reader
+can overrule me.
+
+*The prediction was built on my arithmetic error.* I reasoned that a backoff of 4 is inside a window
+of 7 so a vehicle can re-ask within one window. It cannot. A refusal has to travel back before the
+backoff even starts: one-way latency 4, service 6.67, latency 4 again, then the hold. The earliest
+re-ask is 18.7 steps at backoff 4 and 32.7 at backoff 18, against a window of 7. **A repeat inside
+one window is physically impossible at every backoff in this battery**, so the quantity P2 predicted
+would vary cannot vary, and its being zero is a confirmation of the physics rather than a symptom of
+a broken counter.
+
+*And the instrument passes a strictly stronger check than the one P2 proposed.* `arrival_distinct` is
+computed from a bitmask popcount and `arrival_multiplicity` from an independent increment counter.
+They agree **to machine precision in all sixteen cells**, which is exactly what two correct
+implementations must produce when no vehicle repeats and is a coincidence no broken counter
+delivers.
+
+**This is the only place in the ledger where a registered inference is declined, and it is flagged as
+such** so it can be judged rather than absorbed. The rule I take from it, and it is a real cost: a
+falsifier is only as good as the arithmetic behind its premise, and mine had an unstated assumption
+(that the backoff is the whole cycle) that the model's own latency contradicts. **Registering a
+falsifier does not protect against being wrong about what the model can do**, and the protection
+against that is deriving the predicted quantity's range before predicting its direction.
+
+### What P1 buys the manuscript
+
+`arrival_repeat` is identically zero, so `arrival_distinct` equals `arrival_multiplicity`
+everywhere, which means **every multiplicity result in this paper was already a distinct-sender
+result** and none of them needs restating. What changes is that the mechanism sentence now has direct
+evidence instead of an assumption: none of the crowding a fixed hold produces is a vehicle colliding
+with itself, so "the benefit is vehicles desynchronizing from each other" is measured rather than
+inferred. Together with CR-34 P6, the picture is complete: a fixed hold crowds the console with a
+cohort of DIFFERENT vehicles that grows superlinearly with span, and a randomized hold of the same
+mean takes that crowding back to the level of a fleet that never retries.

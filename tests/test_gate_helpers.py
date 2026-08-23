@@ -255,3 +255,37 @@ def test_the_denominator_guard_stays_relative_not_capacity_floored():
     # it still makes the ratio unreadable, because ratio bias tracks proportional movement.
     assert ar_gate("operator_goodput", eff=0.30, t=40.0, won=32, n=32, base=0.50,
                    denom=(0.0020, 0.010)) is False
+
+
+# ---------------------------------------------------------------------------
+# The null registry. Four defects in this project shared one shape: a level compared against a
+# reference treated as a constant when the reference is a function. The rule is that a level may
+# be gated only against a computed null whose every argument was logged in the same run.
+# ---------------------------------------------------------------------------
+from tools.ar_gate import NullUnavailable, check_level  # noqa: E402
+
+
+def test_a_level_needs_its_nulls_arguments_in_the_same_run():
+    # This is exactly F3: an arrival_excess level swept over dwell with no arrival_rate logged.
+    with pytest.raises(NullUnavailable, match="arrival_rate"):
+        check_level("arrival_excess", {"ge_burst_len", "operator_goodput"})
+
+
+def test_a_level_passes_when_every_argument_is_logged():
+    check_level("arrival_excess", {"ge_burst_len", "arrival_rate"})
+
+
+def test_a_ratio_whose_reference_is_a_treatment_effect_has_no_level_reading():
+    with pytest.raises(NullUnavailable, match="treatment effect"):
+        check_level("operator_goodput", {"requests_per_step", "served_per_step"})
+
+
+def test_a_level_with_nothing_logged_refuses():
+    # `logged=None` is the empty case, not an exemption: a level still needs its null.
+    with pytest.raises(NullUnavailable):
+        check_level("arrival_excess", None)
+
+
+def test_an_unregistered_metric_is_unaffected():
+    check_level("success", set())
+    check_level("served_per_step", set())
