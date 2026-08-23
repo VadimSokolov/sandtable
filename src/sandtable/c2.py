@@ -177,6 +177,20 @@ class Operator:
     # above 1.0 says acting on bad guidance is worse than acting on none, which is the assumption a
     # programme worried about over-trust actually holds. It is a sweep, not a belief.
     bad_answer_hold: float = 1.0
+    # WHICH KIND OF HARM a wrong answer does, which is a different question from how much. Under
+    # `"time"` the requester does not get its answer and comes back for it, so wrongness is priced
+    # in delay and `bad_answer_hold` is the price. That channel cannot represent the failure mode a
+    # programme worried about over-trust actually holds, where acting on bad guidance is worse than
+    # acting on none, because no amount of delay ever makes a vehicle FIGHT worse.
+    #
+    # The quality channel does. It delivers the wrong answer, the requester acts on it, and the
+    # decision resolves at a degraded control quality. Its two settings are the endpoints of an
+    # interval rather than a dial, and both are derived from constants this paper already prices:
+    # `"weak"` resolves at `q_auto`, so a wrong answer leaves the vehicle no better off than its own
+    # autonomy would have, and `"reflect"` resolves at `2 q_auto - q_operator`, so it is as far
+    # BELOW autonomy as a right answer is above it. There is no third value and no number to tune,
+    # which is the point: an interval cannot be fitted to a conclusion.
+    bad_answer_harm: str = "time"       # "time" | "weak" | "reflect"
     # The confusion matrix, in the operator's own decision units. Checked-and-wrong is a hit,
     # checked-and-right a false alarm, shipped-and-wrong a miss, shipped-and-right a correct
     # rejection. `n_shipped_bad` is the mission-facing count: answers that went out wrong.
@@ -359,6 +373,7 @@ def build_c2(scn: Scenario, ent: Entities,
         check_dprime=float(scn.params.get("check_dprime", 0.0)),
         comply_frac=float(scn.params.get("comply_frac", 0.25)),
         bad_answer_hold=float(scn.params.get("bad_answer_hold", 1.0)),
+        bad_answer_harm=str(scn.params.get("bad_answer_harm", "time")),
         q_operator=q_operator_eff,
         q_auto=q_auto,
         q_fallback=float(scn.params.get("q_fallback", 0.50)),
@@ -482,6 +497,19 @@ def _sees_the_draw(op: "Operator", rng: np.random.Generator) -> bool:
     if op.admit_acuity <= 0.0:
         return False
     return bool(rng.random() < op.admit_acuity)
+
+
+def _bad_quality(op: "Operator") -> float:
+    """The control quality a vehicle resolves at after acting on a wrong answer.
+
+    Both endpoints are functions of quantities the scenario already sets, so the interval is a
+    property of the model's own price list rather than a parameter of this mechanism.
+    """
+    if op.bad_answer_harm == "reflect":
+        return 2.0 * op.q_auto - op.q_operator
+    if op.bad_answer_harm == "weak":
+        return op.q_auto
+    raise ValueError(f"bad_answer_harm {op.bad_answer_harm!r} is not a quality channel")
 
 
 def _supervise(op: "Operator", svc: float, rng: np.random.Generator) -> tuple[float, bool]:
@@ -856,12 +884,23 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
                 _give_up(op, ent, i, arrive, int(op.patience_v[i]), rng)
                 continue
             if not good:
-                # The slot was spent and an answer went out; it was the wrong one, so the requester
-                # still has its problem and comes back for it.
                 op.n_shipped_bad += 1
                 op.t_shipped_bad += svc
-                _give_up(op, ent, i, arrive,
-                         int(op.bad_answer_hold * op.patience_v[i]), rng)
+                if op.bad_answer_harm == "time":
+                    # The requester still has its problem and comes back for it. Wrongness is
+                    # priced in delay and never reaches the vehicle's own effectiveness.
+                    _give_up(op, ent, i, arrive,
+                             int(op.bad_answer_hold * op.patience_v[i]), rng)
+                    continue
+                # The wrong answer is DELIVERED. The requester is satisfied, stops asking, and acts
+                # on it, which is the only channel in this model through which a decision can make a
+                # vehicle worse rather than merely later.
+                ent.await_until[i] = int(math.ceil(reply))
+                op.resolved_quality[i] = _bad_quality(op)
+                op.waits.append(float(reply - arrive))
+                op.n_serviced += 1
+                op.n_ans_v[int(i)] += 1
+                op.retry_streak[i] = 0
                 continue
             if reply > deadline:  # worked, and answered too late. `blind` always; an admitting
                                   # console only when it admitted on the mean and the draw overran
@@ -1112,7 +1151,8 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 if not good:
                     op.n_shipped_bad += 1
                     op.t_shipped_bad += svc
-                op.resolved_quality[i] = q if good else op.q_auto
+                op.resolved_quality[i] = q if good else (
+                    op.q_auto if op.bad_answer_harm == "time" else _bad_quality(op))
                 if wait > op.patience_v[i]:
                     # Admitted on the mean, overran on the draw. The slot is spent and the answer
                     # lands after the requester has gone, which is the honest cost of a console

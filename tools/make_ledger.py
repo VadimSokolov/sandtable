@@ -182,6 +182,12 @@ ROWS = [
      "the corrected value sits below the materiality floor, so the quantity was never testable; "
      "guarded by \\texttt{deep\\_stale\\_fraction}, which takes the rung as an argument and reads "
      "the rate from the ladder, so a wrong rung is a visible argument rather than a constant"),
+    ("a continuous mediator measures the same thing on both sides of its threshold",
+     "(instrument: a run that stops as soon as the objective is met)",
+     "\\textsc{repaired}: \\texttt{arrived\\_frac} is pinned at \\texttt{survive\\_fraction} whenever "
+     "the mission succeeds, so it separates only on the failing side and every contrast across the "
+     "threshold is a lower bound; guarded by a test asserting the pinning at three thresholds, so "
+     "the metric cannot be quoted as a two-sided mediator without the assertion failing"),
     ("the most accurate difficulty estimate is the one to build",
      "an honest rule that prices the slot and matches a deliberately biased estimate",
      "\\textsc{refuted} on its own control: a capped console reaches the inflated console's "

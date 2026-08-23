@@ -6716,3 +6716,96 @@ both help would naturally buy both. In this model buying both is worse than buyi
 delivers 0.1545 where triage alone delivers 0.1949. The ladder's ordering stands, but the rungs are
 alternatives and not increments, and that sentence has to be in the guidance rather than in a
 footnote.
+
+## CR-61 AMENDED BEFORE ITS BATTERY: THE COST OF SCRUTINY IS NOT THE SCRUTINY
+
+Round 29's review and three pilots between them took the registration apart. Everything below
+replaces P1 through P5, and the pilots are disclosed.
+
+**First, what the reviewer was right about and I was not.** The `bad_answer_hold` sweep cannot reach
+the failure mode it was built for. That knob prices wrongness in the requester's TIME, and the harm
+a programme worried about over-trust holds is structurally different at any value of it: it is
+absorbing rather than transient, it falls partly on the neighbour, and it lives in the tail. No time
+price ever makes a vehicle FIGHT worse. So the sweep provably cannot arrive, and sweeping harder
+would have been a way of not noticing. The reviewer's repair is taken in full and adds no dial:
+wrong answers may instead be DELIVERED and resolve at a degraded control quality, with two endpoints
+both derived from constants this paper already prices. `weak` resolves at $q_{\text{auto}} = 0.70$,
+so a wrong answer leaves the vehicle no better off than its own autonomy; `reflect` resolves at
+$2q_{\text{auto}} - q_{\text{operator}} = 0.45$, as far below autonomy as a right answer is above it.
+An interval cannot be fitted to a conclusion, which is why it is an interval.
+
+**Second, the closed form I derived from the pilot is wrong, and finding out how it is wrong is the
+result.** At saturation, checking delivers $1/s$ correct answers and shipping delivers $(1-q)/(cs)$,
+so shipping should win exactly while $q < 1 - c$, which at $c = 0.25$ predicts a break-even autonomy
+error rate of 0.75, and 0.375 under the reflecting endpoint. Measured at eight assets over 64
+replications, shipping wins at EVERY error rate on both endpoints, including $q = 0.9$ under
+`reflect`, where nine answers in ten actively degrade the vehicle that receives one. The closed form
+is not slightly off. It is missing a term.
+
+**The missing term, isolated.** Same configuration, $q = 0.5$, `reflect`, 64 replications:
+
+    arm                              served/step   success   blue loss
+    no operator at all                   0.0000     0.891      0.2734
+    operator checks everything           0.1165     0.719      0.4062
+    operator ships everything            0.2497     0.797      0.3223
+    checks everything, waiting free      0.1244     0.922      0.2285
+    ships everything, waiting free       0.2764     0.969      0.2051
+
+Two things are in that table and the second explains the first. **A conscientious operator at the
+collapse span is worse than no operator at all**, 0.719 against 0.891. And the whole of that deficit
+is the WAITING: pricing a waiting asset at $q_{\text{auto}}$ instead of $q_{\text{stall}}$ takes the
+same always-checking console from 0.719 to 0.922, above the no-operator baseline. The closed form
+omitted the queue of vehicles idled behind each check. Scrutiny is not expensive because scrutiny is
+expensive. It is expensive because it is a slot, and every vehicle waiting on that slot is stalled.
+
+**What is registered now.**
+
+- **Q1. THE CROSSING.** There is a span at which adding an operator who checks every recommendation
+  makes the mission WORSE than having no operator, and it is at or below the collapse span. Pilot
+  has it at eight assets. FALSIFIER: no span in the sweep where always-check falls below the
+  supervisory-autonomous baseline at full tier.
+- **Q2. THE DECOMPOSITION, which is the claim and not Q1.** The crossing is carried by the stall and
+  not by the checking. Registered: setting $q_{\text{stall}} = q_{\text{auto}}$ removes the crossing
+  at every span where Q1 finds it, and the stall term is at least twice the correctness term
+  (measured 0.203 against 0.047 in the pilot). FALSIFIER: the crossing survives free waiting, or the
+  two terms are within a factor of two, in which case the cost of scrutiny is genuinely the
+  scrutiny and Q2 is withdrawn while Q1 stands.
+- **Q3. THE REQUIREMENT, stated where a programme can act on it.** The binding parameter on a
+  supervisory console is neither answer quality nor answer rate but what an asset may DO while it
+  waits. Registered as a threshold: there is a value of $q_{\text{stall}}$ above which an
+  always-checking operator beats no operator at eight assets, and it is strictly between
+  $q_{\text{stall}}$ and $q_{\text{auto}}$. FALSIFIER: no interior threshold.
+- **Q4, THE HONESTY CLAUSE, because Q2 is a comparison of two stipulated constants.** That
+  $q_{\text{stall}} < q_{\text{auto}}$ is an assumption, not a finding, and a result that only said
+  "waiting is costly because we priced waiting as costly" would be worthless. What is NOT stipulated
+  is the ORDERING of the two mechanisms, nor where the crossing falls, nor that either exists. Those
+  three are what is reported. The transferable object is the shape.
+- **Q5. THE HARM CHANNELS ARE COMPARED, NOT CHOSEN.** Both quality endpoints and the time channel
+  run on the same grid. Registered null: identical ordering of the design space across all three.
+  Inversion cells, if any, are the over-trust exhibit and are the only place the model can say
+  anything about F5 at all. FALSIFIER of the null: any inversion, which is a result rather than a
+  failure.
+- **Q6, replacing P3, on the reviewer's correction that corners are the wrong comparison.** The
+  pilot already has check-rate 0.5 beating 1.0 at sixteen assets, so always-check against
+  never-check is not the contrast. Registered instead: the OPTIMAL check rate $r^\star(u)$ as a
+  function of console utilization, with the claim that it falls monotonically in $u$ and reaches
+  zero only above the collapse span. FALSIFIER: $r^\star$ pinned at zero across the whole range, or
+  non-monotone in $u$.
+- **Q7, replacing P5, on the reviewer's correction that "jamming makes checking cheaper" reads as an
+  artefact.** The claim is re-registered as SUFFICIENCY: $r^\star$ collapses onto a single curve in
+  console utilization, tested by matched-utilization cells drawn from different rungs of the comms
+  ladder. If it holds, rational trust is scheduled by console slack whatever sets the slack, which
+  is artefact-proof and welded to the effort-invariance family. If it fails, the rung residual is a
+  genuinely communications-specific effect on trust and is the more interesting of the two. Both
+  branches publish; the earlier wording survived only one. Conservative assumption stated once: the
+  autonomy's error rate is taken to be comms-invariant.
+
+**Instrument defect 12, found while diagnosing the above.** `arrived_frac` is described in the
+metric set as the continuous quantity `success` thresholds. It is that only below the threshold. The
+run breaks as soon as enough vehicles reach the objective, so a succeeding mission records
+`arrived_frac` AT `survive_fraction` and never above it: measured 0.3125, 0.5000 and 0.7500 against
+thresholds of 0.3, 0.5 and 0.7. The metric separates only on the failing side, a contrast between two
+succeeding arms reads zero whatever the arms did, and a contrast across the threshold is a LOWER
+bound. No published claim is overturned, because every reported contrast on it is of the third kind
+and is therefore understated rather than overstated; the manuscript now says so. Guarded by a test
+asserting the pinning at three thresholds.

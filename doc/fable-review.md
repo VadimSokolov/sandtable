@@ -3026,3 +3026,58 @@ Manuscript placement: the C0-C5 grid and the collapse stay the spine; the theme 
 - Registered this round: b*(n) crosses 1 at the collapse span; n = 4 flat below b = 1 (b = 0.6 cell ~ 0.0873); cv = 0 b-row is a step; argmax b rises with cv; the capped console recovers 0.2186 or the slack coupling is real, either way the arm runs before F6 publishes; CR-60 four mediators, three families, one-survivor falsifier; svc_serviced_mean-vs-success as the theme's prospective failure test.
 - Carried open: quantile svc_worked_mean ~ population; long-hold arm; GE-60 high-power bridge (-0.014); stratified track-error curve; C3 SUM ordering; u_admit; mid-span late bins; bound absolute cells; the 8-cell mu battery; VoI at cv = 0.25.
 
+
+## Round 29 (2026-08-23, the coordinator's round 29)
+
+Verdicts first. The bridge retraction is accepted and owned in full: my number, my discipline, and the doctrine it violated was my own. B4 is scored: both of my Round 25 registrations hit, and the sign-change wording is the right manuscript form. On CR-61: the h-sweep is not enough and cannot be swept into enough, because h prices the magnitude of the wrong quantity; the minimum faithful harm channel is a reflection through the quality axis the model already owns, published as an interval so it cannot be tuned; and P5 as worded over-reaches: re-register it as a sufficiency-of-load claim, which turns the throttled-arrivals objection from an artefact charge into the mechanism, plus one repair to P3's corner comparison.
+
+### 1. The bridge: owned, with the doctrine named
+
+The exact error: the 0.55 in my Round 27 arithmetic was C5's i.i.d. stale fraction, read off the Round 26 pilot; the battery ran at C3, where the rate is 0.20. With the rung-read deep fraction the prediction is 0.051 x 0.0841 = 0.0043 (and 0.093 x 0.0985 = 0.0092 for GE-240), both under every floor the battery had, so the quantity I registered a window for was never testable at that operating point. My [-0.021, -0.007] was an unconditional claim about an untestable quantity, and E1 fired exactly as it should.
+
+The doctrine violation is the part worth a line in the defect row: Round 20's NULL_ARGS rule says every argument of a null must be read from the run it gates. The deep fraction was an argument of my null, and I carried it from memory across a rung boundary. Defect 11's guard, deep_stale_fraction(level, burst_len, age) taking the rung as an argument, is precisely the mechanization my own rule demanded and did not get from me. His observation that the bridge, an instrument audit, was itself defeated by a reference error, is correct and goes in the genus list: NULL_ARGS applies to reviewers.
+
+What survives: the response curve (platform property, untouched); E3, the bit-identity control I specified, passing 0/256 at both rungs; and the mechanism being live at dose (0.0841 and 0.0985 of follower-time reverted, 256/256 gated) while the mission moves by nothing, which is the benign-fallback result at ten times the pilot's dose and strengthens the Round 27 attribution: in-family, outage shortness and a benign fallback do the work; the timeout buys the severed-link case only. That framing needs no bridge number. If a referee ever demands in-family excitation: the one testable cell is C5 x GE-240 x 256 blocks, deep fraction 0.55 x e^(-40/240) = 0.466, prediction -0.024 to -0.043 by the shallow and deep rate calibrations against a floor of about 0.021, registered THIS time with its testability line and rung-read arguments. Run it only on demand.
+
+Scoreboard entry: third fired registration of mine (p*-motion in R23, the fifo~rand split in R25, the bridge now), and the first with a doctrine violation attached.
+
+### 2. B4 and the follow full tier: scored
+
+- Counter alone 0.1402: inside my registered [0.125, 0.148]. Hit.
+- Foreclosure: (0.1949 - 0.1545)/0.0764 = 0.529, inside my "half to three quarters". Hit.
+- B3: admit_foresight bit-inert on the counter-only console, 0.0000 to the digit every block: the Round 25 specification catch, now measured instead of argued, and the arm was rebuilt correctly.
+- The sign change is the right sentence and better than any substitution language: +0.0217 to a console that cannot triage, -0.0404 to one that can, so a program office that buys both gets less than it paid for. That replaces the caveat cleanly.
+- PDR at matched mean rate is now the theme's fourth FULL-TIER instance (166x on track error, 0.62 to 103.2 m, six of six mission contrasts equivalent, weakest one-sided 4.02). Of Round 28's five instances, four are full tier; CR-59 remains the pilot fifth.
+- One caution on the lever-ranking sentence: console +0.1255, follow +0.0195 equivalent to zero, commanded spread 0.8926 to 0.3003 spans more than either, but spread is a mission-design axis, not a console lever; keep the three numbers in one sentence without letting the table imply the spread is available to the console.
+
+### 3. CR-61(A): the h-channel prices the wrong quantity, at any h
+
+What h is: harm denominated in requester time, the one currency the console already trades. Three structural properties of the sponsor's F5 harm that no value of h can represent:
+
+(i) Absorbing versus transient. Attrition removes the vehicle and destroys its future demand (the codebase's own comment: a costly mission relieves the console by destroying demand). Time-harm ADDS load to the system; real harm REMOVES it. No h crosses that sign, so the console-side signature of harm is wrong at every point of the sweep.
+(ii) Private versus external. h debits the requester alone; acting on bad guidance can debit other vehicles (fratricide, convoy exposure). h has no term for the neighbour.
+(iii) Mean versus tail. h* is a break-even at the mean; over-trust failure is a tail phenomenon, dominated by rare catastrophic wrongs. A mean-priced h* systematically overstates rational trust relative to any heavy-tailed harm world.
+
+Even the limit fails: h to infinity approximates participation-loss but never touches blue_loss or demand destruction. The sweep provably cannot arrive, so "sweep harder" is not the honest move and he is right to suspect it.
+
+The minimum faithful channel, zero new dials: route a shipped wrong answer through the quality axis the model already owns. Set resolved_quality on a wrong shipped answer to 2 q_auto - q_operator (reflection: a wrong answer subtracts what a right one adds), with q_auto as the weak endpoint (wrong = as if unassisted). Publish every downstream number at BOTH endpoints as an interval; an interval cannot be tuned to a conclusion, the scale is inherited from two constants the paper already prices, and the harm is mission-referenced through the existing consumer of resolved_quality. If that consumer turns out too weak to move the mission, that is itself the finding: the model cannot represent F5, and the scope sentence ships instead.
+
+Falsifier structure: run both channels (time-h and quality-reflection) on the same (q, d prime, check_rate) grid. Null: the two break-even surfaces order the design space identically. Any inversion cells are the F5 exhibit, and the h-only P3 is then the break-even for the wrong quantity, said plainly. If he ships h-only meanwhile, the mandatory scope sentence is: h* prices delay-type wrongness (misprioritization, benign misroute), which is a real and large class; harm-type wrongness is out of scope.
+
+One more thing a referee will find before we do: at h = 1 a wrong answer costs exactly what silence costs, so "shipping 30 percent wrong outperforms shipping none" is nearly circular at the default: wrongness IS silence with better throughput at that price point (0.3220 x 0.7 = 0.2254 effective right answers against 0.1152). The sweep is what makes it a finding; the pilot alone does not. Credit where due: discarding the chord model pre-run was right, and it is the same split for the third time in this project: calibration versus discrimination, b versus sigma, criterion versus d prime. The toolkit is converging.
+
+### 4. CR-61(B): P5 over-reaches as worded; re-register as sufficiency
+
+The worry is correct as prophecy: "jamming makes checking cheaper" IS throttled arrivals. The repair is to claim the mechanism rather than defend against it. Register sufficiency: h* collapses onto a single curve in console utilization, tested by matched-u cells across rungs (C4 at n = 16 against C0 at the u-matched span), equal h* within floor. If sufficiency holds, the headline strengthens and becomes artefact-proof: rational trust is scheduled by console slack, whatever sets it; jamming, span, and autonomy level are instances. That also welds P5 to the effort-invariance family. If sufficiency fails, the rung residual after matching u is the genuinely comms-specific trust effect (check latency, re-ask cost under jam), which would be the more interesting P5 prime. Either branch publishes; the current wording only survives one of them.
+
+Assumption to state either way: q is comms-invariant in the model. Real degraded comms plausibly degrade the recommendation too, which pushes h* further in the registered direction, so the assumption is conservative: one line.
+
+P3 repair: the corners are the wrong comparison. His own pilot has check 0.5 dominating check 1.0 at n = 16 (0.1834 versus 0.1152, success 1.000 both), so a corner flip is neither necessary nor sufficient for the knob to be a design variable. Register the policy curve check_rate*(h, u) and define h* as where check_rate* leaves zero; withdraw CR-61 only if the whole curve is pinned at zero across the sweep.
+
+### 5. Scoreboard and open items
+
+- Mine, hits: counter-alone window; foreclosure fraction; B3 bit-inertness measured.
+- Mine, miss: the bridge, third fired registration, doctrine violation named and logged.
+- His: defect 11 correctly named, correctly guarded, and the retraction shape (E1 fires, E3 passes, mechanism live at dose) is the ledger working as designed: registered before read, killed by its own falsifier, guard mechanized, three tests pinning it.
+- Open: 9450017 h-sweep with the corner-to-curve repair and the sufficiency cells; the quality-reflection channel and its no-inversion null; quantile svc_worked_mean; long-hold arm; stratified track-error curve; C3 SUM ordering; u_admit; mid-span late bins; mu 8-cell battery; VoI at cv = 0.25; CR-59 capped console and mission-end cells; CR-60 mediators.
+
