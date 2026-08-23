@@ -121,6 +121,7 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "abandon_queue_frac": 0.0, "abandon_link_frac": 0.0,
            "served_per_step": 0.0, "requests_per_step": 0.0,
            "arrival_fano": 0.0, "arrival_multiplicity": 0.0, "arrival_peak": 0.0,
+           "arrival_rate": 0.0, "arrival_excess": 0.0,
            "supervised_mean": 0.0, "supervised_frac": 0.0, "demand_norm_goodput": 0.0,
            "hold_fraction": 0.0, "interaction_steps": 0.0, "neglect_steps": 0.0, "fan_out": 0.0}
 

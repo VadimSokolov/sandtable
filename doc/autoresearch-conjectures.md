@@ -2726,3 +2726,145 @@ channel's own variance is largest and the statistic's power is least, and it cos
 eighty in t. The published Fano null was read through a window that had almost no power. This is a
 fifth member of the genus in `tests/test_gate_helpers.py`: a parameter chosen by an argument about
 where the physics lives rather than by measuring where the instrument works.
+
+---
+
+## CR-32 VERDICT. LEWIS ET AL. 2010: THE PREDICTION HOLDS, AND THE MEDIATOR IS SHARPER THAN THE ONE I REGISTERED
+
+Source text obtained from the Internet Archive's copy of the author-hosted PDF (the University of
+Pittsburgh URL is dead; `web.archive.org/web/20240423152545/http://www.ischool.pitt.edu/people/
+lewis/HF-2010.pdf`). Both registered falsifiers checked against the reported numbers.
+
+### Falsifier 1: NOT FIRED. The prediction is confirmed with the right shape and the right statistics.
+
+Victims found, full-task condition (the operator performs both subtasks):
+
+| robots | victims found | s |
+|---|---|---|
+| 4 | 4.80 | 1.57 |
+| 8 | 7.06 | 2.25 |
+| 12 | 4.73 | 1.98 |
+
+`N Robots x Task` interaction, within groups `F(2, 56) = 8.45`, partial eta-squared 0.23,
+`p = .001`. Adjusted pairwise: 4 against 8 `p < .001`, 8 against 12 `p = .006`, **4 against 12
+`p = .08`, not significant.**
+
+The registered prediction was that the 4-to-8 step and the 8-to-12 step carry opposite signs. They
+do. And the third comparison is the one that settles it: **twelve robots is statistically
+indistinguishable from four.** That is not a trend continuing, it is a return. An attention account
+in which per-robot quality declines as robots compete for a fixed budget predicts monotone decline
+from 4; that is refuted on this dataset, not merely unsupported.
+
+### Falsifier 2: PARTIALLY FIRED. The strong reading is withdrawn; a sharper one replaces it.
+
+I registered that if exploration performance "in fact declines with team size" the sufficiency
+reading is withdrawn. It does not decline. Area explored in the full-task condition:
+
+| robots | full task | exploration only | paired test |
+|---|---|---|---|
+| 4 | 129.2 (s 48.5) | 173.8 (s 52.2) | `t(15) = 4.25, p = .024` |
+| 8 | 327.6 (s 55.4) | 348.9 (s 73.9) | no difference |
+| 12 | 285.8 (s 60) | 377.8 (s 48) | `t(15) = -3.62, p = .001` |
+
+So the abstract's "roughly the same" is true only at 8 robots, and the full-task operator IS
+degraded relative to one freed of the other subtask at both 4 and 12. **The strong claim, that the
+operator is not degraded at the subtask at all, is withdrawn.**
+
+**What replaces it is better, and it is arithmetic on their own two columns.** From 4 robots to 12,
+full-task area explored rises from 129.2 to 285.8, a factor of 2.2. Over the same range victims
+found goes 4.80 to 4.73, unchanged. **The fleet more than doubled its productive output and the
+mission output did not move.** Whatever the operator lost at twelve robots, it was not enough to
+stop the robots covering twice the ground, and none of that extra ground converted. The loss is not
+in what the robots did, and not in the operator's ability to keep navigating. It is in the
+conversion, which happens one interaction at a time at a shared server.
+
+### The arm that removes the console interaction removes the collapse
+
+Perceptual search, where exploration is automated and the operator handles only detections:
+
+| robots | victims found | s |
+|---|---|---|
+| 4 | 6.93 | 1.22 |
+| 8 | 8.20 | 0.86 |
+| 12 | 8.33 | 0.62 |
+
+Monotone, no collapse, `F(1, 28) = 27.4, p < .001` against full task. Removing one class of console
+interaction removes the span pathology. That is this paper's admission-control and supervisory arms,
+performed on human operators eight years before we ran them, and reported by authors who framed the
+result as a question about which subtask to automate rather than about a queue.
+
+The authors' own effect-size comparison points the same way: improvements in perceptual search
+contribute more to victims found (partial eta-squared 0.35) than improvements in exploration
+contribute to area explored (0.13).
+
+### Status: SHAPE, PRE-REGISTERED
+
+Not `numerical`: the paper reports no interaction or neglect time, so no `n*` is computable for
+their setup and none is claimed. Stronger than the `sign only` status Giachetti carries, because
+what was predicted was the SHAPE (non-monotone, peak at the interior, endpoints statistically
+equal) and it was registered before the source text was read. Their design has three team sizes,
+which is the minimum that can show a hump at all, and it shows one.
+
+---
+
+## CR-34 AMENDMENT. THE BENCH POINT FABLE ASKED FOR, AND WHY IT MOVES BOTH PREDICTIONS
+
+Registered before the `cohort` battery is read. `tools/bench_excess.py` measures `arrival_excess` at
+its DEPLOYED window of 7 steps against the closed form for the injected process. Over a window of
+w steps, `N_t = K * B_t` with `B_t ~ Bernoulli(lambda/K)` gives `K * Binomial(w, lambda/K)`
+arrivals, so
+
+    E[k | k >= 1] = lw / (1 - (1 - lambda/K)^w)   and   excess = (1 - e^{-lw}) / (1 - (1-lambda/K)^w)
+
+exactly. Run at the deployed GE geometry (bad dwell 120, stationary bad 0.2, hence good dwell 480),
+32 blocks of 1800 steps, at the rates the batteries actually deliver:
+
+| channel | lambda | K | truth | measured | error |
+|---|---|---|---|---|---|
+| memoryless | 0.070 | 1 | 0.9726 | 0.9796 | +0.7% |
+| on-off | 0.070 | 1 | 0.9726 | 1.0261 | +5.5% |
+| memoryless | 0.090 | 1 | 0.9672 | 0.9761 | +0.9% |
+| on-off | 0.090 | 1 | 0.9672 | 1.0321 | +6.7% |
+| memoryless | 0.090 | 2 | 1.6964 | 1.7104 | +0.8% |
+| on-off | 0.090 | 2 | 1.6964 | 1.7372 | +2.4% |
+
+**Two findings, and both change what CR-34 may claim.**
+
+**1. On the memoryless channel the estimator is essentially exact** (under 1% at every rate and
+cohort size, `t` against truth below 1.3, i.e. not distinguishable from ground truth). Within-channel
+contrasts there are trustworthy at face value.
+
+**2. On the on-off channel the estimator reads HIGH even when the source has no cohort at all.**
+At K = 1, a perfectly scattered source reads 1.026 to 1.032 at the batteries' rates. **The gate
+manufactures apparent clustering.** At the duty cycle I first benched (0.5 rather than the deployed
+0.8) the bias reaches +20% to +46%, so the size of this effect is a property of the channel's
+geometry and has to be measured at the deployed one, not assumed from another.
+
+**Consequences, stated before the data is seen.**
+
+P1 as registered said the jittered memoryless arm reaches 1.0. **That reference was wrong and is
+withdrawn.** A perfectly scattered Bernoulli source reads 0.97, not 1.00, because a binomial count
+is slightly under-dispersed against Poisson. The pilot's 1.001 and 1.011 are therefore ABOVE the
+scattered reference, not at it, by roughly 0.02 to 0.03. **P1' : the jittered memoryless arm's
+excess is within the bench's own error band of the scattered-source reading at its measured rate.**
+
+P2 as registered said the jittered GE arm stays above 1.0 by a gated margin. **The margin must be
+taken against the instrument's floor on that channel, not against 1.0.** Pilot values 1.042 and
+1.083 against floors of about 1.026 and 1.032 leave true residuals near +0.016 and +0.051, so
+roughly half the apparent residual at n = 5 is instrument bias and the n = 5 cell may not survive.
+**P2' : the GE residual measured against the bench floor at the arm's own delivered rate is
+positive and gated at at least one span.**
+
+**FALSIFIER, unchanged in spirit and sharpened in form: if the GE residual net of the bench floor
+is not gated at any span, the two-synchronizer account is withdrawn.**
+
+**What is unaffected either way.** The within-channel paired contrast, `jit` against `fix` on the
+same channel at the same mean hold, differences the bias away because it is common to both arms.
+Those numbers (-0.094, -0.088 memoryless; -0.173, -0.265 GE) stand as measured. Had the amendment
+not been made before the run, the absolute-level claims would have shipped with half their n = 5
+residual borrowed from the instrument.
+
+**The general rule this is the second instance of.** A deployed instrument setting is registration
+content and owes its own bench point against injected ground truth, at the geometry it is deployed
+at. The Fano window was the first instance and it cost a refutation. This one was caught before it
+cost anything, which is the only difference.

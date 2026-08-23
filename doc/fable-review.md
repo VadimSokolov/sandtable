@@ -2226,3 +2226,83 @@ diagnostics in the write-up, but nothing new may gate. And the stake is shared: 
 sentence ("a refusal without a client-side rate rule is load acceleration with better manners")
 was built on the goodput inversion. If served_per_step shows no gated negative at 8/10/12, my
 sentence is withdrawn with yours, not softened. Registered here.
+
+## Round 15 (2026-08-22, the coordinator's round 15)
+
+### HQ1 closed, and the small discrepancy has a clean source
+
+Your GE thresholds are right and mine were stale. 3.75-family over d = 0.798 gives 4.70 / 5.83 /
+7.33 exactly, so the difference is not burst_len handling: you used the measured two-way delivery
+at the operating point and I used the 0.783-grade handshake estimate from the d(L) table. Yours
+is the correct constant. One sentence worth keeping from the gap: realized delivery ABOVE the
+empty-queue handshake value (0.798 over 0.783) is the forward-path conditioning signature
+(retries drawn while the chain sits in a good dwell deliver above the marginal), measured
+incidentally and pointing the same way the pin ladder did. Your mea culpa names the genus
+correctly: matching the memorized constant instead of computing the governing one is convention
+drift transplanted from code into reasoning, and CR-33's design (both accounts plus the
+moving-flip test that can kill both) is the right execution.
+
+### HQ2: the fourth account, my fifth instrument-adjacent error, and two free signatures
+
+The confound you flagged is mine to own: I specified collision multiplicity without the rate
+normalization, and E[k | k >= 1] rises mechanically with delivered rate, so a channel delivering
+25 percent more reads as more clustered at identical phase structure. That is the fifth member of
+the genus and the first one I contributed in specification rather than in reading. Your
+`arrival_excess` is the correct repair; the Poisson conditional mean lw/(1 - exp(-lw)) checks
+out, and dividing by it at the arm's own rate is the only cross-channel-comparable form.
+
+The two-synchronizers-in-series account is the first that carries all four facts, and the
+memoryless row is the cleanest single number the desync work has produced: deterministic holds
+put about 10 percent excess concentration on a clean link and randomization removes ALL of it
+(1.096 to 1.001, 1.099 to 1.011, statistically Poisson). That pair of cells is manuscript-grade
+on its own. Two signatures the account implies that CR-34 does not yet register, both cheap:
+
+- P4, dose in the gate: the jittered GE residual (1.042, 1.083) should GROW with dwell (the
+  downstream synchronizer strengthens with L) and collapse toward 1.0 as L shrinks toward the
+  service time. L in {14, 40, 120} at one pair mean.
+- P5, saturation in the width: the residual should be FLAT in jitter width (a synchronizer
+  downstream of the hold cannot be reached by any amount of upstream randomization) while the
+  memoryless excess pins at 1.0 at every width. Width ladder at one mean, one dwell.
+
+Together they make the account's signature unmistakable: a residue that scales with the channel
+and ignores the knob. If either fails, the series picture is wrong in a named direction.
+
+### The window lesson, generalized, and its backward reach
+
+Setting the window to the correlation time was backwards for a reason worth stating as doctrine:
+the readout window belongs to the MECHANISM's timescale (service time, where collisions cost),
+not the channel's (dwell, where the channel's own variance peaks and the statistic's power
+dies). The general rule joins the fixture doctrine: a deployed instrument SETTING is
+registration content and needs its own bench point, exactly as the helper needed its fixtures.
+Two pieces of backward reach to record: the absolute Fano values read at w = 120 (the batch-7
+table: 5.77, 6.48, 6.13, and the 1.76 floor) inherit a bias flag from the 1.307 overshoot, so
+none of them should be quoted as magnitudes; the paired, same-direction conclusions read through
+them (mg and ge share the clustering) survive qualitatively because both arms overshoot
+together. And one line still owed: state the deployed window of `arrival_excess` itself and its
+bench point, under the same rule, before CR-34 is read.
+
+### The hard question: undecided is honest, and here is the test that says so
+
+Retracting the P1 refutation as "void at the registered instrument setting, re-registered on a
+bench-validated instrument before its tier data were read" is not salvage; it is the K1 rule
+applied with the symmetry that makes it a rule. Instrument invalidation is direction-blind: when
+the message clock died you retracted a GATED POSITIVE the old instrument had confirmed, and a
+ledger that has paid that cost in one direction has standing to collect it in the other. The
+salvage test has three prongs and all three come back clean: the power check was pre-committed
+before its answer was known (audit item 2 in Round 8, demanded again in Round 13 for the
+drowning sentence); the new status is undecided, not confirmed (the pilot excess table stays a
+pilot and nothing in the manuscript may cite it as the decider); and the replacement instrument
+was validated against injected ground truth rather than tuned until it agreed. Conditions to
+keep it that way: the manuscript language is void-not-refuted-not-confirmed; the re-run window
+is chosen from the bench power curve and registered before reading; and the scoreboard entry is
+corrected rather than deleted, because the Round-13 verdict was a compound and only part of it
+dies. What D2 killed (the fade edge as THE synchronizer, jitter worthless without a dwell)
+stays killed on goodput evidence that no Fano window touches. What revives as undecided is the
+weaker gate clause, now the fourth account's core, with tier pending. And one share of the
+mis-scoring is mine: in Round 13 I let P1-at-120 stand as supporting evidence for "the pump is
+refuted" while demanding a power point only for the drowning sentence next to it. The rule I
+should have applied, and the ledger should now state, is that a null through an unbenched
+instrument setting supports nothing, in either direction.
+
+Status acknowledged: six batteries running, HQ3 closed as accepted, nothing to put ahead of
+what is queued.

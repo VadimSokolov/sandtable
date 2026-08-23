@@ -775,3 +775,34 @@ Cross-channel decomposition and Fano bench (source: tools/make_decomp_numbers.py
   fbMemWTenT = 23
   fbServiceWindows = 4
   fbWorstErr = 9
+
+
+Lewis et al. 2010 retrodiction (source: tools/make_lewis_numbers.py, transcribed from doi 10.1177/0018720810366859 Results)
+  lwAreaExplEight = 348.9
+  lwAreaExplFour = 173.8
+  lwAreaExplTwelve = 377.8
+  lwAreaFullEight = 327.6
+  lwAreaFullFour = 129.2
+  lwAreaFullTwelve = 285.8
+  lwAreaRatio = 2.2
+  lwAreaTwelveP = .001
+  lwDrop = 33
+  lwEightTwelveP = .006
+  lwFourEightP = <.001
+  lwFourTwelveP = .08
+  lwFullEight = 7.06
+  lwFullFour = 4.80
+  lwFullHump = yes
+  lwFullTwelve = 4.73
+  lwInterDf = 2, 56
+  lwInterEta = 0.23
+  lwInterF = 8.45
+  lwInterP = .001
+  lwPercDf = 1, 28
+  lwPercEight = 8.20
+  lwPercF = 27.4
+  lwPercFour = 6.93
+  lwPercMono = yes
+  lwPercTwelve = 8.33
+  lwYieldDelta = -0.07
+  lwYieldRatio = 0.99

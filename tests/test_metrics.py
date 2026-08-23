@@ -31,6 +31,13 @@ EXPECTED_KEYS = {
     "served_per_step",
     "requests_per_step",
     "arrival_fano",
+    # Collision multiplicity (CR-34). Defaulted, not conditional: `ar_eval` compares
+    # arms by key and an arm run without `mult_window` must still answer the same
+    # question set as one run with it.
+    "arrival_multiplicity",
+    "arrival_peak",
+    "arrival_rate",
+    "arrival_excess",
     "supervised_mean",
     "supervised_frac",
     "demand_norm_goodput",
