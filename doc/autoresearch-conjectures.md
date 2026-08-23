@@ -5537,3 +5537,42 @@ before the first measurement; the code hash records the rest. Neither was checke
 so a run could satisfy both at second zero and be a different experiment by section three. Two of
 the three guards this project relies on were start-of-run only, and the third, the seed list, is the
 only one that could not drift.
+
+---
+
+## CR-52 P1 AND P2 VERDICT: THE MAP MOVES THE MISSION AND NOT THE MECHANISM
+
+Job 9448824, full tier, 32 blocks a point, three terrain profiles: `band` (the map every result in
+this paper was found on), `open` (no cover at all, the negative control), and `chokepoint` (a
+transverse ridge with one gap, so the map rather than the operator chooses where the force converges).
+
+**P1 HELD, on both metrics, on both new maps.** The admit-over-blind contrast gates up from six
+assets on every map. On `served_per_step` it is nearly map-invariant: at sixteen assets +0.1495 on
+band, +0.1494 on choke, +0.1481 on open, a spread of 0.0014 against a materiality floor of 0.0090.
+The console does not know what the ground looks like and the console-level lever does not either.
+
+**And the unregistered half is the one worth having.** On `success` the same lever fans out sharply
+with terrain difficulty. At sixteen assets it is +0.0298 on band (equivalent to zero), +0.0547 on
+choke (inconclusive) and +0.1396 on open (gated up). At the collapse span it is +0.2373, +0.2671 and
++0.2769. The mechanism is headroom: blind success at sixteen assets is 0.9609 on band, so there is
+almost nothing left for a console fix to win, while on open it is 0.7139 and the fix takes half of
+what remains.
+
+**The methodological consequence is general and belongs in the paper.** Measure a console lever on
+the console, not on the mission, or the map decides how large the effect looks. A single-map study
+on easy ground will report that a real fix does not matter, and will be wrong for a reason that has
+nothing to do with the fix. This is the instrument-defect genus one level up: the metric is correct,
+the inference across configurations is not.
+
+**P2 HELD, and its error shape is map-invariant too.** The capacity ladder's argmax is $k^{\star}=2$
+on all three maps at all three spans. Against a bound of one the derived bound is positive at 9 of 9
+cells and TOST-equivalent at all 9, so being one short is real and immaterial everywhere. Against a
+bound of four it is gated down at 9 of 9, from -0.047 to -0.075. One below is free on every map; two
+above is costly on every map. The closed form carries no terrain term and does not need one.
+
+**P3 UNTESTABLE at this resolution, and re-registered.** The sweep steps 4, 6, 8, so the blind
+collapse lands between six and eight assets on all three maps and the prediction cannot be
+falsified. Recorded as untestable rather than as held, and re-registered as CR-52 P3a/P3b/P3c
+against `hopper/batteries/maps2.sh` (job 9449266) at one-asset resolution, with the mechanism it
+needs to beat the null stated in advance: a chokepoint concentrates the force where the map chooses,
+so the console should see a burstier arrival process at the same mean rate.
