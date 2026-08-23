@@ -6133,3 +6133,45 @@ commanded-spread curve, where success falls 0.906 to 0.781 between 10 m and 40 m
 geometry and estimator error are not the same quantity, exactly as review argued, and the composition
 CR-55 rested on is refuted by the arm it was supposed to predict. Geometry the planner asks for
 changes the mission; geometry the estimator fails to hold does not.
+
+## CR-56 W1 VERDICT: AN INSTRUMENT THAT ANSWERS "DOES THIS CONSOLE HAVE DIFFICULTY INFORMATION" WITH A 500 TO 1 MARGIN
+
+Job 9449525, W1, full tier. The registered test is the reviewer's and it replaced mine, which was
+unsound: I had proposed that a console serving more while abandoning less must have information, and
+per-step abandonment is a demand meter rather than a knowledge meter, because any arm that lengthens
+a refused vehicle's hold lowers it mechanically. The sound test uses the busy-weighted bins directly.
+Length cannot be selected without seeing length, so a console has difficulty information if and only
+if the mean service of the decisions it WORKS falls below the population mean.
+
+Mean service of decisions worked, against a population mean of 6.667 steps:
+
+| arm | 8 assets | 12 | 16 |
+| --- | --- | --- | --- |
+| capacity bound of two | 6.6833 | 6.6749 | 6.6827 |
+| the coin, refusing a quarter at random | 6.6648 | 6.6771 | 6.6771 |
+| the honest deadline test against the mean | 6.6800 | 6.6820 | 6.6719 |
+| the 0.9-quantile budget | 6.6766 | 6.6658 | 6.6756 |
+| acuity one half | 6.3378 | 6.0628 | 5.8217 |
+| perfect foresight | 6.0317 | 5.5115 | 5.0923 |
+
+**All four information-free consoles work at population, within 0.003 of it and of each other, at
+every span.** Only the two acuity arms select, and they select in proportion to what they can see.
+The instrument's spread among the arms it should not separate is 0.003; the gap it does open is 1.57.
+C1, C2 and C3 all hold as registered, including the sharp one: the quantile console, which many
+readers will take for a cheap triage, works at population because it selects on the requester's
+SLACK and not on the decision's length. It is a rung of the requirements ladder, not a substitute
+for a capability.
+
+**C4 holds and is the sentence the paper did not have.** The honest console WORKS 6.672 and SERVES
+5.538 at sixteen assets. It ends up with almost the same job mix as a console that can triage, and it
+pays full service time for every long decision it then fails to deliver. The foreseeing console works
+5.092 and serves 5.092: it works only what it will serve. So triage and a deadline test select nearly
+the same jobs, and the difference between them is who pays for the rejects. That is a cleaner account
+of the 0.0764 than "discernment is worth 2.5 times consistency", and it is measurable in one number.
+
+**A negative worth recording against my own Q1 to review.** A pilot sweeping `track_timeout` at 32
+replications under the burstiest channel this paper has, Gilbert-Elliot with mean bad run 60, gives
+0.844 to 0.875 across timeouts from 2 to infinite, with station error 15.7 to 18.8 m: no interior
+optimum and nothing above noise. Under the forced outage the same sweep is noise as well, 0.719 to
+0.938 with no monotone trend. So the staleness cut-off is a BINARY design choice, have one or not,
+and not a scalar to tune. CR-57's finding should be stated that way and not as an optimum.
