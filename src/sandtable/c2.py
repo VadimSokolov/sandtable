@@ -126,6 +126,13 @@ class Operator:
     # number written on the console: it is a constant, not a skill, and it costs nothing to field.
     # Zero leaves the mean test in place, so it is off by default and takes no draw either way.
     admit_quantile: float = 0.0
+    # The information-free null underneath both of them. A console that refuses a fixed fraction of
+    # head-of-line requests AT RANDOM has admission tightness and no triage whatsoever: it cannot
+    # tell a quick decision from a slow one, or a live requester from a stale one. Any gain a
+    # foreseeing console shows over this arm at the same refusal rate is the value of the
+    # INFORMATION; anything this arm reproduces was never information, only tightness, and at
+    # saturation tightness alone is worth a great deal. Zero takes no draw.
+    admit_refuse: float = 0.0
     queue_model: str = "reserve"   # "reserve" | "buffer"
     # A real console's backlog is bounded. `queue_capacity < 0` leaves it unbounded, which is the
     # default and the regime a newest-first discipline is most flattered by, since it never has to
@@ -290,6 +297,7 @@ def build_c2(scn: Scenario, ent: Entities,
         admit_foresight=bool(scn.params.get("admit_foresight", False)),
         admit_acuity=float(scn.params.get("admit_acuity", 0.0)),
         admit_quantile=float(scn.params.get("admit_quantile", 0.0)),
+        admit_refuse=float(scn.params.get("admit_refuse", 0.0)),
         q_operator=q_operator_eff,
         q_auto=q_auto,
         q_fallback=float(scn.params.get("q_fallback", 0.50)),
@@ -699,7 +707,8 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
             svc = _service_time(op, rng)
             reply = start + svc + lat
             test = reply if _sees_the_draw(op, rng) else start + _admit_budget(op) + lat
-            if test > deadline and op.queue_policy != "blind":
+            blind_refusal = op.admit_refuse > 0.0 and rng.random() < op.admit_refuse
+            if (test > deadline or blind_refusal) and op.queue_policy != "blind":
                 # Head-of-line admission control against the delay this console actually has. No
                 # service time is claimed, so the next request is considered on the same step.
                 op.n_abandon_queue += 1

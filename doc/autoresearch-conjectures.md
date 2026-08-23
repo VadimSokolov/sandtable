@@ -5928,3 +5928,26 @@ $p = 0$, so the measured numbers still reproduce and the interior is new.
 effort identity is stated in JOBS and jobs are selectable: a triaging console finishes short ones.
 The busy-weighted bins landed before this battery was written, and the identity now reads on
 `busy_total`, which no admission rule can select.
+
+### CR-56 B6, ADDED BEFORE THE BATTERY: THE NULL THE DISCERNMENT CLAIM LIVES OR DIES ON
+
+Fable's Round 25 named the quantile console as the null a training recommendation has to beat. A
+pilot says the quantile console is not information-free, which makes it the wrong null to rest on:
+it tests the requester's DEADLINE against a conservative budget, so it refuses exactly the requests
+whose deadline is tight. That is information, cheaply obtained, and it is a rung of the ladder rather
+than a control.
+
+The information-free null is a console that refuses a fixed fraction of head-of-line requests AT
+RANDOM. Same lever, fewer requests admitted; no information at all about which. Implemented as
+`admit_refuse`, and it decomposes the discernment gain into a part that any tightening buys and a
+part that only knowing this request's difficulty can buy.
+
+Pilot, 16 replications at twelve assets and $cv = 0.5$, served per step: the mean-test console
+0.1220, random refusal 0.1225 / 0.1246 / 0.1141 / 0.0794 at refusal rates 0.10 / 0.25 / 0.50 / 0.75,
+the 0.95-quantile console 0.1399, perfect foresight 0.1740. Registered decomposition, to be scored
+at full tier: **tightness alone is worth about 5% of the gain, a deadline-aware budget about a
+third, and the remaining two thirds requires knowing this request's difficulty.**
+
+FALSIFIER for the section, not just the prediction: if random refusal at its best rate recovers more
+than half the foresight gain, the discernment result is an admission-rate artefact, the section comes
+out of the paper, and what survives is a sentence saying admission rate was the confound.

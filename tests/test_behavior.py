@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from sandtable.scenario import load_scenario
+from conftest import same_run
 from sandtable.sim import evaluate, run_mission
 
 SPAN = "scenarios/sc_span_control.json"
@@ -40,7 +41,8 @@ def test_supervisory_auto_reduces_to_waypoint():
         base = run_mission(scn, seed=seed, params={"control_mode": "supervisory"})
         auto = run_mission(scn, seed=seed,
                            params={"control_mode": "supervisory", "blue_behavior": "auto"})
-        assert base == auto, f"seed {seed}: supervisory+auto diverged from the scripted path"
+        assert same_run(base, auto), \
+            f"seed {seed}: supervisory+auto diverged from the scripted path"
 
 
 def test_sentry_produces_zero_displacement():

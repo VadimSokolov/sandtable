@@ -117,3 +117,18 @@ def make_world():
         )
 
     return _make
+
+
+# Keys that describe the CONFIGURATION or that only an optional layer can observe, rather than
+# describing what happened in the mission. Two runs whose physics are identical can differ on these
+# and still be the same run: `policy_admit` names the policy that was set even where the policy
+# cannot bite, and `turn_rate_mean` needs the behaviour layer to be instantiated at all. The
+# byte-identity contract in this suite is about the mission, so it is asserted on everything else.
+NON_PHYSICS_KEYS = ("queue_buffer", "policy_admit", "channel_bursty", "turn_rate_mean")
+
+
+def same_run(a: dict, b: dict) -> bool:
+    """Whether two metric dicts describe the same mission, ignoring configuration markers."""
+    ka = {k: v for k, v in a.items() if k not in NON_PHYSICS_KEYS}
+    kb = {k: v for k, v in b.items() if k not in NON_PHYSICS_KEYS}
+    return ka == kb

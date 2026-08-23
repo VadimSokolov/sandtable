@@ -15,6 +15,12 @@
 #       published direction is backwards. Falsifier: bound-plus-triage at or above triage alone.
 #   B5. a quantile admission test needs no triage capability, only a number. If it recovers most of
 #       the acuity gain, the training recommendation does not survive.
+#   B6. AND UNDERNEATH BOTH, THE INFORMATION-FREE NULL. A console that refuses a fixed fraction of
+#       requests AT RANDOM has admission tightness and no information at all. Registered
+#       decomposition: tightness alone is worth almost nothing, a deadline-aware budget is worth
+#       roughly a third, and the remainder is the value of knowing THIS request's difficulty.
+#       Falsifier: random refusal at its best fraction recovers more than half the acuity gain, in
+#       which case the discernment result is an admission-rate artefact and comes out of the paper.
 #
 # EVERY CELL HERE RUNS AT cv > 0, where the four-bin effort identity stated in JOBS is selectable:
 # a triaging console finishes short ones. `busy_total` is carried through every section for exactly
@@ -77,4 +83,15 @@ $PY tools/ar_eval.py $S --metric $M $B --sweep 'n_blue=8,12,16' \
   --arm "fore_cv50={$A,\"service_cv\":0.5,\"admit_acuity\":1.0}" \
   --arm "mean_cv100={$A,\"service_cv\":1.0}" \
   --arm "fore_cv100={$A,\"service_cv\":1.0,\"admit_acuity\":1.0}"
+done
+
+# A5 is B6, the information-free null, and it is the arm the discernment claim lives or dies on.
+# Random refusal has the same lever (fewer requests admitted) and none of the information (which
+# ones). Read the three against each other at a common span: whatever random refusal reproduces was
+# never information, and only the remainder is worth training for.
+for M in served_per_step busy_total abandoned_per_step success; do
+echo "### A5 tightness without information ($M)"
+$PY tools/ar_eval.py $S --metric $M $B --sweep 'admit_refuse=0.1,0.25,0.4,0.5,0.75' \
+  --arm "r_cv50={$A,\"service_cv\":0.5}" \
+  --arm "r_cv100={$A,\"service_cv\":1.0}"
 done

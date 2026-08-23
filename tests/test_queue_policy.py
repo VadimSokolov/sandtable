@@ -14,6 +14,7 @@ import numpy as np
 import pytest
 
 from sandtable import sim
+from conftest import same_run
 from sandtable.scenario import Scenario, load_scenario
 
 BASE = "scenarios/sc_span_control.json"
@@ -94,4 +95,4 @@ def test_policies_agree_when_the_operator_is_never_saturated():
         a = _run(seed=s, **kw, queue_policy="blind")
         b = _run(seed=s, **kw, queue_policy="admit")
         assert a["operator_goodput"] == 1.0
-        assert a == b
+        assert same_run(a, b)
