@@ -1509,3 +1509,52 @@ reversal is scenario geometry plus threshold concentration and three quarters is
 `st-backoff-9445984` was still running. Byte identity was verified first (29 pre-existing metrics
 identical across 32 runs), and that battery reports only `operator_goodput` and `success`, so no
 value it wrote can have moved. The `# code=` line in its header is the pre-change hash.
+
+---
+
+## 2026-08-23. The queue section's levers reduced to one mechanism, and three infrastructure defects
+
+All batteries: `sc_span_control.json`, blocks 0-31, 64 reps, 32 jobs, GMU Hopper `interactive`,
+conda env `pol`, scratch `/scratch/vsokolov/sandtable-ar`.
+
+| job | battery | tier | outcome |
+| --- | --- | --- | --- |
+| 9448647 | `lifo` | full | complete. CR-47 P1-P6. |
+| 9448688 | `qcap` | full | TIMEOUT at 02:00 during Q3. Q1 and Q2 complete on all three metrics. |
+| 9448805 | `waittail` | full | complete, read earlier. |
+| 9448824 | `maps` | full | complete. CR-52 P1, P2. |
+| 9448848 | `svccv` v1 | full | CANCELLED unread past C1. Four defects; see below. Kept as `-VOID`. |
+| 9448883 | `capacity` v1 | full | CANCELLED before reading. Registered identity was two bins short. |
+| 9449062 | `svccv` v2 | full | complete. CR-51/CR-53 v2, all four limbs. |
+| 9449071 | `capacity` v2 | full | TIMEOUT at 02:00. All four bins complete on both rungs; utilization and starvation not reached. |
+| 9449266 | `maps2` | full | complete. CR-52 P3 retracted on its falsifier. |
+| 9449271 | `qcap2` | full | complete. CR-49 Q3-Q5. First job under the snapshot guard; header reports `code unchanged through the run`. |
+| 9449430 | `capacity2` | full | running. The metrics 9449071 did not reach. |
+
+**Headline numbers, all n=16, clear link, full tier.** Delivered service per step: oldest-first
+0.0023, random order 0.0100, newest-first 0.1464, the derived bound 0.1476, admission control 0.1490.
+The three working levers are inside one materiality floor (0.0090) of each other. The four bins of a
+claimed slot sum to between 0.1490 and 0.1504 across all five arms, a spread of 0.0014, so the
+console's total effort is invariant and only its composition moves.
+
+**Three infrastructure defects, numbered 7, 8 and 9 in the instrument ledger.**
+
+7. The admission test drew the service time and then tested the deadline against the draw. Fixed as
+   `admit_foresight`, defaulting to the console a deadline field can build. Bit identity at
+   `service_cv = 0` pinned by `tests/test_c2.py`.
+8. `hopper/batteries/_common.sh` defines `D` with no `queue_model`, so `svccv` v1 measured the
+   reservation console while its conjecture was registered against the buffer one. Detected only
+   because its blind-clear arm disagreed with `st-lifo`'s identical configuration, 0.0197 against
+   0.0411 at eight assets. Guarded by a named `DB` macro.
+9. `hopper/sync.sh` rsyncs into the directory jobs run from, so `src` was replaced under 9448824 and
+   9448688 mid-run. **Byte identity verified after the fact for both**: `band_blind` at eight assets
+   reproduces 0.020346, 0.020887, 0.021002 and `cap_none` reproduces 0.038507, 0.046060, 0.038577
+   under the current code, matching the logged block values exactly. Nothing was lost. Jobs now
+   snapshot `src tools scenarios hopper .autoresearch` into `runs/$SLURM_JOB_ID` and re-check the
+   code hash at exit, refusing the log on a mismatch. This is the same class as the note on
+   `st-backoff-9445984` above, handled the same way and now guarded rather than noted.
+
+**Reproducibility.** `tools/sync_numbers.py` was added after an audit found 165 manuscript macros
+with no line in `results/numbers.txt`. The generated half of that file is now rebuilt mechanically
+from `report/gen/*.tex`; used-and-defined macros with no ledger line are 0 in both the manuscript and
+the companion.
