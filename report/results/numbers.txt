@@ -1834,3 +1834,36 @@ Staffing equivalence (source: tools/make_staffeq_numbers.py over st-staffeq-9446
   seSrvThreeNSixteen = 0.4231
   seSrvTwoNSixteen = 0.0130
   seSrvTwoNTwelve = 0.2321
+
+The four levers and the random-order control (source: tools/make_lever_numbers.py over st-lifo-9448647.out and st-qcap-9448688.out), 2026-08-23
+  LvSrvFifo = 0.0023
+  LvStaleFifo = 43.8
+  LvBackFifo = 132
+  LvSrvRand = 0.0100
+  LvStaleRand = 37.3
+  LvBackRand = 131
+  LvSrvLifo = 0.1464
+  LvStaleLifo = 0.02
+  LvBackLifo = 146
+  LvSrvAdmit = 0.1490
+  LvStaleAdmit = 0.00
+  LvBackAdmit = 5
+  LvSrvBound = 0.1476
+  LvSrvNone = 0.0023
+  LvRandGain = +0.0076
+  LvLifoGain = +0.1441
+  LvRandShare = 5
+  LvMPE = 0.0090
+  LvMu = 0.15
+  LvCapTwo = 0.1476
+  LvCapThree = 0.1299
+  LvCapFour = 0.0993
+  LvCapSix = 0.0314
+  LvCapTen = 0.0034
+  LvJamClear = +0.1232
+  LvJamOne = +0.1060
+  LvJamTwo = +0.0899
+  LvJamThree = +0.0544
+  LvJamFour = +0.0000
+  LvSubSixteen = -0.0034
+  LvSubEight = -0.0065

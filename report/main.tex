@@ -36,6 +36,7 @@
 \input{gen/absrate_numbers}
 \input{gen/staffeq_numbers}
 \input{gen/qcap_numbers}
+\input{gen/lever_numbers}
 \input{gen/ledger_counts}
 
 \newcommand{\sandtable}{\textsc{SandTable}}
@@ -362,6 +363,49 @@ waiting requests and no more. This is a threshold rule in the sense of \citet{na
 \paragraph{The bound is a plateau, not a peak, and which way to err reverses with load.} Reading an argmax off this response would be reading noise: the set of capacities delivering within one material effect of the best is one capacity wide at $\lambda = 1.3$ and six wide at $\lambda = \QcapLamMax{}$. Scored against membership in that set rather than against the highest point, the rule above is outside it at \QcapHalfMiss{} of \QcapPoints{} points; the version without the correction term is outside at \QcapFloorMiss{}, every one of them in $\lambda \in [\QcapFloorMissLo{}, \QcapFloorMissHi{}]$, which is the degraded link. No single fixed number covers the range: a bound of two is inside the plateau at \QcapFixedTwoFrac\% of the points and fails everywhere below $\lambda = \QcapFixedTwoBadHi{}$. The direction in which to err is not fixed either. Averaged over the grid, one capacity too few costs \QcapUnderCostEight\% of delivered service and one too many costs \QcapOverCostEight\% at a load of roughly twice the console's capacity, where over-sizing is the worse error at \QcapOverWorseFracEight\% of points; by five times capacity the same two numbers are \QcapUnderCostTwentyfour\% and \QcapOverCostTwentyfour\% and over-sizing is worse at only \QcapOverWorseFracTwentyfour\%. The mechanism is the one the bufferbloat literature is about. A length cap has no fixed meaning in time. While the backlog is overflowing, every arrival evicts the oldest, so a request advances one place per removal at the arrival rate $\Lambda$ and the console picks it up about $k/\Lambda$ old; while the backlog is draining, advancement is by service alone, the age is $j/\mu$ at depth $j$, and the load does not enter. The measured age sits between those two bounds and what moves with load is the mixture weight. What survives either reading is the inverse dependence on $\Lambda$, and it is large: at a fixed cap of \QcapAgeK{} the console picks up work \QcapAgeLight{} steps old when requests arrive at \QcapAgeRateLight{} per step and \QcapAgeHeavy{} steps old at \QcapAgeRateHeavy{} per step, against overflow-limit values of \QcapAgeFlowLight{} and \QcapAgeFlowHeavy{}. The same cap is a different deadline at each load, which is why the plateau is narrow only in a window of load, roughly one to four times console capacity, and why any bound will do outside it.
 
 \paragraph{What the console must know, and what the message must carry.} That last point is an argument for controlling the request's age instead of the backlog's length, so we built the age cap too and measured it against the counter. The three rungs differ in information, not in mechanism: bounding the backlog needs $P$, $\ell$ and $\mu$ and no change to the message; capping the request's age needs $P$ and $\mu$ and a send timestamp, which every protocol already has; refusing on the requester's own deadline needs a semantic field somebody has to define and populate, which is the \texttt{admit} policy priced earlier in this section. Across \QcapLinks{} link latencies at a fixed deadline, one age cap covers \QcapBestAgeCov{} of them within a material effect against \QcapBestCounterCov{} for the best single counter, and its worst shortfall is \QcapBestAgeShort{} against \QcapBestCounterShort{}. The counter is fine until the link is bad and then falls off a cliff, from \QcapCounterClear{} served per step on a clear link to \QcapCounterDeep{} at a one-way latency of six steps, where the age cap still delivers \QcapAgeClear{} and \QcapAgeDeep{}, or \QcapDeepGain\% more. That cliff is outside this study's ladder, which tops out at four steps at C3, and inside the ladder the extra machinery buys nothing: with the latency stepping between clear and C3 mid-mission, the fixed counter delivers \QcapSwitchCounter{} against the age cap's \QcapSwitchAge{}, a difference of \QcapSwitchDiff{} that is enormous in $t$ ($\QcapSwitchT{}$, paired on common random numbers) and below the minimum practical effect this paper reports. The recommendation is therefore the cheapest rung. Bound the backlog with a counter; do not change the message format. One consequence is worth naming because it retires a recommendation this section made earlier. Given the counter, the queue discipline stops mattering: at the jammed operating point $k^{\star} = \QcapDiscJamK{}$ and working the backlog newest-first is not a different policy at all, since a buffer holding one waiting request has no order to permute, and on a clear link, where $k^{\star} = \QcapDiscClearK{}$, the two orders differ by \QcapDiscClearDiff{} served per step. Inverting the queue and bounding it are substitutes, not complements, and the bound is the one with a closed form behind it.
+
+\paragraph{Four levers, one mechanism, and the control that shows it.} The levers of this section
+were built one at a time against different failures, and read together at full tier they turn out to
+be the same lever. At sixteen assets on a clear link the blind console has collapsed to \LvSrvFifo{}
+useful decisions per step, against a capacity of \LvMu{}. Refusing work at the door recovers
+\LvSrvAdmit{}; bounding the backlog at $k^{\star} = 2$ recovers \LvSrvBound{}; working the backlog
+newest-first recovers \LvSrvLifo{}. Three policies with different information requirements, within
+\LvMPE{} of each other, which is this paper's materiality floor. The natural reading is that
+oldest-first is simply a bad order and that anything else is better, and the control arm refutes it:
+service in \emph{random} order recovers \LvRandGain{} against newest-first's \LvLifoGain{}, which is
+\LvRandShare\% of it and is equivalent to zero at the same span. Breaking first-come-first-served is
+not the mechanism. What the three working levers share is visible in the console's own accounting.
+The fraction of the console's requests that it eventually works after the requester has given up and
+asked again is \LvStaleFifo\% under oldest-first and \LvStaleRand\% under random order, against
+\LvStaleLifo\% under newest-first and \LvStaleAdmit\% under admission control. The console's capacity
+is fixed; every step of it goes either to an answer somebody is holding for or to one nobody is, and
+the three policies that work are the three that stop spending it on the second kind. Random order
+does not, because drawing uniformly from a backlog that is mostly stale mostly draws stale work.
+
+That reduction is what makes the three levers comparable, because it says they cannot be stacked and
+must instead be priced. \sandtable{} prices them at the same operating point. Admission control needs
+a semantic deadline field in the message and leaves a mean backlog of \LvBackAdmit{} requests. The
+counter needs no change to the message and bounds the backlog at $k^{\star}+1$ by construction.
+Newest-first also needs no change to the message, and its backlog is \LvBackLifo{} requests against
+oldest-first's \LvBackFifo{}: it is \emph{larger} than the policy it beats, and larger for a reason
+that is the whole of its cost. The requests newest-first never serves are the requests that never
+leave. Its throughput is bought by starving the tail, and the counter's is not. The substitution is
+measurable rather than argued: once the console can refuse, reordering what it accepted is worth
+\LvSubEight{} served per step at eight assets and \LvSubSixteen{} at sixteen, negative at every span
+in the sweep and equivalent to zero at every one. Two levers aimed at the same waste do not add.
+
+Two boundaries belong with the recommendation. The first is that over-sizing the counter is not a
+soft error at this operating point: at sixteen assets the ladder runs \LvCapTwo{} served per step at
+the derived bound, \LvCapThree{} one above it, \LvCapFour{} two above, \LvCapSix{} four above and
+\LvCapTen{} at a bound of ten, which is already indistinguishable from the unbounded console's
+\LvSrvNone{}. A generous buffer is not a conservative choice. The second is that the ordering lever
+is a congestion remedy and not a communications one, and the ladder dates it precisely: newest-first
+is worth \LvJamClear{} served per step over oldest-first on a clear link, \LvJamOne{} at C1,
+\LvJamTwo{} at C2, \LvJamThree{} at C3 and exactly \LvJamFour{} at C4, where nothing in the backlog
+is serviceable inside its requester's patience and there is no order in which to work an unanswerable
+queue. Every lever in this section stops paying at the same rung, and it is the rung where the
+latency ceiling $\ell^{\star}$ is crossed rather than any property of the console.
+
 
 \paragraph{Fan-out cannot warn of the collapse, whichever way the wait is booked.} The standard supervisory-control statistic for operator capacity is fan-out, $1 + NT/IT$, the ratio of neglect time to interaction time \citep{olsen2004fanout,cummings2008predicting}. Measuring it inside \sandtable{} while the queue collapses gives a negative result, and the negative is sharper than a bare failure to track capacity. Fan-out is load-dependent rather than a platform constant: it falls from \qFanTwo{} at two assets to \qFanTwelve{} at twelve. Across the interval where delivery actually fails it is nearly flat, \qFanEight{} at eight assets against \qFanTen{} at ten, while vehicles delivered over the same interval fall from \qArrivedEight{} to \qArrivedTwelve{} at twelve.
 
