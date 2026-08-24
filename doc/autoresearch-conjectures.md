@@ -8613,3 +8613,70 @@ when that choice moves. A requirement that cannot be evaluated without first ass
 worse requirement than one that can, even if it were otherwise equally predictive.
 
 Battery `hopper/batteries/graph.sh`, four sections, 497 cells, smoke-tested at exit 0.
+
+---
+
+### CR-63 R1 RETRACTED ON ITS OWN FALSIFIER, AND R2 SUPPLIES THE FINDING ON A DIFFERENT AXIS
+
+`verify` (job 9458832) is still running; R1 and R2 are complete and are scored here because the
+retraction is owed as soon as the falsifier is met, not when the battery ends.
+
+**R1's registered claim was that the best check rate is interior somewhere and rises with the
+automation's error rate, and its registered falsifier was a tolerance band containing a corner in
+every cell, which would make the finding binary. The falsifier is met.** Contrasts on mission
+success against the never-check arm, which is the reference that moves (the always-check arm is
+byte-identical across the sweep and the flat-reference guard says so out loud, which is the defect
+this battery was written to fix):
+
+```
+    TIME channel, vs never-check, auto_error 0.1 / 0.3 / 0.5 / 0.7 / 0.9
+      check 50%    -0.0562 down   +0.0088 equi   +0.0176 equi   +0.0771 up     +0.1050 up
+      check 100%   -0.1167 down   -0.0376 inco   +0.0264 inco   +0.1133 up     +0.1577 up
+    WEAK channel
+      check 50%    -0.0674 down   -0.0444 inco   -0.0591 down   -0.0542 down   -0.0381 inco
+      check 100%   -0.1318 down   -0.1152 down   -0.1084 down   -0.0947 down   -0.0835 down
+    REFLECT channel
+      check 50%    -0.0776 down   -0.0610 down   -0.0166 equi   -0.0156 equi   +0.0049 equi
+      check 100%   -0.1235 down   -0.0991 down   -0.0640 down   -0.0391 inco   +0.0000 equi
+```
+
+In every cell a corner is either strictly best or inside the band. The optimum is never gated
+interior on the error axis. The claim is retracted rather than reworded.
+
+**What survives, and it is a mechanism rather than a curve.** The error axis does something in ONE
+of the three harm channels and nothing in the other two, and the split is exactly the channel in
+which a wrong answer generates REWORK. Under `time` the requester keeps its problem and comes back,
+so a wrong answer costs the console a slot now and another later, and above an error rate somewhere
+between 0.3 and 0.7 checking pays and keeps paying to the corner. Under `weak` and `reflect` the
+wrong answer is delivered and accepted, so it costs the vehicle quality and the console nothing, and
+checking is a pure loss at every error rate tested. The reflect channel is the one in which a wrong
+answer puts a vehicle BELOW its own autonomy, which is the over-trust failure the literature is
+about, and even there verification does not pay. **Verification pays when a wrong answer comes back,
+not when it is harmful.** That is the sentence R1 actually supports.
+
+**R2 has the crossover, and it is on the axis the adversarial reviewer registered rather than on
+mine.** Sweeping `q_auto` under a fixed operator moves what a right answer is WORTH, and both
+readings agree and gate:
+
+```
+    stakes g = q_op - q_auto        0.45     0.35     0.25     0.15     0.05
+    success, check 50% vs never   +0.0620  +0.0088  -0.0166  -0.0493  -0.0591
+                                     up      equi     equi     inco     down
+    success, check 100% vs never  +0.0659  -0.0156  -0.0640  -0.1006  -0.1519
+                                     up      equi     down     down     down
+    losses,  check 100% vs never  -0.0491  +0.0199  +0.0700  +0.1067  +0.1461
+                                    down     inco      up       up       up
+```
+
+The verification rate is decided by what a right answer is worth over autonomy, and on this console
+the crossing sits near a stakes value of 0.35. Above it, check, and checking everything is as good as
+checking half. Below it, do not, and checking everything is the worst arm on the board. Half-checking
+is the arm that survives furthest into the low-stakes region, equivalent at 0.35 and 0.25 where full
+checking has already gated down, which is what makes a partial rate the robust choice near a crossing
+whose location a programme office will not know precisely.
+
+So the interior optimum exists and I registered it against the wrong variable. The honest report is
+one retraction and one finding, and the finding belongs to the reviewer's section.
+
+R3 and R4 are still running. Nothing goes to the manuscript until they land, because R3 is the arm
+that can kill the throughput explanation for the never-check result outright.
