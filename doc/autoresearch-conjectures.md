@@ -8906,3 +8906,46 @@ the same column, which is why they get confused, and that is worth one sentence 
 
 **Q5 accepted in full, including the criticism.** The instrument catalogue freezes at 19 rows except
 where a defect blocks a published number. The bridge is the priority.
+
+### CR-66 V3 and V4: the threshold located, and the escape closed
+
+**V3, heterogeneity as the sweep at sixteen assets.** `served_per_step` against patience spread:
+
+| arm | 0 | 3 | 6 | 9 | 12 | 18 |
+|---|---|---|---|---|---|---|
+| blind unbounded | 0.0023 | 0.0019 | 0.0020 | 0.0020 | 0.0020 | 0.0020 |
+| bound at two | 0.1476 | 0.1427 | 0.1260 | 0.0952 | 0.0623 | *0.0540* |
+| admitting | 0.1490 | 0.1490 | 0.1489 | 0.1496 | 0.1491 | *0.1485* |
+| admitting + EDF | 0.1490 | 0.1494 | 0.1494 | 0.1500 | 0.1497 | *0.1486* |
+
+The free bound loses 58% of its throughput across the readable range. The deadline field loses
+nothing, flat to three decimals. **The value of buying the field is exactly the heterogeneity of the
+fleet**, which is the battery's registered claim, now a dose-response rather than two points. The
+mechanism is one sentence: a bound refuses by arrival order, and arrival order is uninformative
+about a deadline exactly when deadlines vary.
+
+**A censored level, caught before it was written up.** The two-point layout puts the impatient half
+at `patience - spread`. At spread 18 that is 2 steps against a mean service of 6.67, so half the
+fleet cannot be served by any console whatever it knows, and `boundTwo`, `admits` and `admitsEdf`
+all read `starved_frac` exactly 0.5000 there. That is a floor set by the fleet. Reported as "EDF's
+advantage disappears at the widest spread" it would have been a false finding; the level is now
+flagged by `LdHCensorSpread` and the prose stops at 12. Same family as CR-69 and the second time
+today that a range check changed a conclusion.
+
+**V4, how tight the bound has to be, and it closes the obvious escape.** A program office will ask
+whether a better-sized bound would do, since sizing is free and a semantic field is not.
+`served_per_step` against capacity 1, 2, 3, 4, 6, 8, 12:
+
+| fleet | 1 | 2 | 3 | 4 | 6 | 8 | 12 |
+|---|---|---|---|---|---|---|---|
+| uniform | 0.1461 | **0.1476** | 0.1299 | 0.0993 | 0.0314 | 0.0052 | 0.0029 |
+| two-point | **0.0754** | 0.0623 | 0.0609 | 0.0619 | 0.0596 | 0.0369 | 0.0036 |
+
+The optimum tightens from k = 2 on the uniform fleet to k = 1 on the mixed one, which is direct
+evidence for rounding k* DOWN. And the best achievable free bound on the mixed fleet delivers
+0.0754 against the field's 0.1491: **at its own optimum the bound gets 51% of what the field gets,**
+so it cannot be sized out of its deficit. That is the number that decides whether the field is worth
+specifying.
+
+All of V1 through V4 is now in the manuscript as two paragraphs in the requirements passage, keyed
+adjacent-rung with the whole-ladder gap quoted once, per Round 35.
