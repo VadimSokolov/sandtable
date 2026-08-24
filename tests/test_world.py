@@ -85,6 +85,7 @@ def test_the_published_map_is_bit_identical_after_the_profile_knob():
     """Every result in this project was found on the `band` profile, so growing the generator a
     profile selector and a dozen parameters is only admissible if that path did not move. Pinned on
     three seeds and every metric, not on a summary."""
+    from conftest import same_run
     from sandtable.scenario import load_scenario
     from sandtable.sim import run_mission
 
@@ -93,7 +94,7 @@ def test_the_published_map_is_bit_identical_after_the_profile_knob():
     for seed in (0, 3, 7):
         m = run_mission(scn, seed=seed)
         explicit = run_mission(_with_terrain(scn, {"profile": "band"}), seed=seed)
-        assert m == explicit                       # naming the default cannot change it
+        assert same_run(m, explicit)               # naming the default cannot change it
         assert m["operator_utilization"] == pytest.approx(ref[seed], abs=1e-4)
 
 

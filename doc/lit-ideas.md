@@ -2234,3 +2234,34 @@ A second guard came out of the same session for the same reason: `tools/audit.py
 pre-flight on a repeated `.bib` key. BibTeX keeps the first definition and silently discards the
 rest, so the entry count still balanced while one `% verified:` line described an entry nothing would
 ever render, and the error surfaced only when a citation finally reached the discarded copy.
+
+## D4f. Task switching and attention residue: why SandTable does NOT model them
+
+Two forms of human attention cost were proposed for the console and both were killed on measurement
+rather than on argument. The literature is real and the mechanisms are well attested; what is absent
+is any channel in this architecture through which they could act.
+
+The human-factors basis is the task-switching cost literature (Monsell's switch-cost review; Altmann
+and Trafton's memory-for-goals account of resumption lag; Trafton and colleagues on interruption
+resumption), and its scheduling cousin is sequence-dependent setup time (Allahverdi's surveys). All
+of it predicts that a console moving between vehicles pays something a console staying on one does
+not. NOTE: none of these is in `report/ref.bib` and none has been verified through the citation
+cascade, because none of them is cited. They are recorded here as the basis of a mechanism that was
+considered and rejected, which is a lab-notebook entry rather than a claim.
+
+Form one, a per-switch setup cost. Inert: instrumenting the picker shows the switch fraction is
+1.0000 for arrival order, serve-least-served and deadline order alike at sixteen assets. Every
+discipline changes vehicle on every decision, so a per-switch cost is a constant tax on service and
+cannot interact with the order. There is nothing for the mechanism to modulate.
+
+Form two, a cost scaled by the time since the console last touched that vehicle. Nearly inert, and
+its premise is false in this model: the per-discipline mean contact gap spans thirteen percent, and
+serve-least-served does not minimise the worst gap (arrival order does, 66.7 against 167.0 steps).
+The residual coupling runs toward penalising arrival order and favouring deadline order, so building
+it would strengthen the paper's own recommendation. It was declined on that ground.
+
+What this does buy the paper is a limitation stated with a number rather than a hedge: SandTable's
+console has no locality to exploit, so no result here can be undone by a switching penalty, and
+equally no result here speaks to a console that CAN batch several requests from one vehicle. A
+roster-oriented interface that works a vehicle rather than a request is a different console and is
+untested. That is the honest boundary of the discipline results.

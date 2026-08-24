@@ -36,7 +36,7 @@ def test_blind_is_the_default_and_byte_identical():
     for s in range(4):
         a = _run(seed=s, control_mode="direct", n_blue=8)
         b = _run(seed=s, control_mode="direct", n_blue=8, queue_policy="blind")
-        assert a == b
+        assert same_run(a, b)
 
 
 def test_unknown_policy_is_rejected():

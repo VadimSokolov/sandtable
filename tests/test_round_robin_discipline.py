@@ -15,6 +15,7 @@ import pytest
 from sandtable.c2 import DISCIPLINES, _pick
 from sandtable.scenario import load_scenario
 from sandtable.sim import evaluate, run_mission
+from conftest import same_run
 
 
 class _Op:
@@ -90,7 +91,7 @@ def test_adding_the_discipline_changed_no_arm_that_does_not_ask_for_it():
         over = {} if disc == "fcfs" else {"queue_discipline": disc}
         a = run_mission(_scn(**over), seed=11)
         b = run_mission(_scn(**over), seed=11)
-        assert a == b
+        assert same_run(a, b)
 
 
 def test_an_unknown_discipline_is_still_refused():

@@ -92,6 +92,19 @@ class Operator:
     ew_immune: bool = False        # EW-immune command link (fiber / autonomous terminal guidance)
     immune_latency: int = 1        # fixed one-way latency of the immune link, off the comms ladder
     queue_policy: str = "blind"    # "blind" | "refund" | "admit"; see `step`
+    # When a request is superseded, the console discovers it either by working it or by looking at
+    # its own books. "after" is the published console: the slot is spent and only then does the
+    # console learn that nobody is holding the answer. "before" is a console whose display shows
+    # one live request per vehicle, so a superseded record is recognised at no cost. The two differ
+    # in NO information: `req_seq` is the console's own record of what each vehicle last asked, and
+    # it is already maintained on the arrival path. The difference is entirely in the interface.
+    stale_check: str = "after"     # "after" | "before"
+    # How long a requester that gave up stays on autonomy before it asks again, as a multiple of
+    # the hold the published model uses. It exists because the ghost population is a product of
+    # that cadence: a fleet that re-asks twice as fast puts twice as many superseded records in the
+    # buffer. A claim about wasted console effort that is not checked against this knob is a claim
+    # about one arbitrary cadence.
+    reask_hold: float = 1.0
     terrain_demand: float = 0.0    # >0 makes difficult ground raise the call-for-help rate (CR-15)
     queue_discipline: str = "fcfs"  # see DISCIPLINES and `service_order`
     # `reserve` (default, and the published model) decides a request's fate at ARRIVAL: it reads
@@ -221,6 +234,7 @@ class Operator:
     # optimality theorem is actually about, and it is what separates "the ordering had nothing to
     # order" from "the ordering had something to order and two rules ordered it equally well".
     n_died_feasible: int = 0
+    n_stale_dropped: int = 0
     n_entered_feasible: int = 0
     req_seq: np.ndarray = None     # buffer: per-vehicle request counter, for the staleness test
     n_stale: int = 0               # buffer: requests worked after their requester had moved on
@@ -394,6 +408,8 @@ def build_c2(scn: Scenario, ent: Entities,
         ew_immune=bool(scn.params.get("ew_immune_link", False)),
         immune_latency=int(scn.params.get("immune_latency", 1)),
         queue_policy=str(scn.params.get("queue_policy", "blind")),
+        stale_check=str(scn.params.get("stale_check", "after")),
+        reask_hold=float(scn.params.get("reask_hold", 1.0)),
         terrain_demand=float(scn.params.get("terrain_demand", 0.0)),
         queue_discipline=str(scn.params.get("queue_discipline", "fcfs")),
         retry_prob=float(scn.params.get("retry_prob", 0.0)),
@@ -463,6 +479,10 @@ def build_c2(scn: Scenario, ent: Entities,
                 f"its mean, so use retry_spread <= retry_backoff - 1 or state the arm's mean")
     if op.queue_policy not in ("blind", "refund", "admit"):
         raise ValueError(f"queue_policy must be blind|refund|admit, got {op.queue_policy!r}")
+    if op.stale_check not in ("after", "before"):
+        raise ValueError(f"stale_check must be after|before, got {op.stale_check!r}")
+    if op.reask_hold <= 0.0:
+        raise ValueError(f"reask_hold must be positive, got {op.reask_hold}")
     if op.admit_response not in ("none", "aimd"):
         raise ValueError(f"admit_response must be none|aimd, got {op.admit_response!r}")
     if op.admit_response == "aimd" and op.queue_policy != "admit":
@@ -811,7 +831,14 @@ def _give_up(op: Operator, ent: Entities, i: int, arrive: float, hold: int,
              rng: np.random.Generator) -> None:
     """A request that will not be answered in time. The requester falls back to autonomy `hold`
     steps after it asked, which is one round trip under `admit` and its full patience otherwise."""
-    ent.await_until[i] = int(arrive) + int(hold)
+    # At the published value the hold is passed through untouched, so the arithmetic here cannot
+    # move a single number in any run that does not set the knob.
+    # No floor. An admitting console at zero latency passes a hold of ZERO, meaning the refused
+    # vehicle may ask again on the next step, and a floor of one would make the knob move that
+    # console at every multiplier except its own default, which is a discontinuity at exactly the
+    # value the control exists to nest.
+    held = int(hold) if op.reask_hold == 1.0 else int(round(hold * op.reask_hold))
+    ent.await_until[i] = int(arrive) + held
     op.resolved_quality[i] = op.q_fallback
     _arm_retry(op, rng, i)
 
@@ -899,8 +926,22 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
                     else int(op.patience_v[i])
                 _give_up(op, ent, i, arrive, hold, rng)
                 continue
-            _claim(op, c, start + svc)               # the slot is spent from here on, always
             stale = seq != op.req_seq[i]
+            if stale and op.stale_check == "before":
+                # The console looked at its own books before it looked at the request, saw that this
+                # vehicle has asked again since, and dropped the record. No slot is claimed, so the
+                # next request is considered on the same step, exactly as for a refused admission.
+                # The service time above was still drawn: it is not spent, but drawing it keeps this
+                # arm on the same random numbers as the console it is being compared against.
+                # Counted in its OWN bucket, not in `n_stale`. `n_stale` means "worked, and then
+                # found to have no requester", and it is divided by in three places to price the
+                # console's effort. A record dropped for free is not work, and putting it in the
+                # same counter would make a console that wastes nothing report the same effort as
+                # one that wastes everything.
+                op.n_stale_dropped += 1
+                op.n_died_feasible += int(feas)
+                continue
+            _claim(op, c, start + svc)               # the slot is spent from here on, always
             down_ok = comms.reply_survives(rng, svc)
             if stale:
                 op.n_stale += 1                       # worked, and nobody is holding it

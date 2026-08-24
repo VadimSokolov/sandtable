@@ -20,7 +20,7 @@ def test_layer_off_is_byte_identical():
         for seed in range(4):
             base = run_mission(scn, seed=seed)
             explicit = run_mission(scn, seed=seed, params={"blue_behavior": None})
-            assert base == explicit, f"{path} seed {seed}"
+            assert same_run(base, explicit), f"{path} seed {seed}"
 
 
 def test_new_metric_keys_are_zero_when_layers_absent():

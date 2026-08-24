@@ -11,6 +11,7 @@ import numpy as np
 from sandtable import personality
 from sandtable.scenario import load_scenario
 from sandtable.sim import run_mission
+from conftest import same_run
 
 UC3 = "scenarios/uc3_route_defilade.json"
 
@@ -30,13 +31,13 @@ def test_non_personality_movement_is_byte_identical():
     # Any movement value other than "personality" leaves the scripted lane path exactly in place.
     base = run_mission(load_scenario(UC3), seed=7)
     same = run_mission(load_scenario(UC3), seed=7, params={"movement": "scripted"})
-    assert base == same
+    assert same_run(base, same)
 
 
 def test_personality_deterministic():
     p = _pers(w_enemy=1.0, w_cover=0.5)
-    assert run_mission(load_scenario(UC3), seed=4, params=p) == \
-        run_mission(load_scenario(UC3), seed=4, params=p)
+    assert same_run(run_mission(load_scenario(UC3), seed=4, params=p),
+                    run_mission(load_scenario(UC3), seed=4, params=p))
 
 
 def _mean(params, key, seeds=range(12)):

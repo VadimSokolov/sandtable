@@ -1763,3 +1763,33 @@ lowering abandonment -0.0074. Random order recovers 2.32 of EDF's 3.37, so FCFS 
 flip. The same deadline field read as a 95th-percentile budget excludes 0.233 of the fleet.
 
 Suite 348 passed 1 skipped. Pre-flight PASS on all five including compile.
+
+## 2026-08-23, CR-64 submitted and a static guard against a comparison that stopped being valid
+
+Jobs `9459574` (`roundrobin`, sections T1-T3) and `9459575` (`roundrobin2`, T4-T7), 32 cpus, 10 h.
+Both smoke-tested locally first: 532 and 480 AR_ROWs, exit 0. Registered with falsifiers in
+`doc/autoresearch-conjectures.md` before submission, amendments one through five included, and the
+S4 arm was reworded before it ran because the null guard registered the same day showed it would
+have measured `starved_frac` on an admitting console, where every arm reads 0.0000.
+
+Still running from the day before: `9458832` (`verify`, the interior of the check ladder, the stakes
+ladder, the comply_frac audit, the frontier against load) and `9459110` (`dispcol`, CR-60's owed
+column-length section and its nuisance family).
+
+**Instrument defect 17, same genus, found by its own guard.** `run_mission` returns a flat dict of
+floats and for most of this project's life every one of those floats equalled itself, so `assert a
+== b` was a correct byte-identity check and twenty-four tests used it. Then `answer_step_ratio` and
+`died_feasible_frac` became honestly undefined where their denominators are zero. NaN does not equal
+itself, so thirteen identity tests began failing on runs that were in fact bit-identical. The tests
+were right to be strict and the metrics were right to be NaN; the comparison was what had stopped
+being valid. `conftest.same_run` is the identity check that survives an undefined entry, and all
+twenty-four sites now use it.
+
+The guard is `tests/test_no_bare_dict_equality.py`, which parses every test file and fails on any
+`assert x == y` where either side is a metric dict, with a planted-offender negative control. It was
+worth writing rather than fixing by hand: three greps found twenty-one of the twenty-four sites and
+the parser found the other three, in files whose assertions carried an f-string message and so did
+not match any of the patterns I had guessed. It runs in a tenth of a second and it is static, so the
+next metric that goes undefined in some later configuration will not cost another suite run to find.
+
+Suite 361 passed 1 skipped before the change; re-running after.

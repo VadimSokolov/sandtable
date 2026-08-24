@@ -13,6 +13,7 @@ from sandtable.entities import RED
 from sandtable.scenario import build_entities, load_scenario
 from sandtable.seeding import make_rng
 from sandtable.sim import run_mission
+from conftest import same_run
 
 UC3 = "scenarios/uc3_route_defilade.json"
 
@@ -32,13 +33,14 @@ def test_optin_none_by_default():
 
 def test_baseline_deterministic():
     # With no belief param the run takes the baseline engagement path; identical across calls.
-    assert run_mission(load_scenario(UC3), seed=7) == run_mission(load_scenario(UC3), seed=7)
+    assert same_run(run_mission(load_scenario(UC3), seed=7),
+                    run_mission(load_scenario(UC3), seed=7))
 
 
 def test_belief_on_deterministic():
     p = _belief(decoys=4, decoy_rate=0.6)
-    assert run_mission(load_scenario(UC3), seed=5, params=p) == \
-        run_mission(load_scenario(UC3), seed=5, params=p)
+    assert same_run(run_mission(load_scenario(UC3), seed=5, params=p),
+                    run_mission(load_scenario(UC3), seed=5, params=p))
 
 
 def test_track_ages_and_drops():

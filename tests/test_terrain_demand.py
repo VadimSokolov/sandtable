@@ -32,9 +32,11 @@ def _mean(metric, seeds=range(8), **params):
 
 
 def test_off_by_default_and_byte_identical():
+    from conftest import same_run
+
     for s in range(4):
-        assert _run(seed=s, control_mode="direct", n_blue=6) == \
-               _run(seed=s, control_mode="direct", n_blue=6, terrain_demand=0.0)
+        assert same_run(_run(seed=s, control_mode="direct", n_blue=6),
+                        _run(seed=s, control_mode="direct", n_blue=6, terrain_demand=0.0))
 
 
 def test_difficult_ground_raises_the_call_rate_and_sinks_goodput():

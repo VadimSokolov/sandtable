@@ -14,6 +14,7 @@ from sandtable import engagement, mechanics
 from sandtable.entities import BLUE, RED, Entities
 from sandtable.scenario import load_scenario
 from sandtable.sim import run_mission
+from conftest import same_run
 
 UC3 = "scenarios/uc3_route_defilade.json"
 
@@ -43,13 +44,13 @@ def test_null_mech_is_byte_identical():
     # A mech config that disables both effects builds to None and takes the baseline path exactly.
     base = run_mission(load_scenario(UC3), seed=7)
     null = run_mission(load_scenario(UC3), seed=7, params=_mech())
-    assert base == null
+    assert same_run(base, null)
 
 
 def test_mech_on_is_deterministic():
     p = _mech(suppression=True, munitions=True, ammo_load=8)
-    assert run_mission(load_scenario(UC3), seed=3, params=p) == \
-        run_mission(load_scenario(UC3), seed=3, params=p)
+    assert same_run(run_mission(load_scenario(UC3), seed=3, params=p),
+                    run_mission(load_scenario(UC3), seed=3, params=p))
 
 
 # --- munitions (unit) ------------------------------------------------------------------------

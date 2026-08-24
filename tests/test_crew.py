@@ -12,6 +12,7 @@ import pytest
 
 from sandtable import sim
 from sandtable.scenario import Scenario, load_scenario
+from conftest import same_run
 
 BASE = "scenarios/sc_span_control.json"
 
@@ -29,8 +30,8 @@ def _mean(metric, seeds=range(8), **params):
 
 def test_one_console_is_the_default_and_byte_identical():
     for s in range(4):
-        assert _run(seed=s, control_mode="direct", n_blue=8) == \
-               _run(seed=s, control_mode="direct", n_blue=8, n_operators=1)
+        assert same_run(_run(seed=s, control_mode="direct", n_blue=8),
+                        _run(seed=s, control_mode="direct", n_blue=8, n_operators=1))
 
 
 def test_zero_operators_is_rejected():

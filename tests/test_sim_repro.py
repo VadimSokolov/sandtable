@@ -4,19 +4,20 @@ from __future__ import annotations
 import numpy as np
 
 from sandtable.sim import evaluate, run_mission
+from conftest import same_run
 
 
 def test_run_mission_is_deterministic(skirmish_scenario):
     a = run_mission(skirmish_scenario, seed=3)
     b = run_mission(skirmish_scenario, seed=3)
-    assert a == b   # same (scenario, seed) -> identical KPI dict
+    assert same_run(a, b)   # same (scenario, seed) -> identical KPI dict
 
 
 def test_run_mission_is_a_pure_function_of_seed(skirmish_scenario):
     # a caller reusing the scenario object between runs must not perturb results
     first = run_mission(skirmish_scenario, seed=11)
     _ = run_mission(skirmish_scenario, seed=99)
-    assert run_mission(skirmish_scenario, seed=11) == first
+    assert same_run(run_mission(skirmish_scenario, seed=11), first)
 
 
 def test_different_seeds_can_differ(skirmish_scenario):

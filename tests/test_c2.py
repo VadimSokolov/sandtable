@@ -18,6 +18,7 @@ from sandtable.comms_ew import build_comms
 from sandtable.entities import BLUE, RED
 from sandtable.scenario import build_entities, load_scenario
 from sandtable.seeding import make_rng
+from conftest import same_run
 
 SPAN_PATH = str(Path(__file__).resolve().parents[1] / "scenarios" / "sc_span_control.json")
 
@@ -171,7 +172,7 @@ def test_stall_decay_defaults_to_flat_pricing(skirmish_scenario, rng):
 
     base = run_mission(_stall_scn(skirmish_scenario), seed=7)
     off = run_mission(_stall_scn(skirmish_scenario, stall_decay=0.0, stall_floor=0.0), seed=7)
-    assert base == off
+    assert same_run(base, off)
 
 
 def test_stall_decay_lowers_quality_monotonically_across_the_patience_window():
@@ -218,8 +219,8 @@ def test_duration_param_overrides_the_scenario_field(skirmish_scenario):
     from sandtable.sim import run_mission
 
     d = skirmish_scenario.duration
-    assert run_mission(skirmish_scenario.with_params({"n_blue": 5}), seed=3) == \
-           run_mission(skirmish_scenario.with_params({"n_blue": 5, "duration": d}), seed=3)
+    assert same_run(run_mission(skirmish_scenario.with_params({"n_blue": 5}), seed=3),
+                    run_mission(skirmish_scenario.with_params({"n_blue": 5, "duration": d}), seed=3))
     longer = run_mission(skirmish_scenario.with_params({"n_blue": 5, "duration": 2 * d}), seed=3)
     assert longer["mission_time"] >= 0.0
 
@@ -230,8 +231,8 @@ def test_q_droop_defaults_to_the_oracle_operator(skirmish_scenario):
     from sandtable.sim import run_mission
 
     p = {"control_mode": "direct", "comms_level": 0, "n_blue": 8}
-    assert run_mission(skirmish_scenario.with_params(p), seed=11) == \
-           run_mission(skirmish_scenario.with_params({**p, "q_droop": 0.0}), seed=11)
+    assert same_run(run_mission(skirmish_scenario.with_params(p), seed=11),
+                    run_mission(skirmish_scenario.with_params({**p, "q_droop": 0.0}), seed=11))
 
 
 def test_q_droop_never_takes_a_serviced_answer_below_the_autonomous_one(skirmish_scenario, rng):
@@ -380,7 +381,7 @@ def test_reserve_is_the_default_and_is_untouched_by_the_buffer_code(skirmish_sce
     a = run_mission(_span_scenario(control_mode="direct", n_blue=8, queue_policy="admit"), seed=3)
     b = run_mission(_span_scenario(control_mode="direct", n_blue=8, queue_policy="admit",
                                    queue_model="reserve"), seed=3)
-    assert a == b
+    assert same_run(a, b)
 
 
 def test_build_c2_rejects_an_unknown_queue_model(skirmish_scenario, rng):
@@ -438,7 +439,7 @@ def test_queue_capacity_defaults_to_unbounded_and_zero_is_a_real_setting():
                          queue_model="buffer", queue_policy="blind")
     default = run_mission(scn, seed=5)
     explicit = run_mission(scn.with_params({**scn.params, "queue_capacity": -1}), seed=5)
-    assert default == explicit
+    assert same_run(default, explicit)
     zero = run_mission(scn.with_params({**scn.params, "queue_capacity": 0}), seed=5)
     assert zero["served_per_step"] > 0.0        # a free console still serves what arrives to it
     assert zero["backlog_mean"] < 1.0
@@ -513,7 +514,7 @@ def test_a_metronome_console_takes_no_draw_and_stays_bit_identical():
     for seed in (0, 3, 7):
         a = run_mission(scn, seed=seed)
         b = run_mission(replace(scn, params={**scn.params, "service_cv": 0.0}), seed=seed)
-        assert a == b
+        assert same_run(a, b)
 
 
 def test_service_variability_holds_the_mean_and_delivers_the_asked_for_spread():

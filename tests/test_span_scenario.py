@@ -19,6 +19,7 @@ from sandtable.scenario import build_entities, load_scenario
 from sandtable.seeding import make_rng
 from sandtable.sim import evaluate, run_mission
 from sandtable.world import build_world
+from conftest import same_run
 
 SPAN_PATH = str(Path(__file__).resolve().parents[1] / "scenarios" / "sc_span_control.json")
 
@@ -31,10 +32,11 @@ FIXED_RED = 4        # sc_span_control.json places a fixed 4-team red force
 
 def test_run_mission_is_deterministic():
     scn = load_scenario(SPAN_PATH)
-    assert run_mission(scn, seed=5) == run_mission(scn, seed=5)
+    assert same_run(run_mission(scn, seed=5), run_mission(scn, seed=5))
     # deterministic under param overrides (C2 + comms wired in) as well
     params = {"control_mode": "supervisory", "comms_level": 4, "n_blue": 5}
-    assert run_mission(scn, seed=2, params=params) == run_mission(scn, seed=2, params=params)
+    assert same_run(run_mission(scn, seed=2, params=params),
+                    run_mission(scn, seed=2, params=params))
 
 
 def test_count_param_honors_n_blue():

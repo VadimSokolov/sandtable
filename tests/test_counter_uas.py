@@ -13,6 +13,7 @@ from sandtable.counter_uas import build_counter_uas
 from sandtable.scenario import build_entities, load_scenario
 from sandtable.seeding import make_rng
 from sandtable.sim import evaluate, run_mission
+from conftest import same_run
 
 SC = load_scenario("scenarios/uc5_sensor_swarm.json")
 
@@ -55,7 +56,7 @@ def test_off_is_byte_identical():
     for seed in range(8):
         a = run_mission(SC, seed=seed, params=_p())
         b = run_mission(SC, seed=seed, params=_p(cuas_rate=0.0))
-        assert a == b
+        assert same_run(a, b)
 
 
 # ---- attrition ---------------------------------------------------------------

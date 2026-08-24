@@ -221,10 +221,12 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "arrival_ge2": 0.0, "arrival_ge3": 0.0, "arrival_ge4": 0.0,
            "patience_mean": 0.0, "patience_sd": 0.0, "patience_min": 0.0,
            "stale_frac": 0.0, "stale_per_step": 0.0, "worked_lost_per_step": 0.0,
+           "stale_dropped_frac": 0.0, "stale_dropped_per_step": 0.0,
            "worked_late_per_step": 0.0, "worked_per_step": 0.0,
            "died_feasible_per_step": 0.0, "died_feasible_frac": 0.0,
            "entered_feasible_frac": 0.0,
            "busy_serviced": 0.0, "busy_stale": 0.0, "busy_lost": 0.0, "busy_late": 0.0,
+           "busy_dead": 0.0,
            "busy_total": 0.0, "svc_serviced_mean": 0.0, "svc_worked_mean": 0.0,
            "starved_frac": 0.0, "answer_rate_v": 0.0, "answer_rate_min": 0.0,
            "answer_rate_gap": 0.0, "answer_rate_p25": 0.0, "answer_rate_p75": 0.0,
@@ -282,6 +284,7 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
             # it, because there a request's fate is settled at arrival and a vehicle can never have
             # two outstanding.
             out["stale_frac"] = op.n_stale / op.n_request
+            out["stale_dropped_frac"] = op.n_stale_dropped / op.n_request
             out["dropped_frac"] = op.n_dropped / op.n_request
         out["backlog_mean"] = op.backlog_sum / op.total_steps
         if op.patience_v is not None:
@@ -389,6 +392,7 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
         # in for the last two, because each of them also counts paths where no slot was claimed at
         # all (a head-of-line refusal, an uplink loss), which is why the counters are separate.
         out["stale_per_step"] = op.n_stale / op.total_steps
+        out["stale_dropped_per_step"] = op.n_stale_dropped / op.total_steps
         out["worked_lost_per_step"] = op.n_worked_lost / op.total_steps
         out["worked_late_per_step"] = op.n_worked_late / op.total_steps
         out["worked_per_step"] = (op.n_serviced + op.n_stale + op.n_worked_lost
@@ -420,6 +424,11 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
         out["busy_stale"] = op.t_stale / op.total_steps
         out["busy_lost"] = op.t_worked_lost / op.total_steps
         out["busy_late"] = op.t_worked_late / op.total_steps
+        # The console clock that produced no answer, by whatever route. It is reported beside
+        # `busy_stale` because a repair can move dead time between the three buckets without
+        # removing any of it, and a reader shown only the bucket that fell would read that as a
+        # recovery. This sum is what has to fall for a repair to be one.
+        out["busy_dead"] = (op.t_stale + op.t_worked_lost + op.t_worked_late) / op.total_steps
         out["busy_total"] = (op.t_serviced + op.t_stale + op.t_worked_lost
                              + op.t_worked_late) / op.total_steps
         # Length selection, the mechanism a variable console's admission test acts through. At

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from sandtable.scenario import load_scenario
 from sandtable.sim import evaluate, run_mission
+from conftest import same_run
 
 SC = load_scenario("scenarios/sc_span_control.json")
 
@@ -22,7 +23,8 @@ def test_off_is_byte_identical():
     """Absent vs explicit-False give identical metrics: the gate's off-path is the original code and
     draws the same RNG stream."""
     for seed in range(8):
-        assert run_mission(SC, seed=seed, params=_p()) == run_mission(SC, seed=seed, params=_p(ew_immune_link=False))
+        assert same_run(run_mission(SC, seed=seed, params=_p()),
+                        run_mission(SC, seed=seed, params=_p(ew_immune_link=False)))
 
 
 def test_immune_link_helps_direct_under_jamming():
@@ -46,4 +48,4 @@ def test_immune_link_inert_for_supervisory():
     for seed in range(8):
         a = run_mission(SC, seed=seed, params=_p(control_mode="supervisory"))
         b = run_mission(SC, seed=seed, params=_p(control_mode="supervisory", ew_immune_link=True))
-        assert a == b
+        assert same_run(a, b)

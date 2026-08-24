@@ -6,6 +6,9 @@ from sandtable.scenario import Objective, PlatformType, Scenario
 from sandtable import metrics
 
 EXPECTED_KEYS = {
+    "busy_dead",
+    "stale_dropped_per_step",
+    "stale_dropped_frac",
     "success",
     "time_to_objective",
     "blue_losses",

@@ -8047,3 +8047,354 @@ It is worth recording HOW this was found, because the method generalises. The me
 It was run on the configuration where it was expected to look worst, which is the same move the null
 guard prescribes for explanations: name the case that would embarrass the claim and run that first.
 Three of this session's four defects were found that way and none by inspection.
+
+### CR-64 AMENDMENT FIVE: THE CONTRADICTION IN THE MANUSCRIPT, AND THE SECTION THAT RESOLVES IT
+
+Promoting the discipline result put two paragraphs next to each other that contradict one another.
+The requirements-ladder paragraph ends "given the counter, the queue discipline stops mattering,"
+and the paragraph after it now says the order is the largest single lever in the paper. Both are
+true and the difference is the backlog: the ladder's claim was measured on a console bounded at its
+derived capacity, where the backlog holds one or two requests and a queue of one has no order to
+permute. The manuscript now says so explicitly in a bridging paragraph, which is the honest fix, but
+the reconciliation raises a question neither result answers. **The counter and the order are both
+being sold as repairs to the same console. Are they substitutes on FAIRNESS as well, and if a
+program can only buy one, which?**
+
+Piloted at sixteen replications, sixteen assets, two-point fleet, admitting console:
+
+    arm                share   starved     iqr     rate      srv    aband
+    unbounded fcfs    0.0608    0.1719   0.8589   0.4725   0.1595   0.2095
+    unbounded edf     0.5993    0.0000   0.4455   0.5136   0.1885   0.2187
+    unbounded rr      0.5865    0.0000   0.4191   0.4896   0.1810   0.2145
+    bound k=2 fcfs    0.5119    0.0039   0.3691   0.4044   0.1543   0.2594
+    bound k=2 edf     0.8173    0.0000   0.2038   0.4070   0.1663   0.2630
+    bound k=2 rr      0.6732    0.0000   0.2839   0.3995   0.1583   0.2567
+    bound k=1 fcfs    0.6989    0.0000   0.2524   0.3769   0.1506   0.2725
+
+**Bounding the backlog is a fairness fix in its own right and nobody has reported it as one.** A
+counter at the derived capacity takes the share from 0.0608 to 0.5119 and exclusion from 0.1719 to
+0.0039, with no change to the message format and no order at all. It works because a bound truncates
+the wait every request faces, and a truncated wait is exactly what the impatient half needs.
+
+**And ordering dominates it on every column.** Against the bounded arm, the unbounded ordered console
+is better on the share (0.5993 against 0.5119), on exclusion, on answer rate (0.5136 against 0.4044),
+on throughput (0.1885 against 0.1543) AND on abandonment (0.2187 against 0.2594). The two buy the
+same fairness by opposite means: the counter buys it by REFUSING more, and the order buys it by
+SERVING more. That is why one is free and the other is not.
+
+**T7, registered.** The counter and the order are substitutes on the distributional readings and not
+on the aggregates: at the derived capacity the bounded arm and the ordered arm are equivalent on
+exclusion, and the ordered arm gates UP on mean answer rate and throughput and DOWN on abandonment.
+FALSIFIER: the bounded arm matches the ordered one on any aggregate, or beats it on any
+distributional reading, either of which would make the counter the cheaper repair and the order an
+optional refinement rather than the recommendation. The 2x3 of capacity against discipline is run
+whole so the interaction is measured rather than inferred, since the pilot says the best share in the
+grid belongs to the cell that has both.
+
+---
+
+### CR-64 SUBMITTED, and instrument defect 17: a comparison that stopped being valid
+
+`roundrobin` is job `9459574` (T1-T3) and `roundrobin2` is job `9459575` (T4-T7), 32 cpus, 10 h,
+both smoke-tested at 532 and 480 AR_ROWs before submission. Nothing from either goes near the
+manuscript until it lands at full tier. The recovery paragraph already in the manuscript is
+unaffected either way: it reports the random arm, which has landed.
+
+### INSTRUMENT DEFECT 17, THE SAME GENUS, AND THE GUARD FOUND THE PART I MISSED
+
+The genus is a convention correctly derived for its first use case and carried silently into a
+second where it does not hold. Here the convention is `assert a == b` on two metric dicts.
+`run_mission` returns a flat dict of floats; for most of this project's life every one of those
+floats equalled itself, so a bare equality was a correct byte-identity check and twenty-four tests
+across eighteen files used it. Then `answer_step_ratio` and `died_feasible_frac` became honestly
+undefined where their denominators are zero, which is defect 16's repair. NaN does not equal itself.
+Thirteen identity tests began failing on runs that were in fact bit-identical.
+
+Note which side was wrong. The tests were right to be strict: byte-identity is the correct assertion
+for an opt-in mechanism's off-path. The metrics were right to be undefined: a sentinel that averages
+is what defect 16 was about. What had stopped being valid, silently and without any line of code
+changing, was the comparison between them.
+
+The repair is `conftest.same_run`, which requires the same key set and then requires every pair to
+be either equal or both NaN. All twenty-four sites use it.
+
+**The guard is `tests/test_no_bare_dict_equality.py` and it earned itself immediately.** It parses
+every test file, walks each function, tracks which local names are bound to a call returning metrics,
+and fails on any equality assertion where either side is one of those. It carries a planted-offender
+negative control and a planted-clean control, and it runs in a tenth of a second because it never
+executes a mission.
+
+I wrote it after three greps had already found twenty-one of the twenty-four sites, expecting it to
+confirm the sweep was complete. It found three more, in `test_behavior.py`, `test_channel.py` and
+`test_crew.py`. Two of those carried an f-string failure message after the comparison and the third
+split the equality across a line continuation, so none of them matched any pattern I had guessed.
+That is the argument for the guard in one sentence: the hand search found what I thought to look
+for, and the parser found what the language actually says. A defect whose sites cannot be enumerated
+by inspection is one whose recurrence cannot be prevented by care.
+
+---
+
+### CR-65, REGISTERED. THE WASTE IS FREE TO REMOVE AND IT BUYS ALMOST NOTHING
+
+**The mechanism I set out to build first, and why it was killed before a line of it was written.**
+The obvious human-factors objection to serve-least-served is that it maximises switching, and task
+switching costs a person time. I was about to add a per-switch setup cost to the console when the
+defect-14 guard made me name the configuration in which the mechanism is nonzero and check it. It is
+not nonzero anywhere. Instrumenting `_pick` over three disciplines at sixteen assets:
+
+```
+    discipline     services   switches   switch fraction   max pending from one asset
+    fcfs               190        190          1.0000                19
+    round_robin        190        190          1.0000                29
+    edf                190        190          1.0000                19
+```
+
+Every discipline switches asset on every single decision, so a per-switch cost is a constant tax on
+service and cannot interact with the order. The mechanism was inert by construction and was not
+built. What the instrumentation did surface is the third column: up to twenty-nine requests from ONE
+vehicle can sit in the buffer at once, which is not a queue of twenty-nine problems. It is one
+problem and twenty-eight ghosts of it.
+
+**The finding.** A request goes stale when its vehicle gives up waiting and asks again: `req_seq`
+advances and the buffered record is superseded. The published console discovers this by working the
+request, because the slot is claimed before the sequence numbers are compared. On the blind buffer
+console that is where nearly the whole clock goes.
+
+```
+    n_blue   arm                     busy_serviced   busy_stale   busy_late   served/step
+      8      blind, works the ghost      0.2491        0.2025       0.3776       0.0374
+      8      blind, drops the ghost      0.2621        0.0000       0.5925       0.0393
+     12      blind, works the ghost      0.0154        0.9498       0.0373       0.0023
+     12      blind, drops the ghost      0.0608        0.0000       0.9286       0.0091
+     16      blind, works the ghost      0.0147        0.9544       0.0318       0.0022
+     16      blind, drops the ghost      0.0174        0.0000       0.9850       0.0026
+     24      blind, works the ghost      0.0154        0.9654       0.0212       0.0023
+     24      blind, drops the ghost      0.0157        0.0000       0.9869       0.0024
+     16      admitting                   0.9926        0.0000       0.0000       0.1489
+```
+
+`stale_check = "before"` is a console that consults its own books before it starts work. It carries
+NO new information: `req_seq` is the console's record of what each vehicle last asked, it is
+maintained on the arrival path, and no message field carries it. The difference between the two
+consoles is an interface, not a sensor.
+
+**The repair is total and it is nearly worthless.** Waste does not fall, it goes to exactly zero.
+And the freed clock does not become throughput: at sixteen assets `busy_stale` 0.9544 becomes
+`busy_late` 0.9850 and `served_per_step` moves 0.0022 to 0.0026, which is inside this project's own
+rate floor of 0.0090. The console was not wasting effort. It was short of the capacity to finish
+what it had already accepted, and removing the ghosts only let it fail at the next stage instead.
+The admitting console, at the same span, serves 0.1489: sixty times more, and it is not faster.
+
+**Registered claim.** On the blind buffer console: (a) `busy_stale` gates DOWN to 0.0000 in every
+arm at every span; (b) `busy_late` gates UP by substantially the amount `busy_stale` gave up; (c)
+`served_per_step` is EQUIVALENT to the unrepaired console at every span at or above twelve; and (d)
+the repaired blind console remains below the admitting console's `served_per_step` by more than a
+factor of ten at every span at or above twelve. The deadline field on a console is therefore not
+paying for order, which CR-62 already showed is second-order once any rule is used, and not paying
+for waste, which is free to remove and buys nothing. It is paying for refusal.
+
+**FALSIFIER.** (c) or (d) fails at any span at or above twelve. Either would put a zero-information
+rung above the deadline field on the requirements ladder, which is the opposite of what the
+manuscript now says, and the manuscript would have to change rather than the claim be salvaged.
+
+**Second registered claim, U2, and it reaches back into CR-64.** On a blind console the ORDER decides
+which ghosts are reached first, and the pilot at eight assets puts serve-least-served at 0.6177 of
+the clock on ghosts against arrival order's 0.2670: the rule that seeks the least-served vehicle is
+seeking exactly the vehicle whose old requests are still buffered. If that is why the discipline
+ordering inverts on a console that cannot refuse, then dropping the ghost should COLLAPSE the
+separation between the three rules rather than shift all three. Registered: with `stale_check =
+"before"` the three disciplines are equivalent on `served_per_step` and on `answer_rate_v` at every
+span. FALSIFIER: they separate by more than the gate anywhere, which would make CR-64's inversion a
+property of the rules rather than of what a blind buffer contains, and both readings would then have
+to ship side by side.
+
+**U5 is the defect-14 guard and not an extra section.** The claim is about a console losing its clock
+to ghosts, so it is checked where there are none: two to four assets on a fast console, where the
+pilot reads `busy_stale` at zero. Every arm must be equivalent on every reading there. If the arms
+separate where there is nothing to repair, the repair is not what is doing the work anywhere either.
+
+Battery `hopper/batteries/ghost.sh`, six sections, 685 cells, smoke-tested at exit 0.
+
+---
+
+### CR-65 AMENDED, AND CR-66 REGISTERED: THE FREE RUNG IS MUCH BETTER THAN I SAID
+
+Adversarial review made one demand that changed the result rather than the presentation: report the
+dead clock as a SUM beside the bucket that falls, and put the zero-information BOUND in the same
+table as the repair, because drop-oldest at capacity is refusal by overflow and it is the floor that
+any claim about what the deadline field buys has to clear first. Both were right, and the second one
+moved the science.
+
+**Amendment to CR-65.** `busy_dead` is added: the console clock that produced no answer by any
+route. It is now reported in every section of `ghost.sh`, because a repair can move dead time
+between buckets without removing any of it and a reader shown only the bucket that fell would read a
+relabelling as a recovery. Sixteen assets, blind, twelve seeds: `busy_dead` 0.9861 works the ghost,
+0.9843 drops it. Conserved to three decimals. At twelve assets it is 0.9868 against 0.9315, which is
+the one place the repair removes dead time rather than relabelling it, and that is the collapse edge.
+The registered claim is unchanged and its exhibit is now honest.
+
+**Amendment two, the cadence control.** The sharpest objection CR-65 faces is that the ghost
+population is manufactured by how fast a requester that gave up comes back. `reask_hold` scales that
+hold and the sweep spans sixteenfold. Pilot at sixteen assets: `busy_stale` reads 0.9525, 0.9525,
+0.9571, 0.9611, 0.9608 at 0.5x, 1x, 2x, 4x, 8x. The ghost clock is not a product of the cadence and
+the registered prediction for U3 is EQUIVALENCE across the whole range. FALSIFIER: it moves outside
+the gate anywhere, which would make the result a property of one arbitrary re-ask rate.
+
+### CR-66, REGISTERED. HOW UNLIKE EACH OTHER THE VEHICLES ARE DECIDES WHAT THE CONSOLE MUST KNOW
+
+Four rungs, each costing strictly more than the one below, priced on one console at one span.
+Sixteen seeds, sixteen assets, direct control, C0, buffer console.
+
+```
+    UNIFORM FLEET            served   answer   starved   share   busy_dead
+    blind, unbounded         0.0022   0.0127    0.8125   ----     0.9862
+    bounded k = 1            0.1456   0.3818    0.0000   ----     0.0000
+    bounded k = 2            0.1476   0.4093    0.0000   ----     0.0098
+    bounded k = 4            0.1032   0.2926    0.0039   ----     0.3146
+    bounded k = 8            0.0079   0.0265    0.6992   ----     0.9425
+    admitting                0.1489   0.4183    0.0000   ----     0.0000
+    admitting + EDF          0.1489   0.4183    0.0000   ----     0.0000
+
+    TWO-POINT FLEET          served   answer   starved   share   busy_dead
+    blind, unbounded         0.0018   0.0083    0.8594  0.3125    0.9904
+    bounded k = 1            0.0742   0.2070    0.0391  0.2901    0.4923
+    bounded k = 2            0.0602   0.1948    0.3516  0.0552    0.5988
+    bounded k = 4            0.0620   0.2104    0.4766  0.0046    0.5893
+    admitting                0.1494   0.4668    0.3047  0.0244    0.0000
+    admitting + EDF          0.1494   0.4344    0.0000  0.4432    0.0000
+```
+
+**On a uniform fleet the deadline field buys nothing.** A two-slot bound delivers 0.1476 against the
+admitting console's 0.1489, and both exclude nobody. The field costs a message format, a clock
+convention and a requirement on every vehicle in the fleet, and at sixteen assets on a uniform fleet
+it is worth 0.0013 served per step, which is inside this project's rate floor of 0.0090.
+
+**On a two-point fleet every rung buys something the one below cannot.** The bound gets less than
+half the throughput (0.0602 against 0.1494) AND fails to fix exclusion (0.3516). The field recovers
+the throughput and still leaves 0.3047 excluded. Only the field read TWICE, once to refuse and once
+to order, gets both: 0.1494 served and 0.0000 excluded. That is the requirements ladder as a
+measurement rather than an argument, and the variable that separates the rungs is not the span, not
+the link and not the console speed. It is how unlike each other the vehicles are.
+
+**Registered claim.** (a) On a uniform fleet, `boundTwo` is EQUIVALENT to `admits` on
+`served_per_step` and on `starved_frac` at every span. (b) On a two-point fleet, `admits` gates UP
+over `boundTwo` on `served_per_step` at every span, and `admitsEdf` gates DOWN over `admits` on
+`starved_frac` at every span. (c) In the heterogeneity sweep there is a spread at which (a) turns
+into (b), and it is reported as a threshold with the sweep's resolution stated, in the same form as
+the dispersion threshold in CR-60. FALSIFIER for the headline: (a) fails, which would mean the free
+bound never substitutes for the field and the ladder has no free rung; or (b) fails, which would
+mean the field never earns its cost and the ladder has no paid rung. Either kills the framing, not
+just a number.
+
+**Second registered claim, V4, the sizing rule.** A bound is only a bound if it is TIGHT. Pilot on
+the uniform fleet: 0.1456, 0.1476, 0.1032, 0.0079 served at capacities one, two, four and eight, so
+the free rung has an INTERIOR optimum and a loose bound is not a weak repair but no repair.
+Registered: `served_per_step` is non-monotone in `queue_capacity` with a maximum at or below four,
+and the arm at capacity twelve is EQUIVALENT to the unbounded blind console. FALSIFIER: monotone in
+either direction, which would make the sizing rule a corner solution and the recommendation "as
+tight as possible" rather than a number a programme office can size.
+
+**What is prior here and what is not.** Bounded buffers, drop-oldest and admission control are all
+old. What is not prior is pricing them against each other AS INFORMATION REQUIREMENTS on one console
+under one workload, and finding that the ordering of the rungs reverses with fleet heterogeneity.
+That is the sponsor's question in its own terms: not "is a queue bound good" but "what does the
+console have to be told, and what decides it".
+
+Battery `hopper/batteries/ladder.sh`, four sections, 532 cells, smoke-tested at exit 0.
+
+**CR-65 amendment three, and it turned the control into a result.** The cadence sweep was registered
+as an equivalence to be put on the record. Run at eight assets as well as sixteen it is not one:
+
+```
+    reask_hold      n = 16                              n = 8
+                req/step  served  busy_stale        req/step  served  busy_stale
+        0.25      0.3173  0.0022    0.9544            0.1257  0.0331    0.2041
+        1.00      0.3173  0.0022    0.9544            0.1267  0.0374    0.2025
+        2.00      0.3261  0.0023    0.9575            0.1358  0.0837    0.0099
+        4.00      0.3337  0.0024    0.9590            0.1145  0.0814    0.0089
+        8.00      0.3330  0.0024    0.9596            0.0854  0.0619    0.0080
+       16.00      0.3203  0.0024    0.9576            0.0643  0.0495    0.0083
+```
+
+At sixteen assets the ghost clock is flat across sixty-four-fold, which is the registered
+equivalence and it holds. At eight it is not flat at all: asking back half as often takes the ghost
+clock from 0.2025 to 0.0099 and MORE than doubles delivered throughput, 0.0374 to 0.0837, and the
+curve then turns over so that sixteen-fold is worse than two-fold. That is a third free repair and
+it is on the FLEET side rather than the console side: nobody has to know anything, a vehicle simply
+waits longer before asking again, and it has an interior optimum like the buffer bound does.
+
+U3 now carries both spans. Registered: `busy_stale` is EQUIVALENT across the whole cadence range at
+sixteen assets, and gates DOWN at eight; `served_per_step` at eight is non-monotone with a maximum
+at or below fourfold. FALSIFIER for the first half: the cadence moves the ghost clock at sixteen,
+which would make CR-65's headline a property of one arbitrary re-ask rate after all. FALSIFIER for
+the second: monotone in either direction at eight, which would make the fleet-side repair "back off
+as far as possible" rather than a number that can be sized.
+
+Reporting inertness measured only at the span where nothing moves would have been the flat-reference
+defect wearing a control's clothes. Job 9459668 was cancelled two minutes in and resubmitted with
+the amended section rather than scored as registered.
+
+### ROUND 34 RULINGS, RECORDED
+
+**Q2, the blind console.** Keep the zero, demote its use. Three jobs, separated: as the ladder's zero
+it stays, because the absence of a discard rule is not a design choice but the absence of one and
+the requirements text is addressed to whoever has not decided; as a mechanism exhibit it stays, 0.81
+starved and 0.95 of the clock on ghosts; as a CONTRAST DENOMINATOR it is demoted, because any lever
+quoted against blind at twelve assets and above is mostly quoting the bottom rung's collapse.
+
+MANUSCRIPT ACTION, owed when `ladder` lands. Every increment is routed adjacent-rung and the
+sixtyfold appears exactly once, as the price of omission. The exposed passages are the queue
+section's `\qBlindClear` to `\qAdmitClear` success jump, the band section's `\MpBandSrvFull` served
+per step over the blind console, and the discipline section's `\LvSrvFifo`. Each needs the bounded
+console between them, and the numbers for that are in `ladder` V1 and V2. Nothing is edited until
+they land.
+
+**Q3, CR-64's blind-console section.** Ship the warning, hold the specifics. The warning sentence,
+that the discipline recommendation is void on a console that cannot refuse, is true under both
+branches of U2 and can ship now. The specific ordering claims (random recovering three times, EDF
+worst of the four) have a live registered threat from U2, because the ghost-clock split already says
+the rules differ in what they EAT: 0.6177 against 0.2670 at eight assets. Cost asymmetry decides it:
+holding costs a week, retracting costs a table row and the churn around it. CR-64's numbers stay
+valid for the works-the-ghost world either way; U2 threatens their interpretation, not their
+validity. RULEBOOK: when a running battery can retract a claim but not its enclosing warning, ship
+the warning and hold the specifics.
+
+**Q4, attention cost.** The per-switch form is dead on measurement. The form that is not dead is
+staleness-priced re-acquisition: a setup cost scaled by the time since the console last touched that
+vehicle. It interacts with the discipline BY CONSTRUCTION, because contact-gap distributions are
+exactly what the rules differ in, and it hands serve-least-served its real-world rationale, since a
+fairness rule doubles as an attention-freshness rule. Instrument the per-discipline contact-gap
+distributions first and build the cost only if the spread is there. Queued, not started.
+
+**Q5, defect 17.** Row only, no prose. RULEBOOK: prose for defects that moved a PUBLISHED CLAIM
+(defect 15's class), rows for defects that moved CODE (defect 17's class). The manuscript table
+carries the claim-movers; the companion carries the taxonomy.
+
+**Q4 SETTLED BY MEASUREMENT, AND THE ANSWER IS AGAIN "DO NOT BUILD IT".** Adversarial review's third
+form of attention cost was staleness-priced re-acquisition: a setup cost scaled by the time since the
+console last touched that vehicle, on the argument that contact-gap distributions are exactly what
+the rules differ in and that serve-least-served minimises the worst gap. Instrumented before
+building, sixteen assets, two-point fleet, eight seeds, gaps measured on the console clock and
+cleared per mission:
+
+```
+    ADMITTING CONSOLE     n     mean     sd    p50     p90     p99     max
+    fcfs               3107    40.65  10.76   40.0    53.3    60.0    66.7
+    random             3303    38.61  19.23   40.0    60.0    93.3   125.0
+    round_robin        3685    36.76  16.83   33.3    60.0    93.3   167.0
+    edf                3646    35.93  12.81   33.3    53.3    66.7    70.7
+    easy_first         3306    37.24  23.57   34.3    66.7   108.3   206.7
+```
+
+The means span thirteen percent, which is too little for a cost keyed on the mean gap to separate
+the rules. The premise is also false as stated: serve-least-served does NOT minimise the worst gap
+here, arrival order does, at a maximum of 66.7 against 167.0, because serve-least-served equalises
+counts and not clocks and with sixteen assets arrival order is already nearly cyclic. And the one
+direction the coupling does have runs the wrong way for a sceptic: deadline order has the SHORTEST
+mean gap and arrival order the longest, so pricing re-acquisition would penalise the console this
+paper argues against and strengthen the one it recommends. Declining to build a mechanism that would
+strengthen our own result is the conservative choice, and it is recorded as one.
+
+That is the defect-14 guard working upstream of authorship twice on the same question: two forms of
+attention cost proposed, both killed on a dose-response measurement before a line of either was
+written. The cost of the guard was two instrumentation scripts.

@@ -14,6 +14,7 @@ import numpy as np
 
 from sandtable.scenario import load_scenario
 from sandtable.sim import evaluate, run_mission
+from conftest import same_run
 
 
 def _scn(**over):
@@ -82,7 +83,7 @@ def test_adding_the_counter_left_the_pending_record_readable_by_every_path():
 def test_the_counter_does_not_perturb_any_arm_that_ignores_it():
     a = run_mission(_scn(), seed=13)
     b = run_mission(_scn(), seed=13)
-    assert a == b
+    assert same_run(a, b)
     assert not np.isnan(a["served_per_step"])
 
 

@@ -22,6 +22,7 @@ from sandtable.c2 import build_c2  # noqa: E402
 
 from sandtable.comms_ew import build_comms  # noqa: E402
 from sandtable.scenario import Scenario, build_entities, load_scenario  # noqa: E402
+from conftest import same_run
 
 BASE = load_scenario(ROOT / "scenarios" / "sc_span_control.json")
 # The published queue operating point, so the numbers here are the paper's numbers.
@@ -85,7 +86,7 @@ def test_retry_off_draws_nothing_and_reproduces_the_published_run():
     """Opt-in discipline: the retry coin must not exist when the mechanism is off."""
     a = sim.run_mission(arm(n_blue=8), seed=3)
     b = sim.run_mission(arm(n_blue=8, retry_prob=0.0, retry_backoff=4), seed=3)
-    assert a == b
+    assert same_run(a, b)
 
 
 def test_retry_shortens_the_cycle_and_raises_offered_load():

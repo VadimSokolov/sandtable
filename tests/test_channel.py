@@ -7,6 +7,7 @@ import pytest
 from sandtable.comms_ew import build_comms
 from sandtable.scenario import load_scenario
 from sandtable.sim import run_mission
+from conftest import same_run
 
 SCN = "scenarios/sc_span_control.json"
 RUNGS = [1, 2, 3, 4, 5]
@@ -63,7 +64,8 @@ def test_bernoulli_default_is_byte_identical():
         for seed in range(4):
             base = run_mission(scn, seed=seed)
             explicit = run_mission(scn, seed=seed, params={"channel": "bernoulli"})
-            assert base == explicit, f"{path} seed {seed}: explicit bernoulli diverged"
+            assert same_run(base, explicit), \
+                f"{path} seed {seed}: explicit bernoulli diverged"
 
 
 def test_both_channels_consume_one_draw_per_message():

@@ -128,7 +128,16 @@ NON_PHYSICS_KEYS = ("queue_buffer", "policy_admit", "channel_bursty", "turn_rate
 
 
 def same_run(a: dict, b: dict) -> bool:
-    """Whether two metric dicts describe the same mission, ignoring configuration markers."""
+    """Whether two metric dicts describe the same mission, ignoring configuration markers.
+
+    NaN is compared as EQUAL to NaN here, which plain `==` will not do. Three metrics in this model
+    are deliberately undefined where they have no denominator, and for a byte-identity contract
+    "both undefined" is the same run: a console with no backlog reports an undefined feasible-death
+    fraction whatever else changed around it. Reading NaN as a difference would make every one of
+    those tests fail for a reason that has nothing to do with the mission.
+    """
     ka = {k: v for k, v in a.items() if k not in NON_PHYSICS_KEYS}
     kb = {k: v for k, v in b.items() if k not in NON_PHYSICS_KEYS}
-    return ka == kb
+    if set(ka) != set(kb):
+        return False
+    return all(x == y or (x != x and y != y) for x, y in ((ka[k], kb[k]) for k in ka))

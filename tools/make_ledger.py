@@ -260,6 +260,16 @@ ROWS = [
      "All three are now undefined where they are undefined, and are guarded by a survey check that "
      "refuses a cell containing one out loud rather than returning ``inconclusive'', plus a "
      "reporting rule that the share never appears without a level beside it"),
+    ("a comparison may stop being valid without the code around it changing",
+     "(instrument: bare dict equality, after a metric became honestly undefined)",
+     "\\textsc{repaired}. Twenty-four tests asserted byte-identity between two metric dicts "
+     "with a bare equality, which was correct while every value equalled itself and stopped "
+     "being correct the moment two ratios became NaN where their denominators are zero: "
+     "thirteen of them failed on runs that were in fact bit-identical. The tests were right "
+     "to be strict and the metrics were right to be undefined. It is guarded by a static "
+     "check that parses every test file and refuses any equality whose either side is a "
+     "metric dict, with a planted offender as its negative control; three hand-written "
+     "searches had found twenty-one of the twenty-four sites and the parser found the rest"),
 ]
 
 
