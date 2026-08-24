@@ -144,10 +144,13 @@ CONTRIBUTION_PATTERNS = [
     r'(?i)The main contributions of this (paper|work) are',
     r'(?i)We summari[sz]e our contributions',
     # Header framings (legacy; not preferred but still detected)
-    r'\\paragraph\*?\{Contributions?\}',
-    r'\\subsection\*?\{Contributions?\}',
-    r'\\section\*?\{Contributions?\}',
-    r'\\textbf\{Contributions?\}',
+    # A trailing period in a paragraph header is ordinary LaTeX. Without the optional `\.?` this
+    # reported "no contribution paragraph found" for a paper that had one, which is a false alarm,
+    # and a checker that cries wolf on correct input gets ignored on incorrect input.
+    r'\\paragraph\*?\{Contributions?\.?\}',
+    r'\\subsection\*?\{Contributions?\.?\}',
+    r'\\section\*?\{Contributions?\.?\}',
+    r'\\textbf\{Contributions?\.?\}',
 ]
 
 

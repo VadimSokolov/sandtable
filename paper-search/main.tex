@@ -28,7 +28,63 @@ PLACEHOLDER. Written last, from the numbers.
 \section{Introduction}
 \label{sec:intro}
 
-PLACEHOLDER.
+A mission simulator that runs in a fifth of a second changes what a design study can be. When one
+run took a day, the design was chosen by judgement and the simulator was used to defend it. When a
+run is cheap enough that a laptop can do ten thousand overnight, the design can be searched for, and
+the question becomes which search to run. The obvious answer is Bayesian optimization, which is what
+one reaches for when evaluations are expensive and the space is continuous \citep{shahriari2016taking,
+brochu2010tutorial}. Mission design is neither. The evaluations are cheap and the space is small,
+discrete and often unordered, and both of those facts point somewhere else.
+
+They point at a harder problem hiding inside the easy one. A mission simulator does not return the
+value of a design, it returns a draw from a distribution over missions, so an evaluation has a
+precision that the searcher chooses and pays for. Looking at ten designs once and one design ten
+times cost the same and answer different questions. That makes mission design a best-arm
+identification problem before it is an optimization problem \citep{bubeck2011pure,karnin2013almost},
+and it makes the usual benchmarking convention, counting evaluations, quietly wrong: a method that
+buys more replications per evaluation looks better without being better.
+
+There is a second thing the literature holds fixed that this setting does not. An optimizer benchmark
+varies the method and holds the objective constant, because on a test function the objective is the
+problem. A mission has no single objective. The same missions can be scored on delivered service, on
+whether the mission succeeded, or on what fraction of the force was lost, and a program office cares
+about all three. We began this work expecting the interesting variation to lie between methods. It
+does not. On identical missions the three axes differ by more than an order of magnitude in the
+replications needed to tell the best design from the runner-up, and, more awkwardly, the ordering
+among them is not stable: the axis that is cheapest to estimate at one operating point is the
+dearest a few assets away. A benchmark that varies only the method cannot see any of that, and a
+design study that picks its metric for reasons of reporting convention has made a larger decision
+than it knows.
+
+\paragraph{Contributions} We give a benchmark for mission-design search whose answer key is not
+self-reported, and use it to argue that the axis a study searches on constrains its result more
+tightly than the optimizer it searches with.
+
+\begin{itemize}
+\item A suite of mission-design search problems on a fast multi-agent simulator, each carrying an
+      optimum established by a separate registered study that involved no optimizer, so ``did the
+      method find the right design'' has an answer written down by somebody else first
+      (Section~\ref{sec:bench}).
+\item A budget denominated in mission replications rather than evaluations, with the per-problem
+      ladder derived from a measured difficulty, the ratio of per-mission spread to the gap between
+      the two best designs, rather than chosen (Sections~\ref{sec:bench} and \ref{sec:methods}).
+\item The finding that the cost of estimating a mission metric is a property of the pair (metric,
+      operating point) rather than of the metric, established by holding one design set fixed and
+      scoring the same missions on three axes at four operating points (Section~\ref{sec:results}).
+\item The consequence for method design, which appears inside a method rather than between two of
+      them: an exploration constant is denominated in the metric's noise, so the textbook bandit
+      bonus, derived for rewards on the unit interval, exceeds the gap it must resolve by two orders
+      of magnitude here and collapses the allocator into uniform sampling. We keep the unscaled
+      version as a control rather than repairing it silently (Section~\ref{sec:methods}).
+\item A comparison of enumeration, random search, successive halving, two bandit allocators and
+      Gaussian-process expected improvement under that common budget, scored both on whether the
+      registered optimum was returned and on the mission performance given up by returning something
+      else, which are different questions that disagree (Section~\ref{sec:results}).
+\end{itemize}
+
+The honest summary of the result is a negative one about method choice and a positive one about
+study design, and Section~\ref{sec:discussion} argues that this is the more useful pair for a
+program office than a ranking of optimizers would have been.
 
 \section{The design-space search problem}
 \label{sec:problem}
@@ -100,11 +156,31 @@ the shape decides which family of methods wins.
 \end{itemize}
 
 \paragraph{Auditing the key.} An answer key can be wrong, so it is checked rather than trusted.
-Every design in every problem is evaluated at \BnTruthReps{} replications on a seed block disjoint
-from the ones the searches draw on, and the resulting table is compared against the registered
-optimum. Agreement is reported per problem and disagreement is reported rather than reconciled: a
-table that put the optimum somewhere else would be a finding about the original study or about the
-precision of the table, and hiding it would defeat the purpose of having a key at all.
+Every design in every problem is evaluated on a seed block disjoint from the ones the searches draw
+on, and the resulting table is compared against the registered optimum. Agreement is reported per
+problem and disagreement is reported rather than reconciled: a table that put the optimum somewhere
+else would be a finding about the original study or about the precision of the table, and hiding it
+would defeat the purpose of having a key at all.
+
+The replication count behind the key is per metric and not one number, which is the paper's own
+argument applied to its own instrument. \BnRepsSrv{} replications resolve the top two designs on
+delivered service; the loss fraction needs \BnRepsLoss{}, a factor of \BnRepsRatio{}. A flat count
+set for the first axis would have bought a precise key on the cheap axis and a noisy one on the
+dear axis, and the noisy key would then have graded search methods on exactly the axis this paper
+claims is expensive to estimate. The key would have been least trustworthy precisely where the
+paper looks hardest.
+
+Two further conventions matter more than they sound. Every design draws the SAME mission seeds, so
+the comparison between designs is paired and what has to be resolved is the variance of the
+difference rather than the variance of each arm; an unpaired key needs several times the
+replications for the same resolving power and the noisiest axes pay the most. And every table
+records the precision it actually achieved, so a problem whose leading gap falls inside its own
+noise is reported as ungradeable and dropped from scoring rather than silently graded. That case is
+not hypothetical. At the operating point the metric-paired problems originally inherited, mission
+success is pinned at its ceiling and the two best designs read identically, so a method scored there
+would have been scored on noise. The operating points are chosen so that every paired axis can
+still rank the design set, which is the same admissibility argument the underlying study applies to
+its own contrasts, run one level up.
 
 \paragraph{Two scores, because they disagree.} A method is scored on whether it returned the
 registered optimum, which is a yes or a no, and on how much mission performance the design it
@@ -118,7 +194,7 @@ study writing a requirement cares about the answer.
 \section{Methods under a common budget}
 \label{sec:methods}
 
-Six methods are compared, and the comparison is made fair by two conventions that are stated here
+Seven methods are compared, and the comparison is made fair by two conventions that are stated here
 because they are where most of the honesty lives.
 
 \paragraph{The budget is missions, not evaluations.} Every method is given a fixed number of mission
