@@ -1802,3 +1802,11 @@ joint interval of 199 to 250 m, specified at 225. The nuisance section turned in
 everything at sixteen (-1.0000, gates down, 100.0% to 0.0%), because a covered route is a band of
 finite width. Six batteries now running: 9458832 verify, 9459574 and 9459575 CR-64, 9459669 ladder,
 9459739 ghost.
+
+**The zero-base guard caught a shipped sentence.** Running every number tool with stderr captured,
+`make_fair_numbers.py` reported that `admitFcfs` is exactly 0 at sixteen assets on `stale_per_step`,
+so the relative margin there is zero and any difference would gate. The manuscript said the lost and
+stale bins were "unchanged", which reads as a measurement and was a structural zero: an admitting
+console refuses at the head and never carries a superseded record long enough to work it, which is
+the same fact CR-65 is about. The sentence now says which of the two each bin is. This is the first
+time one of the three survey guards has corrected prose rather than an analysis in progress.
