@@ -20,7 +20,7 @@ if [ "${STAGE:-all}" != "run" ]; then
   # Truth tables are the answer key and must exist before any search is scored against them.
   mkdir -p experiments/results
   cp -r "$ROOT/search/search_truth" experiments/results/ 2>/dev/null || true
-  python -u tools/search_bench.py truth
+  python -u tools/search_bench.py truth --workers "${WORKERS:-16}"
   mkdir -p "$ROOT/search/search_truth"
   cp -r experiments/results/search_truth/* "$ROOT/search/search_truth/" 2>/dev/null || true
 fi

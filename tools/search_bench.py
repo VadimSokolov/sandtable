@@ -28,17 +28,63 @@ BUDGETS = (64, 128, 256, 512, 1024)
 METHODS = ("grid", "random", "halving", "ucb", "thompson", "gp_ei")
 
 
+def _truth_cell(spec):
+    """All benchmark metrics for one design at one operating point, at the dearest metric's reps.
+
+    Grouped this way because metric-paired problems ARE the same missions scored differently, so
+    running them separately would both waste the dear metric's replication count once per axis and
+    quietly break the pairing the comparison depends on. Top level so a pool can pickle it.
+    """
+    key, design, reps = spec
+    p = get(key)
+    draws = oracle._draws(p, design, reps)
+    return oracle._run_key(p, design), draws
+
+
 def cmd_truth(a) -> None:
     keys = a.problems or list(PROBLEMS)
+    probs = [get(k) for k in keys]
+
+    # Group by (scenario, operating point). Every problem in a group draws the same missions; the
+    # group runs once, at the replication count of its dearest axis, and each problem then scores
+    # the slice it needs off those missions.
+    groups: dict[str, list] = {}
+    for p in probs:
+        if not p.is_discrete:
+            continue
+        for d in p.designs():
+            groups.setdefault(oracle._run_key(p, d), []).append((p, d))
+    specs = [(g[0][0].key, g[0][1], max(oracle.truth_reps(q) for q, _ in g))
+             for g in groups.values()]
+    specs.sort(key=lambda s: -s[2])
+    total = sum(s[2] for s in specs)
+    print(f"{len(specs)} (operating point, design) cells, {total:,} missions, "
+          f"{a.workers} workers", flush=True)
+
+    done = 0
+    with ProcessPoolExecutor(max_workers=a.workers) as ex:
+        for rk, draws in ex.map(_truth_cell, specs):
+            oracle._DRAWS[rk] = draws
+            done += 1
+            if done % 10 == 0:
+                print(f"  {done}/{len(specs)} cells", flush=True)
+
     for k in keys:
         p = get(k)
-        t0 = time.time()
-        t = oracle.truth(p, refresh=a.refresh, verbose=True)
+        if not p.is_discrete:
+            continue
+        t = oracle.truth(p, refresh=True)
         d, v = oracle.best_design(p, t)
-        ok = oracle.agrees_with_key(p, t)
-        print(f"{k:16s} best={json.dumps(d, sort_keys=True):40s} {v:.6f}  "
-              f"key={'AGREES' if ok else 'DISAGREES with ' + json.dumps(p.optimum)}  "
-              f"({time.time() - t0:.0f}s)")
+        meta = json.loads(oracle._path(p).read_text())["_meta"]
+        # A table whose leading gap sits inside its own noise cannot grade a search method. Say so
+        # here rather than let it become a silent zero in the results.
+        flag = "RESOLVED" if meta["_resolved"] else "*** UNRESOLVED, cannot grade ***"
+        agree = ""
+        if p.optimum:
+            agree = "  key=" + ("AGREES" if oracle.agrees_with_key(p, t)
+                                else "DISAGREES with " + json.dumps(p.optimum))
+        print(f"{k:16s} best={json.dumps(d, sort_keys=True):32s} {v:.6f}  "
+              f"gap={meta['_gap']:.6f} se={meta['_se_top2']:.6f}  {flag}{agree}", flush=True)
 
 
 def _job(spec):
@@ -56,9 +102,20 @@ def cmd_run(a) -> None:
     # Truth tables first, in the parent, so every worker reads a cached file rather than 16 workers
     # racing to compute the same table. This also fails fast if a table is missing.
     agrees, ladders, diffs = {}, {}, {}
+    kept = []
     for k in keys:
         p = get(k)
         t = oracle.truth(p)
+        meta = json.loads(oracle._path(p).read_text()).get("_meta", {})
+        # A problem whose answer key cannot resolve its own top two designs is not a hard problem,
+        # it is a problem with no answer, and grading a search method on it grades noise. Drop it,
+        # loudly. Silent truncation of a benchmark reads downstream as "we covered everything".
+        if not meta.get("_resolved", True):
+            print(f"### {k:22s} DROPPED: the truth table cannot resolve its own top two "
+                  f"(gap={meta.get('_gap', 0):.6f} <= 2 x se={meta.get('_se_top2', 0):.6f}) "
+                  f"at {meta.get('_reps')} reps on {p.metric}", flush=True)
+            continue
+        kept.append(k)
         agrees[k] = oracle.agrees_with_key(p, t)
         diffs[k] = oracle.difficulty(p)
         ladders[k] = a.budgets or oracle.budget_ladder(p)
@@ -67,6 +124,10 @@ def cmd_run(a) -> None:
               f"gap={d['gap']:.5f} sd={d['sd_per_mission']:.5f} "
               f"reps/design={d['reps_per_design']:8.1f} "
               f"key={'agrees' if agrees[k] else 'DISAGREES'} ladder={ladders[k]}", flush=True)
+
+    if len(kept) < len(keys):
+        print(f"### {len(kept)} of {len(keys)} problems have a gradeable answer key", flush=True)
+    keys = kept
 
     # Replicates are set PER PROBLEM to a fixed mission allowance, not held constant. A ladder
     # derived from difficulty spans very different totals across problems (tens of missions on a
@@ -142,7 +203,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     t = sub.add_parser("truth"); t.add_argument("--problems", nargs="*")
-    t.add_argument("--refresh", action="store_true"); t.set_defaults(fn=cmd_truth)
+    t.add_argument("--refresh", action="store_true")
+    t.add_argument("--workers", type=int, default=8); t.set_defaults(fn=cmd_truth)
     r = sub.add_parser("run"); r.add_argument("--problems", nargs="*")
     r.add_argument("--out", default="experiments/results/search_bench.jsonl")
     r.add_argument("--budgets", nargs="*", type=int, default=[],

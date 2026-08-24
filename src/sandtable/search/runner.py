@@ -85,8 +85,25 @@ def run_one(problem_key: str, method: str, budget: int, replicate: int,
         design = json.loads(sorted(meter.seen)[0]) if meter.seen else p.designs()[0]
     return Result(problem=problem_key, method=method, replicate=replicate, budget=budget,
                   design=json.dumps(design, sort_keys=True),
-                  found=p.is_optimum(design), regret=oracle.regret(p, design, t),
+                  found=_found(p, design, t), regret=oracle.regret(p, design, t),
                   spent=meter.spent, distinct=len(meter.seen))
+
+
+def _found(p, design, t) -> bool:
+    """Did the method return the best design?
+
+    For a problem carrying a registered key that is a comparison against the key. For one whose key
+    is established by the high-precision table it is a comparison against the table's argmax, and
+    `is_optimum` refuses rather than passing vacuously, so the two cases have to be separated here.
+    A design inside the problem's tolerance of the best VALUE also counts, because two designs that
+    the table cannot tell apart are not a search failure.
+    """
+    if p.optimum:
+        return p.is_optimum(design)
+    best_d, best_v = oracle.best_design(p, t)
+    if json.dumps(design, sort_keys=True) == json.dumps(best_d, sort_keys=True):
+        return True
+    return oracle.regret(p, design, t) <= p.tolerance
 
 
 def run_sweep(problem_key: str, methods, budgets, replicates: int, verbose: bool = True):

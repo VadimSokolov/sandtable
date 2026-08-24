@@ -74,6 +74,11 @@ class Problem:
         return {**self.fixed, **design}
 
     def is_optimum(self, design: dict) -> bool:
+        # An empty key would make `all(...)` vacuously true and grade every method as perfect, so
+        # a problem whose optimum is established by the truth table has to be asked through the
+        # oracle rather than through this method.
+        if not self.optimum:
+            raise ValueError(f"{self.key}: no registered key; use oracle.best_design instead")
         return all(design.get(k) == v for k, v in self.optimum.items())
 
 
@@ -179,34 +184,54 @@ _add(Problem(
 
 
 # ---------------------------------------------------------------------------------------------
-# METRIC-PAIRED PROBLEMS. Identical scenario, identical design set, identical everything except the
-# axis the designs are scored on. These exist because the first thing measured on this simulator was
-# that mission metrics differ by three orders of magnitude in how many replications they need for
-# the same relative precision: two for delivered service, about four hundred for mission success,
-# about nine thousand for blue loss fraction. If that dominates the difference between search
-# methods, then the practical advice for a design study is about which axis to search on and not
-# about which optimizer to use, and these pairs are how that gets tested rather than asserted.
+# METRIC-PAIRED PROBLEMS, over the metric AND over the operating point.
 #
-# The optima are NOT assumed to coincide across the axes. Where the high-precision table puts them
-# in different places, that is itself a result: the metric would be choosing the design.
-for _base, _suffix, _metric, _dir in (
-        ("qcap_uniform", "succ", "success", "max"),
-        ("qcap_uniform", "loss", "blue_loss_frac", "min"),
-        ("discipline", "succ", "success", "max"),
-        ("discipline", "loss", "blue_loss_frac", "min"),
-):
+# The first version of this block paired only on the metric, holding the operating point at the
+# base problem's. Two things were wrong with that and both were caught before the sweep ran.
+#
+# The operating point was inherited rather than chosen, and at the inherited point `success` is
+# pinned at its ceiling: measured over the qcap design set at sixteen assets the top two designs
+# read 0.9900 and 0.9900, and on the discipline set at twenty-four they read 1.0000 and 1.0000
+# with a per-mission standard deviation of exactly zero. A search method graded there is graded on
+# noise. This is the first paper's censored-instrument defect, arriving inside the second paper's
+# benchmark, and the fix is the first paper's own rule applied one level up: an axis is admissible
+# only where it can actually rank the design set, and the operating point is CHOSEN so that every
+# paired axis can.
+#
+# And pairing on the metric alone answers a smaller question than the one worth asking. The first
+# measurement of replication cost read a spread of three orders of magnitude across metrics and was
+# about to be reported as a property of the metrics. It is not. Measured at four operating points
+# on one design set, the ordering of the axes CHANGES: the loss axis is the cheapest of the three
+# at ten assets and by far the dearest at twelve. So the cost of estimating a mission metric is a
+# property of the (metric, operating point) pair, not of the metric, and a benchmark that varies
+# only one of the two cannot say so. The grid varies both.
+#
+# The keys here are established by the high-precision table rather than registered in advance,
+# because no landed battery scored these axes at these points. `optimum={}` marks that, and
+# `is_optimum` refuses rather than silently passing.
+_COST_SPANS = (8, 10, 12, 16)
+_COST_AXES = (("srv", "served_per_step", "max"),
+              ("succ", "success", "max"),
+              ("loss", "blue_loss_frac", "min"))
+
+for _base, _tag in (("qcap_uniform", "qcap"), ("discipline", "disc")):
     _b = PROBLEMS[_base]
-    _add(Problem(
-        key=f"{_base}_{_suffix}",
-        scenario=_b.scenario, fixed=_b.fixed, variables=_b.variables,
-        metric=_metric, direction=_dir,
-        optimum=_b.optimum,           # the registered key from the throughput study, to be audited
-        provenance=f"design set and operating point from {_base}; the optimum on THIS axis is "
-                   f"established by the high-precision table and audited against the throughput "
-                   f"study's key, which is a check and not an assumption",
-        note=f"metric-paired twin of {_base}",
-        tolerance=_b.tolerance,
-    ))
+    for _span in _COST_SPANS:
+        for _suffix, _metric, _dir in _COST_AXES:
+            _add(Problem(
+                key=f"{_tag}_s{_span}_{_suffix}",
+                scenario=_b.scenario,
+                fixed={**_b.fixed, "n_blue": _span},
+                variables=_b.variables,
+                metric=_metric, direction=_dir,
+                optimum={},
+                provenance=f"design set from {_base}; operating point chosen so that every paired "
+                           f"axis can rank the set; key established by the high-precision table "
+                           f"under common random numbers, and refused if the table cannot resolve "
+                           f"its own top two",
+                note=f"metric-paired twin of {_base} at n_blue={_span} on {_metric}",
+                tolerance=_b.tolerance,
+            ))
 
 
 def get(key: str) -> Problem:

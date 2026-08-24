@@ -9113,9 +9113,15 @@ arrival order 0; the drops arms rank arrival order +0.3226, round robin +0.2067,
 +0.1172. First come first served goes from worst rule to best rule when the ghosts are dropped. So
 CR-64's inversion is a property of what a blind buffer CONTAINS, not of the rules that order it.
 
-**U3, both halves, as registered.** At sixteen assets `busy_stale` spans 0.9546 to 0.9577 across a
-sixty-four-fold cadence range, a relative span of 0.3 percent: the registered equivalence holds and
-its falsifier does not fire. At eight assets it gates down from 0.2065 to 0.0066, and
+**U3, both halves, as registered, with one correction to the sweep's own advertised range.** At
+sixteen assets `busy_stale` spans 0.9546 to 0.9577, a relative span of 0.3 percent: the registered
+equivalence holds and its falsifier does not fire. The range over which it holds is THIRTY-TWO fold
+and not the sixty-four the sweep was written to cover. Review caught it and the log confirms it:
+`reask_hold` 0.25 and 0.5 are byte-identical in all twenty-eight arm-by-metric cells at both spans,
+because the hold quantizes to the same integer number of steps. The sweep has six distinct doses,
+not seven, and one of its advertised octaves does not exist. `_flat_reference` cannot see this: it
+demands the WHOLE row be constant, and here only an adjacent pair is. A control that flatters its
+own flatness with a duplicated dose is a control that has not been run at the range it claims. At eight assets it gates down from 0.2065 to 0.0066, and
 `served_per_step` is non-monotone with its maximum at a hold of 2.0, rising from 0.0395 and falling
 back to 0.0498 at sixteen. The registered "maximum at or below fourfold" holds. The fleet-side
 repair is real, it is free, and it has a size: backing off as far as possible is wrong.
