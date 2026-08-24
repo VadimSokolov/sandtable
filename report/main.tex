@@ -45,6 +45,7 @@
 \input{gen/verify_numbers}
 \input{gen/ceiling_numbers}
 \input{gen/ladder_numbers}
+\input{gen/graph_numbers}
 \input{gen/fair_numbers}
 \input{gen/disp_numbers}
 \input{gen/trust_numbers}
@@ -1435,6 +1436,9 @@ improves the ordering to \DsCrossInv{} inversions but still admits no separating
 the live and dead arms interleave on it, with a formation reading \DsMidCross{}~m of cross-track
 error scoring \DsMidSuc\% against the base formation's \DsBaseSuc\%.
 
+\paragraph{And a reading from outside geometry beats all of them, for the price of one assumed number.} The four readings above are all distances. The resilient-consensus literature scores the same positions as a graph instead, and it supplies two quantities with established meanings: algebraic connectivity, the second-smallest Laplacian eigenvalue, and exact vertex connectivity $\kappa$, which is the quantity the $2f+1$ tolerance result is stated in \citep{sundaram2011distributed,leblanc2013resilient}. We compute both on the disc graph of the living force, together with the faults it could tolerate, $\lfloor(\kappa-1)/2\rfloor$, evaluated per sampled step and then averaged. Scored by rank correlation against mission success over the \GrCells{}-cell design grid, restricted to the \GrCellsUsed{} cells where success is off its bounds and can order anything at all, the tolerated-fault count leads at $\rho = \GrBestRho{}$ against the best reading not referenced to the commanded station, \GrGeoBest{} at \GrGeoBestRho{}, and against the RMS spread this section recommended, at \GrWorstRho{}. Every reading carries the sign it was predicted to carry. The two station-referenced readings score higher than the geometric ones here and are excluded from that comparison rather than beaten by it, because the treatment on this grid IS the commanded geometry, which is the reference-set-by-treatment failure of Section~\ref{subsec:ledger} arriving in the one place it would look like a result.
+
+Two objections have answers on the same runs. The first is that the fault count is a monotone function of connectivity and so cannot know more than it does. It is not: the floor is applied per sampled step and then averaged, so the mean of the floor is not the floor of the mean, and the two rank this grid at $\rho = \GrFaultsKappaRho{}$ rather than at one. The count answers how often the formation could survive a fault; the mean connectivity answers how connected it was. The second objection is the real cost. A graph reading needs a peer-link range assumed before it can be computed and a distance needs nothing, so the reading could be an artifact of a number we chose. Sweeping that range from \GrRangeLo{} to \GrRangeHi{}~m moves the readings themselves by an order of magnitude and moves what they RANK by very little: the fault count reproduces its own ordering of the arms at $\rho$ between \GrRangeWorst{} and \GrRangeBest{} across the whole sweep. The control that makes that readable is that mission success is identical to \GrRangeInert{} across the same sweep, because the assumed range is an observer's parameter and touches nothing in the simulation. So the price of the better reading is a number that has to be declared and does not have to be right.
 Both readings that ignore the commanded formation separate the two sets cleanly, at
 \DsSpreadInv{} and \DsFCrossInv{} inversions. They are then told apart by a family neither was
 scored on. Sweeping the route bias moves the whole force off the line it was commanded to hold

@@ -8949,3 +8949,48 @@ specifying.
 
 All of V1 through V4 is now in the manuscript as two paragraphs in the requirements passage, keyed
 adjacent-rung with the whole-ladder gap quoted once, per Round 35.
+
+### CR-68 ruling: the topology carries something the geometry does not, for one assumed number
+
+**X1, the design grid.** Five arms (star and chain topologies at three commanded spreads) crossed
+with four spans, 20 cells. Round 36's axis rule removes the 4 cells where mission success is against
+a bound, leaving 16. Rank correlation of each reading against mission success:
+
+| reading | rho | kind |
+|---|---|---|
+| `fleet_faults_mean` | **+0.719** | graph |
+| `station_cross_mean` | -0.621 | geometric, **referenced to the commanded station** |
+| `station_err_mean` | -0.591 | geometric, **referenced to the commanded station** |
+| `fleet_kappa_mean` | +0.579 | graph |
+| `fleet_fiedler_mean` | +0.556 | graph |
+| `fleet_disconnected_frac` | -0.528 | graph |
+| `fleet_cross_mean` | -0.406 | geometric |
+| `fleet_spread_mean` | **+/-0.347** | geometric, **CR-60's recommendation** |
+
+Every reading carries its predicted sign. The two station-referenced readings are excluded from the
+comparison rather than beaten by it: the treatment on this grid IS the commanded geometry, so a
+station-referenced reading looks good here by construction. That is the reference-set-by-treatment
+failure arriving in the one place where it would have looked like a result.
+
+Among the readings not referenced to what the treatment sets, **the graph readings beat the
+geometric ones**, and the tolerated-fault count beats CR-60's recommended RMS spread by a factor of
+1.8 in rank correlation. This qualifies a recommendation the paper already makes.
+
+**The monotone objection, answered.** `faults` is floor((kappa-1)/2), which is monotone in kappa, so
+a reader will say it cannot know more. It does, because the floor is applied PER SAMPLED STEP and
+then averaged: the mean of the floor is not the floor of the mean, and the two rank this grid at
+rho = 0.825 rather than at 1.000. The count answers how often the formation could survive a fault;
+mean connectivity answers how connected it was on average.
+
+**The assumed-parameter objection, answered on the same runs.** A graph reading needs a peer-link
+range assumed and a distance needs nothing. Sweeping that range from 150 to 1000 m moves the
+readings by an order of magnitude and moves what they RANK by very little: the fault count
+reproduces its own ordering at rho between +0.700 and +0.900 across the whole sweep. The control
+that makes this readable is that mission success is identical to 0.0000 across the same sweep,
+because `graph_range` is an observer's parameter that touches nothing in the simulation. **The price
+of the better reading is a number that has to be declared and does not have to be right.**
+
+**Scoring caveat, stated in the macro names and in the prose.** This is an ORDERING claim scored by
+rank correlation over a design grid, not a paired gate. The project's gate answers "did this arm
+move the metric" and no amount of it answers "does this reading rank the design space the way the
+mission does". Both are in the paper and they are not interchangeable.
