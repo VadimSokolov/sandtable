@@ -7,6 +7,7 @@ from sandtable import metrics
 
 EXPECTED_KEYS = {
     "busy_dead",
+    "booked_per_step",
     "stale_dropped_per_step",
     "stale_dropped_frac",
     "success",

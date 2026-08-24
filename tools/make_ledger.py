@@ -301,6 +301,27 @@ ROWS = [
      "check that parses every test file and refuses any equality whose either side is a "
      "metric dict, with a planted offender as its negative control; three hand-written "
      "searches had found twenty-one of the twenty-four sites and the parser found the rest"),
+    ("mission success can read a treatment at any span the model runs at",
+     "(instrument: the metric has run out of range)",
+     "\\textsc{repaired}. On the centerpiece scenario baseline mission success is 0.3333 at four "
+     "assets and exactly 1.0000 at sixteen, twenty-four and thirty-two, while blue loss keeps "
+     "falling from \\CeLossSixteen{} to \\CeLossThirtyTwo{} across the same range: the fleet is "
+     "still paying visibly different prices on an axis that cannot move. An \\textsc{equivalent} "
+     "verdict on success above twelve assets therefore means the instrument could not see, not "
+     "that the treatment did nothing. No published number moves, because every success contrast "
+     "in this paper is read at eight assets or fewer and every large-span claim is read on a "
+     "console metric; guarded by a fixture that fails if the saturation span shifts"),
+    ("the console's busy time is a fraction of the console's time",
+     "(instrument, not a claim)",
+     "\\textsc{repaired}. The six \\texttt{busy\\_*} metrics divide accumulated service by the "
+     "step count and were documented as utilizations. That is right on the buffer console, which "
+     "will not begin a service while it is busy, and wrong on the published reserve console, "
+     "which commits a request at arrival and books forward without bound: at thirty-two assets "
+     "it holds a book 4.74 times longer than the mission and returns 4.7449 where a fraction was "
+     "promised. Nothing published moves, because all seven batteries that measure them set the "
+     "buffer console; the trap was live for the next one that did not. The fractions are now NaN "
+     "off the console they were derived for, and the ratio that is defined on both is emitted as "
+     "\\texttt{booked\\_per\\_step}; guarded by a fixture that pins the buffer values and carries the negative control that the trap was real"),
 ]
 
 

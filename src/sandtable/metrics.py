@@ -226,7 +226,7 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "died_feasible_per_step": 0.0, "died_feasible_frac": 0.0,
            "entered_feasible_frac": 0.0,
            "busy_serviced": 0.0, "busy_stale": 0.0, "busy_lost": 0.0, "busy_late": 0.0,
-           "busy_dead": 0.0,
+           "busy_dead": 0.0, "booked_per_step": 0.0,
            "busy_total": 0.0, "svc_serviced_mean": 0.0, "svc_worked_mean": 0.0,
            "starved_frac": 0.0, "answer_rate_v": 0.0, "answer_rate_min": 0.0,
            "answer_rate_gap": 0.0, "answer_rate_p25": 0.0, "answer_rate_p75": 0.0,
@@ -420,17 +420,36 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
         # be selected. `busy_total` is therefore the console's utilization, reached by summing the
         # four fates, and it is the quantity to compare against `operator_utilization`, which
         # reaches the same number by counting busy steps and so rounds each service up.
-        out["busy_serviced"] = op.t_serviced / op.total_steps
-        out["busy_stale"] = op.t_stale / op.total_steps
-        out["busy_lost"] = op.t_worked_lost / op.total_steps
-        out["busy_late"] = op.t_worked_late / op.total_steps
+        #
+        # That reading holds on the BUFFER console and only there, which is instrument defect 18.
+        # The buffer console refuses to start a service while it is still busy, so the service time
+        # it accumulates is bounded by the clock and dividing by `total_steps` gives a fraction. The
+        # published RESERVE console commits a request to a slot the moment the request arrives, and
+        # books forward without bound: at thirty-two assets it holds a book 4.74 times longer than
+        # the mission, so the same division returns 4.74 and a reader who was promised a fraction of
+        # the console's time gets an offered-load ratio instead. Every battery that measures these
+        # runs on `buffer`, so no result moves, but the trap is live for the next one that does not.
+        # The six fractions are therefore NaN off the buffer console, and the ratio that IS defined
+        # on both is emitted under its own name below. NaN is refused loudly by `tools/ar_survey.py`.
+        _den = op.total_steps if op.queue_model == "buffer" else float("nan")
+        out["busy_serviced"] = op.t_serviced / _den
+        out["busy_stale"] = op.t_stale / _den
+        out["busy_lost"] = op.t_worked_lost / _den
+        out["busy_late"] = op.t_worked_late / _den
         # The console clock that produced no answer, by whatever route. It is reported beside
         # `busy_stale` because a repair can move dead time between the three buckets without
         # removing any of it, and a reader shown only the bucket that fell would read that as a
         # recovery. This sum is what has to fall for a repair to be one.
-        out["busy_dead"] = (op.t_stale + op.t_worked_lost + op.t_worked_late) / op.total_steps
+        out["busy_dead"] = (op.t_stale + op.t_worked_lost + op.t_worked_late) / _den
         out["busy_total"] = (op.t_serviced + op.t_stale + op.t_worked_lost
-                             + op.t_worked_late) / op.total_steps
+                             + op.t_worked_late) / _den
+        # Service time the console has COMMITTED to, per step of mission. On the buffer console it
+        # equals `busy_total` because the book never runs past the clock; on the reserve console it
+        # is the offered-load ratio rho, and a value above one is the honest statement that the
+        # console has accepted more work than the mission is long. Defined on BOTH, so it is the
+        # quantity to quote when the console model is not held fixed across the arms.
+        out["booked_per_step"] = (op.t_serviced + op.t_stale + op.t_worked_lost
+                                  + op.t_worked_late) / op.total_steps
         # Length selection, the mechanism a variable console's admission test acts through. At
         # `service_cv = 0` this is exactly `1 / service_rate`; below it, the console is choosing.
         if op.n_serviced > 0:

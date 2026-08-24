@@ -8680,3 +8680,77 @@ one retraction and one finding, and the finding belongs to the reviewer's sectio
 
 R3 and R4 are still running. Nothing goes to the manuscript until they land, because R3 is the arm
 that can kill the throughput explanation for the never-check result outright.
+
+## CR-69 (audit, not a conjecture): is `success` readable at large span?
+
+Raised by CR-66's V1. On the uniform fleet the blind unbounded console is fully collapsed at
+twenty-four assets (`served_per_step` 0.0023, `busy_dead` 0.9871, `starved_frac` 0.87 above every
+repaired arm) and mission `success` is still 0.9976. Every repair is therefore worth +0.0024 there
+and reads "equivalent". Two readings, and they have opposite consequences for the paper:
+
+- **A. The mission genuinely stops depending on the console at scale.** Fleet size substitutes for
+  console quality. Sponsor-relevant, and it would mean the queue requirement has a span above which
+  it is not worth writing.
+- **B. `success` is at its ceiling and cannot resolve anything at that span.** Then every contrast
+  this project reports at n_blue >= 16 on `success` is compressed by construction, which is an
+  instrument defect of the familiar genus and would touch more than CR-66.
+
+**Discriminator.** Run the published scenario across span with no treatment and read `success`
+beside `blue_loss_frac`. If `success` is pinned near 1.0 while `blue_loss_frac` keeps moving, the
+mission is being scored on the wrong axis at large span and reading B holds. If both flatten, the
+mission really is over by then and reading A holds.
+
+**Falsifier for the concern itself.** If baseline `success` at twenty-four assets is below 0.95,
+there is no ceiling and the audit is withdrawn.
+
+### CR-69 ruling: reading B holds, and it is worse than it looked
+
+Baseline `sc_span_control`, no treatment, twelve reps per span:
+
+| n_blue | success | blue_loss_frac | served/step | starved_frac |
+|---|---|---|---|---|
+| 4 | 0.3333 | 0.7083 | 0.0788 | 0.0000 |
+| 6 | 0.5833 | 0.5556 | 0.0928 | 0.0000 |
+| 8 | 0.5000 | 0.4479 | 0.0218 | 0.5208 |
+| 12 | 0.9167 | 0.2569 | 0.0024 | 0.7500 |
+| 16 | **1.0000** | 0.1979 | 0.0024 | 0.8125 |
+| 24 | **1.0000** | 0.1076 | 0.0023 | 0.8750 |
+| 32 | **1.0000** | 0.0755 | 0.0022 | 0.9062 |
+
+`success` is pinned at exactly 1.0 from sixteen assets up, so it has no resolution there and cannot
+be moved by any treatment; `blue_loss_frac` keeps falling by a factor of 2.6 across the same range,
+so the fleet is still paying visibly different prices. Reading B. The audit's own falsifier
+(baseline success below 0.95 at twenty-four) is not met: it is 1.0000.
+
+**Consequence, and it is a standing rule, not a one-off.** `success` is a censored instrument above
+n_blue = 12 on this scenario. Any contrast reported on `success` at a larger span is compressed by
+construction and an "equivalent" verdict there means "the instrument could not see", not "the
+treatment did nothing". This is the same finding that disqualified `answer_rate_v` for CR-67 in
+Round 35, arriving from the other direction: there the treatment moved the denominator, here the
+metric has run out of range. `blue_loss_frac` is the readable mission axis at large span.
+
+CR-66's V1 large-span cells are the first casualty and are read accordingly below.
+
+### Instrument defect 18: `busy_*` is a fraction of the console's time on one console only
+
+Found while running CR-69. The six `busy_*` metrics divide accumulated service time by
+`total_steps` and the comment above them calls the result the console's utilization. On the BUFFER
+console that is right: it refuses to begin a service while it is still busy, so its book never runs
+past the clock. On the published RESERVE console it is wrong: that console commits a request to a
+slot the moment the request arrives and books forward without bound, so at thirty-two assets it
+holds a book 4.74 times longer than the mission and `busy_total` returns 4.7449.
+
+The genus is the usual one. What makes this instance worth a guard is that 4.74 does not look like
+an error to anyone who does not know which console produced it; it looks like a number.
+
+**Blast radius: none.** All seven batteries that measure `busy_*` (acuity, bias, capped, fleet,
+ghost, ladder, worked) set `queue_model: "buffer"`, and the only tool that reads one
+(`make_acuity_numbers.py`) reads the acuity log. Nothing published moves. The trap was live for the
+next battery that did not set it.
+
+**Repair.** The six fractions are NaN off the buffer console. The ratio that IS defined on both is
+emitted under its own name, `booked_per_step`: service time committed per mission step, equal to
+`busy_total` on buffer and the offered-load ratio rho on reserve. Guarded by
+`tests/test_busy_denominator.py`, which carries the negative control that the trap was real
+(reserve books 1.29 per step at eight assets and 4.74 at thirty-two) and pins the buffer values
+that must not have moved.
