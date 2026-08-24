@@ -424,8 +424,9 @@ def build_c2(scn: Scenario, ent: Entities,
     _ps = int(scn.params.get("patience_spread", 0))
     if _ps < 0:
         raise ValueError(f"patience_spread must be at least 0, got {_ps}")
+    _shape = str(scn.params.get("patience_shape", "uniform"))
     op.patience_v = _patience_vector(ent.n, np.flatnonzero(ent.side == BLUE), op.patience,
-                                    _ps, rng)
+                                    _ps, rng, _shape)
     if _ps > 0:
         _realized = float(op.patience_v[ent.side == BLUE].mean())
         if abs(_realized - op.patience) > 0.02 * max(op.patience, 1):
@@ -687,7 +688,8 @@ def _arm_retry(op: Operator, rng: np.random.Generator, i: int) -> None:
 
 
 def _patience_vector(n_ent: int, blue_idx: np.ndarray, mean: int, spread: int,
-                     rng: np.random.Generator | None = None) -> np.ndarray:
+                     rng: np.random.Generator | None = None,
+                     shape: str = "uniform") -> np.ndarray:
     """Per-vehicle patience: a balanced spread about the mean, laid out on a side stream.
 
     The SET of values is fixed rather than drawn. A fleet whose patiences are sampled has a
@@ -713,7 +715,16 @@ def _patience_vector(n_ent: int, blue_idx: np.ndarray, mean: int, spread: int,
     m = int(blue_idx.size)
     if spread <= 0 or m < 2:
         return v
-    offs = [spread * (2.0 * j / (m - 1) - 1.0) for j in range(m)]
+    if shape == "twopoint":
+        # A fleet that is half impatient and half patient, with the SAME mean and the same
+        # extremes as the uniform layout. Its variance is higher by (m+1)/(m-1) times three, so
+        # any result that holds under both layouts is a statement about the second moment rather
+        # than about the shape we happened to lay the deadlines out in.
+        offs = [(-spread if j < m // 2 else spread) for j in range(m)]
+    elif shape == "uniform":
+        offs = [spread * (2.0 * j / (m - 1) - 1.0) for j in range(m)]
+    else:
+        raise ValueError(f"patience_shape must be 'uniform' or 'twopoint', got {shape!r}")
     order = rng.spawn(1)[0].permutation(m) if rng is not None else np.arange(m)
     for slot, j in enumerate(order):
         v[int(blue_idx[slot])] = max(1, int(round(mean + offs[int(j)])))

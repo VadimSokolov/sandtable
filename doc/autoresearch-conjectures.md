@@ -6832,11 +6832,13 @@ landed; what follows is everything else.
   $+0.0225$ and $+0.0244$.
 - **F2 HELD.** At four assets nothing beats $b = 1$: every offset is equivalent or gates down, and
   $b = 2.5$ gates DOWN at $-0.0163$. The optimum is a property of the load.
-- **F9 HELD in the argmax and not yet in the gate**, and both halves are reported. The argmax leaves
-  $b = 1$ between six and eight assets, bracketing the collapse span $n^\star = 6.45$, which is the
-  reviewer's registered prediction and it is the location it named. The first GATED improvement over
-  $b = 1$ appears at twelve assets ($+0.0115$ at $b = 1.6$). A bracket on an argmax is a weaker
-  statement than a gated crossing and is written as one.
+- **F9 RETRACTED on the finer grid run as its own control (job 9449936, M2 below).** On this coarse
+  grid the argmax leaves $b = 1$ between six and eight assets and the first GATED improvement is at
+  twelve ($+0.0115$ at $b = 1.6$), which looked like a bracket around the collapse span
+  $n^\star = 6.45$. It was a grid artefact: with rungs at 1.10 and 1.25 added, the argmax leaves
+  unity between FOUR and FIVE. The crossing location is grid-dependent, the gate does not resolve it
+  below twelve assets, and $n^\star$ does not locate it. What survives is that $b^\star(n)$ is
+  monotone non-decreasing in span on both grids.
 - **F10 HELD.** At four assets the ladder is flat BELOW $b = 1$ rather than falling: $b = 0.6$ is
   $-0.0025$ and $b = 0.8$ is $-0.0009$, both equivalent. The same $b = 0.6$ gates down at $-0.0108$,
   $-0.0252$ and $-0.0812$ at six, eight and sixteen. Optimism is free at an idle server and ruinous
@@ -6881,3 +6883,918 @@ recommendation is asymmetric: pricing the slot is a console-level gain that this
 converting into mission outcome, while over-tightening at low span is a mission-level loss that it
 can. That asymmetry is the sentence, and it is the opposite of the sentence a throughput number
 alone would have produced.
+
+## CR-59 CONTROL VERDICT: THE HONEST CONSOLE RECOVERS THE INFLATED ONE, THE PRICE TURN IS NOT WHERE I SAID, AND THE THROUGHPUT IS PAID FOR IN ABANDONMENT
+
+Full tier, 32 blocks of 64, job 9449936, battery `capped`. This is the control I registered before
+running: *if the capped console at its best cap recovers the inflated console's 0.2186, F6 dies as
+worded.* It does, and three further things came out of the same battery.
+
+**M1. F6 IS DEAD AT FULL TIER, CONFIRMED RATHER THAN RESCUED.** `cap7`, an honest console that sees
+the true service time and refuses any job longer than seven steps, is TOST-equivalent to `bias250`,
+a console that misjudges every job by a factor of 2.5, at all three spans: $-0.0004$, $+0.0030$ and
+$-0.0034$, with one-sided statistics 11.06, 11.46 and 16.20. Two mechanically different
+implementations, one a lie about the estimate and one a truthful rule about the slot, deliver the
+same throughput. There is no accuracy paradox. What the offset was doing was pricing the slot, and
+a cap prices it too.
+
+The rider matters for how this is written. At matched throughput the two consoles are not
+interchangeable in what they refuse: `bias250` refuses 0.5423 of requests and `cap7` 0.4822, and
+`cap7` serves the LONGER jobs of the two (`svc_serviced_mean` 4.3927 against 4.1618). The honest
+rule reaches the same throughput by refusing less and working longer. That is a better console to
+recommend even though the metric cannot tell them apart, and it is the reason the ladder's top rung
+is now written as *price the slot*, not as *be wrong about the estimate*.
+
+**M2. THE PRICE TURN IS NOT AT THE COLLAPSE SPAN, AND THE EARLIER READING WAS A GRID ARTEFACT.** On
+the finer grid ($b \in \{0.8, 0.9, 1.0, 1.1, 1.25, 1.6\}$, spans 4 through 16) the argmax runs
+
+    n         4      5      6      7      8     10     12     16
+    b*     1.00   1.10   1.10   1.25   1.60   1.60   1.60   1.60
+
+so the argmax leaves unity between FOUR and FIVE assets, not between six and eight. The coarse H1
+grid had no rung between 1.00 and 1.25 and therefore could not see it. Gated against $b = 1.00$ at
+the same cells, $b = 1.10$ is equivalent everywhere ($+0.0007$ at five, $+0.0008$ at six, $+0.0037$
+at sixteen); $b = 1.25$ is equivalent everywhere; $b = 1.60$ is equivalent through ten assets and
+gates up only at twelve ($+0.0115$) and sixteen ($+0.0161$).
+
+**So F9 is retracted as worded.** It predicted that $b^\star(n)$ crosses one AT the collapse span
+$n^\star = 6.45$. On the argmax the crossing is at five, below $n^\star$; on the gate it is at
+twelve, above it. The two readings bracket $n^\star$ between them only in the sense that any pair of
+numbers on opposite sides of it does. The collapse span does not locate the price turn, and the
+earlier "bracketing" sentence in the H1 verdict above is withdrawn with it.
+
+What survives, and it is the part worth keeping: $b^\star(n)$ is monotone non-decreasing in span on
+both grids, and at full tier the optimum is distinguishable from unity only at high span. **The
+existence of an interior optimum is a load effect; its location is not resolvable by this
+instrument.**
+
+**M3. F11 HELD, AND THE STEP IS AT UNITY EXACTLY.** With no spread to price ($cv = 0$) the ladder
+runs 0.0957 at $b = 0.8$, then 0.1490, 0.1486, 0.1484, 0.1481, 0.1468, 0.1416 for $b$ from 1.0 to
+2.5: flat above unity within the rate floor of 0.0090, and a cliff below it. At $cv = 0.10$ the same
+ladder is 0.1030, then 0.1518 through 0.1530: already non-degenerate, but the whole interior spans
+0.0012 and there is nothing to select on. The interior optimum is a property of service-time spread
+and it needs real spread to exist, which is what F11 registered.
+
+**M4. WHO PAYS. THE THROUGHPUT IS BOUGHT WITH ABANDONMENT, AND THE EXCHANGE RATE IS THE DESIGN
+VARIABLE.** Against a plain console at three spans:
+
+    arm     n     served/step   abandoned/step   answer_rate_v   abandonments per extra job
+    b160    8      +0.0034 eq      +0.0163 G       -0.0589 G          4.8
+    b160   12      +0.0115 G       +0.0219 G       -0.0292 eq         1.9
+    b160   16      +0.0161 G       +0.0260 G       -0.0132 eq         1.6
+    b250    8      -0.0098 G       +0.0569 G       -0.2026 G          --
+    b250   12      +0.0094 G       +0.0722 G       -0.1145 G          7.7
+    b250   16      +0.0244 G       +0.0838 G       -0.0644 G          3.4
+    cap5    8      -0.0558 G       +0.1249 G       -0.4383 G          --
+    cap5   16      -0.0059 eq      +0.1711 G       -0.1682 G          --
+
+Every abandonment column gates, at $t$ from 36 to 205. Pricing the slot is not free: it converts
+waiting into abandonment, and the rate at which it does so is the number a sponsor should be shown.
+A modest offset at high span buys a served job for about 1.6 to 1.9 abandoned requests; a large one
+costs 3.4 to 7.7; and an over-tightened honest console (`cap5`) pays 0.17 abandonments per step for
+throughput that is equivalent or worse, which is strict domination and the clearest argument in the
+battery against setting the rule too hard.
+
+The `answer_rate_v` column carries the one genuinely favourable cell. At twelve and sixteen assets
+$b = 1.6$ gates UP on throughput while remaining EQUIVALENT on the per-vehicle answer rate. There is
+therefore a setting at which the console serves measurably more without measurably lowering any
+vehicle's chance of an answer, and the whole of its cost appears in abandonment instead. That is a
+sharper recommendation than the throughput number alone and it is the one to carry into the paper.
+
+**Instrument defect 13, found by this battery and CORRECTED two sections later: `starved_frac`
+reads zero here, and I drew the wrong conclusion from that.** The correction is in the third CR-62
+amendment and should be read with this paragraph: the metric is not broken, it is reporting a true
+zero in a fleet whose deadlines are uniform, and the error was asking a distributional question in
+the one configuration where the distribution is degenerate. What follows is the original entry,
+kept because the reasoning in it is the reasoning the correction overturns.
+
+**As originally written: `starved_frac` is saturated and cannot audit anything here.** It is defined as the fraction of vehicles that asked and received exactly zero
+answers over the run. Its largest value anywhere in the battery, over four arms, three spans and 32
+blocks, is 0.0001, and it is exactly 0.000000 in all but one of those cells. Over a run of this
+length no vehicle is ever excluded outright, so the metric sits on its floor by construction
+and a null read from it says nothing about distribution. Had M4 been read off `starved_frac` alone
+it would have reported that nobody pays, which is the opposite of what `abandoned_per_step` shows at
+$t = 205$. The genus is the familiar one in a new dress: **a metric whose extreme value is
+structurally unreachable at the operating point cannot detect the harm it was added to detect.**
+The guard and the distributional replacements are recorded with the defect.
+
+## CR-62. THE AGGREGATE CANNOT SEE WHO PAYS: IS A THROUGHPUT RULE REGRESSIVE?
+
+**Registered before the battery. Job to follow.**
+
+M4 established that pricing the slot buys throughput with abandonment at a rate of about 1.6 to 7.7
+abandoned requests per extra decision delivered. It could not say WHO abandons, because the only
+distributional metric in the model was saturated (defect 13). With `answer_rate_min` and
+`answer_rate_gap` added, the question is answerable, and it is the question a sponsor asks second:
+*a rule that raises the fleet's throughput, does it raise everyone's chance of an answer, or does it
+take from some vehicles to give to others?*
+
+The mechanism the model actually contains, checked in the code rather than assumed. Latency is a
+scalar and identical for every vehicle, so link quality cannot be the sorting key. Two things can:
+
+1. **The deadline.** The admission test is `start + b*svc + lat <= deadline`, and `deadline` comes
+   from `patience_v`, a per-vehicle value. `patience_spread` disperses it about an exactly fixed
+   mean, so it is a pure second-moment manipulation. Raising $b$ multiplies the service term, which
+   shrinks the slack `deadline - lat - b*svc` fastest for the vehicles with the smallest deadline.
+   The offset should therefore sort refusals onto the impatient vehicles, and it should do so more
+   as $b$ rises. **This is a static key: the same vehicles are disadvantaged all run.**
+2. **The retry loop.** Under `admit_response = "aimd"` a refusal halves a vehicle's request rate and
+   each answer adds back an eighth, so eight good answers undo one refusal. A refused vehicle then
+   asks less often, is answered less often, and stays slow. **This is a feedback key, and it needs
+   no per-vehicle parameter at all.**
+
+The point of registering both is that they predict the same aggregate and different distributions,
+which is exactly the situation in which an aggregate metric is the wrong instrument.
+
+**G1 (the null that has to hold first).** In a UNIFORM fleet with AIMD off, `answer_rate_gap` does
+not grow with $b$. With identical deadlines the admission test has no per-vehicle key, so which
+vehicle is refused is queue-position luck and is not persistent.
+*Falsifier: the gap gates UP with $b$ in the uniform non-AIMD fleet. If that fires the mechanism
+story is wrong and any concentration found later is an artefact of something I have not identified.*
+
+**G2 (the static key).** With `patience_spread` large, `answer_rate_gap` gates UP with $b$, and
+`answer_rate_min` falls by strictly more than `answer_rate_v` does.
+*Falsifier: the gap is equivalent across $b \in \{1.0, 1.6, 2.5\}$ in the dispersed fleet, or the
+min falls by no more than the mean.*
+
+**G3 (the feedback key is stronger).** With AIMD on, the gap grows MORE with $b$ than the dispersed
+fleet's does, because a feedback loop compounds and a static key does not.
+*Falsifier: AIMD's gap growth is equivalent to or smaller than the dispersed fleet's. If it fires,
+the model's own congestion-control response is not a concentrator and CR-26 needs the note.*
+
+**G4 (the one that matters, and the reason to run this at all).** At matched $b$, the uniform and
+dispersed fleets are EQUIVALENT on `served_per_step` and on `answer_rate_v`, while separating on
+`answer_rate_gap`. An operator console reporting throughput and mean answer rate would show no
+difference between a fleet the rule treats evenly and one it does not.
+*Falsifier: `served_per_step` gates between the two fleets at matched $b$. That would mean
+`patience_spread` is not second-moment-only at this operating point, and G4 is not a statement about
+blindness but about a confound.*
+
+**G5 (does it reach the mission).** If the concentration matters, mission success under a large $b$
+should be worse in the dispersed fleet than in the uniform one. If it does not, the concentration is
+a console-level fact and gets written as one, exactly as the throughput gain was.
+*Falsifier: success is equivalent between fleets at every $b$. Registered as the expected outcome
+given H6, and reported either way.*
+
+**What the answer is worth.** If G1, G2 and G4 hold, the finding is that a throughput rule with no
+per-vehicle term in it is nonetheless regressive, that it is regressive through the deadline rather
+than through anything the rule mentions, and that the two aggregate metrics a console would display
+are both blind to it. That is a design requirement (report the minimum, not the mean) and it is the
+kind of statement the reference-set-by-treatment genus keeps producing: the instrument a treatment
+is judged by has to be chosen so the treatment cannot hide in it.
+
+### CR-62 AMENDED ON A FOUR-BLOCK PILOT, BEFORE THE BATTERY: I HAD THE SIGN OF THE MECHANISM WRONG
+
+A four-block pilot at sixteen assets, run to check the arms would launch, contradicts the mechanism
+I registered above. It is recorded here rather than folded silently into the battery, and G1 to G5
+stand as written and will be adjudicated against these numbers.
+
+    arm         answer_rate_v   answer_rate_min   answer_rate_gap   served_per_step
+    uni100         0.5177           0.3265            0.1912            0.1967
+    uni250         0.4573           0.2992            0.1580            0.2189
+    disp100        0.4738           0.0098            0.4639            0.1695
+    disp250        0.4249           0.0140            0.4109            0.1874
+
+**G2 is going to fire, and in the interesting direction.** I predicted the offset would concentrate
+harm because it shrinks the slack `deadline - lat - b*svc` fastest for the smallest deadline. The
+gap does not rise with the offset. It FALLS, in both fleets (0.1912 to 0.1580, 0.4639 to 0.4109),
+and in the dispersed fleet the worst-served vehicle is absolutely better off under the aggressive
+offset than under none (0.0098 to 0.0140) while the fleet mean falls (0.4738 to 0.4249). **Pricing
+the slot is progressive, not regressive.**
+
+The mechanism I registered was wrong about what the rule sorts on. The offset multiplies the
+SERVICE term, so it refuses long jobs whoever asked for them; it has no deadline term in it at all.
+The vehicle that benefits from a shorter queue is the one with the least slack to spend waiting in
+it. So the offset does not sort refusals onto the impatient; it removes the long jobs the impatient
+were stuck behind.
+
+**G4's premise also fails, and that is a finding rather than a nuisance.** `served_per_step` is not
+equivalent between the fleets: 0.1967 uniform against 0.1695 dispersed at $b = 1$, a fourteen
+percent loss from dispersing deadlines about an exactly fixed mean. Throughput is concave in the
+deadline, so a mixed fleet is worse than a uniform one with the same average patience. G4 as
+registered claimed the aggregate is blind to the fleet difference; it is not blind to it. What the
+aggregate IS blind to is the size of the harm: at `disp100` the fleet mean answer rate is 0.4738
+while one vehicle is answered 0.0098 of the time, a factor of forty eight. That is the instrument
+argument and it does not depend on the offset at all.
+
+Three predictions added, registered now, tested by the same battery at full tier.
+
+**G6.** In a dispersed fleet `answer_rate_min` rises with $b$ while `answer_rate_v` falls. The
+console gives up mean answer rate and buys the worst-served vehicle a better one.
+*Falsifier: the min falls with $b$, or its rise does not gate.*
+
+**G7 (the mechanism, and the control that separates it from tightness).** The rise in the minimum
+comes from LENGTH SELECTION shortening the queue, not from refusal as such. So `admit_cap`, which
+selects on length with no offset anywhere in it, should reproduce the rise, and `admit_refuse` at a
+matched refusal rate, which shortens the queue without selecting, should not.
+*Falsifier: random refusal raises the minimum as much as length selection does. That would mean any
+refusal helps the worst-served vehicle, the finding is about tightness rather than selectivity, and
+it is the opposite of what F8 established for throughput.*
+
+**G8.** `served_per_step` falls monotonically along the `patience_spread` ladder at a fixed mean.
+*Falsifier: equivalent across the ladder, which would make the fourteen percent a four-block
+artefact.*
+
+**Why the amendment is worth more than the original.** If G6 and G7 hold, the sentence a programme
+gets is not "the throughput rule takes from the weak" but its opposite: *the rule that raises
+console throughput also raises the floor, and the metric that would have told you so is not the one
+a console displays.* Both halves are actionable and the second is the reusable one.
+
+### CR-62 AMENDED A SECOND TIME: THE MIN AND THE QUARTILE DISAGREE, AND THE INTERESTING ARM IS THE CAP
+
+Twelve blocks of eight, dispersed fleet (`patience_spread` 12 about a fixed mean of 20), sixteen
+assets. I ran this to test my own worry that the minimum is an order statistic over sixteen vehicles
+and might be moving for reasons unrelated to the mechanism. It is, and the worry was right.
+
+    arm      mean    min      p25      stratification: answer rate by the vehicle's own patience
+    b100    0.4704  0.0076   0.1311    p8:0.013  p10:0.049  p13:0.132 ... p30:0.930  p32:0.967
+    b250    0.4228  0.0160   0.1181    p8:0.027  p10:0.062  p13:0.109 ... p30:0.850  p32:0.880
+    cap7    0.4716  0.1203   0.3699    p8:0.132  p10:0.281  p13:0.359 ... p30:0.598  p32:0.606
+    rand60  0.2934  0.0688   0.1985    p8:0.092  p10:0.124  p13:0.166 ... p30:0.397  p32:0.396
+
+**The offset's "progressive" reading does not survive the quartile.** Going from `b100` to `b250`
+the minimum RISES (0.0076 to 0.0160) and the twenty-fifth percentile FALLS (0.1311 to 0.1181). One
+order statistic says the rule helps the worst-off and the next one up says it does not. G6 as
+registered is therefore going to be adjudicated on a quantity I no longer think should carry the
+claim, and the honest verdict when the battery lands will be that the offset does not have a
+distributional story worth telling.
+
+**What the profile shows instead is far more interesting, and it was invisible until the answer rate
+was keyed on the vehicle's own deadline.** A plain console serves the patient and abandons the
+impatient: at `b100` the shortest-deadline vehicle is answered 1.3 percent of the time and the
+longest 96.7 percent, a stratification of seventy-four to one, produced entirely by dispersing
+deadlines about an exactly fixed mean. Nothing in the console's rule mentions the deadline. The
+stratification is emergent: an impatient vehicle times out while waiting behind work the console
+accepted, so the console's queue silently sorts the fleet by who can afford to wait.
+
+**And the admission rule is the instrument that controls it, with one arm getting it for free.**
+`cap7` cuts the stratification from seventy-four to one down to 4.6 to one, raising the least
+patient vehicle's answer rate by a factor of ten, AT AN UNCHANGED FLEET MEAN (0.4716 against
+0.4704). `rand60` flattens comparably (4.3 to one) and pays 38 percent of the mean to do it. The
+offset barely flattens and pays. So the selectivity-against-tightness result that F8 established for
+throughput reappears in the distribution, and it is the same console that wins both times.
+
+**This supersedes G6 and sharpens G7.** The registered falsifier for G7 was that random refusal
+raises the minimum as much as length selection does. It does raise the minimum, so read literally
+G7 fires; but it raises it by levelling down, and the comparison the falsifier should have named is
+at a MATCHED MEAN rather than at a matched refusal rate. Recorded as a defect in my own falsifier
+rather than repaired quietly: **G7 is superseded by G9, and G7's verdict will still be reported.**
+
+**G9.** At a matched fleet-mean answer rate, length selection compresses the answer-rate spread
+across the fleet and tightness does not. Measured as `answer_rate_iqr`, `cap7` gates DOWN against
+`b100` while `answer_rate_v` between them is equivalent; `rand60` reaches a comparable IQR only by
+gating DOWN on the mean as well.
+*Falsifier: `cap7`'s IQR is equivalent to `b100`'s, or its mean is not equivalent, in which case
+there is no free compression and the fairness claim collapses into the throughput one.*
+
+**G10.** The stratification exists at all only because deadlines differ. In a uniform fleet the IQR
+is small and no admission rule moves it much.
+*Falsifier: the uniform fleet shows a comparable IQR, which would mean the spread is queue luck
+rather than deadline sorting and the whole mechanism is misattributed.*
+
+**Instrument note, and the reason for the second amendment.** `answer_rate_min` was added one
+amendment ago to replace a saturated metric and is itself the wrong instrument: a single order
+statistic over sixteen vehicles is noisy, and here it moves opposite to the quartile immediately
+below it. `answer_rate_p25`, `answer_rate_p75` and `answer_rate_iqr` are added and are what the
+claims are registered against. This is instrument defect 13 recurring one level up, which is worth
+saying plainly: **replacing a bad metric is not the same as choosing a good one, and the replacement
+needs its own falsifier.**
+
+### CR-62 THIRD AMENDMENT: DEFECT 13 WAS MY ERROR, NOT THE METRIC'S, AND THE CORRECTED READING IS THE HEADLINE
+
+I recorded `starved_frac` as instrument defect 13 on the grounds that it is pinned to its floor and
+cannot audit a policy. That was wrong, and the way it was wrong matters more than the original
+claim. Eight blocks of eight, sixteen assets, dispersed fleet (`patience_spread` 12 about a fixed
+mean of 20):
+
+    arm                     n=8       n=12      n=16      what it is
+    disp (plain)          0.0039    0.0299    0.0762     no admission rule
+    dispBias250           0.0254    0.0260    0.0361     price the slot
+    dispRand60            0.0020    0.0000    0.0059     refuse at random
+    dispCap7              0.0000    0.0000    0.0010     cap the service length
+    uniform fleet, any    0.0000    0.0000    0.0000
+
+**`starved_frac` was reporting a true zero.** Every arm of the `capped` battery was a workable
+admission rule at a load the console could carry, and under those conditions no vehicle is excluded,
+so zero is the right answer. The metric was never broken. What was broken was my inference: I asked
+a distributional question where the distribution happened to be degenerate, got a null, and
+concluded the instrument could not see.
+
+**Corrected again after the `maps` battery (9449946), which had already falsified the reason I first
+gave.** My first correction said the zero came from the fleet being uniform, and that a uniform
+fleet cannot exclude anyone. That is false and the project's own data says so: on a UNIFORM fleet, a
+plain FIFO console with an unbounded backlog starves **0.8125** of its vehicles at sixteen assets,
+replicated at 0.8125 and 0.8117 on two other maps. Uniformity is not what makes the metric read
+zero; a console that can cope is. Both of my explanations for the null were wrong before this one,
+which is itself the lesson: the
+genus is the one this loop keeps finding and this is a cleaner instance of it than the original:
+**a null measured where the phenomenon cannot occur is not evidence about the phenomenon, and the
+configuration is part of the instrument.** Defect 13 is rewritten as that, and the replacements
+(`answer_rate_min`, the quartiles, the IQR) stay, because they are the right instruments anyway and
+they are what caught this.
+
+**The corrected reading is the strongest single number the project has.** With no admission rule, a
+mixed-deadline fleet at sixteen assets leaves 7.6 percent of its vehicles with ZERO answers over the
+whole run, and total exclusion grows with span (0.0039, 0.0299, 0.0762 at eight, twelve and
+sixteen). A cap on service length takes that to 0.0010 at sixteen and to exactly zero at eight and
+twelve, at a fleet-mean answer rate that is unchanged (0.4716 against 0.4704 in the twelve-block
+profile above). Random refusal also nearly eliminates it, at the cost of 38 percent of the mean.
+Pricing the slot is the worst of the three: it halves exclusion at sixteen assets and CREATES it at
+eight, where the plain console had almost none (0.0254 against 0.0039).
+
+**And worry (b) is dead: the stratification is not a denominator effect.** Per-vehicle ask counts
+are flat across the deadline range in every arm (ratio of most-patient to least-patient asks is
+0.96, 0.97 and 1.02 for plain, cap and random). The whole of the stratification is in the numerator:
+under a plain console the least-patient vehicle asks 28.4 times over the run and is answered 0.4
+times, while the most-patient asks 27.3 times and is answered 26.4. Under the cap the same vehicle
+asks 32.9 times and is answered 4.5, while the most patient falls from 26.4 answers to 19.1. Total
+answers are about unchanged. **The cap redistributes service at constant total.**
+
+**G11, registered.** At full tier, `starved_frac` in a dispersed fleet rises with span under a plain
+console, and a service-length cap drives it to zero at every span with `answer_rate_v` equivalent to
+the plain console's.
+*Falsifier: the cap's `starved_frac` is equivalent to the plain console's, or the cap's mean answer
+rate gates DOWN, in which case the exclusion is bought rather than removed and the recommendation is
+a trade rather than a free lunch.*
+
+**G12, registered, and it is the one that decides whether this reaches guidance.** The exclusion is
+span-dependent, so there should be a span below which no admission rule is needed and above which
+one is. The plain console's `starved_frac` at eight assets is 0.0039, near zero.
+*Falsifier: exclusion is flat in span, which would make it a property of the fleet alone and the
+admission rule's role incidental.*
+
+### CR-62 FOURTH AMENDMENT: THE DISCIPLINE DOES MORE THAN THE ADMISSION RULE, AND MY ATTRIBUTION WAS PREMATURE
+
+The reviewer asked for a fifth explanation of the stratification and named one I had not considered:
+the console walks its pending requests in FCFS order, so a request's death in queue is
+patience-dependent BY CONSTRUCTION, and part of the seventy-four to one may belong to the
+DISCIPLINE rather than to admission control. The codebase's own docstring anticipates this, which is
+why `_patience_vector` permutes: without the permutation `edf` would be `fcfs` by construction.
+The reviewer's verdict, accepted: until the EDF arm runs, attributing the stratification to
+admission control is premature. Twelve blocks, sixteen assets, spread 12, run before the battery:
+
+    arm        answers, least patient    most patient    tail ratio    half-to-half ratio
+    b100                        0.417          26.417          63.4                  4.97
+    b250                        1.000          24.667          24.7                  3.77
+    cap7                        4.500          19.083           4.2                  1.49
+    edf                        10.417          12.417           1.2                  0.92
+    edfCap7                    15.417          15.667           1.0                  0.91
+
+(Counts over a fixed run length, so within an arm the ratio IS the per-step ratio; the battery's
+`answer_step_impatient` and `answer_step_patient` carry the normalized levels.)
+
+**The attribution was wrong and the corrected finding is stronger.** Simply working the queue in
+deadline order takes the stratification from 63.4 to 1.2, essentially removing it, where the best
+admission rule takes it to 4.2. **The console has two independent levers on who gets served, and the
+one nobody reaches for, the order it works its queue in, dominates the one everyone does.** The
+least-patient vehicle goes from 0.4 answers to 10.4 under EDF alone, a factor of twenty five, while
+the most patient falls from 26.4 to 12.4. It is a redistribution and the discipline performs it
+without refusing anybody.
+
+**And the reviewer's own gate passes, once it is measured against the contrast it was calibrated
+on.** The registered threshold was twenty to one per step or the effect is bookkeeping. The per-step
+half-to-half ratio is 4.97, which looks like a failure, but the seventy-four to one it was
+calibrated against is a tail-to-tail figure and the matching per-step tail-to-tail ratio is 63.4.
+Half-to-half averages over a fleet that is mostly middle and compresses any monotone gradient; the
+two statistics are not comparable and the apparent failure was the comparison, not the effect. With
+ask counts flat across the deadline range (0.96 to 1.02) and the per-ask and per-step tail ratios
+agreeing at 74 and 63, **worry (b) is closed: the stratification is not a denominator artefact.**
+
+**G13, registered, and it supersedes the admission framing of G9.** In a dispersed fleet, deadline
+ordering compresses `answer_step_ratio` further than any admission rule does, and does so with
+`served_per_step` and `answer_rate_v` equivalent to FCFS.
+*Falsifier: EDF's ratio is equivalent to `cap7`'s, in which case the two levers are the same lever
+and the admission framing stands; or EDF's throughput gates DOWN, in which case the compression is
+bought and the sentence is a trade rather than a free swap.*
+
+**G14, registered, and it is what a programme would actually be told.** The two levers compose
+rather than substitute: `edfCap7` reaches a ratio no lower than `edf` alone.
+*Falsifier: `edfCap7` gates below `edf`, which would mean each lever removes a different part of the
+harm and both are needed.*
+
+**What this does to the sentence.** Before: *a service cap removes exclusion at no cost to the
+mean.* After: *a console that works its queue in deadline order removes almost all of it, a service
+cap removes most of it, and the two do not add.* The second is a better recommendation because
+deadline ordering requires only the requester's own slack, which the quantile-budget rung already
+established is the cheap information. It is also a worse headline for admission control, which is
+the correct outcome of running the control.
+
+### CR-62 FIFTH AMENDMENT: EDF DOMINATES RATHER THAN TRADES, AND THE DIRECTION CONTROL CAME FREE
+
+Eight blocks of eight, sixteen assets, dispersed fleet, run before the battery to find out whether
+deadline ordering costs anything. It does not.
+
+    arm             served   answer_rate   abandoned   starved   answer_iqr   strat ratio
+    b100 (fcfs)     0.1691      0.4776      0.1965     0.0762      0.668          63.4
+    cap7            0.2082      0.4752      0.2337     0.0010      0.239           4.2
+    edf             0.1981      0.5258      0.1828     0.0000      0.152           1.2
+    patient_first      .           .        0.2141     0.0771      0.564            .
+
+**EDF is not a fairness-for-throughput trade. It dominates FCFS on every quantity measured**: more
+served per step, a higher fleet-mean answer rate, FEWER abandonments, no total exclusion at all, and
+the lowest spread. The mechanism is the classical one and the model contains it exactly: under FCFS
+the console spends its service on requests whose requester can afford to wait, while the requests
+about to expire sit behind them and are abandoned. Serving the most urgent first converts
+would-be abandonments into answers, so total delivered service RISES. Fairness here is not bought;
+it is what the efficient order happens to produce.
+
+**And the cap's cost is now visible where M4 predicted it.** `cap7` reaches its compression by
+abandoning MORE than the plain console (0.2337 against 0.1965), which is the exchange M4 priced.
+EDF reaches a better compression while abandoning LESS (0.1828). Between the two levers the
+discipline is strictly better and the admission rule is the one that charges for its fairness.
+
+**The direction control arrived without being registered, and it is the one that matters.**
+`patient_first` sorts on the same key as `edf` and in the opposite direction. It leaves exclusion
+exactly where FCFS had it (0.0771 against 0.0762), barely moves the spread (0.564 against 0.668),
+and abandons MORE (0.2141). So the result is not "any informed sort helps" and it is not an artefact
+of sorting at all: **it is specifically urgency, and the wrong direction on the right key is worse
+than no key.** Registered as G16, with the full discipline ladder added to the battery so the claim
+is tested against every ordering the model has rather than against the one that flatters it.
+
+**G16.** Across the six disciplines the model implements, the compression of `answer_step_ratio`
+tracks how well the ordering approximates urgency: `edf` best, `patient_first` no better than
+`fcfs`, and `random` between them.
+*Falsifier: `easy_first` or `hard_first`, which sort on the job's difficulty and not on the
+requester's deadline, compress as much as `edf` does. That would mean any sort correlated with
+service length is sufficient, the deadline is incidental, and the finding collapses back into the
+length-selection result the cap already gives.*
+
+`easy_first` is the interesting one, because serving short jobs first is the discipline analogue of
+the cap and is what the scheduling literature would reach for. If it compresses as well as `edf`,
+the honest sentence is about length and not about deadlines. The battery decides it.
+
+### CR-62 SIXTH AMENDMENT: THE ELEMENTARY CORE IS CONCEDED, AND THE LADDER GROWS A SECOND CURRENCY
+
+Two things from the reviewer's Round 31, both of which change what may be claimed rather than what
+was measured.
+
+**The elementary core, conceded before anyone makes us concede it.** Under FCFS with reneging a
+customer is served if and only if its wait is shorter than its own patience, so a longer deadline
+is a higher service probability BY ARITHMETIC. That is Barrer 1957 (`10.1287/opre.5.5.650`,
+CrossRef-verified) and it is the core of the seventy-four to one. A referee arriving from the
+impatience-queue literature rather than from scheduling will see it immediately, and they will be
+right. Barrer is cited the moment the stratification is stated, and the claim is narrowed to the
+three things the arithmetic does not give: the axis rotating from the work to the client, the sign
+of size-based control flipping from starvation-cause to starvation-cure, and the comparison of the
+two levers. Similarly, EDF beating FCFS is a known optimality result for capacitated due-date
+scheduling with non-completion penalties (Xu, Shi and Duenyas 2016, `10.1111/poms.12606`,
+CrossRef-verified) and is written as reproduced rather than found.
+
+**My argument for keeping the cap was backward, and the reviewer's correction is the reason the
+result gets bigger rather than smaller.** I argued the cap survives because a console may not know
+deadlines. But a deadline is a cheap, specifiable message field, and a service-time estimate is the
+expensive graded capability CR-56 already priced. A console is MORE likely to know deadlines than
+lengths, so the cap's surviving case is narrow: a frozen message format with a skilled crew, where
+the cap is the only fairness lever available. The requirements ladder does not lose the cap. It
+gains a second column: **each rung now has an input requirement, a throughput price and a fairness
+price, and the two prices are not paid by the same rung.**
+
+**G17, the reviewer's registration, and it is the sharpest prediction in the battery.** The
+quantile budget reads the SAME message field EDF reads, the requester's own slack, and should spend
+it in the opposite direction: it refuses tight slack by rule, and tight slack is exactly the
+impatient vehicle. So in a dispersed fleet the quantile budget should be REGRESSIVE,
+`answer_step_ratio` above the plain console's 63.4 at a fleet-mean answer rate no lower.
+*Falsifier: the quantile budget compresses, or its mean gates down so the comparison is not at
+matched information value.*
+
+If G17 lands the sentence is: **the deadline field is fairness-neutral, EDF spends it progressively
+and a conservative budget spends it regressively, so a specification must name the rule and not the
+field.** That is the same-information-opposite-rule genus for the fourth time in this project, and
+it is the most transferable thing the loop has produced.
+
+**G18, the mechanism watch item.** Serving the most urgent first means serving requests closer to
+expiry, so EDF's `worked_late_per_step` should sit slightly ABOVE the plain console's, with
+`edfCap7` suppressing it again.
+*Falsifier: EDF's late bin comes back BELOW the plain console's. That would mean the compression is
+not produced by the mechanism claimed and the whole attribution needs re-opening, exactly as the
+FCFS attribution did.*
+
+**Where CR-62 stands, for the eventual write-up.** Registered: G1 to G18. Adjudicated on pilots and
+awaiting the full tier: G2 and G6 expected to fire (the offset has no distributional story), G4's
+premise already failed and was replaced, G7 superseded by G9, and the admission-control framing
+superseded by G13. Surviving and expected to hold: the stratification exists and is large, the
+discipline dominates the admission rule, the two levers compose, and total exclusion is real in a
+mixed fleet and removable. Nothing from this conjecture goes near the manuscript until job 9450238
+lands.
+
+## CR-62 VERDICT, PART ONE: THE DISCIPLINE DOMINATES AT FULL TIER, AND TWO OF MY TESTS COULD NOT MOVE
+
+Full tier, 32 blocks of 64, jobs 9450238 (P1 to P4) and 9455454 (P5, P6). Contrasts against the
+plain FCFS console in a dispersed fleet, at sixteen assets.
+
+    arm             ratio       starved     iqr         answer_rate   served
+    edf            -3.3687 G   -0.0692 G   -0.5062 G   +0.0380 G     +0.0300 G
+    cap7           -2.6835 G   -0.0680 G   -0.4221 G   -0.0071 eq    +0.0400 G
+    hardFirst      -2.4049 G   -0.0643 G   -0.3329 G   -0.0226 eq    -0.0052 eq
+    random         -2.3171 G   -0.0634 G   -0.3188 G   -0.0253 eq    -0.0054 eq
+    easyFirst      -2.2532 G   -0.0645 G   -0.3111 G   -0.0268 eq    -0.0057 eq
+    patientFirst   +1.4052 G   +0.0043 G   -0.0911 G   -0.0828 G     -0.0219 G
+
+**G13 HELD, and it is the strongest result in the project.** Deadline ordering gates DOWN on every
+inequality measure and UP on both aggregate ones at the same time: the stratification ratio falls
+from 4.33 to 0.96 ($t = -130.6$, 32 of 32 blocks), total exclusion goes from 6.92 percent of
+vehicles to exactly zero ($t = -57.5$), the interquartile spread falls 0.5062 ($t = -342.6$), and
+the console nonetheless serves $+0.0300$ more per step ($t = 137.3$) and answers $+0.0380$ more of
+what it is asked ($t = 48.8$). **Nothing is traded.** A ratio below one means the least patient half
+of the fleet is now answered MORE per step than the most patient half, which is what serving by
+urgency means when the urgent are the ones who cannot wait.
+
+**G16 HELD on its registered falsifier, and the full tier adds something I did not predict.** The
+falsifier was that `easy_first`, which sorts on the job's length rather than the requester's
+deadline, compresses as much as `edf`. It does not: $-2.2532$ against $-3.3687$, and where `edf`
+gates UP on throughput and mean answer rate `easy_first` is equivalent or slightly down on both. And
+`patient_first`, the same key in the wrong direction, is worse than FCFS on every column. So the
+compression tracks urgency and not sorting.
+
+What I did not predict is that **RANDOM order recovers about two thirds of it** ($-2.3171$, gating).
+FCFS is not a neutral baseline that EDF improves on; it is actively regressive, because working
+requests in arrival order makes the wait a vehicle faces correlate with nothing about whether it can
+survive the wait. Merely breaking that correlation removes most of the harm. Only deadline order
+removes it entirely, and only deadline order pays nothing for it.
+
+**The two levers separate into two currencies, as the reviewer predicted.** `cap7` has the best
+throughput (+0.0400) and buys it with abandonment (+0.0397, gated); `edf` has the best fairness and
+its abandonment change is equivalent ($-0.0074$). Neither dominates the other and they are answers
+to different questions.
+
+**Mission success is equivalent for every arm at both spans.** This is a console-level result and
+gets written as one, exactly as the throughput ladder did. Registered as the expected outcome.
+
+### Two registered tests came back as nulls that were not nulls
+
+Instrument defect 13's genus, third and fourth instances, both mine.
+
+**G17 could not act.** The quantile-budget arms returned BIT-IDENTICAL numbers to the plain console,
+0 of 32 blocks differing, in every metric. `_admit_budget` is consulted only when `_sees_the_draw`
+is False, and every arm ran at `admit_acuity` 1.0, so the console always saw the job's true length
+and never read the budget at all. The quantile was inert by construction. Reported as untested, not
+as falsified.
+
+**G18 could not move.** Every effort bin came back exactly 0.0000 for every arm, with
+`worked_per_step` equal to `served_per_step` to the last digit. At `comms_level` 0 with a
+feasibility test, a console never starts work that ends lost, late or stale, so the decomposition
+has no support at this operating point. The reviewer's watch item (does EDF's late bin rise, which
+would confirm it is serving the dying) is unanswered rather than answered negatively.
+
+**The repair, and it is procedural rather than technical.** Both failures are the same mistake:
+registering a test in a configuration where the quantity under test is structurally pinned, then
+being ready to read the resulting zero as evidence. Before job 9456257 was submitted, every arm in
+it was piloted locally at four blocks and confirmed to move. That check costs four minutes and it
+is now the precondition for any arm entering a battery. The pilot already shows G17 will hold: at
+`admit_acuity` 0 the mean-budget console reads 6.03, `q80` reads 7.08 and `q95` reads 8.90, so the
+quantile budget is regressive and monotonically so in the quantile, which is the reviewer's
+prediction exactly.
+
+## CR-61 VERDICT: THE INSTRUMENT IS SOUND, ONE PREDICTION IS FALSIFIED, AND WHETHER TO VERIFY THE AUTOMATION IS DECIDED BY THE HARM CHANNEL RATHER THAN BY THE ERROR RATE
+
+Full tier, 32 blocks of 64, job 9450073.
+
+**P0, the instrument check, CONFIRMED at full tier.** Setting `check_dprime` to 0.0, 0.5, 1.0 and
+2.0 recovers a measured $d'$ of $-0.0034$, 0.4969, 0.9950 and 1.9928 at sixteen assets, and the two
+arms that hold sensitivity at 1.0 while moving the criterion (`d10hi`, `d10lo`) recover 0.9946 and
+0.9954. **The measured discrimination is invariant to the decision rule**, which is the property a
+signal-detection instrument must have and the reason the earlier chord-between-corners version was
+replaced before it ran. D7 is now computable.
+
+**P1 FALSIFIED on its registered falsifier, and in the more interesting direction.** P1 predicted
+the ladder is flat at four and six assets, with a gated effect at either span as the falsifier. At
+four assets every check rate gates UP over never-checking, monotonically: $+0.0405$, $+0.0640$,
+$+0.0752$ and $+0.0859$ at rates of 0.25, 0.50, 0.75 and 1.00. Served per step at the same span is
+not flat either, falling 0.1149 to 0.0844. So checking is NOT free at an idle console: it costs
+throughput at every span we ran. What is true at four assets is that the correctness it buys is
+worth more than the throughput it costs, which is a stronger claim than the one registered and it
+required the falsifier to fire to find it.
+
+**P2 HELD.** At sixteen assets served per step is monotone decreasing in the check rate (0.5235,
+0.3191, 0.2168, 0.1575, 0.1183) and success is monotone non-increasing (0.9985, 0.9883, 0.9873,
+0.9824, 0.9790). Nothing rises with $r$ at the weakest assumption about what a wrong answer costs.
+
+**The reversal, and both ends of it gate.** Full verification is worth $+0.0859$ of mission success
+at four assets ($t = 5.5$, 30 of 32 blocks) and $-0.0640$ at eight ($t = -5.1$, 28 of 32). Unlike
+the admission-offset ladder, this optimum is RESOLVABLE: the tolerance band, every check rate within
+one rate floor of the best, has width one at four, eight, twelve and sixteen assets and widens to
+three only at six, which is the transition. So a point location is reportable here by the same
+sharp-cell doctrine that forbids it on the offset ladder: **check everything at four assets, check
+nothing at eight and above, and six is the crossing.**
+
+**P3 HELD, conditionally, and the condition is the finding.** The break-even was registered as a
+wrong-answer cost $h^\star$ in $[1, 8]$. The amended battery rotated the coordinate and swept the
+automation's ERROR RATE across the three harm channels instead, which is the same question asked in
+units a programme can measure. Always-check against never-check, at eight assets:
+
+    channel   q=0.1      q=0.3      q=0.5      q=0.7      q=0.9
+    time    -0.1167 G  -0.0376 .  +0.0264 .  +0.1133 G  +0.1577 G
+    reflect -0.1235 G  -0.0991 G  -0.0640 G  -0.0391 .  +0.0000 eq
+    weak    -0.1318 G  -0.1152 G  -0.1084 G  -0.0947 G  -0.0835 G
+
+**Verification pays only when a wrong answer costs the vehicle TIME.** In that channel the sign
+reverses inside the sweep and both ends gate, with break-even between 30 and 70 percent automation
+error. Where a wrong answer merely produces a weaker result, checking NEVER pays, not even when the
+automation is wrong nine times in ten ($-0.0835$, $t = -7.2$, gated). Where it actively misleads,
+break-even sits at the very top of the range and is reached exactly at $q = 0.9$.
+
+So the knob does change a mission outcome, gated, in both directions, and CR-61 is not withdrawn.
+But the sentence it produces is not the one the conjecture expected. **A programme cannot decide
+whether its operators should verify the automation from the automation's accuracy. It has to know
+what a wrong answer does downstream, and the same accuracy argues for opposite policies in two of
+the three channels this model implements.** That is the same-information-opposite-rule genus for
+the fifth time.
+
+**S4, and it settles which axis schedules the check rate.** Across comms levels 0 to 3 the ordering
+of never-check against always-check does not flip at eight or sixteen assets; never-check wins at
+every rung. The check rate is scheduled by SLACK, that is by span, and not by the channel. A
+degraded link lowers everything and reorders nothing, which is worth stating because the obvious
+programme instinct is to verify more when the link is bad.
+
+**What an operator is worth, which is the uncomfortable part and is reported anyway.** Against a
+no-operator baseline, an operator who never verifies raises blue losses at every span ($+0.0425$,
+$+0.0268$, $+0.0319$, $+0.0203$, all gated) and an operator who always verifies raises them further
+($+0.0968$, $+0.1039$, $+0.0792$ at eight, twelve and sixteen). Only the free-checking operator at
+four assets gates UP on mission success against no operator at all ($+0.1499$, $t = 10.0$). In this
+scenario, at this operating point, the console earns its place only where checking is cheap and the
+fleet is small. That is a limitation of the scenario as much as a finding about operators, and it is
+written with the scenario attached.
+
+## CR-62 VERDICT, PART TWO: SAME FIELD, OPPOSITE SIGN, AND THE FREE LUNCH HAS A PRECONDITION
+
+Full tier, 32 blocks of 64, job 9456257, the corrective battery. Every arm in it was piloted at
+four blocks first and confirmed to move, which is the repair for the two nulls that were not nulls.
+
+**G17 HELD, and it is the most transferable result in the conjecture.** Against a mean-budget
+console, which reads the requester's deadline field and cannot see the job:
+
+    arm          ratio            starved          answer_rate      served
+    q80         +0.5463 G        +0.0215 G        +0.0051 eq       +0.0074 eq
+    q95         +2.6763 G        +0.0932 G        -0.0164 eq       +0.0087 inco
+    edfBudget   -5.3488 G        -0.1380 G        -0.0766 G        -0.0167 G
+
+The quantile budget is REGRESSIVE, monotonically in the quantile, and `q80` is regressive **at
+matched aggregate performance**: its mean answer rate and its throughput are both equivalent to the
+mean-budget console's while its stratification gates up $+0.5463$ and its total exclusion gates up
+$+0.0215$. The registered falsifier, that the mean gates down so the two are not compared at
+matched information value, does not fire for `q80`. In levels, a 95th-percentile budget leaves
+**23.3 percent of a mixed fleet with no service at all**, against 14.0 percent for the mean budget
+and 0.0 percent for deadline ordering.
+
+**So the sentence is confirmed: the deadline field is fairness-neutral and the RULE carries the
+sign.** Two consoles with identical information, neither able to see the job, differ by a factor of
+six in how unequally they distribute service (`edfBudget` 1.12 against `meanBudget` 6.47 at sixteen
+assets), and one of them gates progressive while the other gates regressive. A specification that
+mandates the deadline field and leaves the rule to the implementer has specified nothing about
+fairness. This is the same-information-opposite-rule genus for the sixth time and it is the cleanest
+instance the project has.
+
+**And the free lunch has a precondition I had not isolated.** EDF's dominance holds for a console
+that SEES the job: `edfSees` gates up on throughput and mean answer rate while gating down on every
+inequality measure. For a blind console it is a genuine trade: `edfBudget` gates down $-0.0766$ on
+mean answer rate and $-0.0167$ on throughput to buy its $-5.3488$ of compression. **Deadline
+ordering is free only when the console can also see what it is being asked.** That qualification
+ships with the claim.
+
+**G18 HELD.** At C3, where the console can waste work, EDF's late bin sits $+0.0037$ above the
+plain console's ($t = 37.3$, 32 of 32). Serving the most urgent first does mean serving requests
+closer to expiry, which is the mechanism the compression was attributed to. The second half of the
+watch item, that a cap suppresses the late bin again, is untested: `admit_cap` is inert at C3
+because the feasibility test already refuses everything the cap would have, and `admitEdfCap` is
+identical to `admitEdf` on every metric to four decimals.
+
+**A finding that came with it: the compression weakens as the link degrades.** At C0 deadline
+ordering takes the ratio from 4.33 to 0.96. At C3 it takes 7.06 to 4.54. The plain console is more
+stratified on a bad link and the discipline recovers less of it, because latency, which is the same
+for every vehicle, becomes a larger share of the deadline that separates them.
+
+**G14, the composition, PARTIAL and the partial is the useful part.** At sixteen assets, adding a
+cap to a deadline-ordered console buys $+0.0185$ of throughput ($t = 65.0$) and costs $+0.0227$ of
+abandonment ($t = 32.1$), with the stratification unchanged (inconclusive at $-0.0502$). Adding
+deadline ordering to a capped console buys $-0.7355$ of stratification ($t = -85.7$), $+0.0341$ of
+mean answer rate, and $-0.0243$ LESS abandonment, at equivalent throughput.
+
+**So the two levers are not symmetric and the ordering is a recommendation.** Deadline ordering is a
+strict improvement to a capped console on every axis at sixteen assets. The cap on top of deadline
+ordering is a throughput-for-abandonment trade, and at eight assets it is a losing one
+($-0.0121$ served and $-0.1814$ mean answer rate, both gating). **Adopt the discipline first and
+unconditionally; add the cap only where throughput is worth abandonment and the span is high.**
+G14's falsifier fires at eight assets, where `edfCap7` does gate below `edf` on stratification
+($-0.2246$), so at low span both levers contribute to fairness and only at high span does the
+discipline saturate it.
+
+## CR-60 VERDICT: THREE OF FIVE FIRED, THE MECHANISM IS NOT ESTABLISHED, AND THE METRIC TO SPECIFY IS NOT THE ONE I REGISTERED
+
+Full tier, 32 blocks of 64, job 9449945. Ten arms, two families: `out*` holds the commanded gap
+fixed and varies an outage length, `sp*` varies the commanded spread.
+
+    arm      success   station_err   cross    fleet_spread   fleet_cross
+    base      0.8872        12.99      2.99          86.45          3.71
+    sp60      0.8652        17.79      6.36         127.61          7.46
+    out40     0.8726       186.84     26.37          95.04          6.79
+    out80     0.8643       215.68     26.82         106.85          9.42
+    sp120     0.8242        45.72     28.42         250.22         24.38
+    out160    0.8613       231.91     35.88         119.75         11.66
+    out320    0.8726       221.06     54.70         121.64         12.25
+    sp300     0.4341       172.56    130.27         596.72         78.88
+    sp450     0.4434       366.41    300.08         855.30        133.57
+    sp600     0.4468       818.80    727.33        1078.35        174.94
+
+**The counterexample that motivated the conjecture survives and is now gated.** `out40` carries 187 m
+of station error and scores 0.8726; `sp300` carries LESS, 173 m, and scores 0.4341, a gap of
+$-0.4385$ ($t = -32.5$, 32 of 32 blocks). Meanwhile `out80`, `out160` and `out320` span 187 to 232 m
+of station error with mission success statistically indistinguishable from `out40`. **A programme
+reading the scalar sees a 24 percent spread in tracking error that costs nothing, and a lower value
+that costs half the mission.**
+
+**J1 FALSIFIED as worded, HELD on the reading it should have registered.** Registered: zero
+inversions in the cross ordering across the pooled set. Counted over all fifteen arm pairs, cross
+has three inversions and the scalar has five, so the falsifier fires. But two of cross's three are
+between arms whose mission success is statistically equivalent, and an ordering error between two
+outcomes the experiment cannot distinguish is noise being scored as a mistake. Counted over the
+eight pairs that DO differ at the gate: **cross-track has 0 inversions, fleet dispersion has 0,
+fleet cross-dispersion has 0, and the scalar has 2.** The repair is principled and it is recorded as
+a repair rather than as the original claim.
+
+**J2 HELD.** Within the outlier family the commanded gap is fixed, and cross-track rises 26.4 to
+54.7 across it, so J1 is not a re-reading of the spread knob. What must be said alongside it:
+success does NOT fall within that family, every arm being equivalent to `out40`, so the rank
+correlation of cross with success WITHIN the outlier family is $-0.105$ against the scalar's
+$-0.632$. **The predictive power is between families and not within them.** Cross-track separates a
+formation that has left its route from one that is merely late; it does not grade how late.
+
+**J3 FALSIFIED, and with it the mechanism.** Registered: the success cost per 100 m of cross-track
+error at least halves from banded to open terrain, because the penalty is supposed to come from
+leaving a survivable corridor. Measured by OLS over the five arms carried onto all three maps, the
+cost is $-0.0534$ per 100 m on the band, $-0.0780$ at the chokepoint and $-0.0432$ in the open. The
+open-to-band ratio is 0.81, not the registered 0.50 or less. On a relative reading, as a fraction of
+each map's own baseline success, open is WORSE than band ($-7.70$ percent against $-6.02$ percent
+per 100 m), which is the opposite of the prediction. **The corridor explanation is not established
+and only the correlation may be written**, which is exactly what the registered falsifier said to do.
+
+**J4 FALSIFIED for cross-track and HELD for a metric I registered as the runner-up.** The
+acceptance rule was to be a cross-track threshold separating every arm above 0.83 success from every
+arm below. No such threshold exists: `sp120` sits at 28.4 m of cross-track, inside the 26.4 to 54.7
+band occupied by four arms that all score above 0.86. The scalar fails too, as expected. But
+**`fleet_spread_mean` separates the two groups cleanly at 189 m and `fleet_cross_mean` at 18 m**,
+with no overlap on the full ten-arm set.
+
+**J5 FALSIFIED in the useful direction, and it changes the recommendation.** The registered
+expectation was that resolved cross-track error wins and fleet dispersion is reported as the
+runner-up, on the strength of a single pilot inversion. At full tier that inversion is between arms
+whose success is equivalent, dispersion ties cross-track at zero gated inversions, and dispersion
+alone supports the acceptance threshold cross-track cannot.
+
+**So the recommendation inverts.** The metric a programme should specify is **fleet dispersion, the
+RMS distance of the living assault force from its own centroid**, which contains no commanded
+geometry at all, needs no knowledge of the formation the autonomy was trying to hold, and is
+recoverable from bare position tracks on a range. Resolving station-keeping error onto the heading
+is a real improvement over the scalar and it is now the runner-up rather than the answer. What
+CR-57's bare null becomes is not "project the error" but "**stop measuring the error against the
+commanded formation and measure the formation itself.**"
+
+## MAPS VERDICT: THE STARVATION ORDERING IS MAP-INVARIANT, AND IT FALSIFIED MY OWN CORRECTION
+
+Full tier, 32 blocks of 64, job 9449946. The five console levers replicated on all three terrain
+profiles. `starved_frac`, the fraction of vehicles that asked and never received a single answer:
+
+    arm       n=4      n=6      n=8      n=12     n=16    n=16 on chokepoint / open
+    admit   0.0000   0.0000   0.0000   0.0000   0.0000        0.0000 / 0.0001
+    bound   0.0000   0.0000   0.0000   0.0000   0.0002        0.0002 / 0.0002
+    lifo    0.0000   0.0000   0.0000   0.0000   0.0001        0.0001 / 0.0002
+    rand    0.0000   0.0000   0.0385   0.2821   0.4420        0.4168 / 0.4503
+    fifo    0.0000   0.0000   0.2581   0.7404   0.8125        0.8125 / 0.8117
+
+**The replication is essentially exact.** FIFO's exclusion at sixteen assets is 0.8125, 0.8125 and
+0.8117 on band, chokepoint and open. The ordering of the five levers is identical on every map and
+the onset span is the same. This is the precondition the reviewer set for the Discussion's
+boundary-law paragraph: a console-level result that does not depend on the ground.
+
+**The magnitude is the thing to carry.** A plain FIFO console with an unbounded backlog leaves
+**81 percent of its vehicles with no answer at all** over the whole run, while serving a backlog of
+132 requests. LIFO holds a LARGER backlog, 146, and starves 0.0001, because it answers the request a
+vehicle just made rather than the one it gave up on. The two policies differ by a factor of eight
+thousand in exclusion at nearly identical backlog.
+
+**And it falsified my own correction to instrument defect 13, which is recorded rather than quietly
+fixed.** Two sections above I wrote that `starved_frac` read zero in the `capped` battery because a
+uniform fleet cannot exclude anyone. The arms here are a uniform fleet and FIFO excludes 81 percent
+of it. The true reason for the earlier zero is simpler and duller: every arm in that battery was a
+workable admission rule at a load the console could carry. **I have now given two explanations for
+one null and the first was wrong**, which is worth stating plainly because it is the same failure
+the defect names: reaching for an explanation of a zero without checking the configurations in which
+it is not zero. The project's own earlier battery contained the counterexample the whole time.
+
+**It also independently corroborates CR-62 on a different axis.** CR-62 found that FCFS ORDERING
+within a served queue stratifies a mixed-deadline fleet. This battery, run before it and on a
+uniform fleet, finds that FIFO SERVICE of an unbounded backlog excludes most of the fleet outright.
+Different knob, different fleet, same villain: **working the oldest request first is the single most
+harmful thing this console does, and it is the default everywhere.**
+
+## CR-63. THE VERIFICATION FRONTIER, AND THE DEGENERATE CORNER THAT WAS CARRYING CR-61's HEADLINE
+
+Registered before the battery. The reviewer's Round 32 ruling was that the CR-61 sentence
+"verification pays only when a wrong answer costs time" may not ship until the quality channel has
+its positive control, because a null in a channel that cannot move the mission is a fact about the
+instrument. **Applying his own guard, which is to grep the landed batteries before registering an
+arm, found the positive control already present and also found something worse.**
+
+**The positive control fires, so the channel is not inert.** In the landed `trust` battery (9450073)
+the two never-checking quality arms differ only in what a wrong answer resolves at: `weak` leaves the
+vehicle at its own autonomy, `reflect` puts it as far below autonomy as a right answer is above. At
+90 percent automation error the difference on mission success is **-0.0835, t = -8.53, 28 of 32
+blocks, gated**. Control quality reaches the mission. The channel comparison is not void.
+
+**But the reference arm in that comparison is a constant.** At `check_rate` 1.0 the console checks
+every answer and `_supervise` returns a caught answer as a right one, so no wrong answer is ever
+shipped. Automation error and harm channel are then both inert by construction, and the data says so
+without ambiguity: the six always-checking cells, three channels crossed with five error rates from
+0.1 to 0.9, are **byte-identical to one another**, all at success 0.7764. Every one of them.
+
+So the sentence I sent the reviewer, and the whole three-price comparison, was carried entirely by
+the never-checking arm. **This is instrument defect 15 and it is the thirteenth's genus once more, in
+its most expensive form yet: not a metric that cannot move, but a REFERENCE that cannot move.** A
+contrast against a constant is a level dressed as a difference, and the paper came within one round
+of publishing three of them.
+
+The correct reading of the landed grid, stated in levels because that is all it supports:
+
+    auto_error         0.1      0.3      0.5      0.7      0.9
+    never check, time  0.8931   0.8140   0.7500   0.6631   0.6187
+    never check, refl  0.8999   0.8755   0.8403   0.8154   0.7764
+    never check, weak  0.9082   0.8916   0.8848   0.8711   0.8599
+    always check, any  0.7764   0.7764   0.7764   0.7764   0.7764
+
+Never checking beats always checking almost everywhere, and the reason is throughput, not
+correctness: a checked answer costs a full console slot and a shipped one costs `comply_frac` of
+one, so at a saturated console verification is paid for on every job and collected on the wrong ones
+only. That is a real and sponsor-relevant statement, and it is not the statement CR-61 recorded.
+
+**R1. The interior.** The grid has two corners and no middle. Check rates 0, 0.25, 0.5, 0.75 and 1.0
+against automation error 0.1 to 0.9 in each of the three channels, on mission success and blue
+losses. Prediction: the best check rate is interior somewhere, and it rises with `auto_error`.
+FALSIFIER: if the tolerance band contains a corner in every cell of the grid, there is no frontier,
+the finding is a binary "check or do not", and the word frontier does not appear in the paper.
+
+**R2. The stakes ladder, which is the reviewer's registration.** `g = q_operator - q_auto` is what a
+right answer is worth. Sweep `q_auto` over 0.50 to 0.90 at fixed `q_operator` 0.95, so g runs 0.45
+down to 0.05, at three check rates in the reflect channel. Prediction: the check rate that wins
+rises with g, because the benefit of catching a wrong answer scales with g while the throughput
+price does not. FALSIFIER: if the gated ordering of the three check rates is the same at every g,
+the stakes do not set the policy, and the frontier is one number rather than a design curve.
+
+**R3. The decomposition, which is the cheap decisive test.** If the throughput reading above is
+right, then setting `comply_frac` to 1.0, so that shipping an unchecked answer costs exactly what
+checking it costs, must destroy the never-checking arm's advantage. Sweep `comply_frac` 0.25 to 1.0
+at fixed error and channel. Prediction: the advantage falls monotonically and reverses by 1.0.
+FALSIFIER: if never-checking still gates above always-checking at `comply_frac` 1.0, throughput is
+not the mechanism and I have no second explanation ready, which is the point of registering it.
+
+**R4. The operator's own worth, on the metric the sponsor reads.** The reviewer refused the
+"operator is net-harmful" sentence as a calibration echo. R2 answers it directly: the sweep contains
+the g at which a console with an operator beats no console, and that number, not the sign at the
+default, is what a programme can use. Reported as a frontier with the default marked on it.
+
+Nothing from CR-61's third prediction goes near the manuscript until this battery lands. The
+first two, the instrument recovery and the falsified free-check prediction, stand: neither of them
+reads the degenerate corner.
+
+
+## CR-60 VERDICT, CORRECTED AND SHARPENED BY ITS OWN NUMBER SCRIPT
+
+Two corrections and one new result, all from `tools/make_disp_numbers.py`, which is the first time
+the L2 and L5 sections were read by a script rather than by eye.
+
+**Correction one, the corridor ratio.** I reported 0.81 to the reviewer and called it the open-map
+to banded-map ratio of the dispersion penalty. It is not that number. 0.81 is the RELATIVE cost on
+the open map alone, the penalty as a fraction of what the base formation achieved there. The ratio
+the falsifier actually asked about is 1.04 on absolute cost and 1.65 on relative cost, both against a
+falsifier of 0.50. **The verdict does not change and the correction strengthens it**: J3 is falsified
+by a wider margin than I reported, and on the relative reading a force with no cover to funnel it
+pays MORE for dispersion than one moving through a corridor, not less. The corridor is not the
+mechanism.
+
+**Correction two, and it is a real finding rather than a slip.** The registered blindness test asked
+whether a formation metric moves when route bias moves the force off its commanded line. Every
+candidate moves; scoring them on how much they move ranks them, but ranks them on the wrong thing. A
+requirement is a LINE, so the only nuisance failure that matters is one that carries a cell across
+it. Scored that way, against the thresholds section L1 fixes:
+
+    reading               inversions   threshold   route-bias misclassifications
+    station_err_mean         8 / 24    none            (no line to cross)
+    station_cross_mean       2 / 24    none            (no line to cross)
+    fleet_cross_mean         0 / 24    18 m            1 of 10
+    fleet_spread_mean        0 / 24    189 m           0 of 10
+
+The one misclassification is the interesting cell. At route bias 0 the dispersed force reads
+**2.4 m** of fleet cross-track, comfortably inside an 18 m line, while its mission success in that
+cell is the worst in the section. A force strung out ALONG its axis of advance has almost no
+cross-track spread, and cross-track is exactly the component that cannot see it. `fleet_spread_mean`
+does not have that hole because it is not a component of anything: it is the whole distance.
+
+**So the recommendation tightens from "measure the formation" to a specific reading with a number.**
+Specify the RMS distance of the living assault force from its own centroid, hold it under about 190
+metres, and do not decompose it. Both decompositions tested here, one against the commanded line and
+one against the axis of advance, have a blind family that the undecomposed distance does not.
+
+**And an honest debt, recorded rather than fixed.** `fleet_spread_mean` was not logged in section L3,
+so the reading this conjecture ends up recommending is the one whose threshold has NOT been checked
+against column length. The other two hold their separation at all four spans, over threshold ranges
+of 22 to 116 metres and 35 to 218 metres, which is itself a warning: a threshold that moves by a
+factor of five across column length is not a requirement. Until L3 is rerun with the recommended
+reading logged, the 190 metre figure is a single-span number and the paper must say so.

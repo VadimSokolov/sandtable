@@ -37,6 +37,7 @@ def survey(log: str, sec: str, metric: str, ref: str | None = None, quiet: bool 
         rows[a] = lv
         if not quiet:
             print(a.ljust(16) + "".join(f"{v:11.4f}" for v in lv))
+    _flat_reference(log, sec, metric, ref, d, pts, quiet)
     if not ref:
         if not quiet:
             best = {p: max(arms, key=lambda a: rows[a][i]) for i, p in enumerate(pts)}
@@ -62,6 +63,32 @@ def survey(log: str, sec: str, metric: str, ref: str | None = None, quiet: bool 
                 print(f"  {a:<14} {p:>6}  {e:+9.4f}  t={t:8.2f}  {w:2d}/{n:2d}  {verdict}"
                       + (f"  (tost {st:.2f})" if not ok else ""))
     return out
+
+
+def _flat_reference(log, sec, metric, ref, d, pts, quiet) -> bool:
+    """Warn when the reference arm is byte-identical across the sweep, because then it is a constant.
+
+    A contrast against an arm the treatment cannot move is a level wearing a difference. The paper
+    came within one round of publishing three of them: an operator that checks every answer catches
+    every wrong one by construction, so its automation error rate and its harm channel are both inert
+    and its cells came back byte-identical. Nothing in the numbers said so, because a contrast
+    against a constant looks exactly like a contrast against anything else. This says so.
+
+    The check is deliberately a warning and not an error. A reference that does not move is sometimes
+    the whole point of a control arm; what is never acceptable is not KNOWING.
+    """
+    if not ref or len(pts) < 2:
+        return False
+    vecs = [tuple(d[(ref, p)]) for p in pts if (ref, p) in d]
+    if len(vecs) < 2 or len(set(vecs)) > 1:
+        return False
+    if not quiet:
+        print(f"!! FLAT REFERENCE: {ref!r} is byte-identical at all {len(vecs)} sweep points of "
+              f"{sec!r} on {metric!r}. Every contrast below is a level, not a difference.")
+    else:
+        sys.stderr.write(f"!! FLAT REFERENCE {log}::{sec}::{metric}: {ref} is byte-identical "
+                         f"across all {len(vecs)} sweep points\n")
+    return True
 
 
 def _mean(v):

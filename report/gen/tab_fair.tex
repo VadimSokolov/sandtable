@@ -1,0 +1,14 @@
+\begin{tabular}{lrrrrrrl}
+\toprule
+rule & served & answer & starved & patient: & service & abandoned & vs.\ FCFS \\
+ & /step & rate & frac. & impatient & IQR & /step & on ratio \\
+\midrule
+First come, first served & 0.169 & 0.481 & 0.069 & 4.33 & 0.661 & 0.197 & reference \\
+Random order & 0.164 & 0.456 & 0.006 & 2.01 & 0.342 & 0.201 & better \\
+Shortest job first & 0.163 & 0.454 & 0.005 & 2.08 & 0.350 & 0.198 & better \\
+Longest job first & 0.164 & 0.458 & 0.005 & 1.92 & 0.328 & 0.201 & better \\
+Most patient first & 0.147 & 0.398 & 0.073 & 5.73 & 0.570 & 0.211 & worse \\
+Earliest deadline first & 0.199 & 0.519 & 0.000 & 0.96 & 0.155 & 0.189 & better \\
+Service cap alone & 0.209 & 0.474 & 0.001 & 1.64 & 0.239 & 0.236 & better \\
+\bottomrule
+\end{tabular}

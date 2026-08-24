@@ -24,6 +24,58 @@ def blue_at_goal(ent: Entities, scn: Scenario) -> np.ndarray:
     return ent.side_mask(BLUE) & (d <= scn.objective.goal_radius)
 
 
+
+def _stratified_by_deadline(n_ans, patience, total_steps: int) -> dict:
+    """Answers PER STEP, split by the requester's own deadline. Fable's Round 30 gate.
+
+    `answer_rate_v` divides answers by ASKS, so a stratification in it is partly a statement about
+    who asks more. The ask counts turn out to be flat across the deadline range, which bounds how
+    much bookkeeping can contribute, but a bound is not a measurement. Answers per STEP has the
+    same denominator for every vehicle by construction and cannot be inflated by re-asking, so it
+    is the reading that decides whether the console is really giving the impatient vehicle less
+    help or merely answering a larger number of its requests.
+
+    The split is at the fleet's own median deadline, so it is a property of the fleet rather than a
+    threshold anyone chose. A uniform fleet has no split and returns nothing.
+    """
+    pat = np.asarray(patience, dtype=float)
+    if pat.size < 2 or float(pat.max() - pat.min()) <= 0.0:
+        return {}
+    med = float(np.median(pat))
+    lo, hi = pat <= med, pat > med
+    if not lo.any() or not hi.any():
+        return {}
+    ans = np.asarray(n_ans, dtype=float) / max(int(total_steps), 1)
+    a_lo, a_hi = float(ans[lo].mean()), float(ans[hi].mean())
+    return {"answer_step_impatient": a_lo, "answer_step_patient": a_hi,
+            "answer_step_ratio": a_hi / a_lo if a_lo > 0.0 else float(len(ans))}
+
+
+def _distribution_of_answers(n_ans, n_ask) -> dict:
+    """Who got answered, not just how many answers there were.
+
+    `starved_frac` counts TOTAL exclusion. It is the statistic a sponsor asks for first and the
+    one that is hardest to move: over the run lengths we simulate no vehicle is ever excluded
+    outright, so it reads 0.0 at every arm and every span and is blind to the policy. The min and
+    the mean-to-min gap are computed from the same vector and do vary, so they are what a
+    distributional claim has to be read off.
+    """
+    rate = np.asarray(n_ans) / np.maximum(np.asarray(n_ask), 1)
+    lo, hi = (float(x) for x in np.percentile(rate, [25.0, 75.0]))
+    return {"starved_frac": float((np.asarray(n_ans) == 0).mean()),
+            "answer_rate_v": float(rate.mean()),
+            "answer_rate_min": float(rate.min()),
+            "answer_rate_gap": float(rate.mean() - rate.min()),
+            # The min is one order statistic out of a fleet of sixteen and it moves for reasons
+            # that have nothing to do with the policy. The quartiles are what a distributional
+            # claim should be read off; their spread is the stratification the console imposes on
+            # the fleet, and it is a different quantity from the mean in exactly the cases that
+            # matter.
+            "answer_rate_p25": lo,
+            "answer_rate_p75": hi,
+            "answer_rate_iqr": hi - lo}
+
+
 def compute(scn: Scenario, init_counts: dict, ent: Entities,
             t_reached: float | None, t_elapsed: float, assault0: int | None = None,
             air0: int = 0, bhv=None, op=None) -> dict:
@@ -148,7 +200,10 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "worked_late_per_step": 0.0, "worked_per_step": 0.0,
            "busy_serviced": 0.0, "busy_stale": 0.0, "busy_lost": 0.0, "busy_late": 0.0,
            "busy_total": 0.0, "svc_serviced_mean": 0.0, "svc_worked_mean": 0.0,
-           "starved_frac": 0.0, "answer_rate_v": 0.0, "backlog_mean": 0.0, "dropped_frac": 0.0,
+           "starved_frac": 0.0, "answer_rate_v": 0.0, "answer_rate_min": 0.0,
+           "answer_rate_gap": 0.0, "answer_rate_p25": 0.0, "answer_rate_p75": 0.0,
+           "answer_rate_iqr": 0.0, "answer_step_impatient": 0.0, "answer_step_patient": 0.0,
+           "answer_step_ratio": 0.0, "backlog_mean": 0.0, "dropped_frac": 0.0,
            "supervised_mean": 0.0, "supervised_frac": 0.0, "demand_norm_goodput": 0.0,
            "hold_fraction": 0.0, "interaction_steps": 0.0, "neglect_steps": 0.0, "fan_out": 0.0,
            "track_err_mean": 0.0, "station_err_mean": 0.0,
@@ -339,9 +394,16 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
         if op.n_ask_v is not None:
             asked = (op.n_ask_v > 0) & (ent.side == BLUE)
             if asked.any():
-                out["starved_frac"] = float((op.n_ans_v[asked] == 0).mean())
-                out["answer_rate_v"] = float(
-                    (op.n_ans_v[asked] / np.maximum(op.n_ask_v[asked], 1)).mean())
+                out.update(_distribution_of_answers(op.n_ans_v[asked], op.n_ask_v[asked]))
+                if op.patience_v is not None:
+                    out.update(_stratified_by_deadline(
+                        op.n_ans_v[asked], op.patience_v[asked], op.total_steps))
+                # Instrument defect 13. `starved_frac` counts TOTAL exclusion, and over a run of
+                # this length no vehicle is ever excluded outright, so it sits on its floor at
+                # every arm and every span and a null read from it is a property of the run length
+                # rather than of the policy. The distribution has to be measured where it actually
+                # varies: the worst-served vehicle, and the gap between it and the mean.
+
         # Absolute abandonment, for the same reason. `abandon_queue_frac` divides by
         # `n_request`, so a treatment that suppresses requests can lower the FRACTION while
         # abandoning exactly as often, or raise it while abandoning less. The rate cannot be

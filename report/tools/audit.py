@@ -74,10 +74,22 @@ def check_citation_provenance(bib_path):
     with open(bib_path) as fh:
         text = fh.read()
     verified = len(re.findall(r'^%\s*verified:', text, flags=re.MULTILINE))
+    keys = re.findall(r'^@\w+\s*\{\s*([^,\s]+)\s*,', text, flags=re.MULTILINE)
     entries = len(re.findall(r'^@\w+\s*\{', text, flags=re.MULTILINE))
     detail = {'verified_lines': verified, 'bib_entries': entries}
     if entries == 0:
         return ('FAIL', 'no .bib entries found', detail)
+    # A repeated key is worse than a missing one. BibTeX keeps the first definition and discards the
+    # rest, so the count above still balances while one of the % verified: lines is describing an
+    # entry nothing will ever render, and the error surfaces only when something finally cites the
+    # key. Caught here instead, where it is a one-line fix.
+    dupes = sorted({k for k in keys if keys.count(k) > 1})
+    if dupes:
+        detail['duplicate_keys'] = dupes
+        return ('FAIL',
+                f'{len(dupes)} repeated entry key(s) in the .bib: ' + ', '.join(dupes) +
+                '. BibTeX keeps the first and discards the rest; delete the duplicates.',
+                detail)
     if verified >= entries:
         return ('PASS', f'{verified} of {entries} entries verified', detail)
     return ('FAIL',

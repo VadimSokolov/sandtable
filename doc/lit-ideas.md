@@ -1226,6 +1226,86 @@ recommendation the sponsor can act on without buying a better radio.
   discovered only when the customer fails to appear, which is precisely the `blind` operator). That
   is a good analogy and a bad substitute; it is human customers, not supervised vehicles.
 
+### D4b: Who the queue starves, and the scheduling literature that already named it (added 2026-08-23, drives CR-62)
+
+The model produced a result the queue section did not anticipate and the literature turns out to
+have a name for. With deadlines dispersed about an exactly fixed fleet mean, a console with no
+admission rule serves the patient and abandons the impatient: at sixteen assets the shortest
+deadline vehicle is answered 1.3 percent of the time and the longest 96.7 percent, and 7.6 percent
+of vehicles get ZERO answers over the whole run. Nothing in the console's rule mentions the
+deadline. The stratification is emergent, and a cap on service length removes it (4.6 to one
+instead of seventy-four to one, total exclusion 0.0010 instead of 0.0762) at an unchanged
+fleet-mean answer rate.
+
+Three verified sources place this, and the placement is what makes the result citable rather than
+merely novel to us.
+
+- **Kleinrock 1964** (`10.1002/nav.3800110105`, Naval Research Logistics Quarterly 11(1):59-73,
+  CrossRef-verified), *Analysis of a Time-Shared Processor*. The foundational statement of the
+  direction: under time sharing, jobs shorter than average spend less time in queue than they would
+  under FCFS, and longer than average jobs more. Our cap is a crude, non-preemptive member of that
+  family and moves the same way, so the mechanism is not a modelling artefact of SandTable.
+- **El Abdouni Khayari 2005** (`10.1002/dac.744`, Int. J. Communication Systems 18(10):975-994,
+  CrossRef-verified), *Class-Based Weighted Fair Queueing*. States the standard trade in one line:
+  SJF and SRPT minimize mean waiting time but carry "the disadvantage of potential job starvation",
+  and the paper's whole contribution is a discipline that keeps the mean and removes the
+  starvation. **Our result is the complement of that concern and it is worth stating as such.**
+  The scheduling literature worries that size-based service starves the LARGE JOB. In a supervised
+  fleet the unit of harm is the requester, not the job, and what starves under a console with NO
+  size rule is the IMPATIENT REQUESTER. Both are true at once; naming the first is what lets us
+  claim the second is not the same statement.
+- **Liu, Zhou and Chen 2023** (`10.1111/poms.14033`, Production and Operations Management 32(10),
+  CrossRef-verified), *Customer Segmentation and Ex Ante Fairness: A Queueing Perspective*. The
+  fairness framing in the operations venue the rest of our queue citations come from, and it makes
+  the ex ante and ex post distinction we need: our stratification is ex ante, since a vehicle's
+  deadline is a property it arrives with and the console never observes.
+
+**Two more, added after the discipline result overtook the admission one.**
+
+- **Barrer 1957** (`10.1287/opre.5.5.650`, Operations Research 5(5):650-656, CrossRef-verified),
+  *Queuing with Impatient Customers and Ordered Service*. The elementary core, and it is conceded
+  rather than discovered: under FCFS with reneging a customer is served iff its wait is under its
+  own patience, so a longer deadline is a higher service probability by arithmetic, not by any
+  emergent property of the console. **Cite this the moment the stratification is stated.** A
+  referee arriving from the impatience-queue literature rather than from scheduling will see the
+  seventy-four to one as Barrer-class arithmetic, and they will be right about the core of it.
+- **Xu, Shi and Duenyas 2016** (`10.1111/poms.12606`, Production and Operations Management
+  25(12):2086-2102, CrossRef-verified), *Priority Rules for Multi-Task Due-Date Scheduling under
+  Varying Processing Costs*. Establishes an optimal EDF policy for a capacitated server with
+  stochastic arrivals, heterogeneous due dates and a non-completion penalty, which is our console
+  with the names changed. So EDF beating FCFS here is a known result reproduced, not a discovery,
+  and it must be written that way.
+
+**What is ours and what is not, corrected after the EDF arm.** Not ours: that size-based service
+helps short jobs (Kleinrock 1964); that SJF and SRPT trade mean waiting time against starvation
+(Khayari 2005); that EDF is optimal for due-date scheduling with penalties (Xu, Shi and Duenyas
+2016); and that under FCFS reneging a longer deadline means a higher service probability (Barrer
+1957). Four separate results, all older than the loop that found them.
+
+What appears to be ours, stated narrowly enough to defend:
+
+1. **The axis rotates.** Classical starvation is a harm to an axis of the WORK: the long job waits.
+   Here it is a harm to an axis of the CLIENT: the impatient vehicle is never helped. The plain
+   console has no size rule at all, so classical starvation is absent exactly where client
+   starvation peaks. Two phenomena, not one quantity re-divided, which is also the answer to the
+   denominator objection.
+2. **The sign of size-based control flips.** In the scheduling literature a size rule CAUSES
+   starvation; here it CURES it. The flip is literal and it carries a structural price that must
+   ship welded to the claim: a cap starves long jobs completely, by construction, so the cure is
+   free only where the length of a decision carries no value.
+3. **The two levers and their composition**, and the magnitude: a console that changes only the
+   ORDER it works its queue in removes almost all of the stratification while also raising
+   throughput and lowering abandonment, where the admission rule buys a smaller compression with
+   more abandonment. The literature above has each lever separately and does not have the
+   comparison, because it does not have a client axis to compare them on.
+
+The claim to make is 1, 2 and 3, with all four prior results cited as the frame they sit in.
+
+**Still open.** Whether the free compression survives a non-uniform deadline distribution.
+`_patience_vector` lays offsets out in equal steps, so the fleet's deadline distribution is uniform;
+a bimodal fleet (a few very impatient vehicles among many patient ones) is the realistic case and is
+untested. Registered as a limitation, not yet as a conjecture.
+
 **The one usable field measurement, found 2026-08-22, and what it buys.** The scenario timestep is
 one second, so `1/mu`, `tau` and `P` convert directly into the fan-out literature's own units:
 interaction time 6.67 s, neglect time 22 s, patience 20 s. Two of the three are quantities that
@@ -2103,3 +2183,54 @@ effort? Not found so far, and it is the sharpest sentence CR-54 has.
 **Also verified and not used.** He and Alfa 2000 (`10.1002/1520-6750(200008)47:5<399::AID-NAV3>3.0.CO;2-9`)
 computes a mixed FCFS/LCFS discipline for MMAP[K]/PH[K]/1 but has no abandonment, so it is the
 wrong half of the problem.
+
+### D4d: What a formation requirement should be written in (added 2026-08-24, drives CR-60)
+
+CR-60's verdict inverts the recommendation this project carried since CR-57, so the literature note
+has to be rewritten rather than extended.
+
+**The claim being positioned.** Among four readings of one set of positions, the two that ignore the
+commanded formation entirely order the design space the way mission success does (zero inversions
+over the twenty-four gated-apart pairs) and the two that are measured against the commanded station
+do not (eight and two inversions, and neither admits a separating threshold at all). Between the two
+survivors, the UNDECOMPOSED distance beats its own cross-track component under a nuisance family the
+component is blind to: a force strung out along its axis of advance reads 2.4 m of fleet cross-track,
+inside an 18 m line, in the cell with the worst mission success in that section.
+
+**What is certainly not ours.** Dispersion about a centroid is a standard swarm statistic under
+several names, and the formation-control literature's own objective is path or station error, which
+is what \citet{cheung2022convoy} reports large reductions in. Nothing here is a new metric.
+
+**What the contribution has to be, stated narrowly.** It is a comparison, not an invention: on one
+grid, with mission success as the arbiter and a registered falsifier, the metric the control
+literature optimises does not order the design space and the metric it treats as descriptive does.
+That is a statement about which quantity belongs in a REQUIREMENT, and it is the kind of statement
+only a mission-level model can make, because it needs an outcome the control problem does not
+contain.
+
+**Open citation debt, recorded so it is not forgotten.** Two searches for a peer-reviewed source
+that compares formation-quality metrics BY MISSION OUTCOME rather than by tracking error returned
+nothing on point; the Scholar Gateway corpus returned medical-physics and protein-science hits for
+the dispersion query, which is a coverage failure rather than evidence of absence. Until a source is
+found, the paper states the comparison as its own measurement and does not claim the gap in the
+literature.
+
+### D4e: The degenerate reference, which is a methods note the paper owes (added 2026-08-24, drives CR-63)
+
+Not a literature note but it belongs with them, because it is the kind of thing a referee catches.
+In the `trust` battery the always-checking operator catches every wrong answer by construction, so
+its automation error rate and its harm channel are both inert, and its fifteen cells came back
+byte-identical at success 0.7764. Three contrasts had been drawn against it. A contrast against a
+reference the treatment cannot move is a level wearing a difference, and nothing in the numbers says
+so, because it looks exactly like any other contrast.
+
+The guard now lives in `tools/ar_survey.py`: any reference arm byte-identical across its sweep is
+announced on stdout and on stderr, so the number scripts, which all run quiet, cannot miss it. All
+forty-odd number scripts in the project were swept after it was added and none trips it, so nothing
+in the manuscript rests on a flat reference. Locked by `tests/test_survey_flat_reference.py`,
+including a regression against the landed log that motivated it.
+
+A second guard came out of the same session for the same reason: `tools/audit.py` now fails
+pre-flight on a repeated `.bib` key. BibTeX keeps the first definition and silently discards the
+rest, so the entry count still balanced while one `% verified:` line described an entry nothing would
+ever render, and the error surfaced only when a citation finally reached the discarded copy.

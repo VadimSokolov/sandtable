@@ -1710,3 +1710,56 @@ correctness term.
 
 **Instrument defect 12.** `arrived_frac` is pinned at `survive_fraction` whenever the mission
 succeeds: 0.3125, 0.5000, 0.7500 against thresholds 0.3, 0.5, 0.7. Contrasts on it are lower bounds.
+
+## 2026-08-23/24. Five batteries scored, two guards added, two submitted
+
+Hopper jobs, all on `contrib` with `--constraint=intel` after the AMD nodes were ruled out for this
+workload. `hopper/submit.sh` now defaults to that partition and constraint.
+
+| job | battery | tier | what it settled |
+| --- | --- | --- | --- |
+| 9450238 | regress P1-P4 | 32 x 64 | CR-59 control; timed out part way into P5 at 6 h |
+| 9455454 | regress2 P5-P6 | 32 x 64 | the discipline ladder; P6's quantile arms came back inert |
+| 9456257 | regress3 Q1-Q3 | 32 x 64 | the corrective run: quantile at acuity 0, effort at C3, composition |
+| 9450073 | trust S1-S6 | 32 x 64 | signal-detection operator; instrument recovery confirmed |
+| 9449945 | cross L1-L5 | 32 x 64 | four readings of one set of positions |
+| 9449946 | maps N1 | 32 x 64 | the five backlog levers on three terrain profiles |
+| 9458832 | verify R1-R4 | 32 x 64 | CR-63, running |
+| 9459110 | dispcol K1-K2 | 32 x 64 | CR-60's owed column-length section, running |
+
+**Two arms that could not move, and the procedure that now catches them.** `regress2`'s quantile
+arms were bit-identical to FCFS because `_admit_budget` is consulted only when the console cannot see
+the job, and every arm ran at `admit_acuity` 1.0. Its effort bins were all exactly zero because at
+C3 with `queue_policy = admit` the console never starts work that ends lost, late or stale. Both were
+reruns rather than salvage. Every arm in `regress3`, `verify` and `dispcol` was piloted locally at
+three or four blocks and confirmed to MOVE before submission.
+
+**Instrument defect 14, and it is epistemic rather than mechanical.** I explained one null twice. The
+first explanation, that `starved_frac` read zero because a uniform fleet cannot exclude anyone, was
+already falsified by a landed battery in this project: job 9449946, uniform fleet, plain FIFO,
+0.8125 exclusion at sixteen assets, replicated at 0.8125 and 0.8117 on two other maps. The guard has
+the same shape as the rule it broke: every explanation of a null names the configuration in which it
+predicts a nonzero, and that configuration is checked against the landed batteries before the
+explanation ships.
+
+**Instrument defect 15, caught before publication.** In `trust` section S5 the always-checking
+operator catches every wrong answer by construction, so its automation error rate and its harm
+channel are both inert; its fifteen cells are byte-identical at success 0.7764. Three contrasts had
+been drawn against it. `tools/ar_survey.py` now announces any reference arm byte-identical across
+its sweep, on stdout and on stderr so the quiet number scripts cannot miss it. All number scripts in
+the project were swept and none trips it, so nothing in the manuscript rests on a flat reference.
+Locked by `tests/test_survey_flat_reference.py`, five tests including a regression against the log
+that motivated it.
+
+**A third guard, from the same session.** `tools/audit.py` now fails pre-flight on a repeated `.bib`
+key. `barrer1957ordered` had been added twice on consecutive days; BibTeX keeps the first and
+discards the rest, so the entry count still balanced and the error surfaced only when a citation
+finally reached the discarded copy. Proven with a planted-duplicate negative control.
+
+**Headline result promoted.** At fixed information, service ORDER at sixteen assets: FCFS answers the
+patient half of a mixed fleet 4.33 times as often as the impatient half and excludes 0.069 of it;
+EDF takes those to 0.96 and 0.000 while raising mean answer rate +0.0380 and throughput +0.0300 and
+lowering abandonment -0.0074. Random order recovers 2.32 of EDF's 3.37, so FCFS is beaten by a coin
+flip. The same deadline field read as a 95th-percentile budget excludes 0.233 of the fleet.
+
+Suite 348 passed 1 skipped. Pre-flight PASS on all five including compile.
