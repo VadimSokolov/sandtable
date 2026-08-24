@@ -9167,3 +9167,93 @@ it look BETTER, because the t statistic grows without bound while the informatio
 Sent to review as Round 37 Q1 before any repair is written, because the obvious fix, auditing the
 treatment arms for pinning, appears to reintroduce the Round 18 defect, and because the better fix
 may be a registration-time check on the arm's DEFINITION rather than any statistic at all.
+
+### ROUND 37 RULINGS. THE DEFECT IS REAL, MY DIAGNOSIS OF IT WAS NOT
+
+Review verified the mechanism at the code level and then corrected three things in the account I
+wrote above. The corrections matter because each one points at a different repair.
+
+**It failed once, not three times.** U1's `dropsGhost`, U2's three drop arms and U3's drop arms are
+one entailment with three exposures, not three failures. `stale_check = "before"` forecloses the
+`t_stale` accumulator, and every reading downstream of that is the same fact seen again. Counting
+exposures as failures makes the axis look statistically treacherous when it is definitionally
+degenerate, and that misdiagnosis points at a statistical repair when the right one is a registry.
+
+**The three zeros are not epistemically alike.** Only `dropsGhost` reaches zero by entailment.
+`boundTwo` and `admits` reach it empirically and could have been otherwise: that the admitting
+console holds `busy_stale` at zero WHILE serving 0.149 per step is a real and publishable fact. Any
+repair that treats "pinned" uniformly throws two informative zeros away with the tautological one.
+That kills the set-wide mute I was drifting toward.
+
+**Every contrast that was actually computed is true, and correctly gated.** "Dropping the ghost
+takes `busy_stale` from 0.94 to zero" is registered claim (a) of CR-65 and it is fine as a
+manipulation check. What failed is a claim NOBODY EVER COMPUTED: the ranking among the three
+treatments was read off three separate contrasts against a common reference, and the ranking's own
+contrast was never formed. No guard fired because no guard was ever pointed at the comparison being
+consumed. This is the sharpest correction of the three and it dissolves most of my worry about the
+tooling: run that comparison through the existing machinery and `paired()` returns t = 0 on
+byte-identical arms by explicit design, the TOST margin is zero, and both `_zero_base` and
+`_flat_reference` fire. **The tools already refuse this claim, loudly and twice. What was missing
+was the obligation to ask them.**
+
+So the repair is not a new statistic. It is two sentences:
+
+1. **Admissibility attaches to a CONTRAST**, an ordered pair of the claim's own reference and the
+   claim's arm, computed from that reference alone. Round 36 is the special case where the claim's
+   reference is the battery's designated reference. Every gated claim now in the manuscript is of
+   that form, so the restatement moves no landed verdict; the rewrite I feared is small.
+2. **Any cross-arm reading, an ordering, an equivalence, a "these two differ by X" among
+   treatments, must be COMPUTED as a contrast among those arms.** Once formed, rule 1 applies to it
+   automatically and in the pinned case it refuses.
+
+And the observation that belongs in the paper rather than only in this log: Round 36's scope clause,
+"computed from the reference arm alone", is itself a convention correctly derived for its first use
+case, designated-reference batteries, and carried silently into a second, cross-arm readings, where
+"the reference arm" has no referent. **The rule against the instrument genus contains an instance of
+the instrument genus.**
+
+**My "property of a set" defence does not survive, and the correct defence is a different one.**
+Round 18 does not forbid "one arm wrote the audit". It forbids any causal path from outcomes under
+audit into the audit, because every such path is a selection channel. Set membership is chosen by
+the registrant, and pinning is easy to engineer, since any prohibition-defined arm pins its own
+metric; so a registrant could demote an unfavourable axis by adding a decoy arm built to pin.
+Multiplicity is more surface, not a firewall. What survives is narrower and rests on vacuity rather
+than on symmetry: the check is PAIRWISE rather than set wide, it is REFUSAL ONLY so it can withhold
+a cross-arm verdict but never grant or reverse one and never touches an arm-versus-reference
+contrast, and the fallback axis order stays fixed in advance so a refusal cannot steer the reading.
+Under those three restrictions the channel carries nothing, because refusing to rank two
+byte-identical vectors suppresses no true statement. There is no payoff to steer toward.
+
+**It is a genus of its own, and the ledger's own test decides it.** The manuscript defines the
+instrument genus by the question that exposes every instance: ask what the denominator counts, then
+ask whether the arm changed it. Ask that here and the answer is nothing, because the denominator,
+`total_steps`, is innocent. The exposing question for this defect is a different one: can this
+metric's source event occur at all under this arm's definition? That is a reachability question,
+answerable at registration with no data, and it lands in a different phase with a different guard
+class. The crisp difference, and it is the sentence for the paper: **every one of the eighteen
+instrument instances produced a WRONG number. The entailed cell produces only TRUE ones.**
+`busy_stale` really is zero, the contrast really is -0.9671, the t really is -10437. Nothing is
+miscomputed, which is exactly why no amount of replication, range checking or benching can touch it:
+the reading is a theorem, and theorems replicate perfectly. Defect 18's 4.74 was CONTINGENTLY wrong
+and another console makes it right. This cell is NECESSARILY uninformative and no scenario, seed or
+span changes it.
+
+**And the genus does not arrive as a singleton.** Review predicted a dual entailment in the same
+log and it is there: `stale_dropped_frac` is exactly zero on the works arms, because its counter's
+only increment site sits inside the `before` branch. CR-67's W5 is a third instance, caught by hand
+at the time and correctly reported as structural. A mechanical sweep of all seventy landed logs then
+put a number on it: an arm is pinned at a structural value in **66 of 623 section-by-metric
+readings, one in ten**, and in **42 of them two or more arms are pinned at the SAME value**, so
+those pairs cannot be ordered on that axis at all. That is not exotic. It is the shadow of the
+project's best architectural decision, since every opt-in mechanism behind a parameter gate entails
+zeros on its own metrics when it is off.
+
+**Three guards added, all announcements rather than verdict changes, because the scoring surface is
+frozen and a margin changed after the fact would move landed verdicts silently.** `_pinned_arm`
+announces any arm byte-identical in every block at every sweep point. `_duplicate_dose` announces
+adjacent sweep points that are one dose wearing two labels, which is how the sixty-four-fold claim
+above got corrected to thirty-two. `_thin_base` announces a reference that is nonzero but under a
+hundredth, where the relative margin has collapsed toward nothing: at six assets `worksGhost` reads
+0.000541 on `busy_stale`, so the margin is 0.0000325 and a repair worth half a thousandth of a
+percent of operator time would gate as material with a large t. `_zero_base` demands exactly zero
+and cannot see it.
