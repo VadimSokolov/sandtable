@@ -9257,3 +9257,70 @@ hundredth, where the relative margin has collapsed toward nothing: at six assets
 0.000541 on `busy_stale`, so the margin is 0.0000325 and a repair worth half a thousandth of a
 percent of operator time would gate as material with a large t. `_zero_base` demands exactly zero
 and cannot see it.
+
+## CR-72, REGISTERED. AN EXPLORATION CONSTANT IS DENOMINATED IN THE METRIC'S NOISE
+
+Registered before the search benchmark's run stage, with the pilot disclosed, because the pilot is
+what prompted it and hiding that would be dishonest.
+
+Textbook UCB1 adds `c * sqrt(2 log t / n)` to each arm's mean, and that constant is derived for
+rewards bounded in the unit interval. Mission metrics are not bounded there and, more to the point,
+what the bonus has to be commensurate with is not the metric's LEVEL but the GAP between the designs
+being told apart. On this simulator those gaps are small in absolute terms:
+
+```
+    metric              gap      per-mission sd    UCB1 bonus at 8 pulls   bonus / gap
+    served_per_step   0.00641        0.0193               1.020              159x
+    success           0.03333        0.4325               1.020               31x
+    blue_loss_frac    0.01917        0.2468               1.020               53x
+```
+
+An allocator whose bonus exceeds its signal by two orders of magnitude always selects the
+least-pulled arm. So unscaled UCB on this benchmark is not exploring too eagerly. It has stopped
+being UCB and become uniform allocation with an argmax stapled to the end, which is the grid
+baseline under another name. Had the benchmark shipped that way it would have reported "the bandit
+ties the grid", and the tie would have been a fact about units.
+
+**The pilot, disclosed.** A surrogate with the measured scale, means from the landed ladder table
+and a per-mission sd of 0.019, budget 400, counting missions per design:
+
+```
+    method      allocation                        contenders   hopeless   ratio
+    ucb_raw     [64, 64, 64, 56, 56, 48, 48]         128          96      1.33
+    ucb         [24, 320, 16, 16, 8, 8, 8]           344          16     21.50
+    thompson    [144, 200, 16, 16, 8, 8, 8]          344          16     21.50
+```
+
+`ucb_raw` spends forty-eight missions on a design worth 0.0029 while the best is worth 0.1476. All
+three return the right design on a problem this easy, so the difference is invisible in the headline
+and decisive in the budget.
+
+The repair carries the bonus in units of the estimate's own standard error, which is the treatment
+`thompson` already gave its posterior and which makes the two comparable for the first time. The
+unscaled version is KEPT as `ucb_raw`, a control rather than a recommendation, because the effect is
+worth showing rather than asserting.
+
+**Registered predictions.**
+
+**M1.** `ucb_raw` is equivalent to `grid` on both regret and found-rate at every budget on every
+problem whose answer key resolves. FALSIFIER: it gates away from `grid` on either, which would mean
+the unscaled bonus is doing something after all and the degeneracy argument is wrong.
+
+**M2.** `ucb` gates up against `ucb_raw` on regret at the middle of each problem's budget ladder.
+FALSIFIER: equivalent or worse. Scaling the bonus is then not the repair, and the honest conclusion
+is that this design space is too small for any allocator to beat enumeration, which is a real result
+about mission design and not a failure of the benchmark.
+
+**M3, and it is the one this conjecture exists for.** The advantage of `ucb` over `ucb_raw` is
+LARGER on the axes whose gap-to-spread ratio is worse. Ranked by `bonus / gap` above, the ordering
+is served_per_step, then blue_loss_frac, then success. FALSIFIER: no ordering, or the reverse one.
+The claim would then be that scaling helps, without the stated reason, and it would ship as the
+weaker claim.
+
+**The general form, and why it belongs in the second paper rather than in a footnote.** This is the
+paper's own thesis arriving INSIDE a method rather than between two of them. If an exploration
+constant is denominated in the metric's noise, then a bandit tuned on one mission metric is
+mistuned on another by whatever ratio separates their spreads, and no amount of care in choosing the
+optimizer substitutes for knowing the axis it will be run on. The same argument applies to any
+method carrying a scale-bearing hyperparameter, which includes the length scale of the Gaussian
+process, and that is checked as an ablation rather than assumed.
