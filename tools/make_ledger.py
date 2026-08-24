@@ -89,6 +89,19 @@ ROWS = [
     ("a scattered arrival stream reads one",
      "(instrument, not a claim)",
      "\\textsc{repaired}: a gated stream does not, and the null moves with dwell and rate; guarded by a null computed from the run's own dwell and rate rather than assumed to be one"),
+    ("three console repairs of unlike value read identical on the axis named after the waste",
+     "(entailed, not a claim)",
+     "\\textsc{repaired}: an arm defined as never doing a thing sets a metric counting that thing "
+     "to zero by definition, so the reading is a theorem and more replication only grows its "
+     "$t$; guarded by a sentinel that announces any arm byte-identical across every block and "
+     "sweep point, and by the rule that a reading across arms be computed as a contrast among "
+     "those arms rather than assembled from contrasts against a common baseline"),
+    ("a control swept over sixty-four-fold was swept over half that",
+     "(instrument, not a claim)",
+     "\\textsc{repaired}: two adjacent doses quantized to the same integer hold and were one dose "
+     "wearing two labels, so the range the control demonstrated was narrower than it reported; "
+     "guarded by a sentinel that announces adjacent sweep points byte-identical in every arm, "
+     "which the flat-reference check cannot see because it requires the whole row to be constant"),
     ("the stop-dead cliff has a closed form in route, speed and clock",
      "a separating hold more than 0.05 from the prediction, or one that moves with span",
      "\\textsc{refuted} on both, in three registrations declared final in advance; "
@@ -334,7 +347,7 @@ def main() -> None:
     # its place in the table only if it can name the guard that makes its recurrence
     # impossible. A row that cannot is a war story, and war stories get cut.
     for r in ROWS:
-        if "instrument" in r[1] and "guarded by" not in r[2]:
+        if ("instrument" in r[1] or "entailed" in r[1]) and "guarded by" not in r[2]:
             raise SystemExit(f"instrument row names no guard, so it does not ship: {r[0]!r}")
     lines += [" & ".join(r) + " \\\\" for r in ROWS]
     lines += ["\\bottomrule", "\\end{tabular}"]
@@ -342,14 +355,22 @@ def main() -> None:
     out.write_text("\n".join(lines) + "\n")
     # The prose says how many entries there are and how many failed. Counting them here keeps
     # those two sentences from drifting the next time a row is added.
-    claims = [r for r in ROWS if "instrument" not in r[1]]
+    # Three categories, not two. A defect is not a claim, and the entailed rows are not instrument
+    # rows either: an instrument row records a number that came out WRONG, an entailed row records
+    # a number that came out right and carried nothing. Counting them together would put a defect
+    # in the claim total, which is the one number in this section a reader is entitled to trust.
+    instr = [r for r in ROWS if "instrument" in r[1]]
+    entailed = [r for r in ROWS if "entailed" in r[1]]
+    claims = [r for r in ROWS if r not in instr and r not in entailed]
     failed = [r for r in claims if "refuted" in r[2] or "cut" in r[2] or "partial" in r[2]]
-    counts = {"ldRows": len(ROWS), "ldClaims": len(claims), "ldInstr": len(ROWS) - len(claims),
+    counts = {"ldRows": len(ROWS), "ldClaims": len(claims), "ldInstr": len(instr),
+              "ldEntailed": len(entailed),
               "ldFailed": len(failed), "ldHeld": len(claims) - len(failed)}
     (ROOT / "report" / "gen" / "ledger_counts.tex").write_text(
         "".join(f"\\newcommand{{\\{k}}}{{{v}}}\n" for k, v in counts.items()))
     print(f"wrote {out} with {len(ROWS)} rows "
-          f"({counts['ldClaims']} claims, {counts['ldFailed']} failed, {counts['ldInstr']} instruments)")
+          f"({counts['ldClaims']} claims, {counts['ldFailed']} failed, "
+          f"{counts['ldInstr']} instruments, {counts['ldEntailed']} entailed)")
 
 
 if __name__ == "__main__":
