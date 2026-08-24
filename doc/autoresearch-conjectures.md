@@ -9030,3 +9030,39 @@ congestion there is only its cost.
 procurement consequence: damping demand at the vehicle and refusing it at the console are
 substitutes, doing both is worse than doing either, and the vehicle cannot see which console it is
 talking to. The cheapest item in the paper is the only one whose sign is somebody else's decision.
+
+### CR-64 ruling: the exclusion fix is a counter, not a field, and it is void without refusal
+
+**T1, admitting console, two-point fleet, spans 4 to 24, reference = arrival order.** `round_robin`
+serves whoever has been served least and reads NOTHING about the request: no deadline, no timestamp,
+no difficulty, only a counter the console already keeps about itself.
+
+| rule | exclusion at n=24 | vs arrival order | throughput vs arrival order |
+|---|---|---|---|
+| arrival order (fcfs) | 0.4242 | | |
+| round robin (free) | 0.0001 | **-0.4240 gates down** | +0.0233 gates up |
+| earliest deadline (a field) | 0.0002 | **-0.4240 gates down** | +0.0471 gates up |
+| random | 0.0557 | -0.3684 gates down | -0.0082 equivalent |
+
+Compared directly, `round_robin` against `edf`: the largest exclusion gap at any span is 0.0000 to
+four decimals. **The free counter matches the deadline field on exclusion.** The gate cannot certify
+that and the prose says so: `edf` reads exactly zero at four of six spans, so a relative margin
+against it is undefined and the zero-base guard fires. The supported statement is the weaker and
+sufficient one, that the two leave the same number of vehicles unanswered.
+
+Where they part is throughput: the counter gives up -0.0092 at sixteen and -0.0239 at twenty-four,
+both gating down. **So the requirement splits along the two currencies. Exclusion is fixed by not
+privileging arrival order, and the cheapest way to stop is a counter needing no message change.
+Throughput is bought by the deadline field, and only on a fleet whose deadlines differ.**
+
+This refines CR-66's V2 in the direction that helps a program office. V2 priced the exclusion fix as
+a second reading of the deadline field. It does not have to be bought that way at all.
+
+**T2, the precondition, and it is the amendment that inverted the original conjecture.** On a
+console that cannot refuse: arrival order leaves 0.8897 unanswered, the free counter leaves 0.8897,
+the same number, the deadline field leaves 0.9659, which is worse than doing nothing, and a coin
+flip at 0.7105 beats all three. Ordering is not a lever on a console with no capacity to allocate;
+it is a way of choosing who is denied.
+
+**T6, the control**, where there is no scheduling problem: every rule reads at most 0.0026 and none
+can win. Fires correctly.
