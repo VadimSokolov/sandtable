@@ -37,7 +37,9 @@ def survey(log: str, sec: str, metric: str, ref: str | None = None, quiet: bool 
         rows[a] = lv
         if not quiet:
             print(a.ljust(16) + "".join(f"{v:11.4f}" for v in lv))
+    _censored_cells(log, sec, metric, d, quiet)
     _flat_reference(log, sec, metric, ref, d, pts, quiet)
+    _zero_base(log, sec, metric, ref, d, pts, quiet)
     if not ref:
         if not quiet:
             best = {p: max(arms, key=lambda a: rows[a][i]) for i, p in enumerate(pts)}
@@ -63,6 +65,51 @@ def survey(log: str, sec: str, metric: str, ref: str | None = None, quiet: bool 
                 print(f"  {a:<14} {p:>6}  {e:+9.4f}  t={t:8.2f}  {w:2d}/{n:2d}  {verdict}"
                       + (f"  (tost {st:.2f})" if not ok else ""))
     return out
+
+
+def _censored_cells(log, sec, metric, d, quiet) -> int:
+    """Announce cells containing an undefined value, because a NaN that reaches a gate is a verdict.
+
+    `answer_step_ratio` is undefined when the impatient half of the fleet receives nothing at all. It
+    used to stand in the fleet size, which averages and gates and reads as a very large but finite
+    stratification; it is now NaN. NaN compares false against every threshold, so a censored cell
+    would quietly come back "inconclusive", which is a verdict rather than a refusal. This makes it a
+    refusal.
+    """
+    bad = [(a, p) for (a, p), v in d.items() if any(x != x for x in v)]
+    if not bad:
+        return 0
+    msg = (f"!! CENSORED: {len(bad)} of {len(d)} cells of {sec!r} on {metric!r} contain an undefined "
+           f"value and cannot be scored: " + ", ".join(f"{a}@{p}" for a, p in sorted(bad)[:6]))
+    if not quiet:
+        print(msg)
+    else:
+        sys.stderr.write(f"{log}: {msg}\n")
+    return len(bad)
+
+
+def _zero_base(log, sec, metric, ref, d, pts, quiet) -> int:
+    """Announce a reference sitting at exactly zero, because the relative margin then vanishes.
+
+    For every metric outside `RATE_METRICS` the gate's materiality margin is a FRACTION of the
+    reference level. A reference of exactly zero makes that margin zero, so any difference at all
+    gates as material and no equivalence can ever be declared. That is the mirror image of the flat
+    reference above: there the contrast could not move, here it cannot fail to. Both look like
+    ordinary contrasts in the output.
+    """
+    from ar_gate import RATE_METRICS
+    if not ref or metric in RATE_METRICS:
+        return 0
+    bad = [p for p in pts if (ref, p) in d and _mean(d[(ref, p)]) == 0.0]
+    if not bad:
+        return 0
+    msg = (f"!! ZERO-BASE REFERENCE: {ref!r} is exactly 0 at {', '.join(bad)} on {metric!r}, so the "
+           f"relative margin is 0 and every difference there gates by construction")
+    if not quiet:
+        print(msg)
+    else:
+        sys.stderr.write(f"{log}::{sec}: {msg}\n")
+    return len(bad)
 
 
 def _flat_reference(log, sec, metric, ref, d, pts, quiet) -> bool:

@@ -250,6 +250,16 @@ ROWS = [
      "difference. It is guarded by a byte-identity check on every reference arm across the "
      "treatment "
      "before any contrast against it is read, which is the check that caught this one"),
+    ("an undefined value may stand in a number that looks like one",
+     "(instrument: a sentinel averages, a NaN does not)",
+     "\\textsc{repaired} in three places at once. The deadline-stratification ratio returned the "
+     "FLEET SIZE when the impatient half received nothing, so total exclusion read as a large finite "
+     "stratification; the feasible-death fraction returned zero on the console that has no backlog "
+     "at all, so eleven batteries would have read ``this console loses nothing to its ordering''; "
+     "and the inverted share reads a perfect 1.0 when both halves of the fleet are equally starved. "
+     "All three are now undefined where they are undefined, and are guarded by a survey check that "
+     "refuses a cell containing one out loud rather than returning ``inconclusive'', plus a "
+     "reporting rule that the share never appears without a level beside it"),
 ]
 
 

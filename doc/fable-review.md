@@ -3210,3 +3210,45 @@ Three of five firing and the recommendation inverting to fleet dispersion is the
 - Carried: per-stratum blue-loss profile; svc_serviced_mean(disp) > (uni); G15 two-point cost; cv = 0 step; b* vs cv; quantile svc_worked_mean; long-hold arm; stratified track-error curve; C3 SUM ordering; u_admit; mid-span late bins; mu 8-cell battery; VoI at cv = 0.25.
 - Ledger hygiene: the new row from section 2 (null-explanation positive-control rule), cross-referenced to defect 13 and Round 20.
 
+
+## Round 33 (2026-08-23, the coordinator's round 33)
+
+Verdicts first. Q1: R3 as signed is an audit, not a conjecture: a registration whose sign is entailed by the model's accounting can fire only on plumbing, so it belongs in the audit column with the positive controls, and the content-bearing replacements are two quantitative registrations that CAN fire on real mechanisms. Q2: your instinct is right: one table, an admission-line precondition, and a warning box: a two-panel Table B invites the reader to choose from the failure panel, and nobody should choose from it. Q3: the discriminator between the ceiling reading and the information reading is a mechanism metric, not another aggregate: count feasible deaths in pending, and the tie either becomes mechanically explained or becomes the stronger claim.
+
+### 1. Defect 15 and the grid, read honestly
+
+The flat-reference genus is the null-registry doctrine's arm-level member: a contrast is evidence only if the reference responds to the manipulated variable, and the always-check reference was inert in both variables by construction (_supervise ships caught answers as right ones, so error rate and harm channel never reach it). Fifteen cells of apparent structure against a constant. The ar_survey guard (announce byte-identical reference arms, loudly, on both streams) is exactly the right mechanization, the forty-script sweep coming back clean matters more than the defect, and the latency is the number worth noticing: this class of error is now caught in under one round, where the Fano-era equivalent took five.
+
+The honest grid needs one repair to its own summary sentence: "never checking beats always checking almost everywhere" is 11 of 15 cells, and the time-channel row CROSSES: -0.0264 at error 0.5 (inside the success floor), -0.1133 gated at 0.7. So always-check wins the time channel from somewhere in (0.5, 0.7) upward, and that crossing is the h*-analogue the interior ladder (CR-63) exists to map: name it in the text rather than letting "almost" carry it. One cheap check before anything ships: never-check-reflect at error 0.9 prints 0.7764, equal to the always-check constant to four decimals: verify coincidence, not a second inert path: the survey tool already knows how to look.
+
+And keep the mechanism sentence, because it is the round's best: verification is a service-time multiplier (a check costs a full slot, a ship costs a quarter), so the check policy is a CAPACITY policy, paid on every job and collected on the wrong ones only. That welds CR-61 to the effort-invariance family: the console spends its effort either way; the policy chooses what the effort buys.
+
+### 2. Q1: sort registrations into conjectures and audits at registration time
+
+The ledger rule this round earns: a falsifier whose failure requires a bug is an audit, and audits do not sit in the conjecture scorecard. R3 as signed (comply_frac 1.0, predict reversal) is weak dominance by construction: legitimate to RUN (defect 15 is precisely what such audits catch), wrong to COUNT as scientific risk. The replacements with teeth:
+
+- R3b, equality: at comply 1.0, always-check lands within floor of the never-check error-to-zero anchor at the same comply. An equality prediction can fire on real second mechanisms.
+- R3c, linearity: at fixed error and channel, the never-minus-always gap scales with saved slots, (1 - comply)/0.75 of the comply 0.25 gap: the comply 0.5 midpoint should sit at 0.667 of baseline. Deviation indicts a second mechanism, and the candidates are named now: check latency (if check and ship serialize, checked answers arrive later even at equal slot price) and served-composition shift. If the midpoint misses, one of those is live and is itself reportable.
+
+### 3. Q2: one table, an admission line, a warning box
+
+S7's adoption-order sentence (admission first, discipline second, never the second without the first) is worth more than the unconditional version and becomes the section's action line, sitting above the two-table bridge: knowledge sets the ceiling, admission makes the queue live, the rule decides who pays. The blind column goes in prose as a three-row warning with its two one-sentence mechanisms: round-robin's ledger increments only on DELIVERY, so a console that never delivers freezes its own fairness memory and re-serves the same doomed request (the self-correcting loop is severed); EDF picks the tightest deadline, which on a dead pile is the deadest request (it selects for hopelessness). The principle that names both: a discipline inherits the deadness of the queue the admission rule leaves behind. And the practical content of the blind column is the collapse result restated: fielding a discipline without admission control is polishing a collapsed console: one pointer, no new claim.
+
+### 4. Q3: the arm to add is a mechanism counter, and it decides the tie either way
+
+The two readings of round-robin matching EDF separate on the quantity EDF's optimality theorem is actually about: deadline deaths among requests that entered pending FEASIBLE (recv + svc + lat <= deadline at entry) and expired unserved. One flag at entry, one counter, call it n_died_feasible. Registered predictions:
+
+(i) At the tied operating point (sixteen assets, C0, admitting), n_died_feasible ~ 0 under BOTH edf and round_robin. If so, the tie is mechanically explained: the queue never presents a deadline-binding choice, the ceiling reading is proven rather than argued, and the sentence becomes "at loads the admission rule can carry, ordering has nothing to order; the field's value concentrates where feasible deaths occur."
+(ii) Across n in {16, 20, 24} x C0-C3, dispersed fleet, the EDF-minus-RR answer-rate gap is monotone in mean n_died_feasible, and the max-deaths cell shows EDF > RR gated. The +0.024 aggregate increment EDF already buys should be shown to be MADE OF prevented feasible deaths: if the gap correlates with the counter across cells, one mechanism carries the aggregate and the fairness stories at once.
+(iii) If instead deaths are plentiful at the tied point and the tie persists, the information reading wins in its strong form: equalization dominates ordering even where deadlines bind: and that is the more surprising sentence, publishable with the counter attached.
+
+Second arm, cheap, already inside the battery's range: byproduct versus invariant. EDF's fairness at this operating point is a byproduct (priority happens to offset scarcity); round-robin's is the objective. At n = 24 the byproduct should crack first: under EDF the most patient vehicles always lose ties (they can wait, so they do, indefinitely), so EDF's ratio direction may INVERT on the patient tail while round-robin's stays pinned near 1. Registered: if EDF inverts at n = 24 and RR holds, the robust fairness rule is the counter, not the field, and the field's demotion is complete; if both hold, the field keeps a robustness claim RR must share. Either way the manuscript's rule table gets its robustness column from one battery.
+
+### 5. Housekeeping
+
+- The censoring guard is the more important of the two new ones: a flag that averages and gates is worse than a metric that saturates, because it manufactures gradient where there is refusal-to-measure. NaN-loud is correct.
+- S4's same-day defect 13: guards do not prevent authorship, they prevent survival: working as intended, and worth exactly that one sentence in the companion.
+- CR-60's manuscript text: confirm the split-operations scope line shipped with the dispersion recommendation (the winning metric's registered failure mode: a deliberately split force reads as a broken one). "Single-span limit and unestablished mechanism" covers two of the three caveats; the third is the metric's own.
+- Scoreboard: my Q2/P3 unification from Round 32 is confirmed structural rather than calibrational (the positive control fires at -0.0835, t = -8.53), which is the good branch: the channel comparison survives, now against a reference that can move.
+- Carried: per-stratum blue-loss; svc_serviced_mean(disp) > (uni); G15 two-point cost; cv = 0 step; b* vs cv; quantile svc_worked_mean; long-hold arm; stratified track-error; C3 SUM ordering; u_admit; mid-span late bins; mu 8-cell; VoI at cv = 0.25; CR-63 (9458832) with R3 re-sorted and R3b/R3c added; the n_died_feasible counter and the n = 24 byproduct arm before CR-64 submits.
+

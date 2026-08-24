@@ -77,3 +77,52 @@ def test_the_real_battery_that_motivated_the_guard_still_trips_it():
         survey("st-trust-9450073.out", "S5 three prices for a wrong answer, one grid",
                "success", ref="reflR100")
     assert "FLAT REFERENCE" in buf.getvalue()
+
+
+def test_a_cell_containing_an_undefined_value_is_refused_rather_than_scored(tmp_path, capsys):
+    """NaN compares false against every threshold, so a censored cell would quietly come back
+    "inconclusive", which is a verdict rather than a refusal."""
+    p = tmp_path / "st-fake-3.out"
+    p.write_text(f"### {SEC} (answer_step_ratio)\n"
+                 "AR_ROW arm=ref n_blue=4 mean=0.5 vals=0.5,0.6,0.4,0.5\n"
+                 "AR_ROW arm=ref n_blue=8 mean=0.5 vals=0.6,0.6,0.4,0.5\n"
+                 "AR_ROW arm=trt n_blue=4 mean=0.7 vals=0.7,0.8,0.6,0.7\n"
+                 "AR_ROW arm=trt n_blue=8 mean=nan vals=0.7,nan,0.6,0.7\n")
+    survey(str(p), SEC, "answer_step_ratio", ref="ref")
+    out = capsys.readouterr().out
+    assert "CENSORED" in out and "trt@8" in out
+
+
+def test_no_censoring_warning_when_every_cell_is_defined(tmp_path, capsys):
+    p = tmp_path / "st-fake-4.out"
+    p.write_text(f"### {SEC} (answer_step_ratio)\n"
+                 "AR_ROW arm=ref n_blue=4 mean=0.5 vals=0.5,0.6,0.4,0.5\n"
+                 "AR_ROW arm=trt n_blue=4 mean=0.7 vals=0.7,0.8,0.6,0.7\n")
+    survey(str(p), SEC, "answer_step_ratio", ref="ref")
+    assert "CENSORED" not in capsys.readouterr().out
+
+
+def test_a_reference_at_exactly_zero_is_announced(tmp_path, capsys):
+    """The mirror image of the flat reference. For any metric outside RATE_METRICS the margin is a
+    fraction of the reference level, so a reference of zero makes every difference material by
+    construction and no equivalence declarable."""
+    p = tmp_path / "st-fake-5.out"
+    p.write_text(f"### {SEC} (starved_frac)\n"
+                 "AR_ROW arm=ref n_blue=4 mean=0.0 vals=0.0,0.0,0.0,0.0\n"
+                 "AR_ROW arm=ref n_blue=8 mean=0.1 vals=0.1,0.1,0.1,0.1\n"
+                 "AR_ROW arm=trt n_blue=4 mean=0.2 vals=0.2,0.3,0.1,0.2\n"
+                 "AR_ROW arm=trt n_blue=8 mean=0.3 vals=0.3,0.4,0.2,0.3\n")
+    survey(str(p), SEC, "starved_frac", ref="ref")
+    out = capsys.readouterr().out
+    assert "ZERO-BASE REFERENCE" in out and "4" in out
+
+
+def test_a_rate_metric_is_exempt_because_its_margin_is_absolute(tmp_path, capsys):
+    p = tmp_path / "st-fake-6.out"
+    p.write_text(f"### {SEC} (served_per_step)\n"
+                 "AR_ROW arm=ref n_blue=4 mean=0.0 vals=0.0,0.0,0.0,0.0\n"
+                 "AR_ROW arm=ref n_blue=8 mean=0.1 vals=0.1,0.1,0.1,0.1\n"
+                 "AR_ROW arm=trt n_blue=4 mean=0.2 vals=0.2,0.3,0.1,0.2\n"
+                 "AR_ROW arm=trt n_blue=8 mean=0.3 vals=0.3,0.4,0.2,0.3\n")
+    survey(str(p), SEC, "served_per_step", ref="ref")
+    assert "ZERO-BASE REFERENCE" not in capsys.readouterr().out

@@ -37,6 +37,14 @@ def _stratified_by_deadline(n_ans, patience, total_steps: int) -> dict:
 
     The split is at the fleet's own median deadline, so it is a property of the fleet rather than a
     threshold anyone chose. A uniform fleet has no split and returns nothing.
+
+    When the impatient half receives NOTHING the ratio is undefined, and this used to return the
+    fleet size as a stand-in. That is a censoring flag wearing the costume of a measurement, which
+    is the same failure as instrument defect 15: it averages, it gates, and nothing downstream can
+    tell it apart from a ratio that was actually observed. It is now NaN, which poisons the cell it
+    belongs to and forces the reading to be reported as censored rather than scored. The count of
+    fully-excluded impatient halves is exposed separately as `answer_step_censored`, so the
+    information is not lost, only refused as a ratio.
     """
     pat = np.asarray(patience, dtype=float)
     if pat.size < 2 or float(pat.max() - pat.min()) <= 0.0:
@@ -48,7 +56,23 @@ def _stratified_by_deadline(n_ans, patience, total_steps: int) -> dict:
     ans = np.asarray(n_ans, dtype=float) / max(int(total_steps), 1)
     a_lo, a_hi = float(ans[lo].mean()), float(ans[hi].mean())
     return {"answer_step_impatient": a_lo, "answer_step_patient": a_hi,
-            "answer_step_ratio": a_hi / a_lo if a_lo > 0.0 else float(len(ans))}
+            "answer_step_censored": 0.0 if a_lo > 0.0 else 1.0,
+            "answer_step_ratio": a_hi / a_lo if a_lo > 0.0 else float("nan"),
+            # The same comparison the other way up, and the reading to prefer. The ratio is
+            # undefined exactly where the harm is worst, which is the wrong place for an instrument
+            # to go blind, and one censored replication in sixty-four takes a whole block with it.
+            # Inverted it is a SHARE: one when the two halves of the fleet are served in proportion,
+            # zero when the impatient half receives nothing at all, and above one when the impatient
+            # half is favoured. It is bounded, it is defined wherever anybody is served, and it
+            # orders the design space identically wherever the ratio is defined.
+            #
+            # It has one failure and it is severe enough to name here rather than in a note. Being a
+            # ratio of two rates, it reads 1.0 when BOTH halves get almost nothing, which is equal
+            # exclusion and not proportionate service. On a console with no admission rule, deadline
+            # order scores a perfect 1.0000 while excluding 0.9531 of the fleet. **This metric is
+            # meaningless without a level beside it** and must never appear in a table without
+            # `starved_frac` or `answer_rate_v` in the next column.
+            "answer_step_share": a_lo / a_hi if a_hi > 0.0 else 1.0}
 
 
 def _distribution_of_answers(n_ans, n_ask) -> dict:
@@ -198,12 +222,16 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
            "patience_mean": 0.0, "patience_sd": 0.0, "patience_min": 0.0,
            "stale_frac": 0.0, "stale_per_step": 0.0, "worked_lost_per_step": 0.0,
            "worked_late_per_step": 0.0, "worked_per_step": 0.0,
+           "died_feasible_per_step": 0.0, "died_feasible_frac": 0.0,
+           "entered_feasible_frac": 0.0,
            "busy_serviced": 0.0, "busy_stale": 0.0, "busy_lost": 0.0, "busy_late": 0.0,
            "busy_total": 0.0, "svc_serviced_mean": 0.0, "svc_worked_mean": 0.0,
            "starved_frac": 0.0, "answer_rate_v": 0.0, "answer_rate_min": 0.0,
            "answer_rate_gap": 0.0, "answer_rate_p25": 0.0, "answer_rate_p75": 0.0,
            "answer_rate_iqr": 0.0, "answer_step_impatient": 0.0, "answer_step_patient": 0.0,
-           "answer_step_ratio": 0.0, "backlog_mean": 0.0, "dropped_frac": 0.0,
+           "answer_step_ratio": 0.0, "answer_step_censored": 0.0,
+           "answer_step_share": 0.0,
+           "backlog_mean": 0.0, "dropped_frac": 0.0,
            "supervised_mean": 0.0, "supervised_frac": 0.0, "demand_norm_goodput": 0.0,
            "hold_fraction": 0.0, "interaction_steps": 0.0, "neglect_steps": 0.0, "fan_out": 0.0,
            "track_err_mean": 0.0, "station_err_mean": 0.0,
@@ -365,6 +393,22 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
         out["worked_late_per_step"] = op.n_worked_late / op.total_steps
         out["worked_per_step"] = (op.n_serviced + op.n_stale + op.n_worked_lost
                                   + op.n_worked_late) / op.total_steps
+        # The scheduling problem's own size, which no other metric here reports. A request is
+        # FEASIBLE at entry when an idle console could have answered it inside its deadline; one
+        # that was feasible at entry and then died at a deadline was killed by the order the console
+        # chose rather than by its capacity or its link. When this reads zero the queue never
+        # presented a binding choice, so two disciplines scoring the same is a statement about the
+        # ceiling and not about the information they read.
+        out["died_feasible_per_step"] = op.n_died_feasible / op.total_steps
+        # NaN and not zero when nothing entered the backlog, because the `reserve` console has no
+        # backlog at all: a request is committed to a slot the instant it arrives and there is
+        # nothing to order. Zero there would read as "this console loses no servable requests to its
+        # ordering", which is instrument defect 13's exact shape, and eleven batteries in this paper
+        # run that console. NaN is refused loudly by `tools/ar_survey.py`.
+        out["died_feasible_frac"] = (op.n_died_feasible / op.n_entered_feasible
+                                     if op.n_entered_feasible else float("nan"))
+        out["entered_feasible_frac"] = (op.n_entered_feasible / op.n_request
+                                        if op.n_request else 0.0)
         # The same partition weighted by the console-steps each fate CONSUMED rather than by the
         # jobs it finished. These are the bins the invariance claim belongs in: `worked_per_step`
         # is conserved only when service is a metronome, because a console that admits on a

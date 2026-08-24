@@ -74,3 +74,61 @@ def test_the_per_step_split_needs_a_dispersed_fleet_and_says_so():
     assert _stratified_by_deadline(np.array([5, 5]), np.array([20, 20]), 100) == {}
     d = _stratified_by_deadline(np.array([1, 9]), np.array([8, 32]), 100)
     assert d["answer_step_ratio"] == 9.0
+
+
+def test_an_undefined_ratio_is_nan_and_not_a_number_that_looks_like_a_measurement():
+    """Instrument defect 15's genus, in a metric rather than in a reference arm.
+
+    When the impatient half of the fleet receives nothing at all the ratio is undefined. It used to
+    return the fleet size, which averages, gates and reads as a very large but finite stratification.
+    Two cells of a landed battery sat on it in seventeen of thirty-two blocks. It is now NaN, which
+    cannot be silently scored, and the count is exposed separately so nothing is lost.
+    """
+    import math
+
+    from sandtable.metrics import _stratified_by_deadline
+
+    pat = np.array([5, 5, 5, 5, 40, 40, 40, 40], dtype=float)
+    ans = np.array([0, 0, 0, 0, 9, 9, 9, 9])          # the impatient half got nothing
+    d = _stratified_by_deadline(ans, pat, total_steps=100)
+    assert math.isnan(d["answer_step_ratio"])
+    assert d["answer_step_censored"] == 1.0
+    assert d["answer_step_impatient"] == 0.0
+    assert d["answer_step_patient"] > 0.0
+
+
+def test_a_defined_ratio_is_unchanged_and_flagged_uncensored():
+    from sandtable.metrics import _stratified_by_deadline
+
+    pat = np.array([5, 5, 5, 5, 40, 40, 40, 40], dtype=float)
+    ans = np.array([2, 2, 2, 2, 8, 8, 8, 8])
+    d = _stratified_by_deadline(ans, pat, total_steps=100)
+    assert abs(d["answer_step_ratio"] - 4.0) < 1e-12
+    assert d["answer_step_censored"] == 0.0
+
+
+def test_the_share_reads_perfect_fairness_when_both_halves_are_equally_excluded():
+    """Instrument defect 16, pinned at the moment it was found rather than after it shipped.
+
+    `answer_step_share` is a ratio of two rates, so it reads 1.0 when both halves of the fleet get
+    almost nothing. That is equal exclusion, not proportionate service. Measured: on a console with
+    no admission rule, deadline order scores a perfect 1.0000 while starving 95 percent of the
+    fleet. The metric is only interpretable next to a level.
+    """
+    from sandtable.metrics import _stratified_by_deadline
+
+    pat = np.array([5, 5, 5, 5, 40, 40, 40, 40], dtype=float)
+    ruinous = _stratified_by_deadline(np.array([1, 1, 1, 1, 1, 1, 1, 1]), pat, total_steps=1000)
+    healthy = _stratified_by_deadline(np.array([90, 90, 90, 90, 90, 90, 90, 90]), pat, 1000)
+    assert ruinous["answer_step_share"] == healthy["answer_step_share"] == 1.0
+    # And what tells them apart: the level, which is why the share never ships alone.
+    assert ruinous["answer_step_impatient"] < healthy["answer_step_impatient"] / 50.0
+
+
+def test_the_share_and_the_ratio_agree_wherever_the_ratio_is_defined():
+    from sandtable.metrics import _stratified_by_deadline
+
+    pat = np.array([5, 5, 5, 5, 40, 40, 40, 40], dtype=float)
+    for ans in ([2, 2, 2, 2, 8, 8, 8, 8], [1, 1, 1, 1, 9, 9, 9, 9], [5, 5, 5, 5, 5, 5, 5, 5]):
+        d = _stratified_by_deadline(np.array(ans), pat, total_steps=100)
+        assert abs(d["answer_step_share"] * d["answer_step_ratio"] - 1.0) < 1e-12

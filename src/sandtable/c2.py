@@ -69,7 +69,8 @@ from sandtable.scenario import Scenario
 # spread zero. That is the point. The two rules are the prescriptions of two literatures that
 # disagree about an overloaded server with abandonment, and the disagreement is only visible in a
 # fleet whose members do not all wait the same length of time.
-DISCIPLINES = ("fcfs", "random", "hard_first", "easy_first", "edf", "patient_first")
+DISCIPLINES = ("fcfs", "random", "hard_first", "easy_first", "edf", "patient_first",
+               "round_robin")
 
 
 @dataclass
@@ -211,7 +212,16 @@ class Operator:
     # require.
     queue_capacity: int = -1
     n_dropped: int = 0             # buffer: requests pushed out of a full backlog
-    pending: list = field(default_factory=list)   # buffer: [i, arrive, recv, deadline, seq]
+    pending: list = field(default_factory=list)   # buffer: [i, arrive, recv, deadline, seq, feasible]
+    # The discriminator adversarial review asked for, and the only counter in this model that is
+    # about the SCHEDULING PROBLEM rather than about an outcome. A request is feasible at entry when
+    # a console with nothing else to do could have answered it in time: `recv + 1/mu + lat` inside
+    # its deadline. One that was feasible at entry and then died at a deadline was killed by the
+    # order the console chose, not by the physics. That is the quantity a deadline-scheduling
+    # optimality theorem is actually about, and it is what separates "the ordering had nothing to
+    # order" from "the ordering had something to order and two rules ordered it equally well".
+    n_died_feasible: int = 0
+    n_entered_feasible: int = 0
     req_seq: np.ndarray = None     # buffer: per-vehicle request counter, for the staleness test
     n_stale: int = 0               # buffer: requests worked after their requester had moved on
     backlog_sum: float = 0.0       # buffer: pending length summed over steps
@@ -751,6 +761,12 @@ def _pick(op: Operator, ready: list[int], rng: np.random.Generator,
     if d in ("hard_first", "easy_first") and difficulty:
         sign = -1.0 if d == "hard_first" else 1.0
         return min(ready, key=lambda r: (sign * difficulty.get(int(op.pending[r][0]), 0.0), r))
+    if d == "round_robin":
+        # Serve whoever has been served least. This is the only rule in the set that reads nothing
+        # about the request: not its deadline, not its length, not when it arrived. It reads a
+        # counter the console keeps about its own past behaviour, which is why it is the cheapest
+        # deployable alternative to arrival order and the one a fair-queueing scheduler approximates.
+        return min(ready, key=lambda r: (op.n_ans_v[int(op.pending[r][0])], r))
     return ready[0]
 
 
@@ -784,7 +800,8 @@ def _trim(op: Operator, ent: Entities, k: int, rng: np.random.Generator) -> None
         here = [r for r, rec in enumerate(op.pending) if rec[2] <= k]
         if len(here) <= op.queue_capacity:
             return
-        i, arrive, _recv, _deadline, _seq = op.pending.pop(here[0])
+        i, arrive, _recv, _deadline, _seq, _feas = op.pending.pop(here[0])
+        op.n_died_feasible += int(_feas)   # dropped on overflow, and it was servable
         op.n_dropped += 1
         op.n_abandon_queue += 1
         _give_up(op, ent, int(i), arrive, int(op.patience_v[int(i)]), rng)
@@ -844,7 +861,7 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
             if not ready:
                 break
             r = _pick(op, ready, rng, difficulty)
-            i, arrive, recv, deadline, seq = op.pending.pop(r)
+            i, arrive, recv, deadline, seq, feas = op.pending.pop(r)
             i = int(i)
             # A request still in flight is not the console's to work, which is what makes latency
             # cost throughput here and not only delay.
@@ -875,6 +892,7 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
                 # Head-of-line admission control against the delay this console actually has. No
                 # service time is claimed, so the next request is considered on the same step.
                 op.n_abandon_queue += 1
+                op.n_died_feasible += int(feas)   # servable when it arrived, refused now
                 if op.admit_response == "aimd":
                     op.cadence_rate[i] = max(_AIMD_FLOOR, op.cadence_rate[i] * _AIMD_BETA)
                 hold = min(2 * lat, int(op.patience_v[i])) if op.queue_policy == "admit" \
@@ -887,6 +905,7 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
             if stale:
                 op.n_stale += 1                       # worked, and nobody is holding it
                 op.t_stale += svc
+                op.n_died_feasible += int(feas)       # the requester gave up while it waited
                 continue
             if not down_ok:
                 op.n_abandon_link += 1
@@ -917,6 +936,7 @@ def _drain_buffer(op: Operator, ent: Entities, comms: Comms, k: int,
                                   # console only when it admitted on the mean and the draw overran
                 op.n_abandon_queue += 1
                 op.n_worked_late += 1
+                op.n_died_feasible += int(feas)
                 op.t_worked_late += svc
                 _give_up(op, ent, i, arrive, int(op.patience_v[i]), rng)
                 continue
@@ -981,6 +1001,8 @@ def service_order(op: Operator, blue: np.ndarray, difficulty: dict,
         sign = -1.0 if op.queue_discipline == "hard_first" else 1.0
         keys = np.array([sign * difficulty.get(int(i), 0.0) for i in blue])
         return blue[np.argsort(keys, kind="stable")]
+    if op.queue_discipline == "round_robin":
+        return blue[np.argsort(op.n_ans_v[blue], kind="stable")]
     return blue
 
 
@@ -1109,8 +1131,11 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 op.n_request_late += 1
             op.req_seq[i] += 1
             if up_ok or op.ew_immune:
-                op.pending.append([int(i), float(k), float(recv),
-                                   float(k + int(op.patience_v[i])), int(op.req_seq[i])])
+                _dl = float(k + int(op.patience_v[i]))
+                _feas = bool(recv + 1.0 / op.service_rate + lat <= _dl)
+                op.n_entered_feasible += int(_feas)
+                op.pending.append([int(i), float(k), float(recv), _dl,
+                                   int(op.req_seq[i]), _feas])
                 ent.await_until[i] = k + int(op.patience_v[i])
                 op.resolved_quality[i] = op.q_fallback
             else:

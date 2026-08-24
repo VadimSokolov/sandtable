@@ -7798,3 +7798,252 @@ against column length. The other two hold their separation at all four spans, ov
 of 22 to 116 metres and 35 to 218 metres, which is itself a warning: a threshold that moves by a
 factor of five across column length is not a requirement. Until L3 is rerun with the recommended
 reading logged, the 190 metre figure is a single-span number and the paper must say so.
+
+## CR-64. THE FAIRNESS FIX THAT NEEDS NO MESSAGE FIELD
+
+Registered before the battery, with the pilot disclosed below because it is what prompted the
+conjecture and pretending otherwise would be dishonest.
+
+CR-62 ended with a recommendation a program office can only half act on. Deadline order removes the
+whole of the console's exclusion and improves its aggregates, and it needs a semantic deadline field
+somebody has to define, populate and maintain, which the requirements ladder already prices as the
+expensive rung. The recovery decomposition then showed something the conjecture did not predict:
+random order, a discipline that reads nothing at all, recovers 92 percent of the exclusion and 69
+percent of the stratification. **Nobody fields a coin flip.** So the question the decomposition
+actually raises is whether there is a DEPLOYABLE rule with the same information cost, and there is
+an obvious candidate the discipline set did not contain: serve whoever has been served least.
+
+It reads nothing about the request. Not its deadline, not its length, not when it arrived. It reads
+a counter the console keeps about its own past behaviour, which no message format has to carry and
+no requester has to populate. It is what a fair-queueing scheduler approximates and it is the
+natural zero-information member of the family.
+
+**The pilot, disclosed.** Twenty-four replications, sixteen assets, two-point deadline fleet,
+local, no gate:
+
+    discipline     starved   ratio    iqr      rate     served
+    fcfs            0.2344   32.980   0.8733   0.4681   0.1589
+    random          0.0156    5.313   0.6577   0.4492   0.1599
+    round_robin     0.0000    1.670   0.4182   0.4905   0.1858
+    edf             0.0000    1.694   0.4459   0.5159   0.1932
+
+That is why this is registered rather than reported. Six predictions, four of which can kill the
+recommendation.
+
+**S1.** Round-robin gates DOWN against first come, first served on all three inequality readings at
+sixteen assets and gates down on NEITHER aggregate. FALSIFIER: it fails to gate on exclusion, or it
+gates down on mean answer rate or throughput. Then the fix is not free and must be reported as a
+trade like the service cap.
+
+**S2.** Round-robin and deadline order are equivalent on exclusion and on stratification, so the
+semantic field buys nothing distributional. FALSIFIER: deadline order gates apart from round-robin
+on either reading. Then the field buys fairness after all and CR-62's recommendation stands
+unchanged.
+
+**S3.** Deadline order gates UP against round-robin on the aggregates, so the field buys throughput
+and only throughput. FALSIFIER: equivalent on both. Then the deadline field buys nothing measurable
+anywhere and the recommendation is round-robin unconditionally, which is a stronger claim than the
+one being registered and would need its own replication before it ships.
+
+**S4.** The fix survives a UNIFORM fleet, where there is no stratification to remove and only
+exclusion is at stake. FALSIFIER: no gated movement on exclusion against first come, first served.
+Then the result is specific to a mixed fleet and must be stated that way.
+
+**S5.** Below the collapse span the rule is inert rather than costly: at four assets round-robin is
+equivalent to first come, first served on every reading. FALSIFIER: it gates DOWN on an aggregate at
+four or six assets. A rule that costs something where it is not needed is not free insurance and
+would have to be conditioned on span, which is the property CR-62's recommendation was praised for
+not having.
+
+**S6, and it is the sharpest.** CR-62 welded a precondition onto deadline order: without job sight
+it costs -0.0766 of answer rate and -0.0167 of throughput. Round-robin should escape that
+precondition entirely, because it never consults the job. Run both at `admit_acuity` 0 and the
+prediction is that round-robin's distributional gain survives intact while deadline order's does
+not. FALSIFIER: round-robin's gain also collapses without job sight. Then the precondition is a
+property of the console rather than of the rule, and the whole free-lunch framing is wrong.
+
+Nothing from this goes near the manuscript until the battery lands at full tier. The recovery
+paragraph already in the manuscript is unaffected either way: it reports the random arm, which has
+landed.
+
+### CR-64 AMENDED BEFORE ITS BATTERY, TWICE, AND THE SECOND AMENDMENT IS THE CONJECTURE
+
+**Amendment one: S4 as written was untestable, caught by this session's own new guard.** S4 said the
+fix must survive a uniform fleet "where only exclusion is at stake". Piloted, the uniform fleet on an
+ADMITTING console produces `starved_frac` 0.0000 in every arm at every span, because an admitting
+console does not build the backlog that excludes anyone. That is instrument defect 13 for the
+fifteenth time and I was about to commit it in a registration written the same day I registered the
+guard against it. The guard is what caught it: name the configuration in which the quantity is known
+to be nonzero, and check it before writing the arm. The landed `maps` battery names it. Exclusion on
+a uniform fleet needs a BLIND console with an unbounded backlog, which is where it reads 0.8125.
+
+**Amendment two, and it inverts the conjecture.** Piloting that blind configuration to fix S4 found
+something the conjecture did not contain. Sixteen replications, sixteen assets, two-point fleet:
+
+    discipline    ADMITTING console            BLIND console
+                  starved   ratio    rate      starved   ratio      censored   rate
+    fcfs           0.1719   24.385   0.4725     0.8398   undefined   0.6250    0.0109
+    random         0.0195    5.886   0.4468     0.5586   undefined   0.1875    0.0300
+    round_robin    0.0000    1.816   0.4896     0.8398   undefined   0.6250    0.0102
+    edf            0.0000    1.716   0.5136     0.9531   undefined   0.3750    0.0024
+
+The blind column's ratios were first recorded as 10.750, 7.812, 10.750 and 6.000. Those were the
+old sentinel leaking into a mean and the table above is the corrected one, re-derived after the
+sentinel was replaced with NaN in the same session. **On a console that cannot refuse, the
+stratification ratio is not large, it is UNDEFINED**, because the impatient half of the fleet
+receives nothing at all in a majority of replications, and `answer_step_censored` is the honest
+report of how often. The correction does not change the verdict and sharpens it. Note also that
+deadline order's censoring is LOWER than arrival order's, 0.3750 against 0.6250, while its exclusion
+is HIGHER, 0.9531 against 0.8398: it starves the patient half too, so the impatient half is no longer
+uniquely zeroed. A ratio would have called that an improvement.
+
+**The recommendation reverses with admission control.** On an admitting console the ordering is
+round-robin and deadline order best, random middling, arrival order worst. On a blind console it is
+random best by a factor of three on the answer rate, arrival order and round-robin tied and inert,
+and **deadline order the worst of the four**, starving 95 percent of the fleet against arrival
+order's 84.
+
+The mechanism is legible in both cases and neither is a bug. Round-robin reads a counter that only a
+DELIVERED answer increments, so on a console whose answers arrive after their requesters have gone,
+the least-served vehicle stays least-served and the rule spends every slot re-serving the same
+doomed request. It is a feedback loop whose feedback never arrives. Deadline order fails worse and
+for a related reason: it always picks the tightest deadline, which on a blind console is exactly the
+request most likely to be already dead, so it selects for hopelessness. Random has no feedback and no
+selection, which is why it is the only rule that helps the console that cannot refuse.
+
+**S7, registered on that pilot.** On a blind console the discipline ordering inverts: random gates UP
+against arrival order on the mean answer rate, and deadline order gates DOWN against arrival order on
+exclusion. FALSIFIER: either half fails at the full tier. The claim being registered is a CONDITIONAL,
+that the discipline recommendation is void without admission control, and it is worth more to a
+program office than the unconditional one it replaces because it names an order of adoption:
+admission control first, discipline second, and never the second without the first.
+
+**S4 as reworded.** On a uniform fleet with a blind console, which is the configuration the `maps`
+battery already showed excludes 81 percent under arrival order, round-robin does NOT repair the
+exclusion. FALSIFIER: it does. The prediction is now that the repair is specific to a fleet whose
+deadlines differ AND a console that can refuse, and registering the negative is the honest form since
+the pilot already points that way.
+
+**S2 restated, because it too rests on a floor.** Round-robin and deadline order both read
+`starved_frac` 0.0000 on the admitting console, so equivalence there is a comparison between two
+floors and is not evidence. S2 is therefore tested on `answer_step_ratio` and `answer_rate_iqr`
+only, both of which move, and the exclusion column is reported as uninformative rather than as
+agreement.
+
+### CR-64 AMENDMENT THREE: THE DISCRIMINATOR LANDED BEFORE THE BATTERY DID, AND IT SETTLES THE QUESTION
+
+Adversarial review's Round 33 named the arm I asked for, and it is not another aggregate. **A request
+is FEASIBLE at entry when an idle console could have answered it inside its deadline**, that is,
+`recv + 1/mu + lat <= deadline` at the moment it joins the backlog. One that was feasible at entry
+and then died at a deadline was killed by the ORDER the console chose, not by its capacity or its
+link. That is the quantity a deadline-scheduling optimality theorem is actually about, and it is the
+only counter in this model that reports the size of the scheduling PROBLEM rather than an outcome.
+
+The registered discrimination: if the tie between round-robin and deadline order is a ceiling
+effect, then at the tied operating point the counter reads near zero, because a queue that never
+presents a binding choice gives the ordering nothing to order. If the counter is large and the tie
+survives, the tie is about the information and not about the ceiling, which review called the more
+surprising and still publishable reading.
+
+Implemented and piloted at sixteen replications before submission:
+
+    n     rule           died_feasible/step   died_feasible_frac   ratio     served
+    8     fcfs                 0.0732               0.3795         3.078     0.1164
+    8     round_robin          0.0704               0.3428         2.281     0.1290
+    8     edf                  0.0685               0.3317         2.381     0.1324
+    16    fcfs                 0.2095               0.5618        24.385     0.1595
+    16    round_robin          0.2147               0.5336         1.816     0.1810
+    16    edf                  0.2187               0.5313         1.716     0.1885
+    24    fcfs                 0.3452               0.6509           NaN     0.1761
+    24    round_robin          0.4073               0.6664         1.264     0.1960
+    24    edf                  0.4046               0.6424         1.121     0.2192
+
+**The ceiling reading is dead at the pilot.** At the tied operating point **56 percent of all
+requests that were servable when they arrived die at a deadline anyway**, rising to 65 percent at
+twenty-four assets. The queue is presenting an enormous binding choice and the two rules still tie on
+both inequality readings. The information reading therefore wins in its strong form, and the claim it
+licenses is the one I was most suspicious of: **a counter the console keeps about its own past
+behaviour is worth as much, distributionally, as a deadline field the message has to carry.**
+
+Two things the counter exposes that were not asked for. First, `entered_feasible_frac` is 1.0000 in
+every cell at C0, so no request in this configuration is born dead and the counter is currently
+measuring pure ordering loss; its discriminating power against a link is untested and T5 now logs it
+so that gap closes in the same battery. Second, FCFS at twenty-four assets returns NaN on the ratio,
+which is the censoring guard added this session firing on live data: **at twenty-four assets arrival
+order excludes the entire impatient half of the fleet**, so the stratification is not large, it is
+undefined. That is a stronger statement than any ratio and it is only sayable because the sentinel
+was removed.
+
+**Review's ruling on CR-63's R3, recorded and accepted.** A falsifier whose failure would require a
+bug tests plumbing, so R3 is an AUDIT rather than a conjecture and the ledger should say so at
+registration time rather than score it as a survived prediction. The battery is already running and
+the audit is worth having, since an audit of exactly this kind is what caught defect 15. The
+content-bearing replacements review named, to be registered only if the audit returns something to
+explain: R3b, an equality prediction, and R3c, linearity of the gap in saved slots, with two
+second-mechanism candidates named in advance.
+
+### CR-64 AMENDMENT FOUR: THE COUNTER'S OWN NEGATIVE CONTROL, WHICH WAS NOT FREE TO FIND
+
+The discriminator above is only a discriminator if it can read zero. Piloting it found that in the
+PUBLISHED configuration it cannot: at two assets on a clear link with a metronome console it still
+reads 0.0989. That is not a floor and not an artefact. One service is 6.67 steps against the
+impatient half's deadline of 8, so two vehicles asking on the same step already exceeds it, and the
+tightest deadline in this fleet is barely longer than a single service. **The console this paper has
+been studying is one where the ordering ALWAYS has something to order.** That is worth knowing on its
+own and it is not something any earlier metric could have said.
+
+It also means the registered discrimination was one-sided as written, which is the failure the null
+guard was added to catch, caught this time in a conjecture rather than in an explanation. Doubling
+the patience supplies the missing branch and supplies it exactly:
+
+    patience   n     died_feasible_frac    answer_step_ratio
+    20         2           0.0989               1.016
+    20         8           0.3921               4.169
+    40         2           0.0000               1.127
+    40         8           0.2483               1.536
+    80         4           0.0000               1.084
+    80         8           0.0495               1.201
+
+**T6, registered.** At patience 40 with two assets the counter is exactly zero, so no request that
+was servable at entry dies and the ordering has genuinely nothing to order. Every discipline must
+then be equivalent on every reading. FALSIFIER: any two disciplines gate apart on any reading in a
+cell where the counter is zero. That would mean a rule is winning where there is no scheduling
+problem to solve, which no mechanism in this model permits and which would invalidate the counter
+rather than the rule.
+
+That makes the discrimination two-sided: the counter reads exactly zero where the ordering cannot
+matter and 0.53 at the operating point where two rules tie, so a tie at 0.53 is a statement about the
+information the rules read and not about the console's ceiling.
+
+### INSTRUMENT DEFECT 16, FOUND BY BUILDING THE NEGATIVE CASE RATHER THAN BY TRUSTING THE METRIC
+
+Replacing the ratio's sentinel with NaN left a second problem: the ratio is undefined exactly where
+the harm is worst, and one censored replication in sixty-four takes a whole block with it. The fix
+is to invert it. `answer_step_share` is the impatient half's answers per step over the patient
+half's: one at proportionate service, zero at total exclusion, above one where the impatient half is
+favoured. Bounded, defined wherever anybody is served, and it orders the design space identically
+wherever the ratio is defined (their product is exactly one, tested).
+
+**Then I ran it on the case it was not built for.** On a console with no admission rule:
+
+    rule           share     starved
+    fcfs           0.2500     0.8398
+    random         0.1681     0.5586
+    round_robin    0.2500     0.8398
+    edf            1.0000     0.9531
+
+**Deadline order scores a perfect 1.0000 while excluding 95 percent of the fleet.** Being a ratio of
+two rates, the share reads one when both halves get almost nothing, and that is equal exclusion
+rather than proportionate service. A table with a share column and no level column would have
+reported the worst rule in the battery as the fairest.
+
+This is the same genus one more time, and the guard is the reporting rule rather than a code change,
+because the metric is correct and only its use is not: **`answer_step_share` never appears in a
+table, a macro or a sentence without `starved_frac` or `answer_rate_v` beside it.** Pinned by a test
+that asserts the share is 1.0 for a ruinous fleet and for a healthy one and that only the level tells
+them apart, and stated in the metric's own docstring so it is read where it is used.
+
+It is worth recording HOW this was found, because the method generalises. The metric was not audited.
+It was run on the configuration where it was expected to look worst, which is the same move the null
+guard prescribes for explanations: name the case that would embarrass the claim and run that first.
+Three of this session's four defects were found that way and none by inspection.

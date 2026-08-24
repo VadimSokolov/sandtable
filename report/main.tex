@@ -685,6 +685,26 @@ rule are not two encodings of one requirement. The ex ante framing is
 \citet{liu2023segmentation}'s: a vehicle's deadline is a property it arrives with and this console
 never observes it, so the stratification cannot be attributed to a rule that discriminates.
 
+\paragraph{How much of it is available without the semantic field.} The ladder above prices what a
+console must be told; the table prices what it does with what it has. Crossing the two gives the
+question a program actually faces, which is how much of the repair survives if the expensive rung is
+not bought. Most of it. Every row of the table runs on the same admitting console, so what varies is
+the information the DISCIPLINE consumes and nothing else. Measured as a fraction of the movement
+deadline order achieves on each reading, working the queue in random order, a discipline that reads
+no field at all, recovers \FxRandStarv\% of the exclusion, \FxRandRatio\% of the stratification
+and \FxRandIqr\% of the spread. Sorting instead on the length of the job, which requires the
+console to see what it has been handed, is indistinguishable from the coin flip on all three
+(\FxEasyStarv\%, \FxEasyRatio\% and \FxEasyIqr\%). Refusing on that same estimate with a service
+cap does better, \FxCapStarv\%, \FxCapRatio\% and \FxCapIqr\%, and still does not close it.
+
+So the semantic field is not what buys the fairness. It buys the last increment of it and, separately,
+the aggregate improvement: the deadline order is the only rule in the table that raises throughput and
+answer rate while compressing the distribution, and every cheaper rule pays a little of one for the
+other. The recommendation splits cleanly along that line. A program that cannot change its message
+format should still stop working its queue oldest-first, and will get most of the distributional fix
+for nothing; a program that can define a deadline field gets the rest of the fix and a throughput
+gain with it. Neither recommendation depends on knowing the span the console will be flown at.
+
 \paragraph{Two rules, one field, opposite signs.} A console that cannot see the job it has been
 handed can still read a deadline, and there are two things it can do with that number. It can budget:
 refuse any request whose deadline is shorter than a quantile of the service distribution, which is

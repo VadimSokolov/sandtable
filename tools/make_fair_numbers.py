@@ -162,6 +162,19 @@ def main() -> None:
         out += [(f"Fm{atag}Starv", f"{starv['Band'][arm][4]:.4f}"),
                 (f"Fm{atag}Back", f"{back['Band'][arm][4]:.1f}")]
 
+    # How much of the deadline order's repair is available WITHOUT the semantic field. This is the
+    # question the knowledge ladder above asks, applied to the rule axis, and the answer is most of
+    # it: the expensive rung buys the last increment and the aggregate improvement, not the bulk of
+    # the fairness gain. Reported as a fraction of the deadline order's own movement so the three
+    # readings, which have different units, can be put on one line.
+    for mtag, metric in INEQ:
+        lv = survey(P5LOG, P5, metric, quiet=True)
+        base, best = lv["fcfs"][1], lv["edf"][1]
+        span = base - best
+        for atag, arm in (("Rand", "random"), ("Easy", "easyFirst"), ("Cap", "cap7")):
+            frac = (base - lv[arm][1]) / span if abs(span) > 1e-12 else float("nan")
+            out.append((f"Fx{atag}{mtag}", f"{100 * frac:.0f}"))
+
     _table()
 
     dst = ROOT / "report" / "gen" / "fair_numbers.tex"
