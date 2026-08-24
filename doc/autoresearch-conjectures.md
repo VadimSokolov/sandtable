@@ -9324,3 +9324,66 @@ mistuned on another by whatever ratio separates their spreads, and no amount of 
 optimizer substitutes for knowing the axis it will be run on. The same argument applies to any
 method carrying a scale-bearing hyperparameter, which includes the length scale of the Gaussian
 process, and that is checked as an ablation rather than assumed.
+
+### CR-72 AMENDED BEFORE ITS RUN, AND THE AMENDMENT WEAKENS IT
+
+The GP ablation CR-72 promised was run, and then a surrogate pilot across all three axes was run,
+and the pilot disagrees with two of the three registered predictions. It is recorded here, before
+the benchmark lands, because a prediction quietly softened after the fact is not a prediction.
+
+**The ablation first, because it confirms what it was asked to.** Expected improvement carries two
+scale-bearing hyperparameters and both are wrong in the same way UCB's constant was. A unit
+amplitude RBF prior asserts the response varies with standard deviation one; the true design values
+on delivered service have a spread of 0.056, so the prior claims eighteen times more signal than
+exists. And the fixed observation noise of 0.01 sits against a per-chunk noise of 0.153 on mission
+success, so the surrogate is told the data are fifteen times cleaner than they are and interpolates
+noise as signal. The two errors push the acquisition in opposite directions and neither cancels.
+Standardizing the response puts both in units the data has, which is what a Bayesian optimization
+package does in its defaults. **That this implementation is hand rolled is what made the defect
+visible.** A package would have standardized silently, and the benchmark would have reported a
+number about the package's defaults while appearing to report one about the method. `gp_raw` keeps
+the unstandardized version as a control, exactly as `ucb_raw` does.
+
+**The pilot, disclosed, and it is not what CR-72 predicted.** True values from the landed ladder
+table, rescaled to each axis's measured spread and given that axis's measured per-mission noise, so
+the design ranking is identical in all three blocks by construction and the only thing varying is
+the scale. Budget 400 missions, 60 replicates, seven designs. Fraction returning the true best:
+
+```
+                       served            success             loss
+                   found  regret     found  regret     found  regret
+    grid            0.65  0.0005      0.33  0.0101      0.48  0.0077
+    random          0.62  0.0011      0.30  0.0168      0.42  0.0094
+    ucb_raw         0.70  0.0005      0.27  0.0139      0.65  0.0050
+    ucb             0.73  0.0004      0.43  0.0116      0.45  0.0065
+    thompson        0.80  0.0003      0.45  0.0110      0.60  0.0044
+    gp_raw          0.73  0.0004      0.47  0.0103      0.55  0.0053
+    gp_ei           0.75  0.0004      0.33  0.0139      0.42  0.0072
+```
+
+**M2 fails on the loss axis and M3 fails outright.** Scaling helps UCB on delivered service, 0.73
+against 0.70, and helps it a great deal on success, 0.43 against 0.27. On loss it HURTS, 0.45
+against 0.65, and the unscaled version has the lower regret there too. M3 predicted the advantage
+would be ordered by the bonus-to-gap ratio, which ranks the axes served, loss, success. The observed
+ordering is success, served, loss, with the sign flipped on the last. Standardizing the GP shows the
+same pattern: it helps on delivered service and hurts on both noisier axes.
+
+**The mechanism I now believe, stated so it can be killed too.** The loss axis has a true design
+spread of 0.160 against a per-mission noise of 0.247, so noise exceeds signal. When noise dominates,
+an adaptive allocator's early commitment is a liability rather than an advantage: it concentrates on
+whichever arm drew well first and cannot recover, while uniform allocation keeps every arm's
+estimate improving and is close to minimax optimal in that regime. So scaling the bonus is not
+uniformly good. It makes an allocator adaptive, and adaptivity itself is what fails when the axis
+cannot support it.
+
+If that survives the real benchmark, the finding is sharper than the one registered and it is the
+same thesis one level down: the metric does not merely set the price of a search, it decides whether
+adaptive search is worth doing at all. CR-72's headline becomes conditional, and the conditional is
+the noise-to-signal ratio of the axis rather than anything about the optimizer.
+
+**Two cautions on the pilot, and they are the reason it is a pilot.** The surrogate draws Gaussian
+noise; mission success is nearly Bernoulli and loss fraction is a bounded ratio, and neither is
+Gaussian in the tail that decides an early commitment. And sixty replicates put the standard error
+on these proportions near 0.06, so the 0.03 differences in the served column are not readable and
+only the 0.16 and 0.20 swings are. The benchmark settles it. This is registered so that whichever
+way it goes, it was written down first.

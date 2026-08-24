@@ -170,7 +170,8 @@ def thompson(problem: Problem, budget: int, rng, pull, chunk: int = 8) -> dict:
 
 # ------------------------------------------------------------------ Bayesian surrogate
 
-def gp_ei(problem: Problem, budget: int, rng, pull, chunk: int = 8, warm: int = 4) -> dict:
+def gp_ei(problem: Problem, budget: int, rng, pull, chunk: int = 8, warm: int = 4,
+          standardize: bool = True) -> dict:
     """Gaussian-process surrogate with expected improvement over the discrete design set.
 
     Deliberately a plain implementation over the enumerated designs rather than a call into a BO
@@ -196,7 +197,8 @@ def gp_ei(problem: Problem, budget: int, rng, pull, chunk: int = 8, warm: int = 
         obs_y.append(p(designs[int(i)], chunk))
         spent += chunk
     while spent + chunk <= budget:
-        mu, sd = _gp_posterior(X, np.array(obs_i), np.array(obs_y), cho_factor, cho_solve)
+        mu, sd = _gp_posterior(X, np.array(obs_i), np.array(obs_y), cho_factor,
+                               cho_solve, standardize=standardize)
         best = max(obs_y)
         z = (mu - best) / np.maximum(sd, 1e-9)
         from scipy.stats import norm
@@ -211,6 +213,13 @@ def gp_ei(problem: Problem, budget: int, rng, pull, chunk: int = 8, warm: int = 
         agg.setdefault(i, []).append(y)
     best_i = max(agg, key=lambda i: float(np.mean(agg[i])))
     return designs[best_i]
+
+
+def gp_raw(problem: Problem, budget: int, rng, pull, chunk: int = 8, warm: int = 4) -> dict:
+    """Expected improvement with the surrogate left in the metric's raw units. The control for
+    `gp_ei`, and the exact analogue of `ucb_raw`: it shows what a scale-bearing hyperparameter
+    costs when it is carried in units the data does not have."""
+    return gp_ei(problem, budget, rng, pull, chunk=chunk, warm=warm, standardize=False)
 
 
 def _encode(problem: Problem, designs) -> np.ndarray:
@@ -230,9 +239,29 @@ def _encode(problem: Problem, designs) -> np.ndarray:
     return np.hstack(cols)
 
 
-def _gp_posterior(X, idx, y, cho_factor, cho_solve, ls: float = 0.4, noise: float = 1e-2):
+def _gp_posterior(X, idx, y, cho_factor, cho_solve, ls: float = 0.4, noise: float = 1e-2,
+                  standardize: bool = True):
+    """Posterior mean and standard deviation over the enumerated design set.
+
+    `standardize` is not a convenience. A unit-amplitude RBF prior asserts that the response varies
+    with a standard deviation of one, and a fixed `noise` asserts an observation error in the units
+    of `y`. Neither holds for a mission metric. Measured on this simulator: the spread of true
+    design values is 0.056 on delivered service, so the prior claims eighteen times more signal
+    than exists; and the per-chunk observation noise on mission success is 0.153 against a fixed
+    noise term of 0.01, so the surrogate is told the data are fifteen times cleaner than they are
+    and interpolates noise as signal. The two errors push the acquisition in opposite directions
+    and neither cancels.
+
+    Standardizing `y` puts both hyperparameters in units the data actually has, which is what a
+    Bayesian optimization package does in its own defaults. That this implementation is hand-rolled
+    is what made the defect visible: a package would have standardized silently and the benchmark
+    would have reported a number about the package's defaults while appearing to report one about
+    the method. `gp_raw` keeps the unstandardized version as the control.
+    """
     ym = float(np.mean(y))
-    yc = y - ym
+    ys = float(np.std(y, ddof=1)) if (standardize and len(y) > 1) else 1.0
+    ys = ys if ys > 1e-12 else 1.0
+    yc = (y - ym) / ys
     Xo = X[idx]
 
     def k(A, B):
@@ -243,14 +272,15 @@ def _gp_posterior(X, idx, y, cho_factor, cho_solve, ls: float = 0.4, noise: floa
     cf = cho_factor(K, lower=True)
     alpha = cho_solve(cf, yc)
     Ks = k(X, Xo)
-    mu = Ks @ alpha + ym
+    mu = (Ks @ alpha) * ys + ym
     vsol = cho_solve(cf, Ks.T)
     var = np.maximum(1.0 - np.einsum("ij,ji->i", Ks, vsol), 1e-12)
-    return mu, np.sqrt(var)
+    return mu, np.sqrt(var) * ys
 
 
 METHODS = {
     "ucb_raw": ucb_raw,
+    "gp_raw": gp_raw,
     "grid": grid,
     "random": random_search,
     "halving": successive_halving,
