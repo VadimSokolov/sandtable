@@ -42,6 +42,7 @@
 \input{gen/acuity_numbers}
 \input{gen/bias_numbers}
 \input{gen/follow_numbers}
+\input{gen/verify_numbers}
 \input{gen/fair_numbers}
 \input{gen/disp_numbers}
 \input{gen/trust_numbers}
@@ -1075,6 +1076,100 @@ The mechanism is the interesting part, because the obvious reading of that resul
 So we tested whether the stop-dead cliff is a tempo budget, which would make it a closed form in route length, advance rate and mission clock and would owe nothing to the queue. Estimating the advance rate at one span and holding that span out of the test, the budget predicts the mission collapses at a hold fraction of \tpHStar{} everywhere. It does not. The collapse sits at \tpSepFive{} at five assets and \tpSepEight{} at eight, a shift of \tpSepShift{} against a tolerance of \tpSepTol{} declared before the run, and the direction is the one a shared server predicts: more vehicles on the console, collapse at a smaller hold. A budget in route and clock cannot know how many vehicles share an operator. The account is therefore withdrawn, and what it leaves is a stronger statement than it would have made. Two physics that disagree about what a waiting vehicle does produce the same advice for the same reason, and the reason is the queue.
 
 Three limitations belong with this. The upper edge is not a constant: $a_h$ is itself a function of span, so Equation~\ref{eq:band} with a frozen $a_h$ brackets the edge rather than locating it, and the honest reading of $\qBandHi{}$ is an estimate at one operating point. Four vehicles sits inside the predicted band and shows nothing, which is a question about basins rather than about stability: the collapsed state is self-sustaining there, but a synchronized start is not a large enough disturbance to reach it, and we have not mapped the basin boundary. Nor does the band survive load arriving from another direction. Tying the request rate to trafficability shortens the decision interval, which lowers both edges, and the upper edge falls below the operating span first: the same contrast decays monotonically from \qBandGood{} on flat ground to \qBandGoodHard{} under the strongest terrain coupling, which is a threshold moving past a fixed span rather than a band widening around it. And $\pi$ and $\rho$ are declared rather than measured. We could find no published re-request rate for a vehicle whose request went unanswered, which is the number this section would need to become a prediction rather than a demonstration. What the field record does establish is that the retry itself is not an exotic assumption: the Demo~III experimental unmanned vehicles called for help only after several attempts to back up and replan had failed, and terrain was the typical trigger \citep{schlenoff2006rcs}, so retry-before-escalation is already how fielded ground autonomy behaves. Whether the same vehicle also retries \emph{after} escalating, and how soon, is the open measurement. Until it is made, the claim here is conditional: if a crew or a vehicle closes that loop faster than it would otherwise, a span exists at which the team's behavior is not determined by its parameters.
+
+\subsection{Verification as signal detection, and what a checking operator costs}
+\label{subsec:trust}
+
+Everything above treats the operator as a server whose answers are right. The over-trust literature
+is about the case where they are not, and it is usually posed as a dial: how often should the human
+check the machine. That is the wrong shape for the question. Checking is a detection problem, so the
+operator has two independent properties and only one of them is a capability. It sees a cue drawn
+from $N(w d', 1)$, where $w$ is one when the automation is wrong, and it checks when the cue clears
+a criterion. The discriminability $d'$ is how well it can tell a wrong answer from a right one; the
+criterion is a policy, and the check RATE is that policy expressed in units a procedure can name.
+A program office can buy the first and set the second, and conflating them is what makes the dial
+framing mislead.
+
+\paragraph{The instrument first.} Before any claim rests on the model, it has to recover what it was
+given. Set $d'$ to \TdZeroSet{}, \TdHalfSet{}, \TdOneSet{} and \TdTwoSet{} and the run reports
+\TdZeroGot{}, \TdHalfGot{}, \TdOneGot{} and \TdTwoGot{}. The separation of capability from policy is
+the sharper check: holding $d'$ at one and moving only the criterion moves the fraction of answers
+actually checked by \TdFracSpread{} while the recovered discriminability moves by \TdCritSpread{}.
+The two knobs are measurably independent, which is what licenses treating one as a requirement on
+the operator and the other as a requirement on the procedure. At $d' = 1$ the operator catches
+\TdOneHit{} of wrong answers at a false-alarm rate of \TdOneFa{}; at $d' = 2$ it catches
+\TdTwoHit{} at \TdTwoFa{}.
+
+\paragraph{An operator who can be wrong is not automatically better than no operator.} Against a
+supervisory force that consults nobody, an operator who never verifies is WORSE at four assets:
+\ToNeverSuccLow{} mission success, \ToNeverSuccLowV{}, and it loses \ToNeverLossLow{} more of the
+force (\ToNeverLossLowV{}). An operator who always verifies is better by \ToAlwaysSuccLow{}, and
+that is \ToAlwaysSuccLowV{}. Across the whole span sweep and all four operator arms, the arm with an
+operator loses more vehicles than the arm without one in \ToLossUpCells{} of the twenty cells. This
+is not an argument against operators. It is an argument that a consulted operator has to be
+verified, because the model's automation is wrong half the time by construction here and an
+unverified answer is worse than the autonomy it displaces.
+
+\paragraph{What the operator costs is the asset's time, not the console's.} The value of verifying
+is large and it is spent on the wait. Removing what a waiting asset gives up, by letting it hold at
+its own autonomous quality instead of stalling, takes the always-verifying operator from
+\ToAlwaysSuccLow{} against no operator to \ToFreeAlwaysSuccLow{}, and that one \ToFreeAlwaysSuccLowV{}.
+The same move takes losses from \ToAlwaysLossLow{} to \ToFreeAlwaysLossLow{} (\ToFreeAlwaysLossLowV{}).
+Swept as a requirement rather than a contrast, the penalty for verifying shrinks monotonically as
+waiting gets cheaper: always-verifying trails never-verifying by \TsLow{} when a stalled asset is
+badly degraded (\TsLowV{}), by \TsMid{} in the middle (\TsMidV{}), and by \TsHigh{} when waiting is
+free (\TsHighV{}). The requirement that makes verification affordable is therefore not on the
+console at all. It is on what a vehicle is permitted to do while its request is outstanding.
+
+\paragraph{The console's load decides the rate.} Sweeping the check rate against span and reporting
+the TOLERANCE BAND rather than the argmax, because an argmax over a flat ladder is a coin flip
+dressed as a finding, the best rate falls from \TbFourBest\% at four assets to \TbSixBest\% at six
+and \TbEightBest\% at eight and above, and the band contains \TbFourWidth{}, \TbSixWidth{} and
+\TbEightWidth{} of the five rates at those spans. Verifying everything is worth \TrLow{} at four
+assets (\TrLowV{}, $t = \TrLowT{}$) and \TrColl{} at eight (\TrCollV{}, $t = \TrCollT{}$). The sign
+turns over at exactly the span where Section~\ref{subsec:queue}'s queue collapses, and for the same
+reason: a verification is a second draw on a server that has already run out.
+
+\paragraph{Whether verifying pays at all is set by what a wrong answer costs, not by how often the
+automation is wrong.} We registered the opposite and it did not survive. The registered claim was
+that the best check rate is interior and rises with the automation's error rate, with a declared
+falsifier of a tolerance band containing a corner in every cell. Across the \DrCells{} cells of
+that grid, three ways of pricing a wrong answer by five error rates each, the number in which an
+interior rate clears the better corner by the gate's own margin is \DrInterior{}, so the claim is
+retracted rather than reworded. What the error sweep does show is a split by PRICE. When a
+wrong answer leaves the requester with its problem, so that it comes back and asks again, verifying
+everything costs \TpTimeLo{} at an automation error rate of 0.1 (\TpTimeLoV{}) and
+gains \TpTimeHi{} at 0.9 (\TpTimeHiV{}), turning over near an error rate of
+\TpTimeFlip{}. When the wrong answer is accepted and the requester stops asking, verifying
+everything is a loss at every error rate tested: \TpWeakLo{} to \TpWeakHi{} in the channel where a
+wrong answer merely fails to help, and \TpReflLo{} to \TpReflHi{} in the channel where it leaves the
+vehicle worse off than its own autonomy. That last channel is the over-trust failure the literature
+is named for, and verification does not pay there at any error rate we measured. Verification pays
+when a wrong answer comes back, not when it is harmful.
+
+\paragraph{Why not verifying wins, tested rather than asserted.} The obvious explanation for a
+console that does better by shipping unverified answers is throughput: a verification costs a slot,
+and a slot is what the console is short of. That explanation is cheap to state and it has a kill
+test, so we ran it. If never verifying wins because a shipped answer costs only a fraction of a
+slot, then charging a shipped answer a FULL slot must take the advantage away. It does. At a
+compliance cost of \DrComplyLo{} of a slot, always verifying trails never verifying by
+\DrComplyQuarter{} (\DrComplyQuarterV{}); at \DrComplyHi{} of a slot the sign has turned and the
+gap is \DrComplyFull{}, which is \DrComplyFullV{}. The advantage is bought with console capacity
+and disappears when the capacity is charged for, so the mechanism is throughput and not some hidden
+property of the quality model. This is an audit rather than a finding, and it is reported because
+an explanation that has not been given a chance to fail is not evidence.
+
+\paragraph{The crossing is on the stakes.} Moving what a right answer is WORTH, by sweeping the
+autonomous baseline under a fixed operator, produces the interior crossing the error sweep did not.
+At the highest stakes tested, where a serviced decision is worth 0.45 of quality over autonomy,
+verifying half the time gains \DrStakeHalfHi{} and verifying always gains \DrStakeFullHi{}, both
+\DrStakeHiV{}, and both cut losses. Two rungs down the ladder the same policies have crossed over
+and full verification costs \DrStakeFullMid{} (\DrStakeFullMidV{}), and at the lowest stakes it
+costs \DrStakeFullLo{}. Half verification is the arm that survives furthest into the low-stakes
+region, still \DrStakeHalfMidV{} where full verification has already gated down, which is what makes
+a partial rate the robust setting near a crossing whose location a program will not know precisely.
+The rule a requirement can carry is that the verification rate is set by the gap between a good
+decision and autonomy, and that gap is a property of the autonomy rather than of the operator.
 
 \subsection{Sensor swarm under electronic warfare}
 \label{subsec:uc5}

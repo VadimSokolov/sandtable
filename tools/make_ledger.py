@@ -230,6 +230,22 @@ ROWS = [
      "\\DsSpreadThresh{}~m with \\DsSpreadInv{} inversions and \\DbSpreadMiss{} nuisance "
      "misclassifications. The recommendation inverts to a reading that ignores the commanded "
      "formation entirely"),
+    ("the best verification rate is interior and rises with the automation error rate",
+     "a tolerance band containing a corner in every cell, which would make it binary",
+     "\\textsc{refuted} by its own falsifier: across \\DrCells{} cells, three prices of a wrong "
+     "answer by five error rates, the number in which an interior rate clears the better corner by "
+     "the gate margin is \\DrInterior{}. The crossing is real and it is on the other axis"),
+    ("verification pays where a wrong answer is most harmful",
+     "checking gates down in the channel that leaves a vehicle below its own autonomy",
+     "\\textsc{refuted}. In the reflect channel, the over-trust failure the literature is named "
+     "for, checking everything costs \\DrReflLo{} at the lowest error rate and never gains at any "
+     "rate measured. Verification pays where a wrong answer COMES BACK, not where it is harmful"),
+    ("never verifying wins on throughput rather than on the quality model",
+     "charging a shipped answer a full service slot leaves the advantage in place",
+     "\\textsc{held}, and it is an audit rather than a finding. At \\DrComplyLo{} of a slot "
+     "verifying trails by \\DrComplyQuarter{} (\\DrComplyQuarterV{}); at \\DrComplyHi{} the sign "
+     "has turned to \\DrComplyFull{}. The advantage is bought with capacity and vanishes when "
+     "capacity is charged for"),
     ("the dispersion threshold holds at more than the one column length it was measured at",
      "either station reading thresholds at every column length, or the recommended reading "
      "fails at any one of the four",
