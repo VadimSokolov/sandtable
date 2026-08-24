@@ -1925,3 +1925,41 @@ pre-flight passes by construction rather than by luck.
 
 Queue: 9459574 roundrobin, 9459575 roundrobin2, 9459669 ladder, 9459739 ghost, 9459816 fleet,
 9459832 graph, 9460052 loss, 9460874 crosstier.
+
+### CR-68, CR-67 and CR-64 all landed and are in the manuscript
+
+**CR-68 (graph, 9459832, 497 rows).** A graph reading of the formation beats the geometric one this
+paper recommended. Rank correlation against mission success over the 20-cell design grid, restricted
+by Round 36's axis rule to the 16 cells where success is off its bounds: tolerated faults +0.719,
+kappa +0.579, Fiedler +0.556, disconnected -0.528, cross -0.406, RMS spread +/-0.347. Every reading
+signs as predicted. The two station-referenced readings score higher (-0.621, -0.591) and are
+EXCLUDED rather than beaten, because the treatment on this grid is the commanded geometry, which is
+the reference-set-by-treatment failure arriving where it would have looked like a result. Both
+objections answered on the same runs: faults is not a monotone transform of mean kappa (the floor is
+per-step, then averaged; they rank at 0.825 not 1.000), and sweeping the assumed peer-link range 150
+to 1000 m moves the readings an order of magnitude while the ordering holds at rho 0.700 to 0.900,
+with success identical to 0.0000 across the sweep proving the parameter is an observer's.
+`tools/make_graph_numbers.py`, 39 macros. Two CrossRef-verified bib entries added (87 total).
+
+**CR-67 (fleet, 9459816, 642 rows).** Held on `blue_loss_frac` as Round 35 required. An eightfold
+re-ask hold: -0.0510 gates down on the blind console at n=8 only; +0.0287/+0.0328/+0.0251/+0.0332
+gates UP at all four spans on the bounded console; exactly +0.0000 with 0/32 blocks at every span on
+the admitting console, structurally, because that console overrides the vehicle's hold with its own.
+W3 gives the number: best hold is 2 on blind, 1 on bounded, 1 on admitting. W5 isolates the
+mechanism with a control: at a console not load-limited, blind and admitting are byte-identical on
+every cell and the lever is pure cost, +0.0989 gates up. `tools/make_fleet_numbers.py`, 41 macros.
+
+**CR-64 (roundrobin 9459574 + roundrobin2 9459575, 532 + 480 rows).** The exclusion fix is a counter
+the console keeps about itself, not a field in the message. Round robin takes exclusion from arrival
+order's 0.4242 to 0.0001 against the deadline field's 0.0002, largest gap at any span zero to four
+decimals; the zero-base guard fires so the prose claims only that they leave the same number
+unanswered. Throughput is where they part: the counter gives up -0.0092 and -0.0239, gated. And the
+precondition is absolute: on a blind console the counter and arrival order leave the identical
+0.8897, the field leaves 0.9659 which is worse than nothing, and a coin flip at 0.7105 beats all
+three. `tools/make_rr_numbers.py`, 55 macros.
+
+Suite 416 passed, 1 skipped. Pre-flight PASS on all five including compile, 87 of 87 citations.
+
+Still running: 9459739 ghost (CR-65), 9460876 loss (CR-70, resubmitted), 9460877 crosstier (CR-71,
+resubmitted). The first `loss` and `crosstier` submissions died at their time limits because I
+passed TIME=6 and TIME=3 where `submit.sh` wants HH:MM:SS, so SLURM read them as minutes.
