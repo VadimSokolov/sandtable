@@ -395,7 +395,24 @@ assumption, and the paper needs a sentence stating it.
 
 ## CR-8 Score formations by network robustness, not connectivity alone
 
-**Priority:** P2. **Status:** not started. **Depends on:** CR-3 (needs a formation to score).
+**Priority:** P2. **Status:** IMPLEMENTED 2026-08-23, registered as CR-68, battery running
+(job 9459832). **Depends on:** CR-3 (needs a formation to score).
+
+Implemented as `src/sandtable/formation_metrics.py`, opt-in through `graph_range`, sampled on
+a cadence set by `graph_every`, byte-identical when off. Four metrics reach the result dict:
+`fleet_fiedler_mean`, `fleet_kappa_mean`, `fleet_faults_mean`, `fleet_disconnected_frac`.
+Vertex connectivity is EXACT, not an r-robustness approximation, because the theorem is
+stated in vertex-disjoint paths and Menger makes that computable in polynomial time. The
+fast path is NetworkX and this project's own max-flow implementation is kept as the
+independent check the tests run it against.
+
+Two things the implementation added that were not in the plan. First, the predicted
+disagreement is structural rather than statistical: a single-file column has vertex
+connectivity 1 at every length while its Fiedler value falls from 1.0000 to 0.0384 between
+three and sixteen vehicles, so it is a fact about the two definitions and needs no battery
+to establish. Second, a disc graph on a circle cannot realise a star above five spokes,
+because rim neighbours are closer to each other than to the hub. A topology requirement is
+not checkable without the geometry that produces it, and that is now a test.
 
 ### Why
 

@@ -8560,3 +8560,56 @@ natural close and cutting it orphans CR-67.
 point published where an interval was owed, and the fix is the intersection rule now in the
 manuscript. And the covered-route collapse from 100 percent to 0 is a feasibility wall rather than a
 slope, so it is published as a WIDTH constraint with its terrain-class dependence named.
+
+---
+
+### CR-68, REGISTERED. THE GRAPH READING OF A FORMATION, AND WHAT IT COSTS TO USE ONE
+
+CR-8 has sat in the todo file since the literature review as the most directly reusable idea there
+for mission design: score a formation by network robustness rather than by connectivity alone. It is
+now implemented as `src/sandtable/formation_metrics.py`, opt-in through an assumed peer-link range,
+byte-identical when off, and it computes three things from the positions the mission already
+produces: algebraic connectivity, EXACT vertex connectivity, and the f in the 2f+1 resilient-consensus
+result. The fast path is a library call and the project's own textbook max-flow implementation is
+kept as the independent check the tests run it against on two hundred random graphs.
+
+**The disagreement CR-8 predicted is confirmed structurally rather than statistically.** A column in
+single file has vertex connectivity 1 at every length, while its algebraic connectivity falls from
+1.0000 at three vehicles to 0.0384 at sixteen. A formation tuned on the eigenvalue is not thereby
+robust to one compromised vehicle, which is what the consensus literature says and what an earlier
+idea in this project's own notes assumed away.
+
+**Scope, stated in the module and not to be relaxed.** Those theorems are about CONSENSUS and these
+vehicles run no consensus protocol; they pursue targets independently. What is scored is the
+communication topology's resilience, not a proven property of the mission. Nothing licenses the
+sentence "the formation tolerates f compromised agents".
+
+**And a second thing fell out of building it, which is a constraint on the whole idea.** A disc
+graph on a circle cannot realise a star above five spokes: rim neighbours are closer to one another
+than to the hub, so a commanded star closes into a wheel and its vertex connectivity jumps from 1 to
+3 whether the formation meant it or not. A topology requirement is not checkable without the
+geometry that produces it. Locked in a test.
+
+**Registered claim.** (a) In X2 the graph readings SATURATE outside a band of assumed peer-link
+range: at 1000 m every arm is complete and at 150 m every arm is severed, so a saturated reading
+separates nothing, and the band in which it discriminates is narrow. (b) Within that band the graph
+readings carry no ordering information the undecomposed geometric dispersion does not: scored the way
+CR-60 scored its four readings, over gated-apart pairs only, their inversion counts are no lower than
+`fleet_spread_mean`'s. FALSIFIER for the headline: a graph reading orders a gated-apart pair
+correctly that `fleet_spread_mean` inverts, at any link range in X1 or X3. That would mean the
+topology carries information the geometry does not and the recommendation would have to add a graph
+term, which is the outcome the literature predicts and this model may well not reproduce.
+
+**Second registered claim, X4, the blindness the recommendation rests on.** Route bias moves the
+whole force without changing its internal geometry. `fleet_spread_mean` is blind to it and that is
+why it was recommended. Registered: the graph readings are NOT blind to it, because a route that
+funnels the force through a corridor compresses it and raises its connectivity for reasons that have
+nothing to do with the formation. FALSIFIER: they are as blind as the geometric reading, which would
+remove the last argument against them.
+
+**The parameter is the point.** The geometric reading needs nothing assumed. The graph reading needs
+a peer-link range chosen before it can be computed at all, and X2 measures how much the answer moves
+when that choice moves. A requirement that cannot be evaluated without first assuming a radio is a
+worse requirement than one that can, even if it were otherwise equally predictive.
+
+Battery `hopper/batteries/graph.sh`, four sections, 497 cells, smoke-tested at exit 0.

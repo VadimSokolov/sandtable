@@ -2265,3 +2265,37 @@ console has no locality to exploit, so no result here can be undone by a switchi
 equally no result here speaks to a console that CAN batch several requests from one vehicle. A
 roster-oriented interface that works a vehicle rather than a request is a different console and is
 untested. That is the honest boundary of the discipline results.
+
+## D5. Network robustness as a formation reading (idea I20 built, idea I2 corrected)
+
+CR-8 is implemented and registered as CR-68. The literature basis, recorded here with DOIs so the
+citation cascade has somewhere to start if the result ships:
+
+* Sundaram and Hadjicostis, `10.1109/TAC.2010.2088690`: 2f+1 vertex-disjoint paths suffice to
+  tolerate f malicious agents and 2f provably do not. By Menger this is a statement about vertex
+  connectivity, which is why SandTable computes that exactly rather than approximating r-robustness.
+* Guerrero-Bonilla, Prorok and Kumar, `10.1109/LRA.2017.2654550`: turns the same result into a
+  formation-construction algorithm.
+* Usevitch and Panagou, `10.1016/j.automatica.2019.108586`: makes network robustness computable from
+  the Laplacian by mixed-integer programming.
+* LeBlanc, Zhang, Koutsoukos and Sundaram, `10.1109/JSAC.2013.130413`: connectivity is NOT adequate
+  to characterise resilient consensus, which is the correction to this project's own earlier idea I2
+  of mapping the degradation ladder onto the Fiedler eigenvalue.
+
+None of these is in `report/ref.bib` yet and none has been through the verification cascade, because
+none is cited yet. They go through it if and only if CR-68 lands something the manuscript ships.
+
+**What the build already settled without a battery.** The disagreement idea I2 assumed away is
+structural: a single-file column is one cut from severed at every length while its Fiedler value
+keeps falling, so the two readings cannot be substitutes. And a formation's TOPOLOGY is not free of
+its GEOMETRY: a disc-graph star closes into a wheel above five spokes because rim neighbours are
+nearer each other than the hub, so a requirement written on a topology is unevaluable without the
+geometry that produces it.
+
+**The open question, and the one the battery asks.** A graph reading costs a parameter the geometric
+reading does not: a peer-link range has to be assumed before anything can be computed. The
+registered prediction is that the graph readings saturate outside a narrow band of that assumption
+and, inside it, order the design space no better than the parameter-free dispersion reading CR-60
+already recommends. The falsifier is a single gated-apart pair a graph reading gets right and
+dispersion gets wrong, which is what the consensus literature would predict and what this mission
+model may well not reproduce, since these vehicles run no consensus.
