@@ -8994,3 +8994,39 @@ of the better reading is a number that has to be declared and does not have to b
 rank correlation over a design grid, not a paired gate. The project's gate answers "did this arm
 move the metric" and no amount of it answers "does this reading rank the design space the way the
 mission does". Both are in the paper and they are not interchangeable.
+
+### CR-67 ruling: held, and sharper on the axis Round 35 required
+
+Primary reading `blue_loss_frac` throughout, per Round 35's disqualification of `answer_rate_v`
+(the treatment moves its denominator). An eightfold re-ask hold, against the base cadence, within
+each console, at spans 6/8/12/16 on a clear link:
+
+| console | n=6 | n=8 | n=12 | n=16 |
+|---|---|---|---|---|
+| blind (cannot refuse) | +0.0145 equiv | **-0.0510 gates down** | +0.0034 equiv | -0.0086 inconc |
+| bounded at k* | **+0.0287 up** | **+0.0328 up** | **+0.0251 up** | **+0.0332 up** |
+| admitting | +0.0000 | +0.0000 | +0.0000 | +0.0000 (0/32 blocks, all four) |
+
+Sharper than the pilot in a way that matters. The benefit on the blind console is at ONE span, the
+collapse edge; the harm on the bounded console is at ALL FOUR. Since the bound is this paper's
+headline recommendation, the honest statement is not "positive here, negative there" but **once you
+take the cheap console fix, the fleet-side lever becomes a liability.**
+
+The admitting console's zero is structural, not measured-small: that console overrides the vehicle's
+hold with `min(2*lat, patience)`, so `reask_hold` never reaches the code that would apply it.
+
+**W3, the dose-response, gives the recommendation a number.** Sweeping the hold 1, 2, 4, 8, 16 at
+eight assets on C2, the loss-minimising hold is **2 on the blind console, 1 on the bounded one and 1
+on the admitting one.** Back off twice on a console that is collapsing; do not back off at all on a
+console that has been fixed.
+
+**W5 isolates the mechanism with a control instead of an argument.** At `service_rate = 1.2`, where
+the console is not load-limited, blind and admitting are **byte-identical on every cell** (a console
+with no queue never refuses), and the lever is pure cost: +0.0989 blue loss at four assets, gates
+up. So the fleet-side change buys congestion relief and nothing else, and where there is no
+congestion there is only its cost.
+
+**Seventh instance of the same-information-opposite-rule genus**, and the one with the clearest
+procurement consequence: damping demand at the vehicle and refusing it at the console are
+substitutes, doing both is worse than doing either, and the vehicle cannot see which console it is
+talking to. The cheapest item in the paper is the only one whose sign is somebody else's decision.
