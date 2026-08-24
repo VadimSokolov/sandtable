@@ -1861,3 +1861,67 @@ Both falsifiers written before the run.
 
 Queue at submission: 9459574 roundrobin, 9459575 roundrobin2, 9459669 ladder, 9459739 ghost,
 9459816 fleet, 9459832 graph, 9460052 loss.
+
+### CR-66 V2 landed, and it is the best result of the session
+
+Two-point fleet, adjacent-rung, full tier, all cells gated. The deadline field read ONCE (to refuse)
+raises throughput +0.0882 served/step at twenty-four assets AND raises exclusion +0.1405. The SAME
+field read a second time (to order) adds +0.0002 throughput, which is equivalent, and cuts exclusion
+-0.4430. Admitting excludes 0.4452 against ordering's 0.0022, a factor of 201, and against the free
+bound's 0.0956. One field, one integration cost, opposite signs depending on which line of code
+reads it. Eighth instance of the same-information-opposite-rule genus and the sharpest: the earlier
+seven contrast two policies, this contrasts two readings of one input.
+
+Second, unregistered: the second buffer slot is worse than the first on every metric at every span
+(throughput -0.0121 down, exclusion +0.2091 up, answer rate -0.0133 down, all gated). Round 35's
+"round DOWN when uncertain" now has direct backing.
+
+`tools/make_ladder_numbers.py` (new, adjacent-rung by construction per Round 35, degrades on a
+partial log). 107 macros. `LdCollapseRatio` 65, quoted once.
+
+### Round 36 acted on
+
+Q4 implemented and it corrected CR-69's own supporting number within the hour. Added `blue_exposure`
+(vehicle-steps alive) to the mission loop and `loss_intensity` beside it. The decomposition shows
+absolute blue losses are nearly flat across the span sweep (3.17 at sixteen to 2.42 at thirty-two,
+1.31x) while the loss FRACTION falls 2.6x, so most of what the fraction reports across a span sweep
+is a bigger denominator. The manuscript paragraph written earlier today overstated the point by
+roughly a factor of two and has been corrected in place. The caution applies to reading the sweep
+and not to reading a contrast, where every arm shares one force size, so CR-70 is unaffected.
+
+Q3 accepted as (c): the ungated inversion is cut and the gateable consequence is registered instead
+(waiting exposure: `blue_loss_frac` for `admits` exceeds `boundOne` at n >= 16, gated). CR-70's W1
+adjudicates it on runs already submitted.
+
+Q2 accepted as a project rule: an axis is admissible only where the REFERENCE arm sits off its
+bounds, diagnosed from the reference arm alone, fallback order fixed project-wide, both axes always
+reported, symmetric at floor and ceiling.
+
+Q5 accepted including the criticism. Instrument catalogue frozen at 19 rows.
+
+### CR-71, the cross-tier bridge: tier-1 side done, tier-2 side blocked
+
+Fable's Q5 named the bridge as the single highest-value missing thing, and it is right: zero data
+points connect SandTable to anything outside SandTable. **ProjectGL is not in this repository and I
+cannot run it.** It is Government-furnished GOTS software on Unreal Engine; obtaining it and
+instrumenting the shared observables is sponsor-side.
+
+Everything else is now done, so the confirmation run is an afternoon when access arrives:
+
+- `doc/cross-tier-protocol.md`: operating point fixed (published physics, n_blue = 8, C0, blind vs
+  refund vs admit, five to ten missions per arm), rationale for that experiment and not another,
+  shared observables restricted to what a high-fidelity tier can report, registered form on SIGN and
+  ORDER OF MAGNITUDE, both falsifiers, the mandatory tier-2 censoring pre-flight with the Round 36
+  axis rule attached, and the delivery format.
+- `hopper/batteries/crosstier.sh`, job **9460874**: the tier-1 predictions at that exact point on
+  the shared observables, registered before any tier-2 data exists. X2 sweeps span 6/8/10/12 so a
+  tier-2 team that cannot match our scenario exactly still has a registered cell to land in.
+- `tools/score_bridge.py`: reads one CSV of tier-2 missions, scores it against the registered
+  predictions, refuses unregistered arms, refuses fewer than five missions per arm, and prints the
+  verdict. Verified it refuses to score at all until the tier-1 side has landed.
+
+n_blue = 8 was chosen partly because CR-69 says success has full range there, so the censoring
+pre-flight passes by construction rather than by luck.
+
+Queue: 9459574 roundrobin, 9459575 roundrobin2, 9459669 ladder, 9459739 ghost, 9459816 fleet,
+9459832 graph, 9460052 loss, 9460874 crosstier.

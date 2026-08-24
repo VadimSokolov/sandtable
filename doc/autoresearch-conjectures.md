@@ -8803,3 +8803,106 @@ Success is close to a step function of the blue-to-red ratio and has a narrow tr
 `blue_loss_frac` is smooth and monotone over the whole grid. That is the reason for the conjecture
 and it is also its own caution: at `n_red = 12` success is floored rather than ceilinged, and a
 battery that ran there would make the opposite mistake.
+
+### CR-66 V2 ruling: one field, two readings, opposite fixes
+
+Two-point fleet, spans 8/12/16/24, full tier, adjacent-rung. This is the section the battery was
+built for and it delivered more than the registration asked.
+
+`starved_frac` (the fraction of vehicles that never get an answer at all):
+
+| rung | n=8 | n=12 | n=16 | n=24 |
+|---|---|---|---|---|
+| blind unbounded | 0.5567 | 0.7850 | 0.8448 | 0.8953 |
+| bound at one | 0.0037 | 0.0218 | 0.0495 | 0.0956 |
+| bound at two | 0.0784 | 0.2439 | 0.3039 | 0.3047 |
+| admitting | 0.0031 | 0.1289 | 0.3559 | **0.4452** |
+| admitting + EDF | 0.0001 | 0.0009 | 0.0014 | **0.0022** |
+
+Adjacent-rung, gated at every cell shown:
+
+| increment | throughput (served/step) | exclusion (starved_frac) |
+|---|---|---|
+| bound at one | **+0.0720** gates up | **-0.7997** gates down |
+| second slot | **-0.0121** gates down | **+0.2091** gates up |
+| the deadline field | **+0.0882** gates up | **+0.1405** gates up |
+| the same field, read to order | +0.0002 equivalent | **-0.4430** gates down |
+
+**The law.** On a heterogeneous fleet the deadline field read ONCE is a throughput instrument that
+makes exclusion worse; the SAME field read a second time, to order rather than to refuse, is an
+exclusion instrument that adds no throughput. Admitting excludes 0.4452 at twenty-four assets
+against ordering's 0.0022, a factor of 201, and against the free bound's 0.0956: the informed
+console is four and a half times worse on exclusion than the console that knows nothing. A
+requirement that says "the console shall use request deadlines" buys whichever of the two the
+vendor happens to implement, and the two are the same field at the same cost to field.
+
+This is the **eighth instance of the same-information-opposite-rule genus** and the sharpest one so
+far, because the earlier seven contrast two policies. Here there is one policy input, one field, one
+integration cost, and the sign of the outcome turns on which line of code reads it.
+
+**Second result, unregistered and worth its own sentence.** The second slot is worse than the first
+on every metric at every span: throughput -0.0121 gates down, exclusion +0.2091 gates up, mean
+answer rate -0.0133 gates down. Round 35's sizing rule said "round DOWN when uncertain" on
+theoretical grounds. It now has direct backing on the fleet where the bound matters.
+
+**Third, and it is the cost side of the law.** Ordering buys exclusion with mean answer rate:
+-0.0342 at sixteen and -0.0479 at twenty-four, both gating down. Consistent with the fairness
+results already in the paper (`FrEdf*`), reached independently on a different fleet.
+
+**Why the uniform fleet showed nothing.** V1's EDF rung is byte-identical to the admitting rung on
+24 of 24 measured cells. With equal deadlines there is nothing to order, so the second reading is
+free and useless. Heterogeneity is what switches the second reading on, which is the registered
+claim of the battery and is now measured rather than piloted.
+
+## Round 36 rulings, and what acting on them found
+
+**Q2 accepted, and it is a project rule rather than a guard.** An axis is admissible on a cell only
+where the REFERENCE arm sits off its bounds by more than the rate floor. The diagnosis is computed
+from the reference arm alone and never from the contrast, so it cannot be steered by the result.
+The fallback order is fixed once, project-wide, in the sponsor's priority order: `success`, then
+`blue_loss_frac`, then time. Both axes are always reported and only primacy switches. The rule is
+symmetric: it mutes the `n_red = 12` cells where success is floored at 0.000 exactly as it mutes the
+`n_red = 4` cells where it is ceilinged at 1.000. The positive defence is that a saturated axis
+answers the sponsor's question identically for every arm, so switching there declines a tautology
+rather than picking a winner. Fourth appearance of range validity in this project and the first on a
+mission-referenced axis.
+
+**Q3 accepted as (c), and the ungated sentence is cut.** The evidence is weaker than I presented it:
+15/32, 19/32 and 16/32 agreeing blocks are coin flips, and the negative mean at twenty-four rides a
+3-block tail against 29 dissenting blocks. But the sign is mechanism-predicted, so the consequence
+is registered rather than the observation:
+
+> **Waiting exposure.** An admitting console serves more requests, so more vehicles are alive and
+> waiting on it; a bounded console drops the overflow to autonomy at once. If that mechanism is
+> real, `blue_loss_frac` for `admits` exceeds `boundOne` at n >= 16, gated.
+
+CR-70's W1 adjudicates this for free on runs already submitted. If it gates, the genus row writes
+itself with a mechanism attached. If it does not, the inversion is noise and no version of the
+sentence ever ships. Nothing ungated touches the manuscript in the meantime.
+
+**Q4 accepted, implemented, and it immediately corrected a paragraph I had already written.**
+`blue_exposure` (vehicle-steps alive) accumulates in the mission loop and `loss_intensity`
+(losses per vehicle-step at risk) is emitted beside it. The decomposition Fable asked for,
+`d(frac) = d(intensity) * exposure + intensity * d(exposure)`, applied to CR-69's own supporting
+number, says this:
+
+| n_blue | blue_loss_frac | absolute losses | exposure (veh-steps) | intensity |
+|---|---|---|---|---|
+| 8 | 0.4479 | 3.58 | 8 116 | 0.000486 |
+| 16 | 0.1979 | 3.17 | 17 960 | 0.000184 |
+| 24 | 0.1076 | 2.58 | 29 112 | 0.000091 |
+| 32 | 0.0755 | 2.42 | 40 717 | 0.000060 |
+
+Absolute losses are nearly flat. The fraction falls by 2.6 across the saturated range and the
+absolute count by only 1.31, so **most of what the loss fraction reports across a span sweep is a
+larger denominator rather than fewer deaths.** CR-69's claim that "the fleet is still paying
+visibly different prices" was true but overstated by roughly a factor of two, and the manuscript
+paragraph has been corrected to say so.
+
+The distinction that keeps this from voiding CR-70: the caution is about reading the SWEEP, where
+the denominator is the sweep variable, and not about reading a CONTRAST, where every arm in a cell
+shares one force size. CR-70 compares arms within a cell and is unaffected. The two are printed in
+the same column, which is why they get confused, and that is worth one sentence in the paper.
+
+**Q5 accepted in full, including the criticism.** The instrument catalogue freezes at 19 rows except
+where a defect blocks a published number. The bridge is the priority.

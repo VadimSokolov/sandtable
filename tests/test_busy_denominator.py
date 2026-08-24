@@ -87,3 +87,31 @@ def test_the_published_buffer_numbers_did_not_move():
         m = _run(n, "buffer")
         assert m["busy_total"] == pytest.approx(total, abs=1e-4)
         assert m["busy_dead"] == pytest.approx(dead, abs=1e-4)
+
+
+def test_exposure_and_intensity_answer_the_saved_to_die_later_objection():
+    """A loss FRACTION divides by the force that started, so an arm keeping vehicles alive longer
+    gives the enemy more time to shoot and can read worse for a reason that is not about the arm.
+    `loss_intensity` divides by vehicle-steps at risk instead and is immune to that by construction.
+
+    Pinned as a decomposition rather than as two numbers, because the point is the relation between
+    them: across a span sweep the fraction falls much faster than the absolute count, and the gap is
+    the denominator growing."""
+    from sandtable.sim import evaluate
+    scn = load_scenario(SCN)
+    m = {n: evaluate(scn, n_reps=12, seed=0, params={"n_blue": n}) for n in (16, 32)}
+    frac = m[16]["blue_loss_frac"] / m[32]["blue_loss_frac"]
+    dead = m[16]["blue_losses"] / m[32]["blue_losses"]
+    assert frac > 1.7 * dead, (
+        f"fraction falls {frac:.2f}x and the count {dead:.2f}x: if these agreed, the fraction "
+        f"would be reporting deaths rather than force size and the caution would be unnecessary")
+    # The identity holds per mission and NOT after averaging: `evaluate` means the per-run
+    # intensities, which is the right thing to average and is not the ratio of the two means.
+    # Asserting it on the ensemble would be asserting that Jensen's inequality is an equality.
+    for n in (16, 32):
+        assert m[n]["blue_exposure"] > 0.0
+        one = run_mission(load_scenario(SCN), seed=0, params={"n_blue": n})
+        assert one["loss_intensity"] == pytest.approx(
+            one["blue_losses"] / one["blue_exposure"], rel=1e-12)
+    # Exposure grows with the force, which is the whole mechanism behind the caution.
+    assert m[32]["blue_exposure"] > 2.0 * m[16]["blue_exposure"]

@@ -112,6 +112,12 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     along_sum = 0.0
     cross_sum = 0.0
     supp_sum = 0.0
+    # Vehicle-steps at risk. A loss FRACTION divides by the force that started, so an arm that keeps
+    # vehicles alive longer gives the enemy more time to shoot at them and can read worse for a
+    # reason that has nothing to do with the arm. Accumulating the exposure lets loss be reported as
+    # an intensity, losses per vehicle-step at risk, which is immune to that by construction. The
+    # fraction stays the headline; the intensity audits it and never travels on its own.
+    blue_exposure = 0.0
     for k in range(n_steps):
         comms.set_step(k)                       # no-op unless the scenario declares a jam window
         if op is not None:
@@ -139,6 +145,8 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
         if n_red > 0:
             cov_sum += int((ent.seen & red_alive).sum()) / n_red
             cov_steps += 1
+
+        blue_exposure += float(ent.side_mask(BLUE).sum())
 
         assault = ent.side_mask(BLUE) & (ent.domain == GROUND)
         if int(assault.sum()) > 1:
@@ -178,6 +186,14 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     result["support_frac"] = supp_sum / max(disp_steps, 1)
     # Averaged over the SAMPLED steps, not over the mission, so a formation that dies early is not
     # credited with the connectivity of the steps it did not live to see.
+    # Exposure and the intensity it makes readable. `blue_exposure` is in vehicle-steps, so
+    # it is a scale that depends on the horizon and is reported for the decomposition rather
+    # than for comparison: d(frac) = d(intensity) * exposure + intensity * d(exposure), and
+    # the second term is a real console channel (a console that keeps vehicles moving changes
+    # how long they are exposed) rather than a confound to be removed.
+    result["blue_exposure"] = blue_exposure
+    result["loss_intensity"] = (result["blue_losses"] / blue_exposure
+                                if blue_exposure > 0.0 else float("nan"))
     result["fleet_fiedler_mean"] = g_fied / g_steps if g_steps else 0.0
     result["fleet_kappa_mean"] = g_kappa / g_steps if g_steps else 0.0
     result["fleet_faults_mean"] = g_faults / g_steps if g_steps else 0.0
