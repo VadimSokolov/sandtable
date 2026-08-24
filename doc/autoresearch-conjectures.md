@@ -9066,3 +9066,98 @@ it is a way of choosing who is denied.
 
 **T6, the control**, where there is no scheduling problem: every rule reads at most 0.0026 and none
 can win. Fires correctly.
+
+## CR-65 SCORED. THE REPAIR REMOVES ALL OF THE WASTE AND RECLAIMS NONE OF THE LOSS
+
+Job 9459739, 773 rows, 32 blocks at 64 replications, scored against the registration and its three
+amendments. Every registered prediction holds. The battery is kept. What follows is the reading, and
+then the instrument defect it exposed, which is the more important half.
+
+**U1 as registered.** Dropping the ghost is free in information and it removes the entire stale
+clock. It also buys almost nothing, because the dead clock is conserved: `busy_late` rises by
+exactly what `busy_stale` loses, +0.9670 at twenty-four assets against -0.9671. The console is still
+busy 98.7 percent of the time producing no answer. It has stopped producing no answer on superseded
+requests and started producing no answer on fresh ones.
+
+The number that says it plainly, as a share of what refusing the work buys:
+
+```
+    span   works    drops   boundTwo  admits  | drop gains  refuse gains  drop/refuse
+      6   0.0956   0.0960    0.1167   0.1172  |   +0.0004      +0.0216        1.7%
+      8   0.0411   0.0477    0.1316   0.1338  |   +0.0067      +0.0927        7.2%
+     12   0.0028   0.0149    0.1442   0.1470  |   +0.0121      +0.1442        8.4%
+     16   0.0023   0.0039    0.1476   0.1490  |   +0.0015      +0.1467        1.0%
+     24   0.0023   0.0023    0.1491   0.1493  |   +0.0000      +0.1470        0.0%
+```
+
+The free repair has an interior window. It is worth nothing at six assets because there are no
+ghosts to drop, rises to 8.4 percent of refusal's value at twelve, and decays to exactly zero at
+twenty-four. At twenty-four it removes 0.9671 of the console's clock from the stale bucket and
+reclaims 0.0001 of the dead clock, which is one part in ten thousand of the loss the waste was
+named for.
+
+**So the operational statement is a warning about a class of intervention rather than a
+recommendation.** An efficiency repair is measured by the waste it removes; that measurement cannot
+fail, because the repair is defined by removing it. What decides whether it is worth fielding is the
+loss it reclaims, and above saturation that is zero for any efficiency repair whatsoever. At
+twenty-four assets the console is offered 0.33 requests per step against a service capacity near
+0.15. At sixty-five-fold over-commitment nothing that makes the operator more efficient can matter,
+because efficiency is not the binding constraint. Only refusal is. Efficiency repairs and admission
+repairs are not substitutes and they do not trade off: below saturation the first works, above it
+only the second does.
+
+**U2, and it answers the question CR-64 left open.** On a blind console that cannot refuse, dropping
+the ghost INVERTS the discipline ordering rather than shifting it. Against `fcfsWorks` on
+`answer_rate_v` at eight assets, the works arms rank round robin +0.0290, deadline order +0.0127,
+arrival order 0; the drops arms rank arrival order +0.3226, round robin +0.2067, deadline order
++0.1172. First come first served goes from worst rule to best rule when the ghosts are dropped. So
+CR-64's inversion is a property of what a blind buffer CONTAINS, not of the rules that order it.
+
+**U3, both halves, as registered.** At sixteen assets `busy_stale` spans 0.9546 to 0.9577 across a
+sixty-four-fold cadence range, a relative span of 0.3 percent: the registered equivalence holds and
+its falsifier does not fire. At eight assets it gates down from 0.2065 to 0.0066, and
+`served_per_step` is non-monotone with its maximum at a hold of 2.0, rising from 0.0395 and falling
+back to 0.0498 at sixteen. The registered "maximum at or below fourfold" holds. The fleet-side
+repair is real, it is free, and it has a size: backing off as far as possible is wrong.
+
+**U4 and U5 and U6 fire correctly as controls.** Where there are no ghosts every arm is equivalent
+on every reading. The comms ladder shrinks the problem as predicted, because a degraded link is
+accidental admission control.
+
+### DEFECT 19, AND IT IS NOT THE SAME GENUS
+
+`busy_stale` gave three interventions that differ by two orders of magnitude in value an IDENTICAL
+reading. Not similar: the per-block vectors of `dropsGhost`, `boundTwo` and `admits` are
+byte-identical in all thirty-two blocks at all five spans, every value exactly zero, so the three
+arms carry the same effect to four decimals and the same t to the last digit, t = -10436 at
+twenty-four assets with 32/32 sign consistency. On `busy_dead` the same three arms separate
+completely, one equivalent and two gating down by 0.98.
+
+It did this three times in one battery: it also collapsed the discipline ordering in U2, where the
+three drop arms are likewise byte-identical, and it would have reported the U3 cadence sweep as
+inert on a reading where `busy_dead` moves seventy-fold.
+
+The mechanism is that `stale_check = "before"` is DEFINED as never working a stale request, and
+`busy_stale` counts clock spent working stale requests. The metric is the negation of the arm's own
+definition. Its value is entailed rather than measured, and the other two arms reach the same zero
+by a second route, since nothing survives in a bounded or admitting buffer long enough to go stale.
+
+**None of the three guards fires and the Round 36 rule declares the axis admissible.**
+`_censored_cells` wants a NaN. `_flat_reference` and `_zero_base` both audit the REFERENCE arm, and
+the reference sits at 0.94 to 0.97, nowhere near a bound. Round 36 computes admissibility from the
+reference arm alone, deliberately, because the Round 18 rule forbids letting a treatment set its own
+audit. So Round 36 covers the case where the reference is pinned and the treatment had no room to
+move, and is blind to the case where several treatments are pinned at the opposite bound and cannot
+be ranked against each other. Those are different questions and the manuscript currently conflates
+them.
+
+This is why it may not belong to the instrument genus at all. The eighteen instances so far are each
+a convention correctly derived for a first use case and carried into a second where it does not
+hold, and each could in principle be revealed by running somewhere else: defect 18's success ceiling
+is a fact about one scenario's physics and a different scenario relaxes it. This one is entailed by a
+definition, so no scenario relaxes it and no amount of replication reveals it. More replication makes
+it look BETTER, because the t statistic grows without bound while the information stays at zero.
+
+Sent to review as Round 37 Q1 before any repair is written, because the obvious fix, auditing the
+treatment arms for pinning, appears to reintroduce the Round 18 defect, and because the better fix
+may be a registration-time check on the arm's DEFINITION rather than any statistic at all.

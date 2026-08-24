@@ -178,6 +178,37 @@ _add(Problem(
 ))
 
 
+# ---------------------------------------------------------------------------------------------
+# METRIC-PAIRED PROBLEMS. Identical scenario, identical design set, identical everything except the
+# axis the designs are scored on. These exist because the first thing measured on this simulator was
+# that mission metrics differ by three orders of magnitude in how many replications they need for
+# the same relative precision: two for delivered service, about four hundred for mission success,
+# about nine thousand for blue loss fraction. If that dominates the difference between search
+# methods, then the practical advice for a design study is about which axis to search on and not
+# about which optimizer to use, and these pairs are how that gets tested rather than asserted.
+#
+# The optima are NOT assumed to coincide across the axes. Where the high-precision table puts them
+# in different places, that is itself a result: the metric would be choosing the design.
+for _base, _suffix, _metric, _dir in (
+        ("qcap_uniform", "succ", "success", "max"),
+        ("qcap_uniform", "loss", "blue_loss_frac", "min"),
+        ("discipline", "succ", "success", "max"),
+        ("discipline", "loss", "blue_loss_frac", "min"),
+):
+    _b = PROBLEMS[_base]
+    _add(Problem(
+        key=f"{_base}_{_suffix}",
+        scenario=_b.scenario, fixed=_b.fixed, variables=_b.variables,
+        metric=_metric, direction=_dir,
+        optimum=_b.optimum,           # the registered key from the throughput study, to be audited
+        provenance=f"design set and operating point from {_base}; the optimum on THIS axis is "
+                   f"established by the high-precision table and audited against the throughput "
+                   f"study's key, which is a check and not an assumption",
+        note=f"metric-paired twin of {_base}",
+        tolerance=_b.tolerance,
+    ))
+
+
 def get(key: str) -> Problem:
     if key not in PROBLEMS:
         raise KeyError(f"unknown problem {key!r}; have {sorted(PROBLEMS)}")

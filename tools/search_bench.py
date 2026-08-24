@@ -55,16 +55,38 @@ def cmd_run(a) -> None:
 
     # Truth tables first, in the parent, so every worker reads a cached file rather than 16 workers
     # racing to compute the same table. This also fails fast if a table is missing.
-    agrees = {}
+    agrees, ladders, diffs = {}, {}, {}
     for k in keys:
         p = get(k)
         t = oracle.truth(p)
         agrees[k] = oracle.agrees_with_key(p, t)
-        print(f"### {k}  designs={p.n_designs}  "
-              f"key={'agrees' if agrees[k] else 'DISAGREES'}", flush=True)
+        diffs[k] = oracle.difficulty(p)
+        ladders[k] = a.budgets or oracle.budget_ladder(p)
+        d = diffs[k]
+        print(f"### {k:22s} designs={p.n_designs:3d} metric={p.metric:16s} "
+              f"gap={d['gap']:.5f} sd={d['sd_per_mission']:.5f} "
+              f"reps/design={d['reps_per_design']:8.1f} "
+              f"key={'agrees' if agrees[k] else 'DISAGREES'} ladder={ladders[k]}", flush=True)
 
-    specs = [(k, m, b, r) for k in keys for b in a.budgets
-             for m in a.methods for r in range(a.replicates)]
+    # Replicates are set PER PROBLEM to a fixed mission allowance, not held constant. A ladder
+    # derived from difficulty spans very different totals across problems (tens of missions on a
+    # low-noise throughput axis, tens of thousands on a mission-success axis), and holding
+    # replicates constant across them would spend the whole allocation on the noisy problems and
+    # then report the quiet ones at n=24 anyway. The allowance is stated rather than tuned, and the
+    # realized replicate count per problem is recorded on every row so the reader can see which
+    # problems are estimated less precisely.
+    reps = {}
+    for k in keys:
+        per_config = 6 * sum(ladders[k]) if ladders[k] else 1     # one pass over methods
+        reps[k] = int(min(a.replicates, max(a.min_replicates,
+                                            a.allowance // max(per_config, 1))))
+        print(f"    {k:22s} ladder-total={sum(ladders[k]):8d} replicates={reps[k]:3d} "
+              f"missions~{per_config * reps[k]:9d}", flush=True)
+    total = sum(6 * sum(ladders[k]) * reps[k] for k in keys)
+    print(f"    TOTAL ~{total:,} missions across {len(keys)} problems", flush=True)
+
+    specs = [(k, m, b, r) for k in keys for b in ladders[k]
+             for m in a.methods for r in range(reps[k])]
     # The most expensive jobs first, so the pool does not finish with one worker on a 1024-budget
     # run while fifteen sit idle.
     specs.sort(key=lambda s: -s[2])
@@ -81,7 +103,12 @@ def cmd_run(a) -> None:
             except Exception as e:                       # a method that dies is recorded, not fatal
                 print(f"  !! {s} raised {type(e).__name__}: {e}", flush=True)
                 continue
-            fh.write(json.dumps({**row, "key_agrees": agrees[row["problem"]]}) + "\n")
+            k = row["problem"]
+            fh.write(json.dumps({**row, "key_agrees": agrees[k], "metric": get(k).metric,
+                                 "n_designs": get(k).n_designs,
+                                 "reps_per_design": diffs[k]["reps_per_design"],
+                                 "gap": diffs[k]["gap"],
+                                 "sd_per_mission": diffs[k]["sd_per_mission"]}) + "\n")
             n += 1
             if n % 100 == 0:
                 el = time.time() - t0
@@ -118,9 +145,14 @@ def main() -> None:
     t.add_argument("--refresh", action="store_true"); t.set_defaults(fn=cmd_truth)
     r = sub.add_parser("run"); r.add_argument("--problems", nargs="*")
     r.add_argument("--out", default="experiments/results/search_bench.jsonl")
-    r.add_argument("--budgets", nargs="*", type=int, default=list(BUDGETS))
+    r.add_argument("--budgets", nargs="*", type=int, default=[],
+                   help="override the per-problem ladder derived from difficulty")
     r.add_argument("--methods", nargs="*", default=list(METHODS))
-    r.add_argument("--replicates", type=int, default=24)
+    r.add_argument("--replicates", type=int, default=24,
+                   help="upper bound on replicates per problem")
+    r.add_argument("--min-replicates", type=int, default=8)
+    r.add_argument("--allowance", type=int, default=300_000,
+                   help="approximate mission budget per problem")
     r.add_argument("--workers", type=int, default=16); r.set_defaults(fn=cmd_run)
     p = sub.add_parser("report"); p.add_argument("results"); p.set_defaults(fn=cmd_report)
     a = ap.parse_args()
