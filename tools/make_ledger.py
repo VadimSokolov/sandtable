@@ -230,6 +230,21 @@ ROWS = [
      "\\DsSpreadThresh{}~m with \\DsSpreadInv{} inversions and \\DbSpreadMiss{} nuisance "
      "misclassifications. The recommendation inverts to a reading that ignores the commanded "
      "formation entirely"),
+    ("the dispersion threshold holds at more than the one column length it was measured at",
+     "either station reading thresholds at every column length, or the recommended reading "
+     "fails at any one of the four",
+     "\\textsc{held}, and it moved the number. Undecomposed dispersion and fleet cross-track "
+     "separate at \\DkSpreadHeld{} of \\DkSpreadSpans{} column lengths; the scalar holds at "
+     "\\DkScalarHeld{} and the station cross-track at \\DkCrossHeld{}. The threshold serving "
+     "all four is the INTERSECTION of the per-span intervals, \\DkSpreadLo{} to "
+     "\\DkSpreadHi{}~m, and the published single-span \\DsSpreadThresh{}~m sits below it"),
+    ("the dispersion requirement binds independently of the route",
+     "a commanded spread costs the same on the covered route at four assets as at sixteen",
+     "\\textsc{refuted}, and the refutation is the requirement's condition. A 300~m spread on "
+     "the covered route costs \\DkCostFour{} at four assets (\\DkCostFourV{}) and "
+     "\\DkCostSix{} at sixteen (\\DkCostSixV{}, all \\DkBlocks{} blocks). A covered route is a "
+     "band of finite width, so a short column that plans to run the corridor has no "
+     "dispersion requirement worth writing"),
     ("the dispersion penalty is a corridor effect",
      "the penalty on a map with no cover exceeds half the banded map's",
      "\\textsc{refuted} by a wide margin: the ratio is \\DcWideRatio{} on absolute success and "

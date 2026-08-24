@@ -1793,3 +1793,12 @@ not match any of the patterns I had guessed. It runs in a tenth of a second and 
 next metric that goes undefined in some later configuration will not cost another suite run to find.
 
 Suite 361 passed 1 skipped before the change; re-running after.
+
+**`dispcol` landed, job 9459110, full tier.** CR-60's owed column-length section. The recommendation
+holds at four column lengths with zero inversions and both station-referenced readings become
+unthresholdable once the column can change length. The threshold moves from a single-span 189 m to a
+joint interval of 199 to 250 m, specified at 225. The nuisance section turned into a condition: a
+300 m commanded spread costs nothing at four assets on the covered route (-0.0024, equivalent) and
+everything at sixteen (-1.0000, gates down, 100.0% to 0.0%), because a covered route is a band of
+finite width. Six batteries now running: 9458832 verify, 9459574 and 9459575 CR-64, 9459669 ladder,
+9459739 ghost.

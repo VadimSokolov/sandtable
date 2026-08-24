@@ -8398,3 +8398,61 @@ strengthen our own result is the conservative choice, and it is recorded as one.
 That is the defect-14 guard working upstream of authorship twice on the same question: two forms of
 attention cost proposed, both killed on a dose-response measurement before a line of either was
 written. The cost of the guard was two instrumentation scripts.
+
+---
+
+### `dispcol` LANDED (job 9459110). CR-60's OWED SECTION CONFIRMS THE READING, MOVES THE NUMBER, AND ADDS A CONDITION
+
+Full tier, 32 blocks. The section was owed because `fleet_spread_mean`, the reading CR-60 ends up
+recommending, was not among the metrics section L3 logged, so its threshold had only ever been
+measured at one column length.
+
+**K1, the column-length check.** Per-span admissible threshold intervals, four column lengths:
+
+```
+    reading                          n=4        n=8       n=12       n=16     held
+    station_err_mean (scalar)   interleave interleave interleave interleave    0/4
+    station_cross_mean            26 - 43  interleave interleave interleave    1/4
+    fleet_spread_mean            128 - 309  122 - 250  160 - 405  199 - 560    4/4
+    fleet_cross_mean               12 - 33    12 - 24    17 - 54    22 - 73    4/4
+```
+
+The recommendation SURVIVES: both readings that ignore the commanded formation hold at every column
+length with zero inversions, and both station-referenced readings become unthresholdable as soon as
+the column can change length. That is a stronger version of the L1 result rather than a repeat of it.
+
+**And the number moves.** The threshold that serves every column length is the INTERSECTION of the
+per-span intervals, not the average of their midpoints, because an average can sit outside an
+interval it was averaged from. That intersection is 199 to 250 m. The published single-span figure of
+189 m sits below it: at sixteen assets the widest formation that still succeeds reads 199 m, so a
+line at 189 would forbid a formation that in fact arrives. The manuscript now specifies 225 m and
+states the interval. Undecomposed dispersion is also preferred over fleet cross-track on a second
+ground the owed section supplies: cross-track's joint window is 22 to 24 m, a specification that has
+to be met to within two metres.
+
+**K2 turned a robustness check into a condition, and this is the part worth having.** The reading is
+properly blind to route bias, as required. The PENALTY is not.
+
+```
+    route_bias        0.0     0.25      0.5     0.75      1.0     spread range
+    tight4          0.175    0.179    0.305    0.827    0.988      42 to   49
+    wide4           0.102    0.112    0.209    0.760    0.986     284 to  349
+    tight16         0.965    0.975    0.987    1.000    1.000     163 to  199
+    wide16          0.550    0.512    0.659    0.434    0.000     883 to 1439
+```
+
+On the fully cover-biased route a 300 m commanded spread costs -0.0024 at four assets (equivalent,
+t = -0.7, 12 of 32 blocks) and -1.0000 at sixteen (gates down, all 32 blocks, 100.0% to 0.0%). The
+dispersed sixteen-vehicle column does BETTER on the exposed route (0.550) than on the covered one
+(0.000), which the tight column of the same length does not, and that reversal is the mechanism
+showing through: a covered route is a band of finite width and a formation wider than the band
+cannot use it. So the requirement binds on long columns that intend to use terrain, and a short
+column that plans to run the corridor has no dispersion requirement worth writing.
+
+This also partially rescues the mechanism L2 failed to establish. L2 asked whether removing the
+terrain removes most of the penalty and found it does not, at ONE column length and at the scenario's
+default route. K2 shows the penalty's dependence on the route is real but conditional on column
+length, which is why a single-span test could not see it. The manuscript still says the mechanism is
+not isolated, because a conditional dependence is not an isolation.
+
+Promoted to the manuscript, pre-flight PASS on all five checks including compile.

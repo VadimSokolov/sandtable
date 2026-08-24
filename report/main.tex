@@ -1317,10 +1317,40 @@ not be decomposed: each of the two decompositions tested here has a blind family
 does not. It also needs no knowledge of the intended geometry, which is what makes it writable into
 a specification and recoverable from bare position tracks.
 
-Two limits belong with that number. The threshold is a single-span figure: the recommended reading
-was not logged in the section that varies column length, and the two readings that were logged move
-their own thresholds by roughly a factor of five across four column lengths, which is a warning
-rather than a reassurance. And the mechanism we registered for the penalty is not established. If a
+The single-span limit that number carried has since been paid off, and paying it moved the number
+and added a condition. Re-running the same arms across \DkSpreadSpans{} column lengths, with the
+recommended reading logged this time, the two station-referenced readings admit a separating
+threshold at \DkScalarHeld{} and \DkCrossHeld{} of those column lengths: their live and dead arms
+interleave almost everywhere, so neither is thresholdable at all once the column can change length.
+Both readings that ignore the commanded formation hold at \DkSpreadHeld{} of \DkSpreadSpans{}. The
+threshold that serves every column length is the intersection of the per-span admissible intervals
+rather than the average of their midpoints, and for undecomposed dispersion that intersection is
+\DkSpreadLo{} to \DkSpreadHi{}~m. The single-span figure of \DsSpreadThresh{}~m sits below it: at
+sixteen assets the widest formation that still succeeds reads \DkWidestAlive{}~m, so a line drawn at
+\DsSpreadThresh{} would forbid a formation that in fact arrives. The number to specify is
+\DkSpreadThresh{}~m. Fleet cross-track also holds at every column length but on a window of
+\DkFCrossLo{} to \DkFCrossHi{}~m, an order of magnitude tighter in relative terms, which is a second
+reason to prefer the undecomposed reading over a specification that has to be met to within two
+metres.
+
+\paragraph{The requirement binds on long columns and on the covered route, not everywhere.} Running
+the nuisance family at every column length turned a robustness check into a condition on the
+recommendation. Route bias moves a force off the line it was commanded to hold without changing its
+internal geometry, and the reading is properly blind to it: the tight formation never exceeds
+\DkTightFourHi{}~m at four assets or \DkTightSixHi{}~m at sixteen, and the dispersed one never falls
+below \DkWideFourLo{}~m and \DkWideSixLo{}~m. What is not invariant is the penalty the threshold is
+there to prevent. On the fully cover-biased route at four assets, a commanded spread of 300~m costs
+\DkCostFour{} in mission success (\DkCostFourV{}, $t = \DkCostFourT{}$, \DkCostFourBlocks{} of
+\DkBlocks{} blocks): \DkTightFourCover\% against \DkWideFourCover\%, which is nothing. On the same
+route at sixteen assets the same spread costs \DkCostSix{} (\DkCostSixV{}, all \DkBlocks{} blocks),
+taking \DkTightSixCover\% to \DkWideSixCover\%. The dispersed sixteen-vehicle column does better on
+the exposed route (\DkWideSixFlat\%) than on the covered one, which the tight column of the same
+length does not, and that reversal is the requirement's mechanism showing through: a covered route is
+a band of finite width, and a formation wider than the band cannot use it. Dispersion tolerance is
+therefore a function of how long the column is and of whether the force intends to use terrain at
+all. A short column that plans to run the corridor has no dispersion requirement worth writing.
+
+One limit remains. The mechanism we registered for the penalty is not established. If a
 dispersed force were punished because terrain funnels it, then removing the terrain should remove
 most of the penalty; on a map with no cover at all the penalty is \DcWideRatio{} times the banded
 map's on absolute success and larger still relative to what there was to lose there

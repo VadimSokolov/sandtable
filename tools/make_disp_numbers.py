@@ -63,6 +63,87 @@ def _separates(lv, suc, live, pt=0):
     return (hi, lo) if hi < lo else None
 
 
+KLOG = "st-dispcol-9459110.out"
+K1 = "K1 the recommended reading against column length"
+K2 = "K2 the nuisance family against column length"
+SPANS = ("4", "8", "12", "16")
+
+
+def _owed_column_length() -> list[tuple[str, str]]:
+    """The section CR-60 owed, and the one that changes the recommendation's wording.
+
+    L3 swept column length but did not log `fleet_spread_mean`, which is the reading the conjecture
+    ends up recommending, so the column-length check for it was recorded as owed rather than
+    quietly skipped. This is that check. It also carries the nuisance family at every span, because
+    a requirement written on a threshold measured at one column length is a fitted constant.
+    """
+    out: list[tuple[str, str]] = []
+    suc = survey(KLOG, K1, "success", quiet=True)
+    csuc = survey(KLOG, K1, "success", ref="base", quiet=True)
+    reads = (("Scalar", "station_err_mean"), ("Cross", "station_cross_mean"),
+             ("Spread", "fleet_spread_mean"), ("FCross", "fleet_cross_mean"))
+    for tag, metric in reads:
+        lv = survey(KLOG, K1, metric, quiet=True)
+        held, ivs = 0, []
+        for i, sp in enumerate(SPANS):
+            dead = {a for a in suc if a != "base" and (a, sp) in csuc
+                    and csuc[(a, sp)][4] == "GATE down"}
+            live = set(suc) - dead
+            if not dead or not live:
+                continue
+            s = _separates(lv, suc, live, pt=i)
+            if s:
+                held += 1
+                ivs.append(s)
+        out.append((f"Dk{tag}Held", f"{held}"))
+        out.append((f"Dk{tag}Spans", f"{len(SPANS)}"))
+        if held == len(SPANS):
+            # The threshold that serves EVERY column length is the intersection of the per-span
+            # admissible intervals, not the average of their midpoints. An average can sit outside
+            # an interval it was averaged from, which is how a fitted constant gets written into a
+            # requirement without anyone noticing.
+            lo, hi = max(a for a, _ in ivs), min(b for _, b in ivs)
+            if lo < hi:
+                out += [(f"Dk{tag}Lo", f"{lo:.0f}"), (f"Dk{tag}Hi", f"{hi:.0f}"),
+                        (f"Dk{tag}Thresh", f"{0.5 * (lo + hi):.0f}")]
+            else:
+                out.append((f"Dk{tag}Thresh", "disjoint"))
+        else:
+            out.append((f"Dk{tag}Thresh", "none"))
+
+    # Does the threshold this paper published, measured at ONE column length, survive four of them?
+    lv = survey(KLOG, K1, "fleet_spread_mean", quiet=True)
+    joint = dict(out).get("DkSpreadLo")
+    out.append(("DkWidestAlive", f"{max(lv['base'][3], lv['out320'][3]):.0f}"))
+    out.append(("DkOldSurvives", "no" if joint and float(joint) > 189.0 else "yes"))
+
+    # K2. The nuisance family at every column length. The question is not whether route bias moves
+    # the reading but whether the DISPERSION PENALTY ITSELF survives the route, and at four assets
+    # against sixteen it does not merely weaken, it reverses.
+    s2 = survey(KLOG, K2, "success", quiet=True)
+    l2 = survey(KLOG, K2, "fleet_spread_mean", quiet=True)
+    c4 = survey(KLOG, K2, "success", ref="tight4", quiet=True)
+    c16 = survey(KLOG, K2, "success", ref="tight16", quiet=True)
+    out += [("DkTightFourHi", f"{max(l2['tight4']):.0f}"),
+            ("DkWideFourLo", f"{min(l2['wide4']):.0f}"),
+            ("DkTightSixHi", f"{max(l2['tight16']):.0f}"),
+            ("DkWideSixLo", f"{min(l2['wide16']):.0f}"),
+            ("DkTightFourFlat", f"{100 * s2['tight4'][0]:.1f}"),
+            ("DkTightFourCover", f"{100 * s2['tight4'][4]:.1f}"),
+            ("DkWideFourCover", f"{100 * s2['wide4'][4]:.1f}"),
+            ("DkTightSixCover", f"{100 * s2['tight16'][4]:.1f}"),
+            ("DkWideSixFlat", f"{100 * s2['wide16'][0]:.1f}"),
+            ("DkWideSixCover", f"{100 * s2['wide16'][4]:.1f}")]
+    for tag, c, key in (("Four", c4, ("wide4", "1.0")), ("Six", c16, ("wide16", "1.0"))):
+        e, tt, ag, nb, v = c[key]
+        out += [(f"DkCost{tag}", f"{e:+.4f}"),
+                (f"DkCost{tag}T", "infinite" if tt != tt or abs(tt) == float("inf") else f"{tt:.1f}"),
+                (f"DkCost{tag}Blocks", f"{ag}"),
+                (f"DkCost{tag}V", v.replace("GATE ", "gates "))]
+    out.append(("DkBlocks", f"{c4[('wide4', '1.0')][3]}"))
+    return out
+
+
 def main() -> None:
     out: list[tuple[str, str]] = []
     suc = survey(LOG, L1, "success", quiet=True)
@@ -165,6 +246,8 @@ def main() -> None:
         r = s4.get(("chansp", cl))
         if r:
             out += [(f"Dh{ctag}", f"{r[0]:+.4f}"), (f"Dh{ctag}V", r[4].replace("GATE ", "gates "))]
+
+    out += _owed_column_length()
 
     dst = ROOT / "report" / "gen" / "disp_numbers.tex"
     dst.write_text("".join(f"\\newcommand{{\\{k}}}{{{v}}}\n" for k, v in out))

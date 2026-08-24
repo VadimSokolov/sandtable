@@ -1,0 +1,7 @@
+# host=hop010.orc.gmu.edu job=9459668 battery=ghost jobs=32 blocks=0-31 reps=64
+# code=706eb6e7d62641b0 snapshot=/scratch/vsokolov/sandtable-ar/runs/9459668
+OK   tamper guard: 2 frozen path(s) unchanged, 32 seeds fixed at [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+# start 2026-08-24T02:58:28Z
+### BATTERY ghost START
+### BATTERY ghost START
+### U1 what dropping the ghost buys, against span (busy_stale)
