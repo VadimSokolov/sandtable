@@ -1,0 +1,190 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[slantedGreek]{mathpazo}
+\usepackage[pdftex]{graphicx}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\newcommand{\sandtable}{\textsc{SandTable}}
+\input{gen/bench_numbers}
+
+\title{Searching a mission design space: what a fast simulator changes about\\
+       optimization, and what it does not}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+PLACEHOLDER. Written last, from the numbers.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+PLACEHOLDER.
+
+\section{The design-space search problem}
+\label{sec:problem}
+
+A mission design is a setting of the parameters a program office can actually choose: how many
+assets one operator supervises, how deep a console lets its backlog grow, which request it works
+next, how long a rebuffed vehicle waits before asking again, how far apart a column drives. A
+mission simulator turns a design into a distribution over outcomes, and a design decision needs the
+best design in a space of them. Written that way it is an optimization problem, and the standard
+answer is Bayesian optimization: fit a surrogate to what has been evaluated, and let an acquisition
+function choose where to look next.
+
+Two properties of the mission-design setting make that answer less obvious than it looks, and both
+of them are properties a fast simulator creates rather than removes.
+
+The first is that the objective is a Monte-Carlo average, so every evaluation has a precision the
+searcher chooses and pays for. Spending a thousand missions on one design and ten on another are
+both legal moves, and a search method's real decision is jointly which design to try and how hard
+to look at it. A benchmark that counts evaluations rather than replications makes that decision
+invisible and quietly rewards whichever method buys the most precision per evaluation.
+
+The second is that mission design spaces are usually small, often discrete, and frequently
+categorical. A queue discipline is one of seven names with no ordering among them. A backlog bound
+is one integer. A control modality is one of three. On a space of that shape the question "where
+should I look next" is close to answered by enumeration, and the question that remains, "which of
+these arms is best given noisy draws", is the one the bandit literature was built for
+\citep{bubeck2011pure,karnin2013almost}. Best-arm identification and optimization are different
+problems with different optimal strategies, and treating the second as the first is a choice that
+should be tested rather than assumed.
+
+\section{The benchmark, and why its answer key is not self-reported}
+\label{sec:bench}
+
+Optimizer benchmarks usually score a method against the best value that method or its competitors
+happened to find. That is a self-report: it can say which method did better on a run, and it cannot
+say whether any of them found the right design, because the right design is not independently
+known. On synthetic test functions the answer is known and the problem is that the function is not a
+mission. This benchmark takes the other route.
+
+Every problem in the suite is a design space of the mission simulator \sandtable{}, and every
+optimum in it was established by a separate study of that simulator with no view of any search. Each
+of those studies registered a conjecture and a falsifier before its run, gated its contrasts as
+paired blockwise comparisons at a fixed tier, and reported retractions where the falsifier fired.
+None of them involved an optimizer. So "did the method find the best design" is a question with an
+answer that was written down by somebody else, first.
+
+The suite is deliberately not a set of variations on one shape, because the claim under test is that
+the shape decides which family of methods wins.
+
+\begin{itemize}
+\item \textbf{One integer, two fleets, two answers.} Sizing the console's backlog: seven capacities,
+      optimum at two on a fleet whose vehicles all want the same thing and at one on a fleet whose
+      deadlines differ. The smallest problem in the suite, and the one where enumeration is
+      genuinely competitive, which is why it is here. A method that cannot match a grid on seven
+      designs has no business on a larger space.
+\item \textbf{A categorical axis with no ordering.} Seven queue disciplines, named rather than
+      numbered. This is where a surrogate over a one-hot encoding is weakest and a bandit allocator
+      is most natural, and it is common in mission design: a control modality, a doctrine, a
+      formation type.
+\item \textbf{A two-dimensional mixed space.} The backlog bound crossed with the span it is sized
+      for, twenty-eight designs, the first problem where enumeration is expensive enough to be worth
+      beating.
+\item \textbf{A pair that is identical to the searcher and has different answers.} How long a
+      rebuffed vehicle should wait before asking again has an interior optimum on a console that
+      cannot refuse work and no optimum at all on a console that can. The two problems present the
+      same variable over the same domain, and any method that returns one answer to the question
+      ``what should this parameter be'' is wrong on one of them. It is in the suite as a trap, and
+      it is a trap real design studies fall into.
+\end{itemize}
+
+\paragraph{Auditing the key.} An answer key can be wrong, so it is checked rather than trusted.
+Every design in every problem is evaluated at \BnTruthReps{} replications on a seed block disjoint
+from the ones the searches draw on, and the resulting table is compared against the registered
+optimum. Agreement is reported per problem and disagreement is reported rather than reconciled: a
+table that put the optimum somewhere else would be a finding about the original study or about the
+precision of the table, and hiding it would defeat the purpose of having a key at all.
+
+\paragraph{Two scores, because they disagree.} A method is scored on whether it returned the
+registered optimum, which is a yes or a no, and on how much mission performance the design it
+returned gives up against the best design in the table, which is a number. These do not agree, and
+the disagreement is one of the paper's results rather than a nuisance. On the backlog-sizing
+problem the best two capacities differ by under one percent of delivered service, so a method that
+returns the runner-up has almost no regret and has still got the answer wrong. Which of those two
+failures matters depends on what the search is for. A study choosing a setting cares about regret; a
+study writing a requirement cares about the answer.
+
+\section{Methods under a common budget}
+\label{sec:methods}
+
+Six methods are compared, and the comparison is made fair by two conventions that are stated here
+because they are where most of the honesty lives.
+
+\paragraph{The budget is missions, not evaluations.} Every method is given a fixed number of mission
+replications and may spend them however it likes: many designs looked at briefly, few designs looked
+at hard, or anything between. A method that asks for more than it has left is stopped and recorded
+as having failed to return inside its budget, which is a property of the method and not a fault in
+the test. Counting evaluations instead would let a method buy precision for free, and precision is
+exactly what a stochastic objective makes expensive. It would also hide the decision that
+distinguishes these methods most: with a noisy objective, choosing how hard to look at a design is
+as consequential as choosing which design to look at.
+
+\paragraph{Methods are paired on the mission randomness.} Replicate $r$ gives every method the same
+stream of mission seeds, so a difference between two methods within a replicate is a difference in
+what they chose to spend that stream on, not in what they happened to draw. This is the common
+random numbers discipline the simulator's own statistical gate uses, applied one level up.
+
+The methods span three families.
+
+\emph{Enumeration.} A grid spends the budget evenly over every design and returns the best sample
+mean. Random search draws designs uniformly with a fixed batch each. Both are here because they are
+what a program office actually does and because they are the baselines that benchmarks most often
+omit and most often lose to.
+
+\emph{Bandit allocation.} Successive halving cuts the field in half each round and re-spends the
+freed budget on the survivors \citep{karnin2013almost,jamieson2015nonstochastic}. An upper-confidence
+allocator and a Thompson sampler spend a fixed chunk of missions per decision and choose the next
+design from what they have seen. None of the three fits a response surface or needs the design space
+to have a geometry, which is what makes them usable on a categorical axis. The objective they are
+built for is pure exploration, identifying the best arm, which is a different objective from
+minimizing cumulative regret and has different optimal strategies \citep{bubeck2011pure}. Mission
+design wants the first.
+
+\emph{Bayesian surrogate.} A Gaussian process over the encoded design space with an
+expected-improvement acquisition \citep{brochu2010tutorial,shahriari2016taking}, ordinal axes scaled
+to the unit interval and categorical axes one-hot. It is implemented directly over the enumerated
+design set rather than through an optimization package. On spaces this small the acquisition can be
+scored exhaustively, so the part a package spends most of its effort on is not the part in question;
+what is in question is whether the surrogate's smoothing helps when the axis carries no order or the
+response is a cliff, and a package's defaults would hide that.
+
+\paragraph{What is not being claimed.} The surrogate here is a plain one. A better-tuned kernel, a
+learned lengthscale, or a heteroscedastic noise model would all improve it, and none of them would
+change the argument, which is about what the shape of a mission design space does to the choice of
+method rather than about which implementation is best. Where the surrogate loses to a grid on seven
+designs, the conclusion drawn is that the problem did not need a surrogate, not that surrogates do
+not work.
+
+\paragraph{Priority, and an older literature that has it.} Framing this as budget allocation across
+competing designs whose values are known only through noisy replication is not new, and the
+literature that owns it is simulation optimization rather than machine learning. Optimal computing
+budget allocation asks precisely this question and answers it for the normal-means case
+\citep{chen2000simulation}. The transfer being made here is in the other direction from the usual
+one: not a new method, but a demonstration that a mission-design space has the shape that
+literature assumed and not the shape the surrogate literature assumes.
+
+\section{Results}
+\label{sec:results}
+
+PLACEHOLDER.
+
+\section{Discussion}
+\label{sec:discussion}
+
+PLACEHOLDER.
+
+\bibliographystyle{plainnat}
+\bibliography{ref}
+
+\end{document}
