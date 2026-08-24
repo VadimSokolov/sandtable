@@ -8456,3 +8456,64 @@ length, which is why a single-span test could not see it. The manuscript still s
 not isolated, because a conditional dependence is not an isolation.
 
 Promoted to the manuscript, pre-flight PASS on all five checks including compile.
+
+---
+
+### CR-67, REGISTERED. THE FLEET-SIDE LEVER'S SIGN IS SET BY THE CONSOLE'S POLICY
+
+Every lever in this paper so far has been on the console: which request to serve, whether to refuse
+it, whether to recognise it as superseded. `reask_hold` is on the other side of the link. It changes
+how long a vehicle that gave up stays on autonomy before asking again. It changes nothing whatever
+on the console and needs no message, no field and no coordination, which makes it the cheapest
+intervention anywhere in this system and the only one a fleet operator can make alone.
+
+Pilot, twelve seeds, eight assets, buffer console, `reask_hold` 1.0 against 4.0:
+
+```
+    console                 link    served 1x   served 4x     answ 1x   answ 4x   aband 1x  aband 4x
+    blind, unbounded         C0        0.0386      0.0807      0.2167    0.6406     0.0601    0.0323
+    blind, unbounded         C2        0.0350      0.0680      0.2276    0.5996     0.0679    0.0171
+    blind, unbounded         C3        0.0346      0.0375      0.2131    0.4535     0.0551    0.0127
+    blind, bounded k = 2     C0        0.1275      0.1307      0.7481    0.8513     0.0387    0.0194
+    blind, bounded k = 2     C2        0.0915      0.0660      0.5803    0.6585     0.0335    0.0114
+    blind, bounded k = 2     C3        0.0532      0.0392      0.3618    0.4413     0.0429    0.0146
+    admitting                C0        0.1371      0.1371      0.7919    0.7919     0.0336    0.0336
+    admitting                C2        0.0948      0.0858      0.6345    0.6634     0.0296    0.0168
+    admitting                C3        0.0712      0.0522      0.4694    0.5035     0.0329    0.0163
+```
+
+**Registered claim one, the sign flip.** Slowing the fleet gates UP on `served_per_step` on the
+console that cannot refuse and DOWN on both consoles that can, at C2 and C3. The two sides of the
+system are therefore not separable: the same fleet-side change, with the console untouched, roughly
+doubles delivered throughput on one console and costs a quarter of it on another. FALSIFIER: the
+sign is the same on both console families anywhere in W1 or W2, which would make the fleet lever an
+independent design choice and the whole framing wrong.
+
+**Registered claim two, and it is the one a programme office can be caught by.** On a refusing
+console the two metrics that agree everywhere else in this paper come apart: slowing the fleet gates
+UP on `answer_rate_v` and DOWN on `served_per_step` in the same cell. A fleet that asks less often
+gets a higher fraction of its questions answered while the force as a whole is answered less.
+FALSIFIER: they agree in sign on every refusing arm.
+
+**The two nulls, named before the run, per the defect-14 guard.** The admitting console at C0 is
+expected INERT and the reason is structural: its refusal hold is `min(2*lat, patience)`, which is
+zero at zero latency, so the knob has nothing to scale. Verified byte-identical in the pilot. The
+deeply collapsed blind console at sixteen assets is also expected inert, and the pilot reads 0.0022
+against 0.0024, inside the rate floor. Both are predictions rather than absences.
+
+**W4 carries the opposite-signed fleet lever in the same battery on purpose.** Retrying is asking
+again SOONER, and on the blind console at eight assets it takes `served_per_step` from 0.0386 down to
+0.0138. Two fleet-side changes, no console change in either, opposite signs. Running them against
+one another rather than each against its own baseline is what makes that a result instead of two
+sensitivity analyses.
+
+**W5 is the defect-14 guard.** A fleet-side lever acts by changing offered load, so where the console
+is not load-limited it must do nothing on any console. Two to four assets on a fast console is that
+place and every pair must be equivalent there.
+
+**Genus note.** This is the seventh instance of same-information-opposite-rule and the strongest so
+far, because the two rules are not even on the same machine. The information is identical (a vehicle
+knows only that it gave up) and the correct rule inverts depending on a property of the console that
+the vehicle cannot observe.
+
+Battery `hopper/batteries/fleet.sh`, five sections, 543 cells, smoke-tested at exit 0.
