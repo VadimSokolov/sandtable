@@ -26,11 +26,17 @@ def _path(p: Problem) -> pathlib.Path:
     return CACHE / f"{p.key}.json"
 
 
+_MEMO: dict[str, dict] = {}
+
+
 def truth(p: Problem, refresh: bool = False, verbose: bool = False) -> dict:
     """{design-json: value} for every design, at `TRUTH_REPS` replications."""
+    if not refresh and p.key in _MEMO:
+        return _MEMO[p.key]
     path = _path(p)
     if path.exists() and not refresh:
-        return json.loads(path.read_text())
+        _MEMO[p.key] = json.loads(path.read_text())
+        return _MEMO[p.key]
     scn = load_scenario(p.scenario)
     out = {}
     for i, d in enumerate(p.designs()):
@@ -40,6 +46,7 @@ def truth(p: Problem, refresh: bool = False, verbose: bool = False) -> dict:
             print(f"  {json.dumps(d, sort_keys=True):44s} {out[json.dumps(d, sort_keys=True)]:.6f}")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, indent=2, sort_keys=True))
+    _MEMO[p.key] = out
     return out
 
 

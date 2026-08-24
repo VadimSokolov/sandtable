@@ -18,13 +18,14 @@ echo "# host=$(hostname) job=$SLURM_JOB_ID snapshot=$SNAP stage=${STAGE:-all}"
 mkdir -p "$ROOT/search"
 if [ "${STAGE:-all}" != "run" ]; then
   # Truth tables are the answer key and must exist before any search is scored against them.
-  cp -r "$ROOT/search/search_truth" experiments/results/ 2>/dev/null || mkdir -p experiments/results
+  mkdir -p experiments/results
+  cp -r "$ROOT/search/search_truth" experiments/results/ 2>/dev/null || true
   python -u tools/search_bench.py truth
   mkdir -p "$ROOT/search/search_truth"
   cp -r experiments/results/search_truth/* "$ROOT/search/search_truth/" 2>/dev/null || true
 fi
 if [ "${STAGE:-all}" != "truth" ]; then
   python -u tools/search_bench.py run --out "$ROOT/search/bench-$SLURM_JOB_ID.jsonl" \
-    --replicates "${REPS:-24}"
+    --replicates "${REPS:-24}" --workers "${WORKERS:-16}"
 fi
 echo "### SEARCH DONE"
