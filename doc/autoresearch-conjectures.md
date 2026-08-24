@@ -8517,3 +8517,46 @@ knows only that it gave up) and the correct rule inverts depending on a property
 the vehicle cannot observe.
 
 Battery `hopper/batteries/fleet.sh`, five sections, 543 cells, smoke-tested at exit 0.
+
+### ROUND 35 RULINGS, RECORDED AND ACTED ON
+
+**Q1, the headline.** The uniform free bound is not the news and was already known equivalent; the
+news is the PRICING of heterogeneity. Ruled one-sentence form, adopted: what recovers span is
+refusal, and what refusal has to be TOLD is set by how unlike each other the vehicles are, a uniform
+fleet needing one integer with a closed form and a mixed fleet needing the deadline field read
+twice. The mixed fleet is headlined because the sponsor flies one; the uniform fleet stays as the
+free floor and as the honesty clause. On the two-point fleet the best bound reaches 49.7 percent of
+the admitting console's throughput at k = 1, and the uniform-optimal k = 2 reaches 40.3 percent
+while tripling exclusion, which is why the bound is not the recommendation there. CR-66 also unifies
+three prices of one second moment: fleet dispersion costs throughput, costs fairness, and now costs
+KNOWLEDGE, and the fleet-design corollary is that homogeneity is a subsidy to the console.
+
+**Q2, the sizing cliff.** Ship it, because the cliff has a name and a formula. The optimum sits at
+k* = floor(lambda + 1/2) - 1 and the cliff at k = 4 is the deadline boundary rather than new
+brittleness: at k = 8 the arm is the blind console returning (busy_dead 0.9425 against 0.9862
+unbounded). The asymmetry is measured: undersizing by one costs -0.0020, inside the rate floor, and
+oversizing by two costs -0.0444 and gates. Recommendation in three clauses: take k from the closed
+form, round DOWN when uncertain, and do not use a bound at all on a mixed fleet, because k* is
+class-coupled and the two classes want different integers.
+
+**Q3, the metric conflict, and it is a rule this project already wrote down.** `answer_rate_v` is
+DISQUALIFIED as CR-67's primary reading. Its denominator is how often vehicles ask, and slowing the
+fleet is a change to exactly that, so a metric whose denominator the treatment moves cannot audit
+that treatment. Part of the rise is mechanical: asks fall from 0.1494 to 0.1293 per step while
+answers fall 9.5 percent, so the ratio climbs 4.6 percent on arithmetic alone. `served_per_step` is
+the primary intermediate, its denominator being the mission clock; `answer_rate_v` keeps one
+legitimate job as a TRUST input, since reliability-when-called is what shapes whether a crew asks at
+all, and it is reported as a consequence and never optimised. ACTED ON: job 9459788 was cancelled
+fifteen minutes in and resubmitted as 9459816 with `blue_loss_frac` added to all five sections, so
+every cell is gated on the mission as well as on the queue.
+
+**Q4, the 4x3.** One section, one law: fleet-side demand damping SUBSTITUTES for console-side
+refusal, helping consoles that lack it and running from redundant to harmful on consoles that have
+it. The manuscript carries the law and the 2x2 sign-flip exhibit; the full 4x3 goes to the companion
+as a procurement appendix. Not a second paper, because the substitution law is the queue section's
+natural close and cutting it orphans CR-67.
+
+**Two notes carried forward.** dispcol's superseded 189 m threshold is the argmax genus again, a
+point published where an interval was owed, and the fix is the intersection rule now in the
+manuscript. And the covered-route collapse from 100 percent to 0 is a feasibility wall rather than a
+slope, so it is published as a WIDTH constraint with its terrain-class dependence named.

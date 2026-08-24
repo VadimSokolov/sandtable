@@ -16,6 +16,7 @@ from sandtable import (
     c2,
     counter_uas,
     engagement,
+    formation_metrics,
     mechanics,
     metrics,
     motion,
@@ -88,6 +89,14 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     # two vehicles inside it can shoot at the same thing.
     _bw = ent.weapon_range[ent.side_mask(BLUE) & (ent.domain == GROUND)]
     supp_range = float(_bw.max()) if _bw.size else 1000.0
+    # The graph readings of the same formation, opt-in through a peer-link range. They are off by
+    # default because they are a measurement rather than a mechanism and they cost real time: an
+    # exact vertex connectivity is a run of max flows, so it is sampled on a cadence rather than
+    # every step. Off, the block never runs and the four keys read zero.
+    graph_range = float(scn.params.get("graph_range", 0.0))
+    graph_every = max(1, int(scn.params.get("graph_every", 20)))
+    g_fied = g_kappa = g_faults = g_disc = 0.0
+    g_steps = 0
     # Formation dispersion, which is the same positions as station-keeping error read through a
     # different functional. Station error is measured against each vehicle's COMMANDED station, so
     # it is structurally blind to whether the commanded geometry is survivable; this one has no
@@ -146,6 +155,13 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
             np.fill_diagonal(rr, np.inf)
             supp_sum += float((rr.min(axis=1) <= supp_range).mean())
             disp_steps += 1
+            if graph_range > 0.0 and k % graph_every == 0:
+                s = formation_metrics.score(ax, ay, graph_range)
+                g_fied += s["fiedler"]
+                g_kappa += s["kappa"]
+                g_faults += s["faults"]
+                g_disc += s["disconnected"]
+                g_steps += 1
 
         if t_reached is None and metrics.blue_at_goal(ent, scn).sum() >= need:
             t_reached = t
@@ -160,6 +176,12 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     result["fleet_along_mean"] = along_sum / max(disp_steps, 1)
     result["fleet_cross_mean"] = cross_sum / max(disp_steps, 1)
     result["support_frac"] = supp_sum / max(disp_steps, 1)
+    # Averaged over the SAMPLED steps, not over the mission, so a formation that dies early is not
+    # credited with the connectivity of the steps it did not live to see.
+    result["fleet_fiedler_mean"] = g_fied / g_steps if g_steps else 0.0
+    result["fleet_kappa_mean"] = g_kappa / g_steps if g_steps else 0.0
+    result["fleet_faults_mean"] = g_faults / g_steps if g_steps else 0.0
+    result["fleet_disconnected_frac"] = g_disc / g_steps if g_steps else 0.0
     return result
 
 
