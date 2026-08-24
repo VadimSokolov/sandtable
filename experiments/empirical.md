@@ -1810,3 +1810,54 @@ stale bins were "unchanged", which reads as a measurement and was a structural z
 console refuses at the head and never carries a superseded record long enough to work it, which is
 the same fact CR-65 is about. The sentence now says which of the two each bin is. This is the first
 time one of the three survey guards has corrected prose rather than an analysis in progress.
+
+## 2026-08-24 CR-69 / defect 18 / CR-70
+
+**CR-63 R4 landed** (job 9458832, 456 rows, full tier). `DrLoadFour +0.0859 gates up`,
+`DrLoadEight -0.0640 gates down`, `DrLoadSixteen -0.0195 equivalent`. Written into the verification
+subsection's load paragraph as an independent full-tier confirmation of the trust battery's sign
+reversal, plus the third regime the trust battery did not reach: past the collapse span the
+verification policy stops deciding the mission in either direction. Commit `13fcc5d`.
+
+**CR-66 `ladder` V1 scored on the partial log** (job 9459669, still running, 160 of ~532 rows).
+Uniform fleet, spans 8/12/16/24, reference `blindUnbound`:
+
+- Rung 1 (bound at one, zero information) buys essentially the whole thing: `success`
+  0.6230 -> 0.7974 at eight assets and `busy_dead` 0.5988/0.9787/0.9867/0.9871 -> **exactly 0.0000**
+  at every span.
+- Rungs 2 and 3 buy nothing on the mission. Against `boundOne` every `success` contrast is
+  `equivalent` and every point estimate is NEGATIVE (`admits` -0.0088 to -0.0146).
+- Rung 3 is byte-identical to rung 2 on all six metrics at all four spans, which is structural on a
+  uniform fleet (all deadlines equal, so EDF degenerates to FIFO) and is why V2 exists.
+- The console-side metrics do rank `admits` above `boundOne` (`served_per_step` +0.0091 gates up at
+  eight, `starved_frac` -0.0034 gates down at twenty-four), two orders of magnitude below the rung-1
+  gain and invisible on the mission. Another same-information-opposite-rule instance.
+
+**CR-69 (audit) ruled.** Baseline `sc_span_control`, no treatment, 12 reps: `success` is exactly
+1.0000 at sixteen, twenty-four and thirty-two assets while `blue_loss_frac` falls 0.1979 -> 0.0755
+across the same range. Reading B: `success` is a censored instrument above twelve assets on this
+scenario. Its own falsifier (baseline success below 0.95 at twenty-four) is not met. Checked the
+blast radius by hand: every `success` contrast in the manuscript is read at eight assets or fewer
+and every large-span claim is read on a console metric (`\StQcapSuccGain` explicitly steps down to
+eight for its success statement; `\BiOptGapSixteen` is `served_per_step`). Nothing published moves.
+`tools/make_ceiling_numbers.py` (new, runs the sweep itself) and `tests/test_success_ceiling.py`.
+
+**Instrument defect 18**, found while running CR-69. `busy_*` divides accumulated service by
+`total_steps` and is documented as the console's utilization. Right on the buffer console, which
+will not begin a service while busy; wrong on the published reserve console, which commits at
+arrival and books forward without bound. At thirty-two assets reserve returns `busy_total` 4.7449.
+Blast radius: none, all seven batteries that measure `busy_*` set `queue_model: "buffer"` and the
+only tool reading one reads the acuity log. Repair: the six fractions are NaN off the buffer
+console; `booked_per_step` carries the ratio defined on both. `tests/test_busy_denominator.py`.
+Suite 412 passed, 1 skipped after adding `booked_per_step` to `test_metrics.py`'s key set.
+
+The ledger generator refused the defect-18 row until it named its guard, which is the criterion the
+ledger section describes, firing on the author of the criterion. Ledger now 62 rows (43 claims, 23
+failed, 19 instruments). Commit `7070fd3`.
+
+**CR-70 submitted, job 9460052** (`loss.sh`, 420 cells, 32 cpus, 6 h). Four sections; W3 and W4 are
+the discriminators between "the console stops mattering at scale" and "success stopped seeing it".
+Both falsifiers written before the run.
+
+Queue at submission: 9459574 roundrobin, 9459575 roundrobin2, 9459669 ladder, 9459739 ghost,
+9459816 fleet, 9459832 graph, 9460052 loss.

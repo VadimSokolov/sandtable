@@ -8754,3 +8754,52 @@ emitted under its own name, `booked_per_step`: service time committed per missio
 `tests/test_busy_denominator.py`, which carries the negative control that the trap was real
 (reserve books 1.29 per step at eight assets and 4.74 at thirty-two) and pins the buffer values
 that must not have moved.
+
+## CR-70: the console requirement does not stop mattering at scale; mission success stops seeing it
+
+**Where it comes from.** CR-66's V1 reads the requirements ladder against span on `success`. The
+free bound is worth +0.1743 at eight assets, +0.0981 at twelve, +0.0366 at sixteen and +0.0024 at
+twenty-four, so the natural reading is that the console requirement has a span above which it is not
+worth writing. CR-69 then showed that baseline success on this scenario is pinned at exactly 1.0
+from sixteen assets up. The decay and the ceiling are the same three cells, and the ladder battery
+carries no uncensored mission axis to tell them apart.
+
+**Conjecture.** The ladder's mission value does not decay with span. It is `success` that runs out
+of range. Measured on `blue_loss_frac`, which falls smoothly and monotonically across the whole
+span axis with no treatment at all, the free bound keeps buying at twenty-four and thirty-two.
+
+**Falsifier, declared before the run.** If `boundOne` against `blindUnbound` on `blue_loss_frac` at
+twenty-four assets is `equivalent` or gates in the wrong direction, the conjecture is refuted and
+the reading that the console stops mattering at scale stands as CR-66 wrote it.
+
+**Sections.**
+
+- **W1** the four rungs against span (8, 12, 16, 24, 32) on a uniform fleet, reading
+  `blue_loss_frac` and `success` side by side so the decay and the ceiling are on one page. Also
+  `blue_losses` and `blue_survivors`, because a loss FRACTION on a span sweep changes denominator
+  with the sweep even though it does not change with the arm, and the counts say whether the
+  fraction is moving because fewer die or because more are present.
+- **W2** the same on the two-point fleet, where V2 says the rungs come apart.
+- **W3** the discriminator. The ceiling is a property of the scenario's difficulty, not of the
+  mission: at `n_red = 8` baseline success runs 0.125 at eight assets to 0.938 at thirty-two and is
+  saturated nowhere. Run the identical ladder there. If the `success` gain that vanished at
+  twenty-four in W1 REAPPEARS at `n_red = 8`, the vanishing was the instrument. **Falsifier for
+  W3:** if the ladder's success gain at twenty-four is still equivalent once the ceiling is lifted,
+  the diagnosis is wrong, the decay is real, and CR-70 is retracted whatever W1 says.
+- **W4** the ladder against red strength at a fixed large span (twenty-four), which is the same
+  question asked as a dose-response instead of at two points, and the section that would catch a
+  W3 result that only works at one hand-picked value of `n_red`.
+
+**Pilot disclosed** (12 to 16 reps, one seed, no gate). Baseline `success` / `blue_loss_frac` on the
+blind console:
+
+| n_red | n=8 | n=16 | n=24 | n=32 |
+|---|---|---|---|---|
+| 4 (published) | 0.500 / 0.469 | **1.000** / 0.227 | **1.000** / 0.109 | **1.000** / 0.068 |
+| 8 | 0.125 / 0.891 | 0.562 / 0.508 | 0.938 / 0.305 | 0.938 / 0.234 |
+| 12 | 0.000 / 1.000 | 0.000 / 0.910 | 0.125 / 0.750 | 0.500 / 0.541 |
+
+Success is close to a step function of the blue-to-red ratio and has a narrow transition band;
+`blue_loss_frac` is smooth and monotone over the whole grid. That is the reason for the conjecture
+and it is also its own caution: at `n_red = 12` success is floored rather than ceilinged, and a
+battery that ran there would make the opposite mistake.
