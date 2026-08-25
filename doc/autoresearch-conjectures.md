@@ -9613,3 +9613,59 @@ of the world: a gate built only on a t statistic has no such floor, and would in
 differences this one refuses. Which is the better rule is not settled here. What is settled is that
 this one has a resolution, that the resolution is computable before a run, and that it was not
 being computed.
+
+## CR-77: a study's cost at a new operating point is predictable from a study already run at another
+
+**Registered before any of the numbers below were read.** The quantities this conjecture is scored
+on sit in the truth caches and in the `difficulty()` cache, both written for other purposes (the
+answer key, and sizing the search ladder). Neither was inspected for this question before this
+paragraph was written. The one thing already known and used is `delta = 0.454`, CR-74's fitted
+latent offset for the backlog bound, which was fitted to *effect sizes in gated batteries* and is
+being asked here to predict *a different quantity on a different data set*.
+
+**The structure being asserted.** CR-74 modelled a capability as a constant added to a latent
+margin, so a test at baseline `b` reports `Phi(Phi^-1(b) + delta) - b`. If that is the right shape
+then it is not only a statement about one capability against one baseline. It says the whole design
+set is a fixed vector of latent offsets `{delta_j}`, one per design, and an operating point is a
+single number `b` that slides all of them along the same probit curve. The offsets belong to the
+designs; the baseline belongs to the operating point; nothing else is free.
+
+The benchmark suite is arranged to test exactly that, though it was not built to. It is two knobs
+(the backlog bound `qcap`, the queue discipline `disc`) crossed with four spans
+(`n_blue` in 8, 10, 12, 16) crossed with three metrics. Fixing a knob and a metric leaves the same
+seven designs measured at four operating points.
+
+**A, the prediction.** For `success`, fit the seven latent offsets at the *lowest* span alone
+(`n_blue = 8`), anchoring one design at `delta = 0`. Then predict all remaining (design, span) cells
+at spans 10, 12 and 16 with no further fitting, taking each held-out span's baseline from the anchor
+design at that span and nothing else. That is six free offsets plus three baseline readings, and it
+predicts eighteen scorable cells per knob.
+
+The anchor design's own cells are fitted by construction and are therefore excluded from scoring.
+That is the genus-two check run at registration rather than after: a metric whose value is entailed
+by the fitting rule carries no evidence, and four of the twenty-eight cells per knob are entailed.
+
+**Falsifier for A.** Out-of-sample RMS error above 0.045 in success units on the eighteen scored
+cells, or out-of-sample R-squared below 0.5, at *either* knob. The threshold matches the one CR-75
+registered so that the two are read on the same scale.
+
+**B, the consequence, which is the part a program office would use.** The offsets fix the gap
+between any two designs at any operating point, and the same probit reading fixes the per-mission
+standard deviation. So the replication needed to separate two designs is determined at a new
+operating point by a fit made at an old one, and a study can be priced before it is run. Scored
+against the `budget_to_choose` the truth tables actually achieved.
+
+**Falsifier for B.** If predicted and measured cost disagree in rank across the four spans, Spearman
+below 0.5, at both knobs, then the model does not price studies and B is retracted.
+
+**Pre-declared branch, so it is not decided after the fact.** The measured gaps between top designs
+may themselves be noise: at two thousand missions the standard error of a success reading is about
+0.011, and if more than half the cells have a measured top-two gap smaller than the standard error
+of that gap, then the measured costs are not a usable comparison target. In that case B is reported
+as a prediction with no valid test available, *not* as a validated one, and the fact that direct
+measurement is the noisier of the two estimates is reported as the finding.
+
+**Secondary and exploratory, declared as such.** `blue_loss_frac` is also a bounded fraction and the
+same shape may apply. It is scored and reported, but it is exploratory: no threshold is registered
+for it and it cannot support the claim on its own. `served_per_step` is a rate with no upper bound,
+the threshold story does not apply, and it is not scored.
