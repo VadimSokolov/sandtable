@@ -36,6 +36,26 @@ NAME = {"served_per_step": "Srv", "success": "Succ", "blue_loss_frac": "Loss"}
 TRUTH = HERE.parent / "experiments" / "results" / "search_truth"
 
 
+
+def bounded_ratio(num: float, den: float, den_se: float) -> float:
+    """A ratio whose denominator is a measurement, or a valid bound when it is not.
+
+    Every ratio this file publishes goes through here. A denominator consistent with zero makes the
+    ratio unbounded in variance and nearly entailed by whatever rule declared it unresolved, which
+    is how a gap of 0.000094 plus or minus 0.003791 once became a published 52,317,293. Where the
+    denominator clears two standard errors it is used directly; where it does not, it is replaced
+    by that ceiling, which turns the quotient into a floor computed from two measured quantities.
+    """
+    if den_se < 0:
+        raise ValueError("standard error cannot be negative")
+    floor = 2.0 * den_se
+    if den > floor:
+        return num / den
+    if floor <= 0:
+        raise ValueError("denominator is zero with no error to bound it")
+    return num / floor
+
+
 def _key_cost() -> list[tuple[str, str]]:
     """What each problem's answer key can and cannot resolve.
 
@@ -107,7 +127,7 @@ def _key_cost() -> list[tuple[str, str]]:
     # gives a valid floor on the ratio from two quantities that are both measured. Where the table
     # did resolve, the gap exceeds two standard errors and the same expression returns it exactly.
     # A ratio whose denominator is consistent with zero is not reported at all.
-    bnd = [r["spread"] / max(r["gap"], r["det"]) for r in rows if r["spread"] > 0]
+    bnd = [bounded_ratio(r["spread"], r["gap"], r["se"]) for r in rows if r["spread"] > 0]
     out += [("BnSpreadOverGapMed", f"{statistics.median(bnd):.1f}"),
             ("BnSpreadOverGapMax", f"{max(bnd):.0f}"),
             ("BnCheaper", f"{statistics.median(bnd) ** 2:.0f}"),

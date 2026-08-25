@@ -415,6 +415,42 @@ ROWS = [
      "decision rule rather than of the number or of the metric, and is answerable at registration "
      "from block size alone; guarded by an announcement in the survey that prints the floor and "
      "the contrasts sitting under it"),
+
+    ("a cost extrapolated from a gap that failed to resolve",
+     "(floored, not a claim)",
+     "\\textsc{retracted}. The second paper reported 52{,}317{,}293 missions per design as the "
+     "budget one answer key would have needed, from "
+     "$\\mathrm{reps}\\,(2\\,\\mathrm{se}/\\mathrm{gap})^2$ with a gap of 0.000094 whose "
+     "standard error is 0.003791. The denominator is two percent of its own noise. This is the "
+     "floor argument met one level downstream: a table is called unresolved exactly when its gap "
+     "sits inside two standard errors of zero, so the extrapolation is ill-conditioned precisely "
+     "on the problems it gets quoted for, and it is close to entailed besides, returning the "
+     "replication count already spent at a gap of zero and a quarter of it at the resolving "
+     "threshold. Audited across all thirty tables: eight have a gap smaller than one standard "
+     "error of itself. Three published macros were withdrawn and replaced by resolving power "
+     "against available room, both halves measured directly. A number computed from a below-floor "
+     "reading inherits the floor; guarded by every published ratio now passing through "
+     "\\texttt{bounded\\_ratio}, which uses the denominator only where it clears two standard "
+     "errors and otherwise divides by that ceiling, and by a test that fails if either withdrawn "
+     "macro is emitted again."),
+
+    ("one latent offset per design, one baseline per operating point",
+     "CR-77 A",
+     "\\textsc{holds}. Six offsets fitted at one operating point predict eighteen held-out cells "
+     "per knob at RMS 0.0122 and 0.0134, against a registered 0.045. The probit shape beats a "
+     "constant shift in the probability itself at all four arms by 1.7 to 2.2 times. The controls "
+     "were added after the threshold had already been cleared and they cost one arm: on the queue "
+     "discipline a null predictor beats the model on mission success, because the seven "
+     "disciplines span one standard error there and the fitted offsets carry forward the noise "
+     "they were fitted on. That arm is reported as uninformative, not as a confirmation."),
+
+    ("the same fit prices a study at a new operating point",
+     "CR-77 B",
+     "\\textsc{retracted}. Spearman between predicted and measured replication cost across four "
+     "operating points is $-0.200$ and $+0.400$ against a registered 0.50. The branch registered "
+     "in advance, that the measured costs are unusable if more than half the gaps sit inside their "
+     "own standard error, did not fire: exactly half do, four of eight. Retracted rather than "
+     "excused."),
 ]
 
 

@@ -429,3 +429,37 @@ def test_gp_cost_does_not_grow_with_budget():
         times.append(time.perf_counter() - t0)
     # Eightfold budget on a seven-design space should cost roughly eightfold, not five hundredfold.
     assert times[1] < 40 * times[0], f"cost grew superlinearly in budget: {times}"
+
+
+# ---------------------------------------------------------------------------------------------
+# The guard for the noise-denominator defect. The second paper published 52,317,293 missions per
+# design, computed by dividing by a gap of 0.000094 measured to plus or minus 0.003791. Nothing
+# stopped it, because nothing was asking. These do.
+
+def test_a_ratio_refuses_a_denominator_consistent_with_zero():
+    import importlib.util
+    import pathlib
+    spec = importlib.util.spec_from_file_location(
+        "mbn", pathlib.Path(__file__).resolve().parents[1] / "tools" / "make_bench_numbers.py")
+    mbn = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mbn)
+
+    # Resolved: the denominator clears two standard errors and is used as measured.
+    assert mbn.bounded_ratio(1.0, 0.10, 0.01) == pytest.approx(10.0)
+    # Not resolved: the gap is 2% of its own error, so the quotient must collapse to the bound
+    # rather than blowing up. The unguarded value would be 10638.
+    assert mbn.bounded_ratio(1.0, 0.000094, 0.003791) == pytest.approx(1.0 / 0.007582)
+    # And the bound is always the conservative direction: never larger than the naive ratio.
+    assert mbn.bounded_ratio(1.0, 0.000094, 0.003791) < 1.0 / 0.000094
+
+
+def test_no_published_macro_extrapolates_a_budget_from_an_unresolved_gap():
+    """`reps * (2 se / gap) ** 2` is bounded between reps/4 and reps for any unresolved table,
+    whatever the data say, so it reports the study's own budget back to it. It must not return."""
+    import pathlib
+    src = (pathlib.Path(__file__).resolve().parents[1] / "tools" / "make_bench_numbers.py").read_text()
+    assert "BnKeyMedianNeed" not in src, "the retracted extrapolation is back"
+    assert "BnKeyWorstNeed" not in src, "the retracted extrapolation is back"
+    gen = pathlib.Path(__file__).resolve().parents[1] / "paper-search" / "gen" / "bench_numbers.tex"
+    if gen.exists():
+        assert "Need" not in gen.read_text(), "a retracted macro is still being emitted"
