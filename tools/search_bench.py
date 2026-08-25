@@ -21,11 +21,16 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 import numpy as np                                              # noqa: E402
 
-from sandtable.search import PROBLEMS, get                      # noqa: E402
+from sandtable.search import PROBLEMS, get
+from sandtable.search.methods import METHODS as _METHODS                      # noqa: E402
 from sandtable.search import oracle, runner                     # noqa: E402
 
 BUDGETS = (64, 128, 256, 512, 1024)
-METHODS = ("grid", "random", "halving", "ucb", "thompson", "gp_ei")
+# Read from the registry, never restated. A literal here held six names while the registry held
+# ten, so four methods silently never ran: the two unrepaired controls and the two single-estimator
+# discriminators, which are precisely the arms that tell a broken estimator apart from a claim
+# about adaptive search. Same genus as the count two hundred lines below that warns about it.
+METHODS = tuple(_METHODS)
 
 
 def _truth_cell(spec):

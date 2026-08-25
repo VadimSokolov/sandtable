@@ -463,3 +463,17 @@ def test_no_published_macro_extrapolates_a_budget_from_an_unresolved_gap():
     gen = pathlib.Path(__file__).resolve().parents[1] / "paper-search" / "gen" / "bench_numbers.tex"
     if gen.exists():
         assert "Need" not in gen.read_text(), "a retracted macro is still being emitted"
+
+
+def test_the_sweep_runs_every_method_in_the_registry():
+    """A literal list of six here held while the registry held ten, so the two unrepaired controls
+    and the two single-estimator discriminators never ran, and the arms that separate a broken
+    estimator from a claim about adaptive search were silently absent from the sweep."""
+    import importlib.util
+    import pathlib
+    from sandtable.search.methods import METHODS as REGISTRY
+    spec = importlib.util.spec_from_file_location(
+        "sb", pathlib.Path(__file__).resolve().parents[1] / "tools" / "search_bench.py")
+    sb = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sb)
+    assert set(sb.METHODS) == set(REGISTRY), "the sweep's method list drifted from the registry"
