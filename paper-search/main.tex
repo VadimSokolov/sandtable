@@ -28,9 +28,9 @@ and the standard answer is Bayesian optimization. We test that answer on a suite
 \BnKeyProblems{} mission-design search problems whose optima were established by separate registered
 studies of the simulator that involved no optimizer, with the budget denominated in mission
 replications rather than evaluations and every method paired on the same missions in the same order.
-Uniform allocation over the design set is never beaten by any of the \BnMethods{} methods compared,
-including three bandit variants and three Gaussian-process variants, and at small budgets it wins by
-\RsCrossLowEff{} of the achievable spread at $t = \RsCrossLowT{}$. The apparent reversal at large
+Uniform allocation over the design set is not beaten at that tier by any of the nine other methods
+compared, which include three bandit variants and three Gaussian-process variants, and at small
+budgets it wins by \RsCrossLowEff{} of the achievable spread at $t = \RsCrossLowT{}$. The apparent reversal at large
 budgets does not survive a paired test and is reported as equivalent. The reason is a property of
 the problem rather than of the methods: an allocator can only concentrate on the basis of evidence
 that ranks the arms, and on these problems that evidence is expensive. Establishing the answer key
