@@ -9560,3 +9560,56 @@ is steepest and a wrong shape costs the most. X3 moves the baseline with span in
 a strength W4 never used, which is the section that decides whether the model is about the metric or
 merely about opposing strength. Blue loss rides along on every section, because the whole account
 requires that where success stops reporting the capability, the uncensored axis still does.
+
+## CR-76: the gate has a resolution, it is set by block size, and more blocks do not move it
+
+**The arithmetic came first and needs no data.** The gate requires that sixty percent of blocks
+agree in sign. Mission success is zero or one per mission, so a block mean over `reps` missions moves
+in steps of one over `reps`, and a block registers any difference at all only if at least one of its
+missions flips. The fraction of blocks that can agree is therefore capped at
+`1 - (1 - p)^reps` where `p` is the per-mission flip rate, and the sign requirement becomes
+
+    p >= 1 - 0.40 ** (1 / reps)
+
+which at sixty-four missions per block is 0.0142. Since the reported effect is bounded above by the
+flip rate, an effect below that value can only clear the gate if the treatment also moves a
+comparable number of missions the other way, which is the regime where the difference is noise. The
+consequence runs against instinct: **running more blocks does not lower this floor. Only more
+missions per block does.** Sixteen missions per block puts it at 0.0557, two hundred fifty-six at
+0.0036, one thousand twenty-four at 0.0009.
+
+**The audit, which the arithmetic did not need but which prices it.** Sweeping every contrast that
+feeds a macro: 2150 published contrasts, 596 of them on mission success, the one metric whose block
+means actually step in one over `reps`. Which metrics those are was established by asking the logs
+rather than by reading names, because getting that wrong would have been this project's first genus
+committed inside the check for its third: success steps in one over `reps` in 98.8 percent of
+16,688 readings, `blue_loss_frac` in 12.6 percent since its denominator counts vehicles, and
+`served_per_step` in 1.4 percent.
+
+Of those 596, **262 gated and not one had an effect below the floor.** The smallest effect that ever
+gated is 0.0405. The largest effect that read `equivalent` while below the floor is 0.01416, which
+sits 0.00005 under the predicted 0.01422. A single counterexample would have refuted the whole
+account and there are none in seventy battery logs.
+
+**So 151 published `equivalent` verdicts were returned by arithmetic rather than by evidence.** They
+are not wrong. Every one of them reports an effect that is genuinely small. What they cannot do is
+distinguish an effect of 0.000 from one of 0.014, and no quantity of replication at that block size
+ever could.
+
+**This is a third genus, and its exposing question is again different.** The first asks what the
+denominator counts and whether the arm changed it, and every instance produced a wrong number. The
+second asks whether the event a metric counts can occur at all under an arm's definition, and every
+instance produced a true number carrying nothing. The third asks **what the smallest effect this
+decision rule could have separated from zero is, and whether the observed effect clears it.** Like
+the second it is answerable at registration with no data at all, needing only the block size and the
+sign threshold. Unlike the second, the remedy is not a different scenario or a different axis: it is
+a larger block, and it is the one repair that a study which reaches for more replication will not
+find, because more replication is exactly what does not work.
+
+**What this does not say.** The floor is derived for a metric whose per-mission reading is zero or
+one. It says nothing about continuous axes, where blocks essentially always differ and the sign
+criterion is not the binding constraint. And it is a property of a sign-consistency rule rather than
+of the world: a gate built only on a t statistic has no such floor, and would instead accept
+differences this one refuses. Which is the better rule is not settled here. What is settled is that
+this one has a resolution, that the resolution is computable before a run, and that it was not
+being computed.
