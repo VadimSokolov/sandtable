@@ -12,6 +12,7 @@
 
 \newcommand{\sandtable}{\textsc{SandTable}}
 \input{gen/bench_numbers}
+\input{gen/results_numbers}
 
 \title{Searching a mission design space: what a fast simulator changes about\\
        optimization, and what it does not}
@@ -22,7 +23,26 @@
 \maketitle
 
 \begin{abstract}
-PLACEHOLDER. Written last, from the numbers.
+Mission design asks which setting of a simulator's controllable parameters gives the best outcome,
+and the standard answer is Bayesian optimization. We test that answer on a suite of
+\BnKeyProblems{} mission-design search problems whose optima were established by separate registered
+studies of the simulator that involved no optimizer, with the budget denominated in mission
+replications rather than evaluations and every method paired on the same missions in the same order.
+Uniform allocation over the design set is never beaten by any of the \BnMethods{} methods compared,
+including three bandit variants and three Gaussian-process variants, and at small budgets it wins by
+\RsCrossLowEff{} of the achievable spread at $t = \RsCrossLowT{}$. The apparent reversal at large
+budgets does not survive a paired test and is reported as equivalent. The reason is a property of
+the problem rather than of the methods: an allocator can only concentrate on the basis of evidence
+that ranks the arms, and on these problems that evidence is expensive. Establishing the answer key
+made the cost measurable, and it is severe. Only \BnKeyResolved{} of the \BnKeyProblems{} problems
+separate their own top two designs at two standard errors, none of the mission-success problems do,
+and on that axis a key built from \BnRepsSucc{} missions per design can only separate two designs
+differing by a median \BnKeyDetSucc{} percent of the entire distance from best design to worst. The
+spread across the design set is nonetheless large, at least \BnSpreadOverGapMed{} times the gap
+between the best two, so choosing a good design is affordable while proving which is best is not,
+by a factor of at least \BnCheaper{}. We therefore grade normalized regret and carry argmax recovery
+as a flag, and we argue that a requirement written from the argmax of a mission sweep is usually
+written from noise.
 \end{abstract}
 
 \section{Introduction}
@@ -343,7 +363,6 @@ literature assumed and not the shape the surrogate literature assumes.
 \section{Results}
 \label{sec:results}
 
-\input{gen/results_numbers}
 
 The sweep is \RsRows{} graded runs: \RsMethods{} methods on \RsProblems{} problems at five budget
 rungs each, \RsReplicates{} replicates per cell, every method on every replicate drawing the same
