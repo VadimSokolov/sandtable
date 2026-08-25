@@ -104,7 +104,13 @@ def spearman(xs, ys) -> float:
 
 # ---------------------------------------------------------------- part A
 
-def fit_and_predict(knob: str, metric: str, anchor_rule: str = "mid") -> dict:
+def fit_and_predict(knob: str, metric: str, anchor_rule: str = "mid",
+                    shape: str = "probit") -> dict:
+    """`shape` selects the link the design offsets are held constant on. "probit" is CR-74's
+    account. "linear" is the naive alternative, a constant shift in the probability itself, and
+    "null" gives every design the anchor's value, which is what the operating point alone buys.
+    The two controls exist because an R-squared against a wide-ranging held-out set is not evidence
+    for a shape unless a shape-free predictor does worse on the same cells."""
     cells = {s: cell(knob, s, metric) for s in SPANS}
     designs = cells[FIT_SPAN]["designs"]
     fitv = cells[FIT_SPAN]["val"]
@@ -118,14 +124,22 @@ def fit_and_predict(knob: str, metric: str, anchor_rule: str = "mid") -> dict:
         anchor = designs[0]
 
     # Six free offsets. The anchor's is zero by construction, which is why its cells never score.
-    delta = {d: _ppf(fitv[d]) - _ppf(fitv[anchor]) for d in designs}
+    if shape == "probit":
+        delta = {d: _ppf(fitv[d]) - _ppf(fitv[anchor]) for d in designs}
+    elif shape == "linear":
+        delta = {d: fitv[d] - fitv[anchor] for d in designs}
+    else:
+        delta = {d: 0.0 for d in designs}
 
     rows, ent = [], []
     for s in SPANS:
         c = cells[s]
         base = c["val"][anchor]                       # one reading per span, and nothing else
         for d in designs:
-            pred = _cdf(_ppf(base) + delta[d])
+            if shape == "probit":
+                pred = _cdf(_ppf(base) + delta[d])
+            else:
+                pred = min(max(base + delta[d], 0.0), 1.0)
             held = s != FIT_SPAN
             entailed = (d == anchor) or (s == FIT_SPAN)
             row = {"span": s, "design": d, "actual": c["val"][d], "pred": pred,
@@ -139,7 +153,7 @@ def fit_and_predict(knob: str, metric: str, anchor_rule: str = "mid") -> dict:
     mean = sum(act) / n
     sst = sum((a - mean) ** 2 for a in act)
     rsq = 1.0 - sum(e * e for e in err) / sst if sst > 0 else float("nan")
-    return {"knob": knob, "metric": metric, "anchor": anchor, "delta": delta,
+    return {"knob": knob, "metric": metric, "anchor": anchor, "delta": delta, "shape": shape,
             "rows": rows, "entailed": ent, "n": n, "rms": rms, "rsq": rsq,
             "cells": cells, "designs": designs}
 
@@ -210,6 +224,10 @@ def main() -> int:
             print(f"        out-of-sample RMS {f['rms']:.4f}   R2 {f['rsq']:+.3f}   "
                   f"{'PASS' if ok else 'FAIL'}")
             print(f"        robustness (first-design anchor): RMS {g['rms']:.4f}  R2 {g['rsq']:+.3f}")
+            for sh in ("linear", "null"):
+                c = fit_and_predict(knob, metric, shape=sh)
+                print(f"        control {sh:6s}: RMS {c['rms']:.4f}  R2 {c['rsq']:+.3f}"
+                      f"   (probit is {c['rms'] / f['rms']:.2f}x better on RMS)")
             worst = max(f["rows"], key=lambda r: abs(r["pred"] - r["actual"]))
             print(f"        worst cell  span {worst['span']:2d}  actual {worst['actual']:.4f}  "
                   f"pred {worst['pred']:.4f}  se {worst['se']:.4f}")

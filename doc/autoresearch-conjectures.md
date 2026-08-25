@@ -9669,3 +9669,124 @@ measurement is the noisier of the two estimates is reported as the finding.
 same shape may apply. It is scored and reported, but it is exploratory: no threshold is registered
 for it and it cannot support the claim on its own. `served_per_step` is a rate with no upper bound,
 the threshold story does not apply, and it is not scored.
+
+## CR-77, scored
+
+**A holds, and the registered threshold turned out to be the weakest part of the registration.**
+Fitting six latent offsets at `n_blue = 8` and reading one baseline per held-out span predicts
+eighteen out-of-sample cells per knob at RMS 0.0122 and R-squared 0.967 on the backlog bound, and
+RMS 0.0134 and R-squared 0.896 on the queue discipline. Both clear the registered 0.045 and 0.50.
+
+**The controls were added after A had already passed, and they change how it reads.** The
+registration named a threshold on RMS and R-squared and never asked whether a predictor with no
+shape in it could clear the same bar. That is the entailed-zero question asked about a decision
+rule instead of a metric, and not asking it is the same mistake the first paper's second genus
+names. Two controls were added: a linear one, where a design's offset is a constant shift in the
+probability itself, and a null one, where every design is predicted to equal the anchor.
+
+| knob | metric | probit RMS | linear RMS | null RMS |
+|---|---|---|---|---|
+| `qcap` | success | 0.0122 | 0.0273 | 0.0609 |
+| `qcap` | blue loss | 0.0174 | 0.0324 | 0.0468 |
+| `disc` | success | 0.0134 | 0.0231 | 0.0084 |
+| `disc` | blue loss | 0.0056 | 0.0097 | 0.0110 |
+
+The probit shape beats the linear one at all four arms, by between 1.7 and 2.2 times on held-out
+RMS. That is the CR-74 shape claim tested out of sample on a quantity CR-74 never touched, and it
+is the part worth keeping.
+
+The probit shape beats the null at three arms and **loses to it at the fourth**, queue discipline
+on mission success, 0.0134 against 0.0084. The reason is visible once asked: across the seven
+disciplines mission success spans 4.6 standard errors at eight assets and **1.0 standard error at
+sixteen**. There is almost nothing there to predict, so the baseline alone predicts it, and the
+fitted offsets carry forward the noise they were fitted on. That arm cannot test a shape and is
+reported as uninformative rather than as a second confirmation. A registration that had asked
+the entailed-zero question of its own threshold would have excluded it in advance.
+
+**B is retracted on its registered falsifier.** Spearman between predicted and measured
+replication cost across the four spans is -0.200 on the backlog bound and +0.400 on the queue
+discipline; the registration required 0.50 at either. The pre-declared branch that would have
+excused the test did not fire: it needed more than half the measured gaps to sit inside their own
+standard error and exactly half of them do, four of eight. B is retracted, not excused.
+
+**What the retraction shows, recorded separately because it is not a rescue of B.** The measured
+cost is a ratio whose denominator is the measured gap, and on the queue discipline three of four
+gaps sit inside one standard error of zero: 0.0075 against 0.0124, 0.0030 against 0.0097, and
+0.0005 against 0.0033. Squaring that denominator gives numbers like a measured cost of 170,235
+missions per design at sixteen assets against 2,435 at twelve. Those are not measurements of
+anything. Whether a fitted estimate of the same quantity is steadier is a different claim from B,
+needs its own registration, and does not un-retract B.
+
+**A post hoc observation from the same tables, flagged as post hoc, and registered forward as
+CR-78 C rather than claimed here.** Across both knobs and all four spans, the design set's grip
+on the two bounded metrics weakens as span widens while its grip on the unbounded one
+strengthens. In spread over standard error, the backlog bound runs 15.6, 15.6, 12.4, 7.5 on
+success and 38.0, 39.7, 31.5, 19.8 on loss, while on delivered service it runs 113, 158, 213,
+478. The queue discipline does the same thing: 4.6, 3.5, 3.9, 1.0 and 9.8, 9.0, 8.5, 6.4 against
+22, 38, 65, 160. A threshold account predicts exactly that asymmetry, because compression against
+a bound is what a bounded reading does and a rate has no bound to compress against. Delivered
+service is the control the ceiling account never had.
+
+## CR-78: the same fit, asked to predict an operating point nobody has simulated
+
+**Registered before the tables at `n_blue = 24` were built.** Nothing at that span exists on disk
+for these metrics when this is written. The offsets below were fitted at `n_blue = 8` alone and
+are frozen here as numbers so that scoring is transcription rather than judgement.
+
+**D, declared first because it removes an arm before it can be misread.** Extrapolating the
+anchor's probit trajectory puts mission success at `n_blue = 24` between 0.9991 and 0.9999 for
+all seven designs at both knobs: a spread of about 0.0007 against a standard error of 0.011, or
+six hundredths of one standard error. Success at this span cannot rank the design set, so it is
+**not scored as a test of the shape**. It is still run, for one reason: if success at twenty-four
+is not at ceiling then the baseline extrapolation is wrong and B fails. Declared now so that a
+ceiling reading cannot later be reported as a confirmation of anything.
+
+**A, the operationally useful form.** Measure only the anchor design at the new operating point
+and predict the other six from the frozen offsets. Scored on blue loss at both knobs, twelve
+predictions.
+
+**Falsifier for A.** At either knob, probit RMS at or above the smaller of the null and linear
+control RMS on the same cells, or probit RMS at or above half the measured spread across designs
+at `n_blue = 24`. The control clause is the lesson CR-77 paid for.
+
+**B, the bold form: no data at the new operating point at all.** The anchor's own baseline is
+extrapolated from its probit trajectory across the four fitted spans, which is a straight line in
+probit with slope -0.1009 per asset on the backlog bound and -0.0822 on the queue discipline for
+blue loss. The point predictions follow.
+
+`qcap` blue loss at `n_blue = 24`, anchor `{"queue_capacity": 12}`:
+
+| design | offset | predicted |
+|---|---|---|
+| `{"queue_capacity": 12}` | +0.0000 | 0.0437 |
+| `{"queue_capacity": 1}` | -0.2611 | 0.0244 |
+| `{"queue_capacity": 2}` | -0.2687 | 0.0240 |
+| `{"queue_capacity": 3}` | -0.1501 | 0.0315 |
+| `{"queue_capacity": 4}` | -0.0659 | 0.0380 |
+| `{"queue_capacity": 6}` | -0.0353 | 0.0406 |
+| `{"queue_capacity": 8}` | -0.0183 | 0.0421 |
+
+`disc` blue loss at `n_blue = 24`, anchor `{"queue_discipline": "patient_first"}`:
+
+| design | offset | predicted |
+|---|---|---|
+| `{"queue_discipline": "easy_first"}` | -0.0469 | 0.0419 |
+| `{"queue_discipline": "edf"}` | -0.0711 | 0.0398 |
+| `{"queue_discipline": "fcfs"}` | -0.0254 | 0.0439 |
+| `{"queue_discipline": "hard_first"}` | -0.0184 | 0.0446 |
+| `{"queue_discipline": "patient_first"}` | +0.0000 | 0.0463 |
+| `{"queue_discipline": "random"}` | -0.0471 | 0.0419 |
+| `{"queue_discipline": "round_robin"}` | -0.0709 | 0.0398 |
+
+**Falsifier for B.** The anchor design's own reading at `n_blue = 24` differing from its
+predicted value by more than 0.010 in loss units, at either knob. That isolates the one thing B
+adds over A, which is the extrapolated baseline.
+
+**C, the discriminator, and the reason this run is worth an hour of a cluster.** If the
+compression is a property of bounded readings rather than of the simulator getting duller, then
+at `n_blue = 24` against `n_blue = 16` the design set's spread in units of its own standard error
+must FALL on blue loss and on success, and must RISE on delivered service, at both knobs. Six
+directions, registered.
+
+**Falsifier for C.** Any one of the six going the other way.
+

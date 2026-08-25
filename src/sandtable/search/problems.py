@@ -234,7 +234,37 @@ for _base, _tag in (("qcap_uniform", "qcap"), ("discipline", "disc")):
             ))
 
 
+# ---------------------------------------------------------------------------------------------
+# The prediction set, which is deliberately NOT part of the benchmark suite.
+#
+# CR-78 registers point predictions for an operating point nobody has simulated, made from a fit at
+# an operating point somebody has. Those cells need to be addressable by key so the truth builder
+# and the scorer can reach them, and they must not enter `PROBLEMS`, because the benchmark sweep
+# enumerates `PROBLEMS` and a suite that grew between the launch of a run and the reading of it
+# would not be the suite that was launched. So they live here and `get` falls through to them.
+PREDICT: dict[str, Problem] = {}
+
+for _base, _tag in (("qcap_uniform", "qcap"), ("discipline", "disc")):
+    _b = PROBLEMS[_base]
+    for _suffix, _metric, _dir in _COST_AXES:
+        _p = Problem(
+            key=f"{_tag}_s24_{_suffix}",
+            scenario=_b.scenario,
+            fixed={**_b.fixed, "n_blue": 24},
+            variables=_b.variables,
+            metric=_metric, direction=_dir,
+            optimum={},
+            provenance="CR-78 prediction set: values were written down before this table was "
+                       "built, from a probit fit at n_blue=8 alone",
+            note=f"CR-78 held-out operating point, {_metric}",
+            tolerance=_b.tolerance,
+        )
+        PREDICT[_p.key] = _p
+
+
 def get(key: str) -> Problem:
-    if key not in PROBLEMS:
-        raise KeyError(f"unknown problem {key!r}; have {sorted(PROBLEMS)}")
-    return PROBLEMS[key]
+    if key in PROBLEMS:
+        return PROBLEMS[key]
+    if key in PREDICT:
+        return PREDICT[key]
+    raise KeyError(f"unknown problem {key!r}; have {sorted(PROBLEMS)}")
