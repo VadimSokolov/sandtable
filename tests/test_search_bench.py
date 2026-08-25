@@ -330,3 +330,17 @@ def test_regret_frac_is_zero_at_the_best_and_one_at_the_worst():
     assert oracle.regret_frac(p, json.loads(lo), t) == pytest.approx(1.0)
     mid = sorted(t, key=lambda k: t[k])[len(t) // 2]
     assert 0.0 < oracle.regret_frac(p, json.loads(mid), t) < 1.0
+
+
+def test_chunked_pool_building_reproduces_the_sequential_pool():
+    """The pools stage splits a cell's missions into slices and runs them in parallel. That is only
+    safe because mission r is seeded from r alone; if a slice's readings depended on where the slice
+    started, the assembled pool would differ from the sequential one and the answer key would be a
+    function of how many cores the cluster happened to give the job."""
+    p = get("qcap_uniform")
+    d = p.designs()[0]
+    whole = oracle.draw_range(p, d, 0, 6)
+    pieces = [oracle.draw_range(p, d, 0, 2), oracle.draw_range(p, d, 2, 4),
+              oracle.draw_range(p, d, 4, 6)]
+    joined = {m: [x for piece in pieces for x in piece[m]] for m in whole}
+    assert joined == whole

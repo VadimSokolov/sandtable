@@ -87,6 +87,28 @@ def _draws(p: Problem, design: dict, reps: int) -> dict[str, list[float]]:
     return got
 
 
+def draw_range(p: Problem, design: dict, lo: int, hi: int) -> dict[str, list[float]]:
+    """Missions `lo` through `hi` of a design's pool, as raw per-metric readings.
+
+    The unit of parallelism when a pool is built. Mission `r` is seeded `TRUTH_SEED + r` and depends
+    on nothing else, so any contiguous slice can be computed independently and the pieces
+    concatenated: the pool a set of chunks assembles into is identical, mission for mission, to the
+    one a single sequential loop would have produced. That matters because a cell is eight thousand
+    missions on the dearest axis, and running a cell as one task made the critical path forty-seven
+    minutes regardless of how many cores were thrown at it.
+    """
+    scn = load_scenario(p.scenario)
+    runs = [run_mission(scn, seed=TRUTH_SEED + r, params=p.params(design)) for r in range(lo, hi)]
+    return {m: [float(r[m]) for r in runs] for m in BENCH_METRICS if m in runs[0]}
+
+
+def pool_store(p: Problem, design: dict, got: dict[str, list[float]]) -> None:
+    """Persist an assembled pool and put it in the run cache."""
+    key = _run_key(p, design)
+    _DRAWS[key] = got
+    _pool_save(key, got)
+
+
 def pool_for(p: Problem, design: dict) -> dict[str, list[float]]:
     """The stored per-mission pool for one design, or a refusal.
 

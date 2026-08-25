@@ -60,6 +60,13 @@ def _cells(keys):
     return specs
 
 
+def _pool_chunk(spec):
+    """One contiguous slice of one cell's missions. Top level so a pool can pickle it."""
+    key, design, lo, hi = spec
+    return (key, json.dumps(design, sort_keys=True), lo,
+            oracle.draw_range(get(key), design, lo, hi))
+
+
 def cmd_pools(a) -> None:
     """Compute and store the per-mission pools for one shard of the cells.
 
@@ -72,14 +79,43 @@ def cmd_pools(a) -> None:
     """
     specs = _cells(a.problems or list(PROBLEMS))
     mine = [s for i, s in enumerate(specs) if i % a.of == a.shard]
-    total = sum(s[2] for s in mine)
-    print(f"shard {a.shard}/{a.of}: {len(mine)} of {len(specs)} cells, {total:,} missions",
+    # Skip cells already on disk, so a preempted shard resumes instead of repaying for its finished
+    # cells, and so re-running one shard after a failure costs only what that shard still owes.
+    todo = [s for s in mine if oracle._pool_load(oracle._run_key(get(s[0]), s[1])) is None]
+    total = sum(s[2] for s in todo)
+    print(f"shard {a.shard}/{a.of}: {len(todo)} of {len(mine)} cells still owed "
+          f"({len(specs)} in the benchmark), {total:,} missions", flush=True)
+    if not todo:
+        print("### POOLS DONE", flush=True)
+        return
+
+    # Chunked WITHIN a cell, not one task per cell. Mission r is seeded from r alone, so a cell's
+    # slices are independent and assemble to exactly the sequential pool. One task per cell made the
+    # critical path the dearest single cell, forty-seven minutes, whatever the core count.
+    jobs = [(k, d, lo, min(lo + a.chunk, reps))
+            for k, d, reps in todo for lo in range(0, reps, a.chunk)]
+    jobs.sort(key=lambda j: (j[0], j[2]))
+    print(f"  {len(jobs)} chunks of up to {a.chunk} missions across {a.workers} workers",
           flush=True)
+
+    parts: dict[tuple[str, str], dict[int, dict]] = {}
+    want = {(k, json.dumps(d, sort_keys=True)): reps for k, d, reps in todo}
+    designs = {(k, json.dumps(d, sort_keys=True)): d for k, d, _ in todo}
     done = 0
     with ProcessPoolExecutor(max_workers=a.workers) as ex:
-        for _rk, _draws in ex.map(_truth_cell, mine):
+        for key, dj, lo, got in ex.map(_pool_chunk, jobs):
+            parts.setdefault((key, dj), {})[lo] = got
             done += 1
-            print(f"  {done}/{len(mine)} cells", flush=True)
+            if done % 10 == 0 or done == len(jobs):
+                print(f"  {done}/{len(jobs)} chunks", flush=True)
+            have = sum(len(next(iter(v.values()))) for v in parts[(key, dj)].values())
+            if have >= want[(key, dj)]:
+                pieces = parts.pop((key, dj))
+                full = {m: [x for lo_ in sorted(pieces) for x in pieces[lo_][m]]
+                        for m in next(iter(pieces.values()))}
+                oracle.pool_store(get(key), designs[(key, dj)], full)
+                print(f"  stored {key} {dj} at {len(next(iter(full.values())))} missions",
+                      flush=True)
     print("### POOLS DONE", flush=True)
 
 
@@ -300,6 +336,9 @@ def main() -> None:
     pl.add_argument("--shard", type=int, default=0)
     pl.add_argument("--of", type=int, default=1)
     pl.add_argument("--workers", type=int, default=16)
+    pl.add_argument("--chunk", type=int, default=250,
+                    help="missions per parallel task; the unit that bounds the "
+                         "critical path when one cell is thousands of missions")
     pl.set_defaults(fn=cmd_pools)
     t = sub.add_parser("truth"); t.add_argument("--problems", nargs="*")
     t.add_argument("--refresh", action="store_true")
