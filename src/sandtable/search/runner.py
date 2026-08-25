@@ -127,20 +127,23 @@ class PoolMeter(Meter):
         key = json.dumps(design, sort_keys=True)
         pool = self._stream(key, design)
         idx, pos, N = self._order[key], self._pos[key], len(pool)
-        take = []
-        while len(take) < n:
+        take, got = [], 0                                   # `got` counts MISSIONS, not chunks
+        while got < n:
             if pos >= N:                                    # pool exhausted; reshuffle and reuse
                 self.reused += 1
                 idx = np.random.default_rng(self._seed(key, self.reused)).permutation(N)
                 self._order[key], pos = idx, 0
-            want = min(n - len(take), N - pos)
+            want = min(n - got, N - pos)
             take.append(idx[pos:pos + want])
             pos += want
+            got += want
         self._pos[key] = pos
+        picked = np.concatenate(take)
+        assert len(picked) == n, (len(picked), n)
         self.spent += n
         self.calls += 1
         self.seen.add(key)
-        return float(np.mean(pool[np.concatenate(take)]))
+        return float(np.mean(pool[picked]))
 
 
 class BudgetExhausted(RuntimeError):
