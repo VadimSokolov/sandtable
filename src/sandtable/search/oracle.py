@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import pathlib
 
 from ..scenario import load_scenario
@@ -137,7 +138,12 @@ def pool_depth(p: Problem, design: dict | None = None) -> int:
 
 
 def _pool_path(key: str) -> pathlib.Path:
-    d = pathlib.Path("experiments/results/search_pools")
+    # Overridable, so a cluster job can write pools straight to durable storage instead of into its
+    # own snapshot and copying back at exit. On a preemptible partition the copy-back is the whole
+    # risk: a shard killed at ninety percent had stored nothing, and everything it computed was
+    # recomputed by its replacement. Pointed at the shared directory, a cell becomes durable the
+    # moment it is assembled and preemption costs at most the one cell in flight.
+    d = pathlib.Path(os.environ.get("SANDTABLE_POOLS", "experiments/results/search_pools"))
     return d / (hashlib.sha1(key.encode()).hexdigest()[:16] + ".npz")
 
 

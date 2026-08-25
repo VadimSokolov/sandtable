@@ -15,7 +15,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=16G
-#SBATCH --time=00:45:00
+#SBATCH --time=02:00:00
 #SBATCH --output=/scratch/vsokolov/sandtable-ar/runlogs/%x-%A_%a.out
 #SBATCH --error=/scratch/vsokolov/sandtable-ar/runlogs/%x-%A_%a.err
 set -euo pipefail
@@ -31,14 +31,13 @@ export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
 N=${N_SHARDS:-16}
 echo "# host=$(hostname) shard=${SLURM_ARRAY_TASK_ID}/$N"
 
-mkdir -p experiments/results/search_pools "$ROOT/search/search_pools"
-# Existing pools are carried in so a re-run of a shard skips cells already stored.
-cp -r "$ROOT/search/search_pools/." experiments/results/search_pools/ 2>/dev/null || true
-
-# Written back on the way out however the job ends, so a shard killed at ninety percent keeps the
-# cells it finished rather than paying for them twice.
-save() { cp -r experiments/results/search_pools/. "$ROOT/search/search_pools/" 2>/dev/null || true; }
-trap save EXIT
+# Pools are written STRAIGHT to shared storage rather than into the snapshot and copied back at
+# exit. On a preemptible partition the copy-back was the whole risk: a shard killed before its trap
+# ran had stored nothing at all, and its replacement recomputed every mission it had finished. Each
+# cell is now durable the instant it is assembled, the write is atomic through a temp file, and a
+# restarted shard skips whatever is already there.
+export SANDTABLE_POOLS="$ROOT/search/search_pools"
+mkdir -p "$SANDTABLE_POOLS"
 
 python -u tools/search_bench.py pools --shard "${SLURM_ARRAY_TASK_ID}" --of "$N" --workers 16
 echo "### SHARD ${SLURM_ARRAY_TASK_ID} DONE"
