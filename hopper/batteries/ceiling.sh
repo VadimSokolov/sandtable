@@ -39,26 +39,4 @@ $PY tools/ar_eval.py $S --metric $M $B --sweep 'n_red=12,14,16,20' \
   --arm "boundOne={$BLDN,\"n_blue\":24,\"queue_capacity\":1}" \
   --arm "admits={$ADM,\"n_blue\":24}"
 done
-
-# X2. The interior, at strengths W4 skipped. These are the cells where the curve is steepest and so
-# where a wrong shape costs the most, and none of them appear in the fit.
-for M in success blue_loss_frac served_per_step; do
-echo "### X2 the interior of the band, strengths the dose-response skipped ($M)"
-$PY tools/ar_eval.py $S --metric $M $B --sweep 'n_red=5,7,9,11' \
-  --arm "blindUnbound={$BLDN,\"n_blue\":24}" \
-  --arm "boundOne={$BLDN,\"n_blue\":24,\"queue_capacity\":1}" \
-  --arm "admits={$ADM,\"n_blue\":24}"
-done
-
-# X3. The same prediction on a different knob. If the model is about the metric rather than about
-# red strength, moving the baseline with span at a fixed strength must land on the same curve. The
-# strength is one W4 did not use, so no cell here is in the fit either.
-for M in success blue_loss_frac served_per_step; do
-echo "### X3 the same curve reached by moving span instead, n_red=9 ($M)"
-$PY tools/ar_eval.py $S --metric $M $B --sweep 'n_blue=8,12,16,24,32' \
-  --arm "blindUnbound={$BLDN,\"n_red\":9}" \
-  --arm "boundOne={$BLDN,\"n_red\":9,\"queue_capacity\":1}" \
-  --arm "admits={$ADM,\"n_red\":9}"
-done
-
 echo "### BATTERY ceiling DONE"
