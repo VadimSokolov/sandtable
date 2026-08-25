@@ -92,7 +92,8 @@ class PoolMeter(Meter):
         self.spent = 0
         self.calls = 0
         self.seen: set[str] = set()
-        self.reused = 0
+        self.reused = 0                  # total wraps, reported; not used for seeding
+        self._wraps: dict[str, int] = {}  # per DESIGN, and this one seeds the reshuffle
         self.replicate = replicate
         self._pos: dict[str, int] = {}
         self._order: dict[str, np.ndarray] = {}
@@ -130,8 +131,14 @@ class PoolMeter(Meter):
         take, got = [], 0                                   # `got` counts MISSIONS, not chunks
         while got < n:
             if pos >= N:                                    # pool exhausted; reshuffle and reuse
+                # Seeded on THIS design's wrap count, not on the meter's total. A shared counter
+                # made the reshuffled ordering depend on how many other designs had wrapped first,
+                # so two methods that exhausted different designs in different orders diverged after
+                # their first wrap: the same pairing failure this meter was built to remove, moved
+                # one level down and only reachable on a rung deep enough to spend a pool.
                 self.reused += 1
-                idx = np.random.default_rng(self._seed(key, self.reused)).permutation(N)
+                w = self._wraps[key] = self._wraps.get(key, 0) + 1
+                idx = np.random.default_rng(self._seed(key, w)).permutation(N)
                 self._order[key], pos = idx, 0
             want = min(n - got, N - pos)
             take.append(idx[pos:pos + want])

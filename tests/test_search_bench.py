@@ -344,3 +344,29 @@ def test_chunked_pool_building_reproduces_the_sequential_pool():
               oracle.draw_range(p, d, 4, 6)]
     joined = {m: [x for piece in pieces for x in piece[m]] for m in whole}
     assert joined == whole
+
+
+def test_pool_meter_stays_paired_after_a_wrap():
+    """The wrap that refreshes an exhausted pool is seeded, and it was seeded on the meter's TOTAL
+    wrap count. That made a design's reshuffled ordering depend on how many other designs had
+    wrapped first, so two methods that spent their pools in different orders diverged after the
+    first wrap: the pairing failure this meter exists to remove, one level down, reachable only on a
+    rung deep enough to exhaust a pool."""
+    from sandtable.search.runner import PoolMeter
+    p = get("qcap_uniform")
+    depth = _fake_pool(p, depth=16)
+    d0, d1 = p.designs()[0], p.designs()[1]
+
+    a = PoolMeter(p, 10_000, 0, replicate=5)
+    for _ in range(3):                      # wrap d0 twice before touching d1
+        a.pull(d0, 8)
+    a.pull(d1, 8)
+    a.pull(d1, 8)
+    after_a = a.pull(d1, 8)                 # d1's first wrap, with d0 already wrapped
+
+    b = PoolMeter(p, 10_000, 0, replicate=5)
+    b.pull(d1, 8)                           # b touches only d1, so no other design has wrapped
+    b.pull(d1, 8)
+    after_b = b.pull(d1, 8)                 # d1's first wrap, cleanly
+
+    assert after_a == after_b, "a design's wrapped ordering depends on other designs' wraps"
