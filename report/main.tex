@@ -132,74 +132,52 @@ We resolve this with a two-tier workflow. A fast, low-fidelity, mission-level mo
 
 A model built for a search loop must satisfy two properties that ordinary simulators often do not. It must be a \emph{pure function} of its inputs, with no global or hidden state, so that a run is reproducible from its seed, cacheable, and safe to evaluate in parallel. It must also carry an \emph{engineered ground truth}, a known correct answer for each trial, so that outcomes are scored against truth rather than against agreement with the model's own agents. \sandtable{} is designed around both.
 
-The contributions of this paper are the following.
+The contributions of this paper are the following. Three of them are scientific and one is the
+instrument they were obtained on; the further studies at the end run on the same engine and are
+reported as applications rather than as sibling results.
 \begin{enumerate}
 \item \sandtable{}, a fast, reproducible, pure-Python mission-level simulator whose
-\texttt{run\_mission} contract is a pure function of (scenario, seed, parameters), wired into a Bayesian-optimization and design of experiment (DOE) orchestrator and an HPC batch runner as the fast inner-loop companion to ProjectGL (Section~\ref{sec:model}).
-\item A control-modality model, direct human-in-the-loop versus supervisory autonomy, coupled to
-span of control and a C0--C5 communications/EW ladder, that reproduces a \emph{moving optimum}: the communications level at which autonomy overtakes human control falls as span rises (Section~\ref{subsec:centerpiece}).
-\item The mechanism behind that optimum, stated in closed form and then measured: the operator is
-a server with client abandonment, and one that does not detect abandonment sustains its own overload above a collapse span $n^{\star} = c(P+\tau+1)\mu/d$ and a serviceable-latency ceiling $\ell^{\star} = (P - 1/\mu)/2$. Both thresholds are confirmed against staffing and patience sweeps; explicit admission control is worth \qAdmitClear\% against \qBlindClear\% mission success at the centerpiece operating point, and the same mechanism makes message loss beneficial to an undetecting operator, which separates the two axes an EW ladder normally conflates (Section~\ref{subsec:queue}).
-\item A requirements ladder for the console, priced rather than argued, whose recommendation is
-conditional on the link. Three rungs differ in what the message must carry and not in mechanism:
-bounding the backlog needs the patience, the latency and the service rate and no change to the
-message; capping the request's age needs a send timestamp; refusing on the requester's own deadline
-needs a semantic field. On a clear link the cheapest rung is free, delivering \KpClearSrvBound{}
-served per step against admission control's \KpClearSrvAdmit{}, a gap the gate rejects as
-immaterial; at C3 it is not, giving up \KpJamBoundVsAdmitSixteen{} at both twelve and sixteen
-assets, because a length bound is a proxy for a request's age and the proxy fails as latency eats
-the deadline. Underneath all three the console's total effort is invariant: the four ways a claimed
-service slot can end sum to within \KpClearEffortSpread{} across every policy while delivered
-service spans a factor of \KpClearRatio{}, so these levers change the composition of a fixed
-quantity and working a saturated operator harder is not among them (Section~\ref{subsec:queue}).
-\item A second console axis that crosses the ladder rather than extending it, and that no aggregate
-in this paper could see. Knowledge sets the ceiling; the rule decides who pays. At fixed information,
-service ORDER moves who gets served by more than any capability lever priced here: first come, first
-served answers the patient half of a mixed fleet \FrLvFcfsRatio{} times as often as the impatient
-half and leaves \FrLvFcfsStarv{} of it with no answer at all, and working the identical queue in
-deadline order takes those to \FrLvEdfRatio{} and \FrLvEdfStarv{} while also raising mean answer rate
-\FrEdfRate{} and throughput \FrEdfSrv{} and lowering abandonment \FrEdfAband{}. It is a strict
-improvement rather than a trade, subject to one welded precondition: a console that cannot see the
-job in front of it pays \FqEdfBRate{} of answer rate for the same compression. The same deadline
-field read as a service-level budget instead of an order gates the other way, excluding
-\FqLvQNinetyfiveStarv{} of the fleet at a ninety-fifth percentile against \FqLvEdfBStarv{} for
-ordering, so what a console is told does not determine the sign of what it does
-(Section~\ref{subsec:queue}, Table~\ref{tab:fair}).
-\item An attribution of that span effect, which reverses its own sign under the control every
-span-of-control study needs and few report: sweeping span with the defending force scaled so the ratio never moves turns a \atFixDir{} gain into a \atHeldDir{} loss, a difference in differences of \atDid{} at $t = \atDidT{}$ over \atDidN{} seed-matched blocks. Bounding the console away with supervisory control puts about \atConsoleShare\% of the collapse at the operator's queue and \atScenarioShare\% at the scenario, and the same decomposition holds on the continuous arrival fraction that mission success thresholds, which rules out the metric's own sharpening as its cause (Section~\ref{subsec:attrib}).
-\item A bistability in span of control, derived and then gated: when a vehicle that went
-unanswered asks again sooner than one that was served, offered load depends on the state the queue
-is already in, and the collapse threshold splits into a band $(n_c, n_h)$ of width
-$c\mu\pi(\tau-\rho)(1-a_h)/d$ inside which a team has two self-sustaining states. At the one span
-the band covers, mission success moves by \qBandSuccess{} on the initial condition alone; a console
-that discards work it cannot finish shrinks that to \qBandRefund{}, and a backoff floor of
-\qBandFloor{} steps closes the band outright (Section~\ref{subsec:band}).
-\item A measurement result that applies to any span-of-control study reporting a service ratio, and which cost this paper a headline before it was found. Operator goodput, serviced over requested, has a denominator that every policy worth recommending moves: explicit admission control returns a refused vehicle to autonomy after one round trip instead of after its full patience, so it is asked \rtAskedAdmitOverRefundClearTwelve{} more often at twelve assets while serving \rtServedAdmitOverRefundClearTwelve{}, and a client-side rate rule suppresses requests by construction and so flatters itself by the same arithmetic in reverse. Read on absolute rates the rate rule serves \rtServedAimdOverAdmitClearTwelve{} rather than more, and it is the offered load that falls, by \rtAskedAimdOverAdmitClearTwelve{}. A contrast between arms whose request rates differ cannot be reported on a ratio whose denominator is the request count (Section~\ref{subsec:queue}).
-\item That failure turned out not to be about ratios, and the general form is the paper's most portable result because it costs nothing to apply. A metric measured against a reference that the treatment itself moves cannot audit that treatment. Five instances are gated here, in four different subsystems, and in each the metric is correct about what it measures. Operator goodput is referenced to the asking, which every policy worth recommending changes. Mean backlog is referenced to the queue, which a scheduling discipline reshapes: it ranks newest-first \emph{worse} than oldest-first, \KpClearBackLifo{} against \KpClearBackFifo{}, while the share of its own requests that a vehicle ever gets answered ranks it \KpClearAnsRatio{} times better. Operator utilization is referenced to the console's clock and puts those same two policies at \KpClearUtilLifo{} against \KpClearUtilFifo{}, which is the same console to four figures. Station-keeping error is referenced to the commanded station, so it cannot see whether the commanded geometry is survivable, and it orders two failure modes backward: \FoDisCmdErr{}~m of error scores \FoDisCmdSuc{} and \FoDisEstErr{}~m scores \FoDisEstSuc{}. Packet delivery ratio is referenced to the packet stream and is identical by construction across a change in burst structure that moves mean track error by a factor of \FoBurstRatio{}. The constructive half is that the metrics which survive are the ones referenced to something the treatment does not set, and in every case here one was already available and cheaper than a new sensor (Sections~\ref{subsec:queue} and \ref{subsec:attrib}).
-\item A third console axis, verification, posed as a detection problem rather than as a dial, with
-the finding that the axis a program office would tune is not the one that decides the answer.
-Discriminability is a capability and the check rate is a policy, and the model separates them:
-moving the criterion alone moves the fraction of answers checked by \TdFracSpread{} and the
-recovered discriminability by \TdCritSpread{}. On that instrument, an operator who never verifies is
-WORSE than no operator at low span (\ToNeverSuccLow{}, \ToNeverSuccLowV{}), and the arm with an
-operator loses more of the force than the arm without one in \ToLossUpCells{} of twenty cells. What
-verification costs is the asset's time and not the console's, so its affordability is a requirement
-on what a vehicle may do while it waits rather than on the console: removing the waiting penalty
-takes an always-verifying operator from \ToAlwaysSuccLow{} to \ToFreeAlwaysSuccLow{} against no
-operator at all. We registered that the best rate is interior and rises with the automation's error
-rate, and retract it on its own falsifier at \DrInterior{} of \DrCells{} cells. What survives is a
-rule with a mechanism: verification pays when a wrong answer COMES BACK, and not when it is
-harmful, so it gains where the requester keeps its problem and loses at every error rate measured in
-the channel that leaves a vehicle below its own autonomy (Section~\ref{subsec:trust}).
+\texttt{run\_mission} contract is a pure function of (scenario, seed, parameters) and which carries
+an engineered ground truth, so a trial is scored against the answer rather than against the model's
+own agents. It is wired into a Bayesian-optimization and design-of-experiment orchestrator and an
+HPC batch runner, and a full mission finishes in about a tenth of a second
+(Section~\ref{sec:model}).
 
-\item Three decision-relevant findings for Army human-machine teaming, the moving control optimum,
-the speed-survivability frontier of route choice (Section~\ref{subsec:uc3}), and the EW-induced collapse of a sensor-to-shooter chain (Section~\ref{subsec:uc5}), each generated from \nRep{}-replication Monte-Carlo studies with confidence intervals.
-\item An analytic validation: \sandtable{}'s emergent attrition matches Lanchester's square law to
-within \lanchMaxErr\%, with the residual explained by known discretization effects (Section~\ref{subsec:validation}).
-\item A first-class kill-web extension, opt-in and byte-identical when off, in which each entity
-carries suppression, a finite basic load of munitions, and a persistent belief/track state, and fires resolve against belief rather than truth; suppression, munitions, and deception each move mission outcomes as first-order effects, with the fixed-Pk baseline recovered as their degenerate limit (Section~\ref{subsec:killweb}).
-\item A drone-war extension motivated by the Russo-Ukrainian war, also opt-in and byte-identical when
-off: an electronic-warfare-immune command link that holds direct control under jamming, a counter-UAS air-defense layer that gives reconnaissance-swarm size a survivability cost and hence an interior optimum, and a cost-exchange metric for attritable mass (Section~\ref{subsec:drone}).
+\item A sufficiency result for span of control, with two closed forms. An operator that never errs,
+never slows and never tires still produces the span pathologies usually attributed to human
+attention, because they arise in the queue its clients form: a server whose clients abandon it, and
+which never learns it has been abandoned, spends service time on answers nobody is waiting for. A
+collapse span and a ceiling on serviceable latency follow analytically and the simulator obeys both
+with nothing fitted, and the same account predicts a bistability in span that is derived before it
+is gated. The moving control-modality optimum, the communications level at which autonomy overtakes
+human control falling as span rises, is reported here as the phenomenon this queue explains rather
+than as a separate discovery (Sections~\ref{subsec:queue} and \ref{subsec:centerpiece}).
+
+\item A requirements ladder for the console, priced rather than argued, and a second console axis
+that crosses it. The ladder's three policies differ in what the request must carry rather than in
+mechanism: bound the backlog with a counter, cap the request's age, or refuse on the requester's own
+deadline. The recommendation is conditional on the link and inverts inside the range this study
+sweeps, because a length bound is a proxy for age and the proxy fails as latency eats the deadline.
+The console's total effort is invariant across the ladder, so composition rather than intensity is
+the available lever. At fixed knowledge the service ORDER then decides who pays: oldest-first is
+regressive against deadline order by the margins in Table~\ref{tab:fair}, deadline order is a strict
+improvement rather than a fairness-for-efficiency trade, and no aggregate the console reports can
+see the difference (Sections~\ref{subsec:band} and \ref{subsec:trust}).
+
+\item An identification rule that a span-of-control study must satisfy before its numbers can be
+compared with anyone else's. Sweeping span with the defending force fixed raises mission success;
+sweeping the identical span with the force ratio held reverses the sign, gated at full tier. The
+portable form of that failure is the paper's most general result and recurs across four subsystems:
+a metric referenced to something the treatment itself moves cannot audit that treatment. In every
+case a metric referenced to something the treatment does not set was already available and cheaper
+than a new sensor (Section~\ref{subsec:attrib}).
+
+\item Further studies on the same engine, reported as applications of the instrument rather than as
+contributions of their own: an analytic validation against Lanchester's square law, a verification
+axis posed as a detection problem, a first-class kill-web extension and a drone-war extension, each
+opt-in and byte-identical when off, and route choice under fire, reconnaissance cueing under
+jamming, and counter-swarm air defense (Sections~\ref{subsec:validation}, \ref{subsec:uc3},
+\ref{subsec:uc5}, \ref{subsec:killweb} and \ref{subsec:drone}).
 \end{enumerate}
 
 \section{Background and Related Work}

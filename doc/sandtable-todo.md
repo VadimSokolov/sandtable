@@ -65,7 +65,8 @@ Run the suite with `conda run -n mgl python -m pytest tests/ -q` (127 tests, abo
 
 ## CR-1 Blue behavior layer core
 
-**Priority:** P1. **Status:** not started. **Blocks:** CR-2, CR-3, CR-4.
+**Priority:** P1. **Status:** IMPLEMENTED. `src/sandtable/behavior.py`, covered by
+`tests/test_behavior.py`. **Unblocks:** CR-2, CR-3, CR-4, all of which are also landed.
 
 ### Why
 
@@ -166,7 +167,7 @@ instead of standing in for one.
 
 ## CR-2 Teleoperation stop semantics
 
-**Priority:** P1. **Status:** not started. **Depends on:** CR-1.
+**Priority:** P1. **Status:** IMPLEMENTED. **Depends on:** CR-1, which is landed.
 
 ### Why this is a correctness issue and not a refinement
 
@@ -207,7 +208,11 @@ published sweep used the 54.5% behavior, say so and characterize the direction o
 
 ## CR-3 Leader-follower, and the link-versus-behavior contrast
 
-**Priority:** P2. **Status:** not started. **Depends on:** CR-1.
+**Priority:** P2. **Status:** IMPLEMENTED, and PATCHED after review. `_follow` in
+`src/sandtable/behavior.py` dead-reckons on a miss in BOTH modes; the earlier `behavior or got`
+branch gave the behaviour-mode follower the leader's true position on a dropped update, which is
+omniscience rather than on-platform following, and is logged as instrument defect 10.
+**Depends on:** CR-1, which is landed.
 
 ### Why
 
@@ -262,7 +267,9 @@ not be comparable on a shared seed.
 
 ## CR-4 Intervention rate KPI
 
-**Priority:** P2. **Status:** not started. **Depends on:** CR-1.
+**Priority:** P2. **Status:** IMPLEMENTED, and PATCHED after review: the count is edge-detected
+rather than accumulated per step. `src/sandtable/metrics.py`, covered by `tests/test_metrics.py`.
+**Depends on:** CR-1, which is landed.
 
 ### Why
 
