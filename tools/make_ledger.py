@@ -19,6 +19,19 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from make_queue_numbers import ROOT  # noqa: E402
 
 # claim, what its registered falsifier was, what happened
+# The rows that are instances of the ONE shape the paper names: a convention correctly derived for
+# its first use and then carried into a second where it does not hold. Not every instrument row
+# qualifies. Two of them are ordinary guard bugs (a check that measured the wrong quantity, a
+# checker that truncated its input) and one is an arithmetic slip in a loop, and counting those in
+# would inflate the claim the paper makes about how often the shape recurs. Listed by title and
+# asserted to exist, so renaming a row breaks the build rather than silently changing a number in
+# the prose.
+NOT_THE_SHAPE = {
+    "jitter arms hold their mean",
+    "contribution pointers all resolve",
+    "a pull of $n$ missions averages $n$ missions",
+}
+
 ROWS = [
     ("collapse span $n^\\star$",
      "goodput transition brackets a different span",
@@ -342,6 +355,47 @@ ROWS = [
      "buffer console; the trap was live for the next one that did not. The fractions are now NaN "
      "off the console they were derived for, and the ratio that is defined on both is emitted as "
      "\\texttt{booked\\_per\\_step}; guarded by a fixture that pins the buffer values and carries the negative control that the trap was real"),
+
+    ("a bandit that seeds its arms has seen every arm",
+     "(instrument, not a claim)",
+     "\\textsc{repaired}. Both bandit allocators seeded their arms by walking the design list and "
+     "stopping when the budget ran out, so any rung below one chunk per design touched a PREFIX of "
+     "the design set and never saw the rest. The capacity problems put the best design at index "
+     "zero or one and the discipline problem puts it at index four, so the low rungs of the ladder "
+     "would have handed the bandits a free win on one family and a guaranteed zero on the other, "
+     "out of nothing but the order the designs are enumerated in. Found by adversarial review "
+     "before the benchmark ran, so nothing was published from it. Seeding is now permuted from the "
+     "replicate's own generator, the treatment the surrogate method already had; guarded by a test that "
+     "pins non-uniform allocation for the scaled allocator and uniform for its control"),
+
+    ("two methods on one replicate draw the same missions",
+     "(instrument, not a claim)",
+     "\\textsc{repaired}. The meter that hands stored missions to a method drew every design's "
+     "mission ordering from one shared generator, so a design's stream depended on how many OTHER "
+     "designs a method had visited first, and two methods that walked the design space in different "
+     "orders received different missions for the same design on the same replicate. That is the "
+     "pairing the meter exists to provide, inverted, and how a method spends its budget is the "
+     "quantity under measurement, so the two always differ. Each design's ordering is now seeded "
+     "from the replicate and the design and from nothing else; guarded by a test that makes one "
+     "method take two unrelated moves first and asserts it still receives the identical missions"),
+
+    ("a pull of $n$ missions averages $n$ missions",
+     "(instrument, not a claim)",
+     "\\textsc{repaired}. A pull of $n$ missions counted the array slices it had appended rather "
+     "than the missions inside them, so a pull that wrapped past the end of a design's stored pool "
+     "averaged as many as thirty-six missions while charging the method for eight. Every estimate "
+     "made near the end of a pool was quietly more precise than the budget it was billed, which is "
+     "the one thing a benchmark that meters missions cannot allow. Found by a test written for a "
+     "different property; guarded by that test, which now asserts the count before averaging and "
+     "checks the mean is a multiple of one over $n$"),
+
+    ("one pass over the methods costs six ladder totals",
+     "(instrument, not a claim)",
+     "\\textsc{repaired}. The per-problem mission allowance divided by a literal six while the "
+     "method table held eight, so every problem's replicate count was set from a cost a third below "
+     "the real one. The same shape as the eighteen above and written by the author of the rule "
+     "against it, six being correct on the day it was typed; guarded by the count now being read "
+     "from the method list the run actually uses"),
 ]
 
 
@@ -367,11 +421,16 @@ def main() -> None:
     # a number that came out right and carried nothing. Counting them together would put a defect
     # in the claim total, which is the one number in this section a reader is entitled to trust.
     instr = [r for r in ROWS if "instrument" in r[1]]
+    titles = {r[0] for r in instr}
+    missing = NOT_THE_SHAPE - titles
+    if missing:
+        raise SystemExit(f"NOT_THE_SHAPE names rows that no longer exist: {sorted(missing)}")
+    genus = [r for r in instr if r[0] not in NOT_THE_SHAPE]
     entailed = [r for r in ROWS if "entailed" in r[1]]
     claims = [r for r in ROWS if r not in instr and r not in entailed]
     failed = [r for r in claims if "refuted" in r[2] or "cut" in r[2] or "partial" in r[2]]
     counts = {"ldRows": len(ROWS), "ldClaims": len(claims), "ldInstr": len(instr),
-              "ldEntailed": len(entailed),
+              "ldEntailed": len(entailed), "ldGenus": len(genus),
               "ldFailed": len(failed), "ldHeld": len(claims) - len(failed)}
     (ROOT / "report" / "gen" / "ledger_counts.tex").write_text(
         "".join(f"\\newcommand{{\\{k}}}{{{v}}}\n" for k, v in counts.items()))
