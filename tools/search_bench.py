@@ -151,11 +151,30 @@ def cmd_run(a) -> None:
     # The most expensive jobs first, so the pool does not finish with one worker on a 1024-budget
     # run while fifteen sit idle.
     specs.sort(key=lambda s: -s[2])
+
+    # RESUME. The cluster partition this runs on is preemptible by design, and the first attempt at
+    # this sweep was preempted five times in three hours. Opening the results file for writing threw
+    # away every completed run on each restart, so the job could not finish no matter how long it
+    # was given: it was not slow, it was Sisyphean. Completed runs are now read back and skipped,
+    # and results are appended. Each spec is deterministic in (problem, method, budget, replicate),
+    # so a row already on disk is exactly the row that would be recomputed.
+    done = set()
+    if out.exists():
+        for ln in out.read_text().splitlines():
+            try:
+                r = json.loads(ln)
+            except json.JSONDecodeError:
+                continue          # a line truncated mid-write by the preemption that killed it
+            done.add((r["problem"], r["method"], r["budget"], r["replicate"]))
+    todo = [s for s in specs if s not in done]
+    if done:
+        print(f"resuming: {len(done)} runs already on disk, {len(todo)} to go", flush=True)
+    specs = todo
     print(f"{len(specs)} runs on {a.workers} workers", flush=True)
 
     t0 = time.time()
     n = 0
-    with out.open("w") as fh, ProcessPoolExecutor(max_workers=a.workers) as ex:
+    with out.open("a") as fh, ProcessPoolExecutor(max_workers=a.workers) as ex:
         futs = {ex.submit(_job, s): s for s in specs}
         for fut in as_completed(futs):
             s = futs[fut]
@@ -170,6 +189,7 @@ def cmd_run(a) -> None:
                                  "reps_per_design": diffs[k]["reps_per_design"],
                                  "gap": diffs[k]["gap"],
                                  "sd_per_mission": diffs[k]["sd_per_mission"]}) + "\n")
+            fh.flush()          # so a preemption loses at most the row in flight
             n += 1
             if n % 100 == 0:
                 el = time.time() - t0

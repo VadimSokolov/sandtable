@@ -9387,3 +9387,59 @@ Gaussian in the tail that decides an early commitment. And sixty replicates put 
 on these proportions near 0.06, so the 0.03 differences in the served column are not readable and
 only the 0.16 and 0.20 swings are. The benchmark settles it. This is registered so that whichever
 way it goes, it was written down first.
+
+## CR-70 SCORED. THE REQUIREMENT DOES NOT STOP MATTERING; THE INSTRUMENT STOPS SEEING IT
+
+Job 9460876, 467 rows, 32 blocks at 64 replications. Two falsifiers were registered, one for the
+conjecture and one for the diagnosis, and neither fires. The battery is kept.
+
+**The conjecture.** CR-66's V1 read the requirements ladder against span on mission success and
+watched the free bound's value decay from +0.1743 at eight assets to +0.0024 at twenty-four. CR-69
+then found baseline success pinned at exactly 1.0 from sixteen assets up on this scenario. The decay
+and the ceiling are the same three cells, and the ladder battery had no uncensored mission axis to
+tell them apart.
+
+On the uncensored axis the bound is still there at every span:
+
+```
+    n_blue    success (boundOne)          blue_loss_frac (boundOne)
+      8       +0.1743  gates up             -0.1194  gates down
+     12       +0.0981  gates up             -0.0737  gates down
+     16       +0.0366  equivalent           -0.0497  gates down
+     24       +0.0024  equivalent           -0.0103  gates down
+     32       +0.0000  equivalent, 0/32     -0.0064  gates down
+```
+
+At twenty-four assets mission success reports the free bound as making no difference, +0.0024 with
+four of thirty-two blocks agreeing, while blue loss reports it gating down at t = -4.06. At
+thirty-two success reads exactly +0.0000 with ZERO blocks agreeing, which is not a null but an
+instrument with nothing left to move, and loss still gates. The registered falsifier was
+`boundOne` against `blindUnbound` on `blue_loss_frac` at twenty-four reading equivalent or gating
+the wrong way. It gates down. **The conjecture holds.**
+
+**The diagnosis, and this is the half that makes it more than a metric preference.** A reader can
+always answer that the loss axis is simply more sensitive and the effect really did decay. W3
+settles it by lifting the ceiling rather than changing the axis: the same ladder at `n_red = 8`,
+where baseline success is no longer pinned. Success then SEES the bound again at the span where it
+had gone quiet, +0.0889 at twenty-four with t = +6.93 and 29 of 32 blocks, against +0.0024 and 4 of
+32 at the same span with the ceiling in place. The registered falsifier for the diagnosis was that
+success remain equivalent at twenty-four once the ceiling was lifted, in which case the decay was
+real and CR-70 was to be retracted whatever W1 said. It does not remain equivalent. **The decay was
+the ceiling.**
+
+**What this is worth to a program office, which is the reason it was run.** A test program that
+reports a capability as making no difference at the top of its intended range is making two claims
+and usually defending one. The first is that the capability did not help. The second, unstated, is
+that the test could have seen it if it had. Here the second is false at twenty-four assets and
+provably false at thirty-two, where the metric has no range left at all, and the same experiment run
+one notch harder recovers the effect at full strength. The check is cheap: run the baseline across
+the range with no treatment and see whether the metric still moves.
+
+**One guard fired and it was right to.** `admits` and `admitsEdf` are byte-identical in all thirty
+cells of W1 and all twenty of W3, and separate in twenty-three of twenty-five cells of W2. The cause
+is physics rather than a dead knob: W1 and W3 run a UNIFORM fleet, where every vehicle carries the
+same deadline, so earliest-deadline order and arrival order are the same permutation. W2's two-point
+fleet is where they come apart. CR-70 ranks neither arm against the other, so nothing here rests on
+it, but the pattern is the pairwise case `_pinned_arm` cannot see, and `_identical_arms` is added to
+announce it: two arms that both move and move together exactly mean whatever separates them never
+reached the code, and the reason has to be stated rather than assumed.

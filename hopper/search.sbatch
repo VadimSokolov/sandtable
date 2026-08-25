@@ -25,7 +25,7 @@ if [ "${STAGE:-all}" != "run" ]; then
   cp -r experiments/results/search_truth/* "$ROOT/search/search_truth/" 2>/dev/null || true
 fi
 if [ "${STAGE:-all}" != "truth" ]; then
-  python -u tools/search_bench.py run --out "$ROOT/search/bench-$SLURM_JOB_ID.jsonl" \
+  python -u tools/search_bench.py run --out "$ROOT/search/bench-${TAG:-main}.jsonl" \
     --replicates "${REPS:-24}" --workers "${WORKERS:-16}"
 fi
 echo "### SEARCH DONE"

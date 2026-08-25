@@ -45,6 +45,7 @@ def survey(log: str, sec: str, metric: str, ref: str | None = None, quiet: bool 
     _flat_reference(log, sec, metric, ref, d, pts, quiet)
     _zero_base(log, sec, metric, ref, d, pts, quiet)
     _pinned_arm(log, sec, metric, d, arms, pts, quiet)
+    _identical_arms(log, sec, metric, d, arms, pts, quiet)
     _duplicate_dose(log, sec, metric, d, arms, pts, quiet)
     _thin_base(log, sec, metric, ref, d, pts, quiet)
     if not ref:
@@ -105,6 +106,40 @@ def _pinned_arm(log, sec, metric, d, arms, pts, quiet) -> int:
            f"byte-identical in every block at every sweep point. A value that repeats exactly is "
            f"structural. Classify it (entailed by the arm's definition, or degenerate in this "
            f"regime) before ranking anything against it on this axis")
+    if not quiet:
+        print(msg)
+    else:
+        sys.stderr.write(f"{log}::{sec}: {msg}\n")
+    return len(bad)
+
+
+def _identical_arms(log, sec, metric, d, arms, pts, quiet) -> int:
+    """Announce two arms byte-identical to EACH OTHER across the whole sweep.
+
+    `_pinned_arm` sees an arm frozen at one value. This sees the case it cannot: two arms that both
+    move, and move together exactly. In a stochastic simulator that means the difference between
+    them never reached the code, either because a parameter is inert under the other settings or
+    because the configuration makes the two the same thing.
+
+    Both causes are real here and only one is a defect. On a uniform fleet every vehicle carries the
+    same deadline, so earliest-deadline order and arrival order are the same permutation and the two
+    arms are identical for a reason worth stating rather than a reason worth fixing; the same pair
+    separates in twenty-three of twenty-five cells the moment the fleet's deadlines differ. The
+    guard does not decide which cause applies. It refuses to let a section rank two arms it cannot
+    tell apart without somebody saying why they are the same.
+    """
+    bad = []
+    for i, a in enumerate(arms):
+        for b in arms[i + 1:]:
+            cells = [p for p in pts if (a, p) in d and (b, p) in d]
+            if len(cells) >= 2 and all(d[(a, p)] == d[(b, p)] for p in cells):
+                bad.append((a, b, len(cells)))
+    if not bad:
+        return 0
+    msg = ("!! IDENTICAL ARMS: " + "; ".join(f"{a} and {b} agree in all {n} sweep points"
+                                             for a, b, n in bad)
+           + f" on {metric!r}. Whatever separates them did not reach the code, so no reading here "
+             f"can order them; say why they are the same before comparing them")
     if not quiet:
         print(msg)
     else:

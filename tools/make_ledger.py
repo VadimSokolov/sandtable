@@ -89,6 +89,13 @@ ROWS = [
     ("a scattered arrival stream reads one",
      "(instrument, not a claim)",
      "\\textsc{repaired}: a gated stream does not, and the null moves with dwell and rate; guarded by a null computed from the run's own dwell and rate rather than assumed to be one"),
+    ("the console requirement does not stop mattering at scale, the metric stops seeing it",
+     "the free bound reading equivalent or gating the wrong way on blue loss at twenty-four "
+     "assets; and, for the diagnosis, mission success still reading equivalent there once the "
+     "ceiling is lifted",
+     "\\textsc{held} on both: loss gates down at every span while success reports no difference "
+     "from sixteen up, and success recovers the effect at twenty-four once the opposing force is "
+     "strengthened, so the decay was the ceiling and not the mechanism"),
     ("three console repairs of unlike value read identical on the axis named after the waste",
      "(entailed, not a claim)",
      "\\textsc{repaired}: an arm defined as never doing a thing sets a metric counting that thing "
