@@ -43,16 +43,32 @@ def main() -> None:
     rows = load(sys.argv[1])
     if not rows:
         raise SystemExit("no rows")
+    # Every method must be averaged over the SAME cells. A method added to a sweep later carries
+    # fewer, and a resume can leave a partial tail, so intersecting replicate NUMBERS is not
+    # enough: the unit is the (problem, budget, replicate) cell, and only a cell that every method
+    # actually reached can be averaged. Comparing a mean over sixty against a mean over thirty is a
+    # comparison whose denominators differ, which is the defect this project's first paper is about.
+    seen = {}
+    for r in rows:
+        seen.setdefault((r["problem"], r["budget"], r["replicate"]), set()).add(r["method"])
+    nm = len({r["method"] for r in rows})
+    full = {c for c, ms in seen.items() if len(ms) == nm}
+    dropped = len(rows)
+    rows = [r for r in rows if (r["problem"], r["budget"], r["replicate"]) in full]
+    print(f"  cells reached by all {nm} methods: {len(full):,} of {len(seen):,}; "
+          f"kept {len(rows):,} of {dropped:,} rows")
     meths = sorted({r["method"] for r in rows})
     probs = sorted({r["problem"] for r in rows})
     reps = len({r["replicate"] for r in rows})
     grade = sorted({r["problem"] for r in rows if r.get("gradeable")})
 
-    out = [("RsRows", f"{len(rows):,}".replace(",", "{,}")),
+    out = [("RsCells", f"{len(full):,}".replace(",", "{,}")),
+           ("RsRows", f"{len(rows):,}".replace(",", "{,}")),
            ("RsReplicates", str(reps)),
            ("RsMethods", str(len(meths))),
            ("RsProblems", str(len(probs))),
-           ("RsGradeable", str(len(grade)))]
+           ("RsGradeable", str(len(grade))),
+           ("RsRegretOnly", str(len(probs) - len(grade)))]
 
     # Mean normalized regret per method at each rung. Zero is the best design, one is the worst,
     # so these are comparable across problems and across metrics, which raw regret is not.
@@ -122,9 +138,40 @@ def main() -> None:
                     (f"RsCross{tag}Sign", f"{100 * g['sign']:.0f}"),
                     (f"RsCross{tag}Verdict", g["verdict"]),
                     (f"RsCross{tag}N", f"{g['n']:,}".replace(",", "{,}"))]
+        # The rung means for the crossing pair, so the prose never hardcodes a method name.
+        for tag in ("Low", "Mid", "Top"):
+            for who, lab in ((lo_w, "Uni"), (hi_w, "Adapt")):
+                v = [r["regret_frac"] for r in rows if r["method"] == who
+                     and r["budget"] in rungs[tag].get(r["problem"], ())]
+                if v:
+                    out.append((f"RsCross{tag}{lab}", f"{v and st.mean(v):.3f}"))
+                f = [1.0 if r["found"] else 0.0 for r in rows if r["method"] == who
+                     and r["problem"] in grade and r["budget"] in rungs[tag].get(r["problem"], ())]
+                if f:
+                    out.append((f"RsCross{tag}{lab}Found", f"{100 * st.mean(f):.0f}"))
+        # Which clause of the tier the top-rung verdict actually turned on. A contrast that clears
+        # t and misses only sign consistency is a different statement from one that misses on both,
+        # and collapsing them into "equivalent" hides which.
+        gt = gate(paired(rows, hi_w, lo_w, "regret_frac", budgets=rungs["Top"]), sp)
+        out.append(("RsCrossTopBinds",
+                    "sign consistency alone" if abs(gt["t"]) >= 1.70 and gt["sign"] < 0.60
+                    else "the t statistic" if abs(gt["t"]) < 1.70 and gt["sign"] >= 0.60
+                    else "both t and sign consistency"))
         out.append(("RsCrossReal",
                     "yes" if all(x[0] != f"RsCross{tg}Verdict" or x[1] != "equivalent"
                                  for tg in ("Low", "Top") for x in out) else "no"))
+
+    # The two discriminator arms, each a pair differing in exactly one estimator. They are here so
+    # a reader can tell an implementation fault apart from a claim about adaptive search, and they
+    # are emitted whatever they say.
+    for a, b, tag in (("ucb_pooled", "ucb", "Var"), ("gp_noisy", "gp_ei", "Inc"),
+                      ("ucb", "ucb_raw", "Scale"), ("gp_ei", "gp_raw", "Prior")):
+        if a in meths and b in meths:
+            g = gate(paired(rows, a, b, "regret_frac"), sp)
+            out += [(f"RsDisc{tag}Eff", f"{g['eff']:+.4f}"), (f"RsDisc{tag}T", f"{g['t']:+.2f}"),
+                    (f"RsDisc{tag}Sign", f"{100 * g['sign']:.0f}"),
+                    (f"RsDisc{tag}Verdict", g["verdict"]),
+                    (f"RsDisc{tag}N", f"{g['n']:,}".replace(",", "{,}"))]
 
     # Pool reuse: how often a method asked for more missions of a design than the pool holds. A
     # sweep that wrapped a lot is resampling its own draws and the precision it reports is optimistic.

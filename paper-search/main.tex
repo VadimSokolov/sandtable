@@ -369,25 +369,31 @@ rungs each, \RsReplicates{} replicates per cell, every method on every replicate
 missions in the same order from the stored pools. \RsGradeable{} of the problems can be graded on
 argmax recovery and all of them on normalized regret.
 
-\paragraph{Uniform allocation is never beaten, and at small budgets it wins decisively.} At the
-bottom rung of every ladder the lowest mean normalized regret belongs to \RsCrossLow{}, at
-\RsLowWinnerRegret{} of the achievable spread, against \RsLowThompson{} for the best adaptive
-allocator. Paired on the replicate across \RsCrossLowN{} matched runs that is an effect of
-\RsCrossLowEff{} in favour of \RsCrossLow{} at $t = \RsCrossLowT{}$ with \RsCrossLowSign{}\% sign
-consistency, which clears the tier comfortably.
+\paragraph{Uniform allocation is never beaten, and at small budgets it wins decisively.} Means
+are taken over the \RsCells{} problem, budget and replicate cells that every one of the
+\RsMethods{} methods reached, so no two of them are averaged over different denominators. At the
+bottom rung the lowest mean normalized regret belongs to \RsCrossLow{}, at \RsCrossLowUni{} of the
+achievable spread against \RsCrossLowAdapt{} for the strongest adaptive allocator. Paired on the
+replicate across \RsCrossLowN{} matched runs that is \RsCrossLowEff{} in favour of uniform
+allocation at $t = \RsCrossLowT{}$ with \RsCrossLowSign{}\% sign consistency, which clears the tier
+comfortably. Argmax recovery reads the same way, \RsCrossLowUniFound{}\% against
+\RsCrossLowAdaptFound{}\%. At the middle rung uniform allocation still leads,
+\RsCrossMidUni{} against \RsCrossMidAdapt{}.
 
-At the top rung the raw means reverse, \RsTopThompson{} against \RsTopGrid{}, and the reversal does
-not survive the gate: the paired effect is \RsCrossTopEff{} at $t = \RsCrossTopT{}$ with
-\RsCrossTopSign{}\% sign consistency, which is \RsCrossTopVerdict{} at the tier this project uses
-everywhere else. Reporting it as a crossing would have been reporting a mean difference the design
-of the study cannot separate from zero.
+At the top rung the raw means change places, \RsCrossTopAdapt{} for \RsCrossTop{} against
+\RsCrossTopUni{}, and the change does not survive the gate: the paired effect is \RsCrossTopEff{}
+at $t = \RsCrossTopT{}$ with \RsCrossTopSign{}\% sign consistency, so the tier binds on
+\RsCrossTopBinds{}. That distinction is worth stating rather than hiding inside the word
+equivalent. The contrast clears the $t$ threshold and misses the sign requirement by one point,
+which says the difference is consistent on average and not consistent run to run, and a program
+office choosing a method for one study cares about the second.
 
-So the finding is one-directional rather than a crossing. Adaptive allocation never beats uniform
-allocation anywhere on this suite. At small budgets it loses heavily, and at large budgets it
-catches up. Argmax recovery tells the same story from the other side: \RsCrossLow{} recovers the
-best design on \RsFoundLowGrid{}\% of low-budget runs against \RsFoundLowThompson{}\% for the
-adaptive allocator, and by the top rung the two are \RsFoundTopGrid{}\% and
-\RsFoundTopThompson{}\%.
+Taken across the whole method set the picture is one-directional. At the top rung
+\RsBeatGrid{} of the nine other methods separate from uniform allocation on regret at the full
+tier. Four are nominally ahead of it and none of the four gates; three are behind it and gate
+there, including both Gaussian-process variants that use the observed incumbent. Adaptive
+allocation never beats uniform allocation anywhere on this suite. At small budgets it loses
+heavily, and at large budgets it draws level.
 
 \paragraph{Why adaptive allocation is a liability at small budgets.} An adaptive allocator earns
 its keep by spending less on designs it has ruled out, and ruling a design out means separating it
@@ -405,15 +411,48 @@ the answer key already reports. Compare the study's per-design budget against th
 which the design set can be ranked at all. Below it, enumerate; the adaptive machinery will cost
 real performance. Above it, the choice stops mattering on a space of this size.
 
-\paragraph{The controls say this is not a broken estimator.} Two of the methods are deliberately
-unrepaired twins and two differ from their partner in a single estimator, and they are here so that
-a reader can tell an implementation fault apart from a claim about adaptive search. \RsBeatGrid{}
-of the \RsMethods{} methods separate from \RsTopWinner{} on regret at the full tier
-(\RsBeatGridNames{}), and \RsBeatRandom{} separate from \texttt{random} (\RsBeatRandomNames{}).
+\paragraph{One estimator matters and the other three do not.} Four of the \RsMethods{} methods
+exist as members of a pair differing in exactly one estimator, so that a reader can tell an
+implementation choice apart from a claim about adaptive search. Each pair is gated on
+\RsDiscVarN{} matched runs.
 
-\paragraph{Registered verdicts.} The predictions in Section~\ref{sec:methods} were registered
-before the sweep produced a row and are scored mechanically by a script committed at the same time.
-They are reported here whichever way they went, and two of them went against the paper.
+Denominating the exploration bonus in the metric's own noise, rather than in the unit interval the
+textbook derivation assumes, does not repay itself: the scaled allocator differs from its unscaled
+twin by \RsDiscScaleEff{} at $t = \RsDiscScaleT{}$ with \RsDiscScaleSign{}\% sign consistency,
+which is \RsDiscScaleVerdict{}. Taking the surrogate's incumbent from the posterior mean rather
+than from the best observed value is also \RsDiscIncVerdict{}, at \RsDiscIncEff{}. Fitting the
+Gaussian process to the observed incumbent is worse than the raw variant, \RsDiscPriorEff{} at
+$t = \RsDiscPriorT{}$, \RsDiscPriorVerdict{}.
+
+The one estimator that does move the result is how the allocator estimates variance. Pooling the
+per-mission standard deviation across arms rather than estimating it per arm improves regret by
+\RsDiscVarEff{} at $t = \RsDiscVarT{}$ with \RsDiscVarSign{}\% sign consistency,
+\RsDiscVarVerdict{}. That is consistent with the rest of the paper: on these problems an arm's own
+draws are too few to estimate its variance, so an allocator that tries does worse than one that
+borrows strength across the design set. It is also the only one of the four differences that
+survives, which is worth saying plainly, because three of the four are exactly the kind of tuning a
+comparison without controls would have reported as a method contribution.
+
+\paragraph{Registered verdicts, reported whichever way they went.} Three of the five predictions
+registered before the sweep failed. CR-72 M1 held that the unscaled allocator would be equivalent
+to uniform allocation, since a bonus two orders of magnitude larger than the gap it must resolve
+should collapse it into round-robin sampling. It is refuted on both scores: the unscaled allocator
+is worse than uniform allocation, not equal to it. CR-72 M2 held that scaling the bonus would
+recover the loss, and it does not. CR-72 M3 cannot be scored at all, because it asked for an
+ordering across three axes and the mission-success axis has no problem whose key can rank its
+design set, which Section~\ref{sec:bench} had already measured and the registration had not
+allowed for.
+
+CR-73 B held that argmax recovery and regret would rank methods differently, so that the choice of
+grading rule mattered. It is retracted: the two rankings agree closely and the same method wins
+both on ten of thirteen problems. The grading rule still matters for which problems can be graded,
+which is the claim Section~\ref{sec:bench} makes and this one does not touch, but the ranking
+argument was academic and is withdrawn.
+
+CR-73 C holds. On the \RsRegretOnly{} problems whose key cannot resolve its own top two, seven of
+the nine other methods separate from \texttt{random} under regret at the full tier. Those problems
+carry information about method quality even though they cannot say which design is best, which is
+what justified keeping them in the suite rather than dropping more than half of it.
 
 \paragraph{Pool reuse.} A method that asks for more missions of a design than the pool holds
 resamples draws it has already seen, and the precision it reports is then optimistic. Across the
