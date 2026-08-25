@@ -61,13 +61,32 @@ self-reported, and use it to argue that the axis a study searches on constrains 
 tightly than the optimizer it searches with.
 
 \begin{itemize}
-\item A suite of mission-design search problems on a fast multi-agent simulator, each carrying an
-      optimum established by a separate registered study that involved no optimizer, so ``did the
-      method find the right design'' has an answer written down by somebody else first
+\item A suite of mission-design search problems on a fast multi-agent simulator, six of them
+      carrying an optimum established by a separate registered study that involved no optimizer, and
+      the rest by a high-precision table computed on seeds disjoint from every search
+      (Section~\ref{sec:bench}).
+\item The measurement that most of those problems have no affordable best design at all. Only
+      \BnKeyResolved{} of \BnKeyProblems{} separate their own top two designs at two standard errors,
+      \BnKeyResSucc{} of \BnKeyNSucc{} on mission success, and the median unresolved problem would
+      need about \BnKeyMedianNeed{} missions per design. We check first that this is a cost and not
+      a bound effect, since a metric pinned at its ceiling would tie its top two as a matter of
+      definition (Section~\ref{sec:bench}).
+\item The consequence for what a benchmark should grade. The spread from best design to worst is a
+      median \BnSpreadOverGapMed{} times the gap between the best two, so distinguishing the
+      returned design from the best one is about \BnCheaper{} times cheaper than distinguishing the
+      best from the runner-up. Choosing a design well is affordable and proving which is best often
+      is not, so the suite grades normalized regret and carries argmax recovery as a flag
       (Section~\ref{sec:bench}).
 \item A budget denominated in mission replications rather than evaluations, with the per-problem
-      ladder derived from a measured difficulty, the ratio of per-mission spread to the gap between
-      the two best designs, rather than chosen (Sections~\ref{sec:bench} and \ref{sec:methods}).
+      ladder derived from a measured quantity rather than chosen, and capped by the number of real
+      missions standing behind the design it is spent on (Sections~\ref{sec:bench} and
+      \ref{sec:methods}).
+\item A comparison of \BnMethods{} methods under that budget, paired exactly rather than nominally:
+      the answer key's per-mission readings are kept, so replicate $r$ fixes one mission ordering per
+      design and every method that reaches a design receives the same missions in the same order.
+      Two of the methods carry a deliberately unrepaired twin and two carry a variant differing in a
+      single estimator, so a broken estimator can be told apart from a claim about adaptive search
+      (Sections~\ref{sec:methods} and \ref{sec:results}).
 \item The finding that the cost of estimating a mission metric is a property of the pair (metric,
       operating point) rather than of the metric, established by holding one design set fixed and
       scoring the same missions on three axes at four operating points (Section~\ref{sec:results}).
@@ -76,10 +95,6 @@ tightly than the optimizer it searches with.
       bonus, derived for rewards on the unit interval, exceeds the gap it must resolve by two orders
       of magnitude here and collapses the allocator into uniform sampling. We keep the unscaled
       version as a control rather than repairing it silently (Section~\ref{sec:methods}).
-\item A comparison of enumeration, random search, successive halving, two bandit allocators and
-      Gaussian-process expected improvement under that common budget, scored both on whether the
-      registered optimum was returned and on the mission performance given up by returning something
-      else, which are different questions that disagree (Section~\ref{sec:results}).
 \end{itemize}
 
 The honest summary of the result is a negative one about method choice and a positive one about
