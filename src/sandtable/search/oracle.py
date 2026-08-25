@@ -338,24 +338,42 @@ def difficulty(p: Problem, refresh: bool = False) -> dict:
     return out
 
 
-def budget_ladder(p: Problem, n: int = 5) -> list[int]:
+def reaches_separation(p: Problem) -> bool:
+    """Does this problem's ladder get above the budget at which its top two can be separated?
+    A comparison run entirely below it measures the regime, not the methods."""
+    d = difficulty(p)
+    sep = d.get("budget_to_separate")
+    return bool(sep) and budget_ladder(p)[-1] >= sep
+
+
+def budget_ladder(p: Problem, n: int = 6) -> list[int]:
     """A per-problem ladder spanning well below to well above the budget that can separate the top
     two designs. A single ladder shared across problems would put every method at ceiling on the
     easy ones and at floor on the hard ones, and measure nothing on either."""
     d = difficulty(p)
-    # The ladder is sized to the CHOOSING question, not the separating one. Chasing separation put
-    # the top rung at fourteen thousand missions on problems whose top two designs the answer key
-    # itself cannot tell apart at eight thousand replications each, which is a ladder built to
-    # measure something this benchmark argues nobody needs. Four times the budget that distinguishes
-    # the best design from the worst puts the top rung where regret is near zero and the comparison
-    # saturates, which is what the top of a ladder is for.
+    # The ladder has to span BOTH regimes or it decides the comparison by construction.
+    #
+    # It used to be sized to the choosing question alone, four times the budget that tells the best
+    # design from the worst. That was chosen for a good reason, that separation is the question this
+    # benchmark argues nobody needs, and it had a consequence nobody checked: on twenty-four of the
+    # thirty problems the TOP rung then sat below the budget at which any method could rank the
+    # design set at all, by as much as a factor of a thousand. Every method was allocating on
+    # evidence that cannot order the arms, uniform allocation is trivially optimal in that regime,
+    # and the sweep reported that finding as a property of the methods. It is a property of the
+    # ladder. Same shape as the third genus of the first paper, met in a study design rather than a
+    # decision rule: the answer was entailed before the run started.
+    #
+    # So the bottom stays where it was and the top reaches for the separating budget, bounded by
+    # what the stored missions can honestly serve. Where the ceiling binds, the ladder cannot reach
+    # the learnable regime and `reaches_separation` says so rather than leaving it to be inferred.
     lo_b = d.get("budget_to_choose") or 16.0 * p.n_designs
-    hi_b = 4.0 * lo_b
+    sep_b = d.get("budget_to_separate")
     # Two hard ceilings. CAP_MULT bounds cost. The pool depth bounds honesty: a budget deeper than
     # the stored missions would be served by resampling the same missions repeatedly, and a method
     # would converge to the POOL's mean rather than the simulator's while appearing to gain
     # precision. Where either binds it is recorded rather than absorbed.
     ceiling = min(CAP_MULT, pool_depth(p)) * p.n_designs
-    hi = max(min(hi_b, ceiling), 64.0)
-    lo = max(16.0, min(lo_b / 4.0, hi / 16.0))
+    want = 4.0 * lo_b if not sep_b else max(4.0 * lo_b, 2.0 * sep_b)
+    hi = max(min(want, ceiling), 64.0)
+    lo = max(16.0, min(lo_b / 4.0, hi / 64.0))
     return sorted({int(round(lo * (hi / lo) ** (i / max(1, n - 1)))) for i in range(n)})
