@@ -2086,3 +2086,19 @@ span one standard error. Part B retracted, Spearman -0.200 and +0.400 against a 
 **CR-78 launched.** Job 9469006 builds the `n_blue=24` tables. Predictions frozen in the
 registration first; the success arm declared untestable in advance at six hundredths of a standard
 error from ceiling.
+
+**Correction, same day.** The headline above was wrong and is retracted. On 24 of the 30 problems
+the top rung of the budget ladder sat below the replication at which the top two designs can be
+separated, by up to a factor of a thousand (84 missions per design against 100,951 on
+`qcap_s10_loss`). Every method was allocating on evidence that cannot order the arms, uniform
+allocation is trivially optimal in that regime, and the sweep reported it as a property of the
+methods. `budget_ladder` now reaches for the separating budget under the ceiling it always had;
+`reaches_separation` reports the 14 of 30 problems that get there.
+
+Re-run as `experiments/results/bench-wide.jsonl`, 36,000 rows, ten methods, twenty replicates, six
+rungs, 264 s on seven workers, every one of the 3,600 cells reached by all ten methods. The result
+is a genuine crossing. At the bottom rung uniform allocation leads the strongest adaptive allocator
+by 0.1147 of the achievable spread, t=8.23, 75% sign consistency, and recovers the best design 73%
+of the time against 25%. At the top rung `ucb_pooled` leads by 0.0183, t=-3.74, 71% sign
+consistency, which clears the tier, and argmax recovery has converged at 91% against 92%. One of the
+nine methods separates from uniform allocation at the top of the ladder.

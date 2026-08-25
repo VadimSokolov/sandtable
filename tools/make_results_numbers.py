@@ -69,6 +69,12 @@ def main() -> None:
            ("RsProblems", str(len(probs))),
            ("RsGradeable", str(len(grade))),
            ("RsRegretOnly", str(len(probs) - len(grade)))]
+    try:
+        from sandtable.search.oracle import reaches_separation
+        from sandtable.search.problems import get as _g
+        out.append(("RsReachSep", str(sum(1 for k in probs if reaches_separation(_g(k))))))
+    except Exception:
+        pass
 
     # Mean normalized regret per method at each rung. Zero is the best design, one is the worst,
     # so these are comparable across problems and across metrics, which raw regret is not.
@@ -154,9 +160,11 @@ def main() -> None:
         # and collapsing them into "equivalent" hides which.
         gt = gate(paired(rows, hi_w, lo_w, "regret_frac", budgets=rungs["Top"]), sp)
         out.append(("RsCrossTopBinds",
-                    "sign consistency alone" if abs(gt["t"]) >= 1.70 and gt["sign"] < 0.60
-                    else "the t statistic" if abs(gt["t"]) < 1.70 and gt["sign"] >= 0.60
-                    else "both t and sign consistency"))
+                    "clears both clauses of the tier"
+                    if abs(gt["t"]) >= 1.70 and gt["sign"] >= 0.60
+                    else "misses on sign consistency alone"
+                    if abs(gt["t"]) >= 1.70 else "misses on the t statistic"
+                    if gt["sign"] >= 0.60 else "misses on both t and sign consistency"))
         out.append(("RsCrossReal",
                     "yes" if all(x[0] != f"RsCross{tg}Verdict" or x[1] != "equivalent"
                                  for tg in ("Low", "Top") for x in out) else "no"))

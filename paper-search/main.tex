@@ -369,47 +369,49 @@ rungs each, \RsReplicates{} replicates per cell, every method on every replicate
 missions in the same order from the stored pools. \RsGradeable{} of the problems can be graded on
 argmax recovery and all of them on normalized regret.
 
-\paragraph{Uniform allocation is never beaten, and at small budgets it wins decisively.} Means
-are taken over the \RsCells{} problem, budget and replicate cells that every one of the
-\RsMethods{} methods reached, so no two of them are averaged over different denominators. At the
-bottom rung the lowest mean normalized regret belongs to \RsCrossLow{}, at \RsCrossLowUni{} of the
-achievable spread against \RsCrossLowAdapt{} for the strongest adaptive allocator. Paired on the
-replicate across \RsCrossLowN{} matched runs that is \RsCrossLowEff{} in favour of uniform
-allocation at $t = \RsCrossLowT{}$ with \RsCrossLowSign{}\% sign consistency, which clears the tier
-comfortably. Argmax recovery reads the same way, \RsCrossLowUniFound{}\% against
-\RsCrossLowAdaptFound{}\%. At the middle rung uniform allocation still leads,
-\RsCrossMidUni{} against \RsCrossMidAdapt{}.
+\paragraph{The ranking reverses with the budget, and where it reverses is predictable.} Means are
+taken over the \RsCells{} problem, budget and replicate cells that every one of the \RsMethods{}
+methods reached, so no two are averaged over different denominators.
 
-At the top rung the raw means change places, \RsCrossTopAdapt{} for \RsCrossTop{} against
-\RsCrossTopUni{}, and the change does not survive the gate: the paired effect is \RsCrossTopEff{}
-at $t = \RsCrossTopT{}$ with \RsCrossTopSign{}\% sign consistency, so the tier binds on
-\RsCrossTopBinds{}. That distinction is worth stating rather than hiding inside the word
-equivalent. The contrast clears the $t$ threshold and misses the sign requirement by one point,
-which says the difference is consistent on average and not consistent run to run, and a program
-office choosing a method for one study cares about the second.
+At the bottom rung the lowest mean normalized regret belongs to \RsCrossLow{}, at
+\RsCrossLowUni{} of the achievable spread against \RsCrossLowAdapt{} for the strongest adaptive
+allocator. Paired on the replicate across \RsCrossLowN{} matched runs that is \RsCrossLowEff{} in
+favour of uniform allocation at $t = \RsCrossLowT{}$ with \RsCrossLowSign{}\% sign consistency.
+Argmax recovery reads the same way and more starkly, \RsCrossLowUniFound{}\% against
+\RsCrossLowAdaptFound{}\%.
 
-Taken across the whole method set the picture is one-directional. At the top rung
-\RsBeatGrid{} of the nine other methods separate from uniform allocation on regret at the full
-tier. Four are nominally ahead of it and none of the four gates; three are behind it and gate
-there, including both Gaussian-process variants that use the observed incumbent. Adaptive
-allocation never beats uniform allocation anywhere on this suite. At small budgets it loses
-heavily, and at large budgets it draws level.
+At the top rung the ordering reverses. \RsCrossTop{} leads at \RsCrossTopAdapt{} against
+\RsCrossTopUni{}, and paired on the replicate the difference \RsCrossTopBinds{}:
+\RsCrossTopEff{} at $t = \RsCrossTopT{}$ with \RsCrossTopSign{}\% sign consistency. It is the
+\RsBeatGrid{} method of the nine that separates from uniform allocation at the top of the ladder.
+Argmax recovery has converged by then, \RsCrossTopUniFound{}\% against \RsCrossTopAdaptFound{}\%,
+which is what a regime where every method can rank the design set should look like.
 
-\paragraph{Why adaptive allocation is a liability at small budgets.} An adaptive allocator earns
-its keep by spending less on designs it has ruled out, and ruling a design out means separating it
-from the leader. Section~\ref{sec:bench} measured what separation costs on these problems: the
-answer key itself, at \BnRepsSucc{} missions per design, cannot separate two success designs
-differing by less than a median \BnKeyDetSucc{}\% of the entire design spread. A searcher working
-with a fraction of that budget is deciding where to allocate on evidence that cannot rank the arms
-it is choosing between. It concentrates on noise, and concentrating on noise is worse than not
-concentrating at all, which is why the deficit at the bottom rung is wide rather than marginal. As
-the budget grows the evidence becomes worth acting on and the deficit closes, but on a design space
-this small there is nothing left for it to win: uniform allocation has already reached every arm.
+\paragraph{The ladder has to span the regime or it decides the comparison.} That reversal is
+invisible on a ladder that stops too soon, and the first version of this sweep had one. Sizing the
+top rung to four times the budget that tells the best design from the worst put it below the budget
+that separates the top two on \BnSpreadBounded{} of the \BnKeyProblems{} problems, in one case by a
+factor of a thousand. Every method was then allocating on evidence that cannot order the arms,
+uniform allocation is trivially optimal in that regime, and the comparison returned that as a
+property of the methods. It is a property of the ladder. The ladder now reaches for the separating
+budget wherever the stored missions and the cost bound allow, which is \RsReachSep{} of the
+\BnKeyProblems{} problems, and the rest are reported as unable to reach it rather than pooled in.
 
-That is a rule a program office can apply before choosing a method, and the quantity it needs is one
-the answer key already reports. Compare the study's per-design budget against the replication at
-which the design set can be ranked at all. Below it, enumerate; the adaptive machinery will cost
-real performance. Above it, the choice stops mattering on a space of this size.
+\paragraph{Why the crossing is where it is.} An adaptive allocator earns its keep by spending less
+on designs it has ruled out, and ruling a design out means separating it from the leader.
+Section~\ref{sec:bench} measured what separation costs on these problems, and the crossing sits
+where that measurement says it should. Below it a searcher is deciding where to allocate on
+evidence that cannot rank the arms it is choosing between, so it concentrates on noise, and
+concentrating on noise is worse than not concentrating at all. That is why the deficit at the
+bottom rung is wide rather than marginal, and why it shows up far more sharply in argmax recovery
+than in regret: a misallocated budget still lands somewhere reasonable in regret terms and picks
+the wrong design outright.
+
+This gives a program office a rule it can apply before choosing a method, using a quantity the
+answer key already reports. Compare the study's per-design budget against the replication at which
+the design set can be ranked. Below it, enumerate; the adaptive machinery will cost real
+performance and will cost it mostly in the answer, not in the outcome. Above it, allocate, and
+prefer the allocator that pools its variance estimate across the design set.
 
 \paragraph{One estimator matters and the other three do not.} Four of the \RsMethods{} methods
 exist as members of a pair differing in exactly one estimator, so that a reader can tell an
@@ -466,16 +468,18 @@ The result a program office should take from this is not that Bayesian optimizat
 method. It is that on a mission-design problem the binding constraint is the cost of estimating an
 outcome, not the cleverness of the search over designs. A design space of seven queue capacities is
 enumerable; what is expensive is knowing which of the seven is better, and that expense is set by
-the metric and the operating point rather than by the optimizer. Every method in this comparison
-spends the same missions, and the one that spends them evenly is never beaten. The literature that
-motivates surrogate search assumes the opposite regime, a space too large to enumerate and an
-evaluation whose value is known once taken, and neither half of that assumption holds here.
+the metric and the operating point rather than by the optimizer. Every method in this comparison spends the same
+missions, and which way of spending them wins is decided by whether the budget clears the cost of
+ranking the arms. The literature that motivates surrogate search assumes the opposite regime, a
+space too large to enumerate and an evaluation whose value is known once taken, and neither half of
+that assumption holds below the crossing.
 
-That reading is what makes the negative result portable rather than a property of this simulator.
-The condition under which uniform allocation wins is stated in quantities a study can measure before
+That reading is what makes the result portable rather than a property of this simulator. The
+condition under which uniform allocation wins is stated in quantities a study can measure before
 choosing a method: the design set is small enough to enumerate inside the budget, and the budget per
 design is below the replication at which the set can be ranked at all. Both are reported by the
-answer key. Where a mission study has a genuinely large or continuous design space, or an outcome
+answer key, so a study can place itself on the correct side of the crossing without running the
+comparison. Where a mission study has a genuinely large or continuous design space, or an outcome
 cheap enough that its ranking is settled early, the argument does not apply and the surrogate
 literature should be expected to hold.
 
