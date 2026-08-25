@@ -28,21 +28,26 @@ and the standard answer is Bayesian optimization. We test that answer on a suite
 \BnKeyProblems{} mission-design search problems whose optima were established by separate registered
 studies of the simulator that involved no optimizer, with the budget denominated in mission
 replications rather than evaluations and every method paired on the same missions in the same order.
-Uniform allocation over the design set is not beaten at that tier by any of the nine other methods
-compared, which include three bandit variants and three Gaussian-process variants, and at small
-budgets it wins by \RsCrossLowEff{} of the achievable spread at $t = \RsCrossLowT{}$. The apparent reversal at large
-budgets does not survive a paired test and is reported as equivalent. The reason is a property of
-the problem rather than of the methods: an allocator can only concentrate on the basis of evidence
-that ranks the arms, and on these problems that evidence is expensive. Establishing the answer key
-made the cost measurable, and it is severe. Only \BnKeyResolved{} of the \BnKeyProblems{} problems
-separate their own top two designs at two standard errors, none of the mission-success problems do,
-and on that axis a key built from \BnRepsSucc{} missions per design can only separate two designs
-differing by a median \BnKeyDetSucc{} percent of the entire distance from best design to worst. The
-spread across the design set is nonetheless large, at least \BnSpreadOverGapMed{} times the gap
-between the best two, so choosing a good design is affordable while proving which is best is not,
-by a factor of at least \BnCheaper{}. We therefore grade normalized regret and carry argmax recovery
-as a flag, and we argue that a requirement written from the argmax of a mission sweep is usually
-written from noise.
+Which method wins depends on the budget, and the crossing point is predictable in advance from a
+quantity the answer key already reports. Below the replication at which a design set can be ranked
+at all, uniform allocation beats every one of the nine other methods, leading the strongest adaptive
+allocator by \RsCrossLowEff{} of the achievable spread at $t = \RsCrossLowT{}$ and recovering the
+best design \RsCrossLowUniFound{}\% of the time against \RsCrossLowAdaptFound{}\%. Above it the
+ordering reverses and a variance-pooled bandit leads. The cause is a property of the problem rather
+than of the methods: an allocator can only concentrate on evidence that ranks the arms, and on these
+problems that evidence is expensive. A benchmark whose budget ladder stops below that point recovers
+only the first half and reports it as a property of the methods, which is what our own first sweep
+did before the ladder was corrected.
+
+Establishing the answer key made the cost measurable, and it is severe. Only \BnKeyResolved{} of the
+\BnKeyProblems{} problems separate their own top two designs at two standard errors, none of the
+mission-success problems do, and on that axis a key built from \BnRepsSucc{} missions per design can
+only separate two designs differing by a median \BnKeyDetSucc{} percent of the entire distance from
+best design to worst. The spread across the design set is nonetheless large, at least
+\BnSpreadOverGapMed{} times the gap between the best two, so choosing a good design is affordable
+while proving which is best is not, by a factor of at least \BnCheaper{}. We therefore grade
+normalized regret and carry argmax recovery as a flag, and we argue that a requirement written from
+the argmax of a mission sweep is usually written from noise.
 \end{abstract}
 
 \section{Introduction}
@@ -364,10 +369,16 @@ literature assumed and not the shape the surrogate literature assumes.
 \label{sec:results}
 
 
-The sweep is \RsRows{} graded runs: \RsMethods{} methods on \RsProblems{} problems at five budget
+The sweep is \RsRows{} graded runs: \RsMethods{} methods on \RsProblems{} problems at six budget
 rungs each, \RsReplicates{} replicates per cell, every method on every replicate drawing the same
 missions in the same order from the stored pools. \RsGradeable{} of the problems can be graded on
 argmax recovery and all of them on normalized regret.
+
+The replicate count is the one number here set by convenience rather than by the precision the
+comparison needs, and it is stated rather than left to be inferred. At \RsReplicates{} replicates
+the paired contrasts below carry several hundred matched runs each, which is enough for the two
+gated verdicts to clear the tier with room and not enough to call any contrast reported as
+equivalent settled.
 
 \paragraph{The ranking reverses with the budget, and where it reverses is predictable.} Means are
 taken over the \RsCells{} problem, budget and replicate cells that every one of the \RsMethods{}
@@ -506,7 +517,8 @@ not.
 The limits are worth stating in the same terms. This is one simulator, two design knobs, three
 outcome metrics, and design spaces of at most twenty-eight points, all discrete. The methods were
 given a fixed budget and no tuning, which is the right convention for a comparison and the wrong one
-for a deployment. And the search operates on a static design space; the question of whether a
+for a deployment. The comparison rests on \RsReplicates{} replicates per cell, which settles the two
+contrasts it is asked to settle and does not settle those reported as equivalent. And the search operates on a static design space; the question of whether a
 learned policy can do better by choosing where to look as a sequential decision problem, rather than
 by fitting a surrogate to what it has seen, is the natural next step and is not answered here.
 
