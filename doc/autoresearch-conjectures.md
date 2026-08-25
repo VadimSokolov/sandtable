@@ -9489,3 +9489,74 @@ tier, |t| above 1.70 with sixty percent sign consistency paired by problem, then
 information under regret either and the drop stands.
 
 Registered so that whichever way each of the three goes, it was written down first.
+
+## CR-74: the ceiling account, made quantitative on data already in hand
+
+**Status, stated first because it governs how the rest reads.** This is POST HOC. CR-70 registered a
+qualitative discriminator and it held. What follows was not registered in advance: it is a model
+fitted to batteries that had already run, and it is reported as a fitted account with an
+out-of-sample check rather than as a prediction that survived a falsifier. The distinction is the
+whole reason this project keeps a registration log, so it is not blurred here.
+
+**What was sitting unscored.** The CR-70 battery ran four sections and only three were read. W4 is
+the ladder against opposing strength at a fixed large span, the section registered precisely as the
+guard against a W3 result that only works at one hand-picked value of `n_red`. It ran, it is in the
+log, and it was never surveyed. Scored now, it is monotone on both axes: the backlog bound's effect
+on mission success reads +0.0024 equivalent at four opposing units, +0.0161 equivalent at six, then
+gates at +0.0889, +0.1411 and +0.1372 at eight, ten and twelve, while blue loss gates down at every
+dose from -0.0103 to -0.0820. The recovery is therefore not an artefact of one chosen operating
+point. It is a dose-response, and the guard the registration asked for did its job.
+
+**The model.** Treat mission success as a threshold reading of a latent margin and let a capability
+add a constant to that margin. Then the effect a test reports at baseline `b` is
+`Phi(Phi^-1(b) + delta) - b`: one parameter per capability, and no freedom at all in the shape.
+
+**The fit.** One `delta` across twenty cells spanning four sections, two different knobs (span and
+opposing strength), two scenarios, and baselines from 0.079 to 1.000 gives `delta = 0.454` for the
+backlog bound, R-squared 0.935, RMS residual 0.017 against effects running to 0.188. Section mean
+residuals are +0.0073, -0.0050, +0.0089 and -0.0153, so which knob moved the baseline adds nothing.
+
+**The out-of-sample check, which is what makes a post-hoc fit worth reporting.** Fitting `delta` on
+three sections and predicting the fourth gives pooled R-squared 0.888 and RMS 0.023, with `delta`
+between 0.420 and 0.494 across the four held-out folds. The admission rule, a different capability
+on the same axis, gives `delta = 0.394`, pooled out-of-sample R-squared 0.768, folds between 0.364
+and 0.448. Two capabilities, different constants, the same curve: the compression belongs to the
+metric and the constant belongs to the capability.
+
+**Why it is worth a section rather than a footnote.** The model predicts the NULLS. It says a test
+run where the baseline sits at 0.998 will report +0.002 for a capability worth 0.45 on the latent
+scale, and that the reading carries no information about the capability at all. So a program office
+can measure a capability once where the metric has room and then compute what a test will report
+anywhere else, including computing in advance which planned tests cannot answer the question they
+are being run to answer. That is a cheaper and more useful thing than another battery.
+
+**What it does not establish, kept explicit.** A one-parameter probit shift is the simplest account
+that fits, not the only one that could; the twenty cells are four sections of one simulator on one
+scenario family; and the fit and its cross-validation share those cells, so the honest next step is
+a section registered in advance whose baseline is chosen to make the model's prediction sharp, with
+the predicted effect written down before it runs.
+
+## CR-75: the ceiling model as a registered prediction with no free parameters
+
+CR-74 is a fit. This is the test, registered before it runs, and the point of it is that nothing is
+estimated from the new data at all. `delta` is fixed at 0.454 for the backlog bound and 0.394 for
+the admission rule, both taken from CR-74's twenty cells and not refitted. The predicted effect at a
+cell whose control arm reads baseline `b` is `Phi(Phi^-1(b) + delta) - b`, so the prediction is
+conditional on a quantity the same run measures, which is what makes it checkable at operating
+points nobody has visited yet.
+
+**Falsifier one, the level.** RMS deviation of observed from predicted effects, over every gradeable
+cell of the battery, above 0.045. That is twice CR-74's out-of-sample RMS, so a model that holds
+only as well as it already did passes and one that degrades twofold fails.
+
+**Falsifier two, the shape.** The success gain's maximum falling outside the baseline band 0.35 to
+0.65. The curve puts the maximum at exactly 0.5 with no freedom; W4 put it at 0.484 on cells the
+model was fitted to, and this asks for it on cells it was not.
+
+**Three sections, chosen so that none of their cells appear in the fit.** X1 sweeps opposing
+strength to twenty, past where W4 stopped, so the descending limb of the interior maximum rests on
+more than the single point W4 could reach. X2 interpolates at strengths W4 skipped, where the curve
+is steepest and a wrong shape costs the most. X3 moves the baseline with span instead of strength at
+a strength W4 never used, which is the section that decides whether the model is about the metric or
+merely about opposing strength. Blue loss rides along on every section, because the whole account
+requires that where success stops reporting the capability, the uncensored axis still does.
