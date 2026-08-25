@@ -313,17 +313,32 @@ def _gp_posterior(X, idx, y, cho_factor, cho_solve, ls: float = 0.4, noise: floa
     would have reported a number about the package's defaults while appearing to report one about
     the method. `gp_raw` keeps the unstandardized version as the control.
     """
+    # COLLAPSED to one row per distinct design before anything is factorized. The design set is
+    # enumerated and small; a run at a large budget observes the same seven or twenty-eight points
+    # hundreds of times, and carrying one kernel row per observation made the cost cubic in the
+    # number of PULLS rather than in the number of designs. At the top rung of the harder ladders
+    # that is a 1792 by 1792 factorization repeated 1792 times, which is why the first attempt at
+    # this benchmark produced no rows at all in five minutes.
+    #
+    # The collapse is exact rather than an approximation. Under a Gaussian likelihood with equal
+    # per-observation noise, repeated draws at one input enter the posterior only through their mean
+    # and their count, and the count divides the noise. So this changes what the method costs and
+    # not what it returns.
     ym = float(np.mean(y))
     ys = float(np.std(y, ddof=1)) if (standardize and len(y) > 1) else 1.0
     ys = ys if ys > 1e-12 else 1.0
-    yc = (y - ym) / ys
-    Xo = X[idx]
+
+    uniq, inv = np.unique(np.asarray(idx), return_inverse=True)
+    cnt = np.bincount(inv).astype(float)
+    ysum = np.bincount(inv, weights=(y - ym) / ys)
+    yc = ysum / cnt
+    Xo = X[uniq]
 
     def k(A, B):
         d2 = ((A[:, None, :] - B[None, :, :]) ** 2).sum(-1)
         return np.exp(-0.5 * d2 / (ls * ls))
 
-    K = k(Xo, Xo) + noise * np.eye(len(idx))
+    K = k(Xo, Xo) + np.diag(noise / cnt)
     cf = cho_factor(K, lower=True)
     alpha = cho_solve(cf, yc)
     Ks = k(X, Xo)

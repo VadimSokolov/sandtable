@@ -370,3 +370,62 @@ def test_pool_meter_stays_paired_after_a_wrap():
     after_b = b.pull(d1, 8)                 # d1's first wrap, cleanly
 
     assert after_a == after_b, "a design's wrapped ordering depends on other designs' wraps"
+
+
+def test_gp_collapse_is_exact_not_an_approximation():
+    """The surrogate carries one kernel row per DESIGN, not per observation. Under a Gaussian
+    likelihood with equal per-observation noise, repeated draws at one input enter the posterior
+    only through their mean and count, with the count dividing the noise, so this is an identity
+    rather than a shortcut. Asserted against the full matrix directly, because the comment in the
+    code makes that claim and an unchecked claim of exactness is how an approximation gets shipped
+    as one."""
+    import numpy as np
+    from scipy.linalg import cho_factor, cho_solve
+    from sandtable.search import methods
+
+    rng = np.random.default_rng(3)
+    X = rng.normal(size=(6, 2))
+    idx = np.array([0, 0, 0, 2, 2, 4, 5, 5, 5, 5])
+    y = rng.normal(size=len(idx))
+    ls, noise = 0.4, 1e-2
+
+    mu_c, sd_c = methods._gp_posterior(X, idx, y, cho_factor, cho_solve,
+                                       ls=ls, noise=noise, standardize=False)
+
+    def k(A, B):
+        d2 = ((A[:, None, :] - B[None, :, :]) ** 2).sum(-1)
+        return np.exp(-0.5 * d2 / (ls * ls))
+
+    ym = float(np.mean(y))
+    Xo = X[idx]
+    K = k(Xo, Xo) + noise * np.eye(len(idx))
+    cf = cho_factor(K, lower=True)
+    alpha = cho_solve(cf, y - ym)
+    Ks = k(X, Xo)
+    mu_f = (Ks @ alpha) + ym
+    var_f = np.maximum(1.0 - np.einsum("ij,ji->i", Ks, cho_solve(cf, Ks.T)), 1e-12)
+
+    assert np.allclose(mu_c, mu_f, atol=1e-8), (mu_c, mu_f)
+    assert np.allclose(sd_c, np.sqrt(var_f), atol=1e-8)
+
+
+def test_gp_cost_does_not_grow_with_budget():
+    """The defect this collapse fixes: cost was cubic in the number of PULLS rather than in the
+    number of designs, so the top rung of the harder ladders factorized a 1792 by 1792 matrix 1792
+    times and the benchmark produced no rows at all in five minutes."""
+    import time
+    import numpy as np
+    p = get("qcap_uniform")
+    designs = p.designs()
+    rng = np.random.default_rng(5)
+
+    def pull(d, n):
+        return float(rng.normal(_TRUE[designs.index(d)], 0.02 / np.sqrt(n)))
+
+    times = []
+    for budget in (400, 3200):
+        t0 = time.perf_counter()
+        methods.gp_ei(p, budget, np.random.default_rng(5), pull)
+        times.append(time.perf_counter() - t0)
+    # Eightfold budget on a seven-design space should cost roughly eightfold, not five hundredfold.
+    assert times[1] < 40 * times[0], f"cost grew superlinearly in budget: {times}"
