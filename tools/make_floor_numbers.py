@@ -38,6 +38,7 @@ ROOT = HERE.parent
 QUEUE = ROOT / "report" / "data" / "queue"
 OUT = ROOT / "report" / "gen" / "floor_numbers.tex"
 SIGN = 0.60                       # the gate's sign-consistency requirement
+T_CLEAR = 1.70                    # the gate's t threshold, full tier
 
 # Metrics that count missions, so a block mean moves in steps of 1/reps and CAN read exactly zero
 # difference. A continuous rate essentially never does, and the floor does not apply to it.
@@ -111,7 +112,7 @@ def main() -> None:
     pub = _published()
 
     counted = [r for r in pub if r[2] in COUNTED and reps_of.get(r[0])]
-    gated_hi, gated_lo, eq_lo = [], [], []
+    gated_hi, gated_lo, eq_lo, sign_only = [], [], [], []
     for r in counted:
         f = floor_for(reps_of[r[0]])
         gated = "gate" in str(r[10]).lower()        # the verdict reads "GATE up" / "GATE down"
@@ -121,6 +122,13 @@ def main() -> None:
             gated_hi.append(r)
         elif 0 < abs(r[6]) < f:
             eq_lo.append(r)
+            # The count that actually carries the argument. Most sub-floor equivalents also miss
+            # on the t statistic, and for those the floor is not what decided anything: the effect
+            # is small and the null is honest. The interesting ones are where t CLEARS the gate and
+            # the sign criterion alone produces the null, because there two of three criteria say
+            # the arms differ and the third cannot speak at that block size.
+            if abs(r[7]) >= T_CLEAR and r[9] and r[8] / r[9] < SIGN:
+                sign_only.append(r)
 
     out = [("FlSign", f"{SIGN:.2f}"),
            ("FlReps", str(main_reps)),
@@ -132,6 +140,15 @@ def main() -> None:
            ("FlGated", str(len(gated_hi) + len(gated_lo))),
            ("FlGatedBelow", str(len(gated_lo))),
            ("FlEqBelow", str(len(eq_lo))),
+           ("FlSignOnly", str(len(sign_only))),
+           ("FlSignOnlyMaxT", f"{max((abs(r[7]) for r in sign_only), default=float('nan')):.2f}"),
+           ("FlSignOnlyMaxEff",
+            f"{max((abs(r[6]) for r in sign_only), default=float('nan')):.5f}"),
+           # The blocks that agreed on the single most significant of them, which is the reading
+           # worth naming: the t statistic is overwhelming and the sign criterion still refuses.
+           ("FlSignOnlyBlocks",
+            (lambda r: f"{r[8]} of {r[9]}" if r else "n/a")(
+                max(sign_only, key=lambda x: abs(x[7])) if sign_only else None)),
            ("FlSmallestGated", f"{min((abs(r[6]) for r in gated_hi), default=float('nan')):.4f}"),
            ("FlLargestEqBelow", f"{max((abs(r[6]) for r in eq_lo), default=float('nan')):.5f}"),
            ("FlMargin",
@@ -148,7 +165,10 @@ def main() -> None:
     print(f"wrote {OUT} with {len(out)} macros")
     print(f"  published contrasts {len(pub)}, on a mission-counted metric {len(counted)}")
     print(f"  gated {len(gated_hi) + len(gated_lo)}, of which BELOW the floor {len(gated_lo)}")
-    print(f"  equivalent while below the floor {len(eq_lo)}")
+    print(f"  equivalent while below the floor {len(eq_lo)}, of which the SIGN criterion alone "
+          f"was binding (t already cleared) {len(sign_only)}")
+    if sign_only:
+        print(f"  largest t among those {max(abs(r[7]) for r in sign_only):.2f}")
     if gated_hi:
         print(f"  smallest effect that ever gated {min(abs(r[6]) for r in gated_hi):.5f}")
     if eq_lo:
