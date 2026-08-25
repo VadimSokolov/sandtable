@@ -416,6 +416,22 @@ ROWS = [
      "from block size alone; guarded by an announcement in the survey that prints the floor and "
      "the contrasts sitting under it"),
 
+    ("a budget ladder that never reached the regime it was comparing",
+     "(floored, not a claim)",
+     "\\textsc{retracted}. The second paper's headline was that uniform allocation is never beaten "
+     "by any adaptive allocator at any budget. On 24 of the 30 problems the TOP rung of the ladder "
+     "sat below the replication at which the top two designs can be separated at all, by up to a "
+     "factor of a thousand: 84 missions per design against 100{,}951 on one. Every method was "
+     "allocating on evidence that cannot order the arms, uniform allocation is trivially optimal "
+     "there, and the sweep reported the regime as a property of the methods. The docstring already "
+     "said the ladder should span well above the separating budget; the code sized it to the "
+     "cheaper choosing budget for a stated and reasonable purpose, and the consequence went "
+     "unchecked. The third genus met in a study design rather than a decision rule, and the most "
+     "expensive instance in this table because it produced a headline; guarded by the ladder now "
+     "reaching for the separating budget under the same ceiling it always had, by "
+     "\\texttt{reaches\\_separation} reporting the 14 of 30 problems that get there, and by a test "
+     "that fails whenever a ladder stops short of separation with budget still available."),
+
     ("a cost extrapolated from a gap that failed to resolve",
      "(floored, not a claim)",
      "\\textsc{retracted}. The second paper reported 52{,}317{,}293 missions per design as the "

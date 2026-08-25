@@ -477,3 +477,32 @@ def test_the_sweep_runs_every_method_in_the_registry():
     sb = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(sb)
     assert set(sb.METHODS) == set(REGISTRY), "the sweep's method list drifted from the registry"
+
+
+def test_the_ladder_reaches_the_learnable_regime_wherever_the_pool_allows():
+    """The comparison's headline was decided by the ladder, not by the methods. On 24 of 30
+    problems the top rung sat below the budget at which the top two designs can be separated, so
+    every method was allocating on evidence that cannot order the arms and uniform allocation was
+    trivially optimal. Where the stored missions can serve the separating budget, the ladder must
+    reach it; where they cannot, reaches_separation must say so rather than leaving it implicit."""
+    from sandtable.search.oracle import (budget_ladder, difficulty, reaches_separation,
+                                         pool_depth, CAP_MULT)
+    from sandtable.search.problems import PROBLEMS, get
+    checked = 0
+    for k in PROBLEMS:
+        p = get(k)
+        d = difficulty(p)
+        sep = d.get("budget_to_separate")
+        if not sep:
+            continue
+        # The same ceiling budget_ladder uses. CAP_MULT bounds cost and pool depth bounds
+        # honesty, and either can be the one that stops a ladder short; the guard asks only that
+        # the ladder reach separation when neither does.
+        ceiling = min(CAP_MULT, pool_depth(p)) * p.n_designs
+        if sep <= ceiling:
+            checked += 1
+            assert budget_ladder(p)[-1] >= sep, (
+                f"{k}: top rung {budget_ladder(p)[-1]} below separating budget {sep:.0f} "
+                f"with a ceiling of {ceiling} available")
+            assert reaches_separation(p)
+    assert checked >= 5, "no problem exercised the guard"
