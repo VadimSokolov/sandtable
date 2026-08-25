@@ -393,9 +393,26 @@ ROWS = [
      "(instrument, not a claim)",
      "\\textsc{repaired}. The per-problem mission allowance divided by a literal six while the "
      "method table held eight, so every problem's replicate count was set from a cost a third below "
-     "the real one. The same shape as the eighteen above and written by the author of the rule "
+     "the real one. The same shape as the rest of this family and written by the author of the "
+     "rule "
      "against it, six being correct on the day it was typed; guarded by the count now being read "
      "from the method list the run actually uses"),
+
+    ("a verdict of equivalent is a statement about the data",
+     "(floored, not a claim)",
+     "\\textsc{announced}. The gate asks that sixty percent of blocks agree in sign. Mission "
+     "success is zero or one per mission, so a block of sixty-four registers a difference only if "
+     "one of its missions flips, the agreeing fraction is capped at $1-(1-p)^{64}$, and no effect "
+     "below 0.0142 can meet the criterion however many blocks are run. Only larger blocks lower it, "
+     "which is the opposite of where a study short of a verdict reaches. Audited across every "
+     "contrast that feeds a number: of 596 on mission success, 262 gated and none below the floor, "
+     "the smallest that ever gated is 0.0405, and the largest reading equivalent while under it is "
+     "0.01416, five parts in a hundred thousand beneath the predicted value. So 151 equivalence "
+     "verdicts here were returned by arithmetic rather than evidence; none is wrong and none can "
+     "separate a small effect from none. A third genus, whose exposing question is asked of the "
+     "decision rule rather than of the number or of the metric, and is answerable at registration "
+     "from block size alone; guarded by an announcement in the survey that prints the floor and "
+     "the contrasts sitting under it"),
 ]
 
 
@@ -408,7 +425,8 @@ def main() -> None:
     # its place in the table only if it can name the guard that makes its recurrence
     # impossible. A row that cannot is a war story, and war stories get cut.
     for r in ROWS:
-        if ("instrument" in r[1] or "entailed" in r[1]) and "guarded by" not in r[2]:
+        if (("instrument" in r[1] or "entailed" in r[1] or "floored" in r[1])
+                and "guarded by" not in r[2]):
             raise SystemExit(f"instrument row names no guard, so it does not ship: {r[0]!r}")
     lines += [" & ".join(r) + " \\\\" for r in ROWS]
     lines += ["\\bottomrule", "\\end{tabular}"]
@@ -427,16 +445,19 @@ def main() -> None:
         raise SystemExit(f"NOT_THE_SHAPE names rows that no longer exist: {sorted(missing)}")
     genus = [r for r in instr if r[0] not in NOT_THE_SHAPE]
     entailed = [r for r in ROWS if "entailed" in r[1]]
-    claims = [r for r in ROWS if r not in instr and r not in entailed]
+    floored = [r for r in ROWS if "floored" in r[1]]
+    claims = [r for r in ROWS if r not in instr and r not in entailed and r not in floored]
     failed = [r for r in claims if "refuted" in r[2] or "cut" in r[2] or "partial" in r[2]]
     counts = {"ldRows": len(ROWS), "ldClaims": len(claims), "ldInstr": len(instr),
-              "ldEntailed": len(entailed), "ldGenus": len(genus),
+              "ldEntailed": len(entailed), "ldFloored": len(floored),
+              "ldGenus": len(genus),
               "ldFailed": len(failed), "ldHeld": len(claims) - len(failed)}
     (ROOT / "report" / "gen" / "ledger_counts.tex").write_text(
         "".join(f"\\newcommand{{\\{k}}}{{{v}}}\n" for k, v in counts.items()))
     print(f"wrote {out} with {len(ROWS)} rows "
           f"({counts['ldClaims']} claims, {counts['ldFailed']} failed, "
-          f"{counts['ldInstr']} instruments, {counts['ldEntailed']} entailed)")
+          f"{counts['ldInstr']} instruments, {counts['ldEntailed']} entailed, "
+          f"{counts['ldFloored']} floored)")
 
 
 if __name__ == "__main__":

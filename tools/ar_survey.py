@@ -48,6 +48,7 @@ def survey(log: str, sec: str, metric: str, ref: str | None = None, quiet: bool 
     _identical_arms(log, sec, metric, d, arms, pts, quiet)
     _duplicate_dose(log, sec, metric, d, arms, pts, quiet)
     _thin_base(log, sec, metric, ref, d, pts, quiet)
+    _below_floor(log, sec, metric, ref, d, pts, quiet)
     if not ref:
         if not quiet:
             best = {p: max(arms, key=lambda a: rows[a][i]) for i, p in enumerate(pts)}
@@ -175,6 +176,71 @@ def _duplicate_dose(log, sec, metric, d, arms, pts, quiet) -> int:
     else:
         sys.stderr.write(f"{log}::{sec}: {msg}\n")
     return len(bad)
+
+
+_SIGN = 0.60          # the gate's sign-consistency requirement, mirrored here to derive the floor
+_COUNTED = {"success"}   # metrics whose block mean steps in 1/reps; established from the logs
+
+
+def _below_floor(log, sec, metric, ref, d, pts, quiet) -> int:
+    """Announce a contrast whose effect is under the gate's own resolution.
+
+    The sign criterion asks that `_SIGN` of blocks agree. On a metric that is zero or one per
+    mission, a block of `r` missions registers a difference only if one of its missions flips, so
+    the agreeing fraction is capped at `1 - (1 - p)^r` for a per-mission flip rate `p`, and meeting
+    the criterion needs `p >= 1 - _SIGN^(1/r)`. Since the effect cannot exceed the flip rate, an
+    effect below that value cannot gate except by the treatment moving missions both ways in
+    comparable numbers, which is the case where the difference is noise.
+
+    What makes this worth announcing rather than assuming everyone remembers it: the floor falls
+    with BLOCK SIZE and is completely unmoved by block COUNT, so the instinct of a study that lands
+    just short of a verdict, to run the sweep again with more blocks, buys exactly nothing. Across
+    this project's landed logs no contrast has ever gated below its own floor, and the largest
+    effect that read equivalent while under one sits five parts in a hundred thousand beneath it.
+
+    Announces rather than re-verdicts. The scoring surface is frozen, and these readings are not
+    wrong: they report small effects accurately. They simply cannot distinguish a small effect from
+    no effect, and that is a statement about the rule and not about the data.
+    """
+    if not ref or metric not in _COUNTED:
+        return 0
+    reps = _reps_of(log)
+    if not reps:
+        return 0
+    # 1 - (1 - SIGN)^(1/r), not 1 - SIGN^(1/r). Needing the agreeing fraction at or above
+    # SIGN means (1 - p)^r at or below (1 - SIGN), so the two differ by which tail is being
+    # inverted and the wrong one puts the floor at 0.008 instead of 0.014.
+    floor = 1.0 - (1.0 - _SIGN) ** (1.0 / reps)
+    low = []
+    for a in {k for k, _ in d} - {ref}:
+        for p in pts:
+            if (a, p) in d and (ref, p) in d:
+                eff = _mean(d[(a, p)]) - _mean(d[(ref, p)])
+                if 0.0 < abs(eff) < floor:
+                    low.append((a, p, eff))
+    if not low:
+        return 0
+    lv = ", ".join(f"{a}@{p}={e:+.5f}" for a, p, e in low[:6])
+    msg = (f"!! BELOW GATE FLOOR: on {metric!r} at {reps} missions per block the sign criterion "
+           f"cannot be met under an effect of {floor:.5f}, and {len(low)} contrast(s) sit there: "
+           f"{lv}. These read equivalent by arithmetic. More BLOCKS will not change them; only "
+           f"more missions per block will")
+    if not quiet:
+        print(msg)
+    return len(low)
+
+
+def _reps_of(log) -> int:
+    """Missions per block, from the log header the battery writes."""
+    import re as _re
+    try:
+        for ln in pathlib.Path(log).read_text().splitlines()[:5]:
+            m = _re.search(r"reps=(\d+)", ln)
+            if m:
+                return int(m.group(1))
+    except OSError:
+        pass
+    return 0
 
 
 def _thin_base(log, sec, metric, ref, d, pts, quiet) -> int:
