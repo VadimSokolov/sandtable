@@ -25,13 +25,15 @@ echo "# host=$(hostname) job=$SLURM_JOB_ID snapshot=$SNAP stage=${STAGE:-all} wo
 # pools are the per-mission draws behind it, and the head-to-head resamples them instead of running
 # fresh missions, so losing them would mean paying the whole truth stage again to run the
 # comparison a second time.
-mkdir -p experiments/results "$ROOT/search/search_truth" "$ROOT/search/search_pools"
+# Pools are read in place from shared storage, not copied into the snapshot: they are the expensive
+# artefact, they are written by a separate sharded job, and copying half a gigabyte per run only
+# creates a chance for the two copies to disagree about which is current.
+export SANDTABLE_POOLS="$ROOT/search/search_pools"
+mkdir -p experiments/results "$ROOT/search/search_truth" "$SANDTABLE_POOLS"
 cp -r "$ROOT/search/search_truth" experiments/results/ 2>/dev/null || true
-cp -r "$ROOT/search/search_pools" experiments/results/ 2>/dev/null || true
 
 save_caches() {
   cp -r experiments/results/search_truth/* "$ROOT/search/search_truth/" 2>/dev/null || true
-  cp -r experiments/results/search_pools/* "$ROOT/search/search_pools/" 2>/dev/null || true
 }
 # Saved on the way out however the job ends. This partition preempts, and a truth stage killed at
 # ninety percent with nothing written back is three hours bought and discarded.

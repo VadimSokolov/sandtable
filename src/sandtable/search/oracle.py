@@ -301,11 +301,24 @@ def difficulty(p: Problem, refresh: bool = False) -> dict:
     ranked = sorted(t, key=lambda k: t[k], reverse=(p.direction == "max"))
     top2 = [json.loads(k) for k in ranked[:2]]
     gap = abs(t[ranked[0]] - t[ranked[1]])
-    scn = load_scenario(p.scenario)
+    # Prefer the stored pools. They are the same missions the answer key was built from, they hold
+    # up to eight thousand readings per design against the hundred and twenty a fresh block affords,
+    # and reading them costs nothing where running them costs three quarters of an hour across the
+    # suite. The original disjoint block existed to keep the key's seeds away from the searches',
+    # which still holds; this quantity is a variance rather than a comparison, so estimating it from
+    # the key's own missions cannot bias a contrast. It does make the ladder's sizing depend on the
+    # same draws as the means it is sized against, which is a ladder-shaping quantity and is noted
+    # rather than corrected.
+    scn = None
     sds = []
     for j, d in enumerate(top2):
-        draws = [evaluate(scn, n_reps=1, seed=DIFF_SEED + 7919 * j + 13 * i,
-                          params=p.params(d))[p.metric] for i in range(DIFF_DRAWS)]
+        try:
+            draws = pool_for(p, d)[p.metric]
+        except SystemExit:
+            if scn is None:
+                scn = load_scenario(p.scenario)
+            draws = [evaluate(scn, n_reps=1, seed=DIFF_SEED + 7919 * j + 13 * i,
+                              params=p.params(d))[p.metric] for i in range(DIFF_DRAWS)]
         sds.append(float(np.std(draws, ddof=1)))
     sd = float(np.sqrt(np.mean(np.square(sds))))          # pooled
     # Replications per design for the two to sit two standard errors apart. Infinite when the two
