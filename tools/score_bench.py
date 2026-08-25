@@ -15,7 +15,10 @@ were chosen after looking at results:
             rankings agree at Spearman above 0.9 OR the same method wins at least ten of the twelve
             problems whose key resolves.
   CR-73 C   the eighteen problems with no resolvable argmax still carry information under regret.
-            The drop stands if no method separates from `random` there at the full tier.
+            The drop stands if no method separates from `random` there at the full tier. The
+            registration names the PROBLEM as the pairing unit, so sign consistency is counted
+            across problems rather than across replicates; both are printed and the registered
+            one decides.
 
 The gate is the project's full tier throughout: |t| above 1.70, a minimum practical effect of 0.06
 in units of the contrast's own spread, and sixty percent sign consistency across the pairing unit.
@@ -195,15 +198,25 @@ def main() -> None:
     print("=" * 78)
     print("CR-73 C: the regret-only problems still carry information.")
     print("         The drop STANDS if no method separates from random there.")
+    # The registration says "paired by problem", so the unit of sign consistency is the PROBLEM and
+    # not the replicate. Both are reported: the per-problem test is the one registered and decides
+    # the verdict, the per-replicate one sits beside it because pooling replicates is what the gate
+    # does everywhere else here and a reader will look for it.
     sep = []
+    print(f"  {'method':12s} {'per problem (REGISTERED)':>44s} {'per replicate':>30s}")
     for m in methods:
         if m == "random":
             continue
-        gg = gate(paired(rows, m, "random", "regret_frac", problems=ungradeable), sr)
-        mark = " <-- separates" if gg["verdict"] != "equivalent" else ""
-        print(f"  {m:12s} eff={gg['eff']:+.4f} t={gg['t']:+7.2f} "
-              f"sign={gg['sign']:.0%} n={gg['n']:5d}  {gg['verdict']}{mark}")
-        if gg["verdict"] != "equivalent":
+        per_prob = [st.mean(d) for d in
+                    (paired(rows, m, "random", "regret_frac", problems={q}) for q in ungradeable)
+                    if d]
+        gp = gate(per_prob, st.pstdev(per_prob) if len(per_prob) > 1 else 1.0)
+        gr = gate(paired(rows, m, "random", "regret_frac", problems=ungradeable), sr)
+        mark = " <--" if gp["verdict"] != "equivalent" else ""
+        print(f"  {m:12s} eff={gp['eff']:+.4f} t={gp['t']:+6.2f} "
+              f"sign={gp['sign']:.0%} n={gp['n']:3d} {gp['verdict']:11s}"
+              f" | eff={gr['eff']:+.4f} t={gr['t']:+7.2f} {gr['verdict']:11s}{mark}")
+        if gp["verdict"] != "equivalent":
             sep.append(m)
     c = f"HOLDS, {len(sep)} of {len(methods) - 1} methods separate" if sep else "DROP STANDS"
     print(f"  VERDICT C: {c}\n")
