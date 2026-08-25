@@ -2038,3 +2038,51 @@ gp_raw, gp_noisy. Three baselines, two families each carrying its unrepaired con
 variant that differs in a single estimator, so a broken estimator can be told apart from a claim
 about adaptive search. `tools/score_bench.py` was written and committed before the benchmark
 produced a row, and scores CR-72's M1/M2/M3 and CR-73's B/C against their registered falsifiers.
+
+## 2026-08-25, paper two's head-to-head, and three numbers withdrawn from the manuscript
+
+**The sweep.** `tools/search_bench.py run --backend pool`, thirty problems, five budget rungs each,
+every method paired on the replicate against the stored mission pools so that a design's missions
+are identical across methods. Scored by `tools/score_bench.py`, which was committed before the
+sweep produced a row, and turned into macros by `tools/make_results_numbers.py`, which reuses that
+file's gate rather than restating it.
+
+  - `experiments/results/bench-preview.jsonl`, 54,000 rows, six methods, sixty replicates, 225 s on
+    four workers.
+  - `experiments/results/bench-rest.jsonl`, the four methods the sweep had been silently skipping.
+  - Cluster copy at 300 replicates queued as job 9469085 on `normal,intel`.
+
+**A stale literal cost four methods.** `tools/search_bench.py` restated the method registry as a
+six-name tuple while `sandtable.search.methods.METHODS` held ten. Both unrepaired controls and both
+single-estimator discriminators never ran, so CR-72 M1, M2 and M3 each scored on zero observations
+and reported REFUTED. Same genus as the replicate-allowance count two hundred lines below it, which
+carries a comment warning about this exact mistake. Now read from the registry, guarded by
+`test_the_sweep_runs_every_method_in_the_registry`.
+
+**The result, gated.** Uniform allocation over the design set is not beaten anywhere on the suite.
+At the bottom rung it leads the best adaptive allocator by 0.0939 of the achievable spread, t=12.02,
+71% sign consistency across 1,800 paired runs. At the top rung the raw means reverse, 0.070 against
+0.078, and the reversal is 0.0078 at t=-2.25 with 55% sign consistency, which is EQUIVALENT at the
+project's tier. Reported as equivalent. Argmax recovery agrees at both ends: 70% against 29% at the
+bottom, 81% against 84% at the top.
+
+**Three published numbers withdrawn.** The manuscript reported 52,317,293 missions per design as the
+budget one answer key would have needed, from `reps * (2 se / gap) ** 2` with a gap of 0.000094
+whose standard error is 0.003791. Eight of the thirty tables have a gap smaller than one standard
+error of itself. The extrapolation cannot be repaired: a table is called unresolved exactly when its
+gap sits inside two standard errors of zero, and the quantity is bounded between `reps/4` and `reps`
+for any unresolved table whatever the data say. `BnKeyMedianNeed`, `BnKeyWorstNeed` and
+`BnKeyWorstSucc` are gone. Replaced by resolving power against available room, both halves measured
+directly: 1.3% of spread on delivered service, 10.7% on blue loss, 44.9% on mission success.
+`BnSpreadOverGapMed` fell from 8.9 to 6.1 and `BnCheaper` from 79 to 38, both now floors rather than
+estimates. Guarded by `bounded_ratio` and two tests.
+
+**CR-77, scored.** Six latent offsets fitted at `n_blue=8` predict eighteen held-out cells per knob
+at RMS 0.0122 and 0.0134 against a registered 0.045, and the probit shape beats a constant shift in
+the probability at all four arms by 1.7 to 2.2 times. Controls added afterwards cost one arm: on the
+queue discipline a null predictor beats the model on mission success, where the seven disciplines
+span one standard error. Part B retracted, Spearman -0.200 and +0.400 against a registered 0.50.
+
+**CR-78 launched.** Job 9469006 builds the `n_blue=24` tables. Predictions frozen in the
+registration first; the success arm declared untestable in advance at six hundredths of a standard
+error from ceiling.
