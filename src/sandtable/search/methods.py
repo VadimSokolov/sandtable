@@ -102,18 +102,35 @@ def ucb_raw(problem: Problem, budget: int, rng, pull, c: float = 1.0, chunk: int
     return _ucb(problem, budget, rng, pull, c=c, chunk=chunk, scaled=False)
 
 
-def _ucb(problem: Problem, budget: int, rng, pull, c: float, chunk: int, scaled: bool) -> dict:
+def _ucb(problem: Problem, budget: int, rng, pull, c: float, chunk: int, scaled: bool,
+         pooled: bool = False) -> dict:
     p = _mk_pull(problem, pull)
     designs = problem.designs()
     n = len(designs)
     draws: list[list[float]] = [[] for _ in range(n)]
     spent = 0
-    for i in range(n):
+    # PERMUTED, not enumeration order. A budget below n * chunk cannot seed every arm, and walking
+    # `range(n)` meant the arms that got seeded were always the first ones in the design list. On
+    # the capacity problems the registered optimum sits at index 0 or 1 and on `discipline` at index
+    # 4, so the low rungs of the ladder would have handed the bandits a free win on one family and a
+    # guaranteed zero on the other, purely from the order the designs happen to be enumerated in.
+    # `rng` is seeded by replicate, so this stays paired across methods.
+    for i in rng.permutation(n):
         if spent + chunk > budget:
             break
-        draws[i].append(p(designs[i], chunk))
+        draws[int(i)].append(p(designs[int(i)], chunk))
         spent += chunk
     while spent + chunk <= budget:
+        # A per-arm spread taken from two chunk means is itself extremely noisy, and an arm that
+        # draws two close chunks early gets a collapsed bonus, stops being pulled, and so never
+        # re-estimates the spread that starved it. Pooling across arms removes that trap without
+        # assuming the scale. Whether the trap matters is the whole point of carrying both.
+        if pooled:
+            spreads = [float(np.std(d, ddof=1)) for d in draws if len(d) > 1]
+            _pool = float(np.mean(spreads)) if spreads else 0.0
+            if _pool <= 1e-12:
+                lv = [abs(float(np.mean(d))) for d in draws if d]
+                _pool = (float(np.mean(lv)) * 0.5 if lv else 1.0) + 1e-9
         score = []
         for i in range(n):
             if not draws[i]:
@@ -124,7 +141,8 @@ def _ucb(problem: Problem, budget: int, rng, pull, c: float, chunk: int, scaled:
             # Scale in the metric's own units. Before any spread is observable, fall back to a
             # fraction of the level rather than to 1.0, which would reintroduce the same mismatch.
             if scaled:
-                s = float(np.std(draws[i], ddof=1)) if k > 1 else abs(m) * 0.5 + 1e-9
+                s = _pool if pooled else (
+                    float(np.std(draws[i], ddof=1)) if k > 1 else abs(m) * 0.5 + 1e-9)
                 score.append(m + c * s * math.sqrt(2.0 * math.log(max(spent, 2)) / k))
             else:
                 score.append(m + c * math.sqrt(2.0 * math.log(max(spent, 2)) / k))
@@ -133,6 +151,19 @@ def _ucb(problem: Problem, budget: int, rng, pull, c: float, chunk: int, scaled:
         spent += chunk
     means = [np.mean(d) if d else -np.inf for d in draws]
     return designs[int(np.argmax(means))]
+
+
+def ucb_pooled(problem: Problem, budget: int, rng, pull, c: float = 1.0, chunk: int = 8) -> dict:
+    """Scaled UCB whose noise scale is pooled across arms instead of estimated per arm.
+
+    A discriminator, not an improvement proposal. `ucb` and `ucb_pooled` differ in exactly one
+    thing, where the bonus's scale comes from, so if the scaled variant underperforms its unscaled
+    control on the noisy axes and `ucb_pooled` does not, the cause is the variance ESTIMATOR
+    starving arms rather than anything about adaptive allocation as such. If both underperform
+    together, the estimator is exonerated and the regime explanation survives. `ucb` is left exactly
+    as registered; this is a third arm.
+    """
+    return _ucb(problem, budget, rng, pull, c=c, chunk=chunk, scaled=True, pooled=True)
 
 
 def thompson(problem: Problem, budget: int, rng, pull, chunk: int = 8) -> dict:
@@ -147,10 +178,16 @@ def thompson(problem: Problem, budget: int, rng, pull, chunk: int = 8) -> dict:
     n = len(designs)
     draws: list[list[float]] = [[] for _ in range(n)]
     spent = 0
-    for i in range(n):
+    # PERMUTED, not enumeration order. A budget below n * chunk cannot seed every arm, and walking
+    # `range(n)` meant the arms that got seeded were always the first ones in the design list. On
+    # the capacity problems the registered optimum sits at index 0 or 1 and on `discipline` at index
+    # 4, so the low rungs of the ladder would have handed the bandits a free win on one family and a
+    # guaranteed zero on the other, purely from the order the designs happen to be enumerated in.
+    # `rng` is seeded by replicate, so this stays paired across methods.
+    for i in rng.permutation(n):
         if spent + chunk > budget:
             break
-        draws[i].append(p(designs[i], chunk))
+        draws[int(i)].append(p(designs[int(i)], chunk))
         spent += chunk
     while spent + chunk <= budget:
         samples = []
@@ -285,6 +322,7 @@ METHODS = {
     "random": random_search,
     "halving": successive_halving,
     "ucb": ucb,
+    "ucb_pooled": ucb_pooled,
     "thompson": thompson,
     "gp_ei": gp_ei,
 }

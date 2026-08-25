@@ -87,14 +87,24 @@ def cmd_truth(a) -> None:
               f"gap={meta['_gap']:.6f} se={meta['_se_top2']:.6f}  {flag}{agree}", flush=True)
 
 
+_BACKEND = "sim"
+
+
 def _job(spec):
     """One (problem, method, budget, replicate). Top level so a process pool can pickle it."""
     k, m, b, r = spec
-    res = runner.run_one(k, m, b, r)
+    res = runner.run_one(k, m, b, r, backend=_BACKEND)
     return {**res.__dict__}
 
 
+def _init_worker(backend: str) -> None:
+    global _BACKEND
+    _BACKEND = backend
+
+
 def cmd_run(a) -> None:
+    global _BACKEND
+    _BACKEND = a.backend
     keys = a.problems or list(PROBLEMS)
     out = pathlib.Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -107,14 +117,17 @@ def cmd_run(a) -> None:
         p = get(k)
         t = oracle.truth(p)
         meta = json.loads(oracle._path(p).read_text()).get("_meta", {})
-        # A problem whose answer key cannot resolve its own top two designs is not a hard problem,
-        # it is a problem with no answer, and grading a search method on it grades noise. Drop it,
-        # loudly. Silent truncation of a benchmark reads downstream as "we covered everything".
+        # A problem whose answer key cannot resolve its own top two designs has no argmax to
+        # recover, so its `found` column would be a coin flip dressed as a score. It is KEPT and
+        # graded on regret, which asks how far the returned design sits from the best one rather
+        # than which of two statistically tied designs is best, and is roughly eighty times cheaper
+        # to answer here. The flag rides on every row so the report can grade either way, and the
+        # count is printed, because silent truncation of a benchmark reads downstream as "we
+        # covered everything".
         if not meta.get("_resolved", True):
-            print(f"### {k:22s} DROPPED: the truth table cannot resolve its own top two "
+            print(f"### {k:22s} REGRET-ONLY: the truth table cannot resolve its own top two "
                   f"(gap={meta.get('_gap', 0):.6f} <= 2 x se={meta.get('_se_top2', 0):.6f}) "
                   f"at {meta.get('_reps')} reps on {p.metric}", flush=True)
-            continue
         kept.append(k)
         agrees[k] = oracle.agrees_with_key(p, t)
         diffs[k] = oracle.difficulty(p)
@@ -125,8 +138,11 @@ def cmd_run(a) -> None:
               f"reps/design={d['reps_per_design']:8.1f} "
               f"key={'agrees' if agrees[k] else 'DISAGREES'} ladder={ladders[k]}", flush=True)
 
-    if len(kept) < len(keys):
-        print(f"### {len(kept)} of {len(keys)} problems have a gradeable answer key", flush=True)
+    n_arg = sum(1 for k in kept
+                if json.loads(oracle._path(get(k)).read_text())
+                .get("_meta", {}).get("_resolved", True) or get(k).optimum)
+    print(f"### {n_arg} of {len(kept)} problems can be graded on argmax recovery; "
+          f"all {len(kept)} are graded on regret", flush=True)
     keys = kept
 
     # Replicates are set PER PROBLEM to a fixed mission allowance, not held constant. A ladder
@@ -138,12 +154,21 @@ def cmd_run(a) -> None:
     # problems are estimated less precisely.
     reps = {}
     for k in keys:
-        per_config = 6 * sum(ladders[k]) if ladders[k] else 1     # one pass over methods
-        reps[k] = int(min(a.replicates, max(a.min_replicates,
-                                            a.allowance // max(per_config, 1))))
+        # len(a.methods), not a literal. This read 6 while METHODS held eight, which
+        # under-counted the allowance by a third and is the same defect this project's
+        # first paper catalogues: a constant derived when the list had six, carried into
+        # a run where it no longer does.
+        n_meth = max(len(a.methods), 1)
+        per_config = n_meth * sum(ladders[k]) if ladders[k] else 1
+        # The allowance rations SIMULATOR time. On the pool backend a mission is an index into an
+        # array of missions already run, so there is nothing to ration and the replicate count is
+        # set by the precision the comparison needs instead of by what is left in the budget.
+        reps[k] = (a.replicates if a.backend == "pool" else
+                   int(min(a.replicates, max(a.min_replicates,
+                                             a.allowance // max(per_config, 1)))))
         print(f"    {k:22s} ladder-total={sum(ladders[k]):8d} replicates={reps[k]:3d} "
               f"missions~{per_config * reps[k]:9d}", flush=True)
-    total = sum(6 * sum(ladders[k]) * reps[k] for k in keys)
+    total = sum(len(a.methods) * sum(ladders[k]) * reps[k] for k in keys)
     print(f"    TOTAL ~{total:,} missions across {len(keys)} problems", flush=True)
 
     specs = [(k, m, b, r) for k in keys for b in ladders[k]
@@ -174,7 +199,13 @@ def cmd_run(a) -> None:
 
     t0 = time.time()
     n = 0
-    with out.open("a") as fh, ProcessPoolExecutor(max_workers=a.workers) as ex:
+    # The backend rides in through the pool initializer, not through a module global set in
+    # the parent: workers are spawned, so they re-import this module fresh and would each
+    # come up with the default. It stays out of the spec tuple so the resume key is
+    # unchanged and a half-finished sweep can still be picked up.
+    with out.open("a") as fh, ProcessPoolExecutor(
+            max_workers=a.workers, initializer=_init_worker,
+            initargs=(a.backend,)) as ex:
         futs = {ex.submit(_job, s): s for s in specs}
         for fut in as_completed(futs):
             s = futs[fut]
@@ -230,12 +261,17 @@ def main() -> None:
     r.add_argument("--budgets", nargs="*", type=int, default=[],
                    help="override the per-problem ladder derived from difficulty")
     r.add_argument("--methods", nargs="*", default=list(METHODS))
-    r.add_argument("--replicates", type=int, default=24,
+    r.add_argument("--replicates", type=int, default=300,
                    help="upper bound on replicates per problem")
     r.add_argument("--min-replicates", type=int, default=8)
     r.add_argument("--allowance", type=int, default=300_000,
                    help="approximate mission budget per problem")
-    r.add_argument("--workers", type=int, default=16); r.set_defaults(fn=cmd_run)
+    r.add_argument("--workers", type=int, default=16)
+    r.add_argument("--backend", choices=("sim", "pool"), default="pool",
+                   help="pool resamples the stored per-mission draws; sim runs fresh "
+                        "missions. pool makes pairing across methods exact and costs "
+                        "nothing once truth has run.")
+    r.set_defaults(fn=cmd_run)
     p = sub.add_parser("report"); p.add_argument("results"); p.set_defaults(fn=cmd_report)
     a = ap.parse_args()
     a.fn(a)

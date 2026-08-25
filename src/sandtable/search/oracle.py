@@ -10,6 +10,7 @@ on, so a method cannot be lucky by drawing the same missions the truth was measu
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import pathlib
 
@@ -74,11 +75,80 @@ def _draws(p: Problem, design: dict, reps: int) -> dict[str, list[float]]:
     have = _DRAWS.get(key)
     if have is not None and len(next(iter(have.values()))) >= reps:
         return have
+    disk = _pool_load(key)
+    if disk is not None and len(next(iter(disk.values()))) >= reps:
+        _DRAWS[key] = disk
+        return disk
     scn = load_scenario(p.scenario)
     runs = [run_mission(scn, seed=TRUTH_SEED + r, params=p.params(design)) for r in range(reps)]
     got = {m: [float(r[m]) for r in runs] for m in BENCH_METRICS if m in runs[0]}
     _DRAWS[key] = got
+    _pool_save(key, got)
     return got
+
+
+def pool_for(p: Problem, design: dict) -> dict[str, list[float]]:
+    """The stored per-mission pool for one design, or a refusal.
+
+    Deliberately not a cache miss that falls back to simulating. A benchmark run that quietly
+    generated a one-mission pool where a eight-thousand-mission one was expected would produce a
+    complete-looking results file whose noise model is wrong by four orders of magnitude, and
+    nothing downstream would show it.
+    """
+    key = _run_key(p, design)
+    got = _DRAWS.get(key) or _pool_load(key)
+    if got is None:
+        raise SystemExit(
+            f"no mission pool for {p.key} at {design}: run 'search_bench.py truth' first "
+            f"(expected {_pool_path(key)})")
+    _DRAWS[key] = got
+    return got
+
+
+def pool_depth(p: Problem, design: dict | None = None) -> int:
+    """How many real missions stand behind one design here. The ceiling on any honest budget."""
+    d = design if design is not None else p.designs()[0]
+    try:
+        return len(next(iter(pool_for(p, d).values())))
+    except SystemExit:
+        return truth_reps(p)
+
+
+def _pool_path(key: str) -> pathlib.Path:
+    d = pathlib.Path("experiments/results/search_pools")
+    return d / (hashlib.sha1(key.encode()).hexdigest()[:16] + ".npz")
+
+
+def _pool_load(key: str) -> dict[str, list[float]] | None:
+    """The per-mission readings behind a truth table entry, if they were kept.
+
+    Kept on purpose. The design means alone let a benchmark be scored but not re-run, and every
+    question about how a search method behaves under this simulator's noise needs the noise itself,
+    not a summary of it. With the pools on disk the head-to-head resamples real missions instead of
+    simulating new ones, which is what makes a thousand replicates affordable at all.
+    """
+    path = _pool_path(key)
+    if not path.exists():
+        return None
+    try:
+        import numpy as np
+        with np.load(path) as z:
+            return {m: z[m].tolist() for m in z.files}
+    except (OSError, ValueError, KeyError):
+        return None                       # a pool truncated by a preemption is a cache miss
+
+
+def _pool_save(key: str, got: dict[str, list[float]]) -> None:
+    import numpy as np
+    path = _pool_path(key)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    # Written through an open handle rather than by name: savez appends ".npz" to any path that
+    # does not already end in it, which would have renamed the temp file out from under the
+    # replace below and left every pool unwritten.
+    with tmp.open("wb") as fh:
+        np.savez_compressed(fh, **{m: np.asarray(v, dtype=np.float64) for m, v in got.items()})
+    tmp.replace(path)                     # atomic, so a kill mid-write cannot leave a half pool
 
 
 _MEMO: dict[str, dict] = {}
@@ -139,6 +209,28 @@ def regret(p: Problem, design: dict, t: dict | None = None) -> float:
     return (best - got) if p.direction == "max" else (got - best)
 
 
+def spread(p: Problem, t: dict | None = None) -> float:
+    """Best design to worst, in metric units. The size of the prize on this design axis."""
+    t = t if t is not None else truth(p)
+    vals = list(t.values())
+    return abs(max(vals) - min(vals))
+
+
+def regret_frac(p: Problem, design: dict, t: dict | None = None) -> float:
+    """Regret as a fraction of the achievable spread: 0.0 for the best design, 1.0 for the worst.
+
+    The raw regret above is in metric units and cannot be averaged across problems whose metrics are
+    delivered service, mission success and blue loss. This one can, which is what makes it the
+    grading rule rather than a second opinion. It also grades problems whose top two the answer key
+    cannot separate: distinguishing the found design from the best is a far coarser question than
+    distinguishing the best from the runner-up, and on this benchmark it is about eighty times
+    cheaper.
+    """
+    t = t if t is not None else truth(p)
+    s = spread(p, t)
+    return 0.0 if s <= 0 else regret(p, design, t) / s
+
+
 def agrees_with_key(p: Problem, t: dict | None = None) -> bool:
     """Does the high-precision table put the optimum where the registered study put it?
 
@@ -152,6 +244,7 @@ def agrees_with_key(p: Problem, t: dict | None = None) -> bool:
     return p.is_optimum(d)
 
 
+CAP_MULT = 2048        # missions per design at the top of any ladder
 DIFF_DRAWS = 120
 DIFF_SEED = 800_000           # disjoint from both the truth block and the searches
 
@@ -171,7 +264,9 @@ def difficulty(p: Problem, refresh: bool = False) -> dict:
     """
     path = _path(p).with_suffix(".difficulty.json")
     if path.exists() and not refresh:
-        return json.loads(path.read_text())
+        cached = json.loads(path.read_text())
+        if "budget_to_choose" in cached:
+            return cached                     # a cache written before regret grading lacks it
     import numpy as np
 
     t = truth(p)
@@ -188,8 +283,15 @@ def difficulty(p: Problem, refresh: bool = False) -> dict:
     # Replications per design for the two to sit two standard errors apart. Infinite when the two
     # best designs are tied in the table, which is a real state and is reported as such.
     reps = float("inf") if gap <= 0 else float((2.0 * sd / gap) ** 2)
+    # The separation question and the choosing question are different, and on this benchmark they
+    # differ by about two orders of magnitude. Both are recorded so the ladder can span them.
+    sprd = abs(max(t.values()) - min(t.values()))
+    reps_choose = float("inf") if sprd <= 0 else float((2.0 * sd / sprd) ** 2)
     out = {"gap": gap, "sd_per_mission": sd, "reps_per_design": reps,
+           "spread": sprd, "reps_to_choose": reps_choose,
+           "spread_over_gap": (sprd / gap if gap > 0 else float("inf")),
            "best": ranked[0], "runner_up": ranked[1], "n_designs": p.n_designs,
+           "budget_to_choose": (reps_choose * p.n_designs if reps_choose != float("inf") else None),
            "budget_to_separate": (reps * p.n_designs if reps != float("inf") else None)}
     path.write_text(json.dumps(out, indent=2))
     return out
@@ -200,8 +302,19 @@ def budget_ladder(p: Problem, n: int = 5) -> list[int]:
     two designs. A single ladder shared across problems would put every method at ceiling on the
     easy ones and at floor on the hard ones, and measure nothing on either."""
     d = difficulty(p)
-    b = d["budget_to_separate"]
-    if not b or b != b:                                    # None or NaN
-        b = 64.0 * p.n_designs
-    lo = max(16.0, b / 8.0)
-    return sorted({int(round(lo * (4.0 ** (i / max(1, n - 1) * 1.5)))) for i in range(n)})
+    # The ladder is sized to the CHOOSING question, not the separating one. Chasing separation put
+    # the top rung at fourteen thousand missions on problems whose top two designs the answer key
+    # itself cannot tell apart at eight thousand replications each, which is a ladder built to
+    # measure something this benchmark argues nobody needs. Four times the budget that distinguishes
+    # the best design from the worst puts the top rung where regret is near zero and the comparison
+    # saturates, which is what the top of a ladder is for.
+    lo_b = d.get("budget_to_choose") or 16.0 * p.n_designs
+    hi_b = 4.0 * lo_b
+    # Two hard ceilings. CAP_MULT bounds cost. The pool depth bounds honesty: a budget deeper than
+    # the stored missions would be served by resampling the same missions repeatedly, and a method
+    # would converge to the POOL's mean rather than the simulator's while appearing to gain
+    # precision. Where either binds it is recorded rather than absorbed.
+    ceiling = min(CAP_MULT, pool_depth(p)) * p.n_designs
+    hi = max(min(hi_b, ceiling), 64.0)
+    lo = max(16.0, min(lo_b / 4.0, hi / 16.0))
+    return sorted({int(round(lo * (hi / lo) ** (i / max(1, n - 1)))) for i in range(n)})

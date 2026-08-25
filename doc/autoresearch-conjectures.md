@@ -9443,3 +9443,49 @@ fleet is where they come apart. CR-70 ranks neither arm against the other, so no
 it, but the pattern is the pairwise case `_pinned_arm` cannot see, and `_identical_arms` is added to
 announce it: two arms that both move and move together exactly mean whatever separates them never
 reached the code, and the reason has to be stated rather than assumed.
+
+## CR-73: what a benchmark's answer key costs, and whether argmax is the right thing to grade
+
+**Registered before the head-to-head runs, from the truth tables alone.** The tables are the answer
+key for paper two's search benchmark: thirty problems, each an operating point crossed with a
+metric, each design estimated on common random numbers at a per-metric replication count (six
+hundred on delivered service, two thousand on mission success, eight thousand on blue loss).
+
+**A, and this part is measured, not conjectured.** Establishing an answer key by argmax is a
+property of the (metric, operating point) pair, and at those counts most pairs do not have one.
+Twelve of thirty problems resolve their own top two at two standard errors. On delivered service
+nine of twelve resolve; on blue loss three of ten; on mission success **zero of eight**. Extrapolating
+from the achieved standard error, the median unresolved problem would need about ten thousand
+missions per design and the worst of the success problems three hundred forty thousand. One loss
+problem, `disc_s8_loss`, separates its top two by nine parts in one hundred thousand and would need
+fifty-two million.
+
+**The genus-two check, run first, because non-resolution is exactly the shape that is sometimes
+entailed.** If success were pinned at its ceiling the tie would be a theorem and not a cost. It is
+not pinned. `qcap_s8_succ` spans 0.156 from best design to worst with the best at 0.8075, and six of
+the other seven success problems have comparable room. The exception is `disc_s16_succ`, best 0.9895
+and spanning 0.0025, which is ceiling-adjacent and is reported as such rather than as a replication
+cost.
+
+**B, the consequence, and the reason this is worth a section rather than a footnote.** The spread
+across the design set and the gap between the top two are different quantities, and here they differ
+by a lot: the median problem moves its metric 8.9 times further from best design to worst than the
+best two designs differ from each other, and the ratio reaches 283. Choosing a design well is worth
+a great deal and is cheap to do; proving which single design is best is worth little and is often
+unaffordable. So argmax recovery is the wrong grading rule and normalized regret, the fraction of
+the achievable spread a method captured, is the right one.
+
+**Falsifier for B.** If the ranking of methods under regret agrees with the ranking under argmax
+recovery on the twelve resolvable problems, at Spearman above 0.9 or the same winner in ten of
+twelve, then the distinction changes no conclusion and B is retracted as academic.
+
+**C, which is what makes B pay.** Regret does not need the top two separated. It needs the found
+design to be distinguishable from the best one, and since the spread is about nine times the gap,
+that is roughly eighty times cheaper. So the eighteen problems dropped for having no gradeable
+argmax should be gradeable under regret, and the benchmark should run on all thirty.
+
+**Falsifier for C.** If on those eighteen no method separates from `random` under regret at the full
+tier, |t| above 1.70 with sixty percent sign consistency paired by problem, then they carry no
+information under regret either and the drop stands.
+
+Registered so that whichever way each of the three goes, it was written down first.
