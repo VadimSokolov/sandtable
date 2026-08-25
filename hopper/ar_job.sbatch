@@ -12,6 +12,10 @@
 # already leaving. Override with `sbatch --cpus-per-task=... --time=...` when the queue is
 # empty and wall clock matters more than start time.
 #SBATCH --partition=normal
+# Intel, always. The normal partition mixes hop[046-073] with amd[005-068], and without a
+# constraint the scheduler will hand a battery an AMD node, which is markedly slower here
+# and which this project does not use. Job 9468498 landed on amd023 for want of this line.
+#SBATCH --constraint=intel
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16

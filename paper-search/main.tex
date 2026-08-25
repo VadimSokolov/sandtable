@@ -194,8 +194,8 @@ study writing a requirement cares about the answer.
 \section{Methods under a common budget}
 \label{sec:methods}
 
-Seven methods are compared, and the comparison is made fair by two conventions that are stated here
-because they are where most of the honesty lives.
+\BnMethods{} methods are compared, and the comparison is made fair by two conventions that are
+stated here because they are where most of the honesty lives.
 
 \paragraph{The budget is missions, not evaluations.} Every method is given a fixed number of mission
 replications and may spend them however it likes: many designs looked at briefly, few designs looked
@@ -206,10 +206,30 @@ exactly what a stochastic objective makes expensive. It would also hide the deci
 distinguishes these methods most: with a noisy objective, choosing how hard to look at a design is
 as consequential as choosing which design to look at.
 
-\paragraph{Methods are paired on the mission randomness.} Replicate $r$ gives every method the same
-stream of mission seeds, so a difference between two methods within a replicate is a difference in
-what they chose to spend that stream on, not in what they happened to draw. This is the common
-random numbers discipline the simulator's own statistical gate uses, applied one level up.
+\paragraph{Methods are paired on the mission randomness, exactly rather than nominally.} Replicate
+$r$ fixes one mission ordering per design, and a method that reaches a design receives the same
+missions in the same order as every other method on that replicate. So a difference between two
+methods within a replicate is a difference in what they chose to spend that stream on and not in
+what they happened to draw. This is the common random numbers discipline the simulator's own
+statistical gate uses, applied one level up, and it is worth saying why it takes more than seeding
+the methods alike. How a method spends its budget is the thing under measurement, so two methods
+handed the same generator consume it differently and diverge after their first disagreement. The
+pairing is made exact instead by drawing the comparison from stored per-mission readings: the
+answer key's replications are kept rather than summarized, and a pull of $n$ missions on a design
+takes the next $n$ of that design's ordering. What is resampled is the simulator's own mission
+distribution, at \BnRepsLoss{} real missions per design on the dearest axis, and no ladder is
+allowed a rung deeper than the pool behind it, so no method is ever served the same mission twice
+while appearing to buy fresh precision.
+
+\paragraph{Three arms exist to separate a defect from a finding.} Two of the methods below carry a
+deliberately unrepaired twin and two carry a variant that differs in one estimator. A scaled
+allocator that loses to its unscaled control on the noisy axes could mean that adaptive allocation
+fails there, or it could mean that a variance estimated from two observations collapsed and starved
+an arm; those two readings are indistinguishable from the results alone, and are told apart by an
+arm that pools the estimate across designs and changes nothing else. The same holds for the
+surrogate, where an incumbent taken as the best observed value is biased upward by noise. The
+broken versions are kept rather than quietly fixed, because a benchmark that reports only repaired
+methods reports a selection.
 
 The methods span three families.
 

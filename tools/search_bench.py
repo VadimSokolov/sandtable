@@ -41,6 +41,48 @@ def _truth_cell(spec):
     return oracle._run_key(p, design), draws
 
 
+def _cells(keys):
+    """Every (operating point, design) cell and the replication count it must reach.
+
+    Grouped by run key rather than by problem: metric-paired problems ARE the same missions scored
+    differently, so a group runs once at the replication count of its dearest axis and each problem
+    then reads the slice it needs.
+    """
+    groups: dict[str, list] = {}
+    for p in (get(k) for k in keys):
+        if not p.is_discrete:
+            continue
+        for d in p.designs():
+            groups.setdefault(oracle._run_key(p, d), []).append((p, d))
+    specs = [(g[0][0].key, g[0][1], max(oracle.truth_reps(q) for q, _ in g))
+             for g in groups.values()]
+    specs.sort(key=lambda s: (-s[2], s[0], json.dumps(s[1], sort_keys=True)))
+    return specs
+
+
+def cmd_pools(a) -> None:
+    """Compute and store the per-mission pools for one shard of the cells.
+
+    Split out from `truth` so the expensive half can be sized for BACKFILL. The whole answer key is
+    half a million missions, which as one job waited more than a day behind the account's other
+    work; as sixteen shards of twenty minutes each it slots into gaps the scheduler is already
+    leaving. The shards write disjoint files and no shard reads another's, so they are independent
+    and a lost one is re-runnable on its own. `truth` afterwards runs no missions at all: it reads
+    the pools off disk and reduces them.
+    """
+    specs = _cells(a.problems or list(PROBLEMS))
+    mine = [s for i, s in enumerate(specs) if i % a.of == a.shard]
+    total = sum(s[2] for s in mine)
+    print(f"shard {a.shard}/{a.of}: {len(mine)} of {len(specs)} cells, {total:,} missions",
+          flush=True)
+    done = 0
+    with ProcessPoolExecutor(max_workers=a.workers) as ex:
+        for _rk, _draws in ex.map(_truth_cell, mine):
+            done += 1
+            print(f"  {done}/{len(mine)} cells", flush=True)
+    print("### POOLS DONE", flush=True)
+
+
 def cmd_truth(a) -> None:
     keys = a.problems or list(PROBLEMS)
     probs = [get(k) for k in keys]
@@ -253,6 +295,12 @@ def cmd_report(a) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
+    pl = sub.add_parser("pools", help="store per-mission draws for one shard of the cells")
+    pl.add_argument("--problems", nargs="*")
+    pl.add_argument("--shard", type=int, default=0)
+    pl.add_argument("--of", type=int, default=1)
+    pl.add_argument("--workers", type=int, default=16)
+    pl.set_defaults(fn=cmd_pools)
     t = sub.add_parser("truth"); t.add_argument("--problems", nargs="*")
     t.add_argument("--refresh", action="store_true")
     t.add_argument("--workers", type=int, default=8); t.set_defaults(fn=cmd_truth)

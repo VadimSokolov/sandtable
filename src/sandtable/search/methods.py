@@ -208,7 +208,7 @@ def thompson(problem: Problem, budget: int, rng, pull, chunk: int = 8) -> dict:
 # ------------------------------------------------------------------ Bayesian surrogate
 
 def gp_ei(problem: Problem, budget: int, rng, pull, chunk: int = 8, warm: int = 4,
-          standardize: bool = True) -> dict:
+          standardize: bool = True, incumbent: str = "observed") -> dict:
     """Gaussian-process surrogate with expected improvement over the discrete design set.
 
     Deliberately a plain implementation over the enumerated designs rather than a call into a BO
@@ -236,7 +236,13 @@ def gp_ei(problem: Problem, budget: int, rng, pull, chunk: int = 8, warm: int = 
     while spent + chunk <= budget:
         mu, sd = _gp_posterior(X, np.array(obs_i), np.array(obs_y), cho_factor,
                                cho_solve, standardize=standardize)
-        best = max(obs_y)
+        # The incumbent EI improves on. `observed` is textbook and is wrong under noise: the max
+        # of fifty noisy chunk means is biased upward by roughly the chunk's own standard error, so
+        # EI is measured against a value no design actually attains and the acquisition flattens
+        # toward uniform. `posterior` uses the surrogate's own best mean, which is the usual repair
+        # for noisy EI. Both ship, because which one a practitioner reaches for is exactly the kind
+        # of default this benchmark exists to price.
+        best = max(obs_y) if incumbent == "observed" else float(np.max(mu))
         z = (mu - best) / np.maximum(sd, 1e-9)
         from scipy.stats import norm
         ei = (mu - best) * norm.cdf(z) + sd * norm.pdf(z)
@@ -257,6 +263,18 @@ def gp_raw(problem: Problem, budget: int, rng, pull, chunk: int = 8, warm: int =
     `gp_ei`, and the exact analogue of `ucb_raw`: it shows what a scale-bearing hyperparameter
     costs when it is carried in units the data does not have."""
     return gp_ei(problem, budget, rng, pull, chunk=chunk, warm=warm, standardize=False)
+
+
+def gp_noisy(problem: Problem, budget: int, rng, pull, chunk: int = 8, warm: int = 4) -> dict:
+    """Expected improvement against the surrogate's own best posterior mean rather than the best
+    number it happened to observe.
+
+    The third arm in the same pattern as `ucb_pooled`: `gp_ei` is left exactly as registered and
+    this varies one thing. If the standardized surrogate underperforms its raw control on the noisy
+    axes and this does not, the cause is an incumbent inflated by noise rather than anything about
+    surrogate search, and the two explanations are otherwise indistinguishable from the results.
+    """
+    return gp_ei(problem, budget, rng, pull, chunk=chunk, warm=warm, incumbent="posterior")
 
 
 def _encode(problem: Problem, designs) -> np.ndarray:
@@ -325,4 +343,5 @@ METHODS = {
     "ucb_pooled": ucb_pooled,
     "thompson": thompson,
     "gp_ei": gp_ei,
+    "gp_noisy": gp_noisy,
 }

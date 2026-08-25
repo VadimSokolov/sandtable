@@ -33,6 +33,63 @@ SCALE = {"served_per_step": (0.00641, 0.0193),
 NAME = {"served_per_step": "Srv", "success": "Succ", "blue_loss_frac": "Loss"}
 
 
+TRUTH = HERE.parent / "experiments" / "results" / "search_truth"
+
+
+def _key_cost() -> list[tuple[str, str]]:
+    """How many missions per design it takes to establish each problem's answer key, and how often
+    that is unaffordable. Extrapolated from the standard error each table actually achieved, so the
+    number is a measurement with an assumption (that the error falls as the root of the count)
+    rather than a projection from a model of the simulator."""
+    import json
+    import statistics
+
+    rows = []
+    for f in sorted(TRUTH.glob("*.json")):
+        if f.stem.endswith(".difficulty"):
+            continue
+        d = json.loads(f.read_text())
+        m = d.get("_meta", {})
+        if not m.get("_crn"):
+            continue                              # a table predating common random numbers
+        gap, se, reps = m["_gap"], m["_se_top2"], m["_reps"]
+        vals = [v for k, v in d.items() if not k.startswith("_")]
+        spread = abs(max(vals) - min(vals))
+        need = reps * (2 * se / gap) ** 2 if gap > 0 else float("inf")
+        rows.append({"key": f.stem, "metric": m["_metric"], "res": bool(m["_resolved"]),
+                     "need": need, "spread": spread, "gap": gap,
+                     "ratio": spread / gap if gap > 0 else float("inf")})
+    if not rows:
+        return []
+
+    out = [("BnKeyProblems", str(len(rows))),
+           ("BnKeyResolved", str(sum(r["res"] for r in rows)))]
+    for metric, tag in NAME.items():
+        sub = [r for r in rows if r["metric"] == metric]
+        if sub:
+            out += [(f"BnKeyRes{tag}", str(sum(r['res'] for r in sub))),
+                    (f"BnKeyN{tag}", str(len(sub)))]
+
+    unres = [r for r in rows if not r["res"] and r["need"] != float("inf")]
+    if unres:
+        med = statistics.median(r["need"] for r in unres)
+        out += [("BnKeyMedianNeed", f"{med:,.0f}".replace(",", "{,}")),
+                ("BnKeyWorstNeed", f"{max(r['need'] for r in unres):,.0f}".replace(",", "{,}")),
+                ("BnKeyWorst", max(unres, key=lambda r: r["need"])["key"].replace("_", r"\_"))]
+        succ = [r for r in unres if r["metric"] == "success"]
+        if succ:
+            out.append(("BnKeyWorstSucc",
+                        f"{max(r['need'] for r in succ):,.0f}".replace(",", "{,}")))
+
+    # The quantity the paper's grading rule turns on: how much further the design axis moves the
+    # metric than the two best designs differ from each other.
+    fin = [r["ratio"] for r in rows if r["ratio"] != float("inf")]
+    out += [("BnSpreadOverGapMed", f"{statistics.median(fin):.1f}"),
+            ("BnSpreadOverGapMax", f"{max(fin):.0f}"),
+            ("BnCheaper", f"{statistics.median(fin) ** 2:.0f}")]
+    return out
+
+
 def main() -> None:
     out: list[tuple[str, str]] = []
 
@@ -58,6 +115,11 @@ def main() -> None:
                 (f"BnBonusOverGap{NAME[m]}", f"{bonus / gap:.0f}")]
         worst = max(worst, bonus / gap)
     out.append(("BnBonusOverGapWorst", f"{worst:.0f}"))
+
+    # WHAT THE ANSWER KEY COST, read off the truth tables rather than asserted. This is measured
+    # before any method runs, which is what makes it a property of the benchmark: how much
+    # simulation it takes to know the right answer, per (metric, operating point) pair.
+    out += _key_cost()
 
     # The pilot allocation that shows the degeneracy, from the CR-72 registration.
     out += [("BnRawRatio", "1.33"), ("BnScaledRatio", "21.50"),

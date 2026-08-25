@@ -2,6 +2,8 @@
 #SBATCH --job-name=st-search
 #SBATCH --output=/scratch/vsokolov/sandtable-ar/runlogs/%x-%j.out
 #SBATCH --error=/scratch/vsokolov/sandtable-ar/runlogs/%x-%j.err
+#SBATCH --partition=normal
+#SBATCH --constraint=intel
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
