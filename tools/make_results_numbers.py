@@ -105,6 +105,27 @@ def main() -> None:
             if fr:
                 out.append((f"RsFound{tag}Winner", max(fr, key=fr.get).replace("_", r"\_")))
 
+    # The crossing itself, gated rather than eyeballed. The claim is that the sign of the
+    # difference between the best low-budget method and the best top-budget method REVERSES between
+    # the two rungs, so both contrasts are gated and both are reported.
+    lo_w = min((m for m in meths), key=lambda m: st.mean(
+        [r["regret_frac"] for r in rows if r["method"] == m
+         and r["budget"] in rungs["Low"].get(r["problem"], ())] or [9e9]))
+    hi_w = min((m for m in meths), key=lambda m: st.mean(
+        [r["regret_frac"] for r in rows if r["method"] == m
+         and r["budget"] in rungs["Top"].get(r["problem"], ())] or [9e9]))
+    out += [("RsCrossLow", lo_w.replace("_", r"\_")), ("RsCrossTop", hi_w.replace("_", r"\_"))]
+    if lo_w != hi_w:
+        for tag in ("Low", "Top"):
+            g = gate(paired(rows, hi_w, lo_w, "regret_frac", budgets=rungs[tag]), sp)
+            out += [(f"RsCross{tag}Eff", f"{g['eff']:+.4f}"), (f"RsCross{tag}T", f"{g['t']:+.2f}"),
+                    (f"RsCross{tag}Sign", f"{100 * g['sign']:.0f}"),
+                    (f"RsCross{tag}Verdict", g["verdict"]),
+                    (f"RsCross{tag}N", f"{g['n']:,}".replace(",", "{,}"))]
+        out.append(("RsCrossReal",
+                    "yes" if all(x[0] != f"RsCross{tg}Verdict" or x[1] != "equivalent"
+                                 for tg in ("Low", "Top") for x in out) else "no"))
+
     # Pool reuse: how often a method asked for more missions of a design than the pool holds. A
     # sweep that wrapped a lot is resampling its own draws and the precision it reports is optimistic.
     ru = [r.get("reused", 0) for r in rows]
