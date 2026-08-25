@@ -174,22 +174,57 @@ Two further conventions matter more than they sound. Every design draws the SAME
 the comparison between designs is paired and what has to be resolved is the variance of the
 difference rather than the variance of each arm; an unpaired key needs several times the
 replications for the same resolving power and the noisiest axes pay the most. And every table
-records the precision it actually achieved, so a problem whose leading gap falls inside its own
-noise is reported as ungradeable and dropped from scoring rather than silently graded. That case is
-not hypothetical. At the operating point the metric-paired problems originally inherited, mission
-success is pinned at its ceiling and the two best designs read identically, so a method scored there
-would have been scored on noise. The operating points are chosen so that every paired axis can
-still rank the design set, which is the same admissibility argument the underlying study applies to
-its own contrasts, run one level up.
+records the precision it actually achieved, rather than assuming the replication count bought the
+precision it was chosen for.
 
-\paragraph{Two scores, because they disagree.} A method is scored on whether it returned the
-registered optimum, which is a yes or a no, and on how much mission performance the design it
-returned gives up against the best design in the table, which is a number. These do not agree, and
-the disagreement is one of the paper's results rather than a nuisance. On the backlog-sizing
-problem the best two capacities differ by under one percent of delivered service, so a method that
-returns the runner-up has almost no regret and has still got the answer wrong. Which of those two
-failures matters depends on what the search is for. A study choosing a setting cares about regret; a
-study writing a requirement cares about the answer.
+\paragraph{Most of the benchmark has no best design, and that is a result rather than a defect.}
+Recording achieved precision turns the question ``how expensive is this metric'' into one that can
+be answered instead of estimated, and the answer is severe. Of the \BnKeyProblems{} problems, only
+\BnKeyResolved{} separate their own top two designs at two standard errors, at replication counts
+of \BnRepsSrv{} to \BnRepsLoss{} missions per design. By axis: \BnKeyResSrv{} of \BnKeyNSrv{} on
+delivered service, \BnKeyResLoss{} of \BnKeyNLoss{} on blue loss, and \BnKeyResSucc{} of
+\BnKeyNSucc{} on mission success. Extrapolating from the standard error each table actually
+achieved, the median unresolved problem would need about \BnKeyMedianNeed{} missions per design and
+the worst of the success problems \BnKeyWorstSucc{}. One loss problem separates its two best
+designs by nine parts in one hundred thousand and would need \BnKeyWorstNeed{}. These are not
+budgets any study pays, which is the point: at the operating points a mission study actually cares
+about, the question ``which single design is best'' frequently has no affordable answer.
+
+One check has to come before that is read as a cost. A metric pinned at its bound would tie its top
+two designs as a matter of definition, and no replication would ever separate them; the tie would be
+a theorem and reporting it as expensive would be wrong. It is not the explanation here. The success
+problems retain most of their range: the hardest of them spans 0.156 from best design to
+worst with the best at 0.8075, and six of the other seven are comparable. The single
+exception is the one problem whose best design reads 0.9895 across a span of 0.0025,
+which is reported as ceiling-adjacent rather than as a replication cost.
+
+\paragraph{Choosing well and proving which is best differ by two orders of magnitude.} The
+structure underneath the previous paragraph is the useful part, and it is not that these problems
+are flat. The design axis moves the metric a great deal; it is the top two designs that are close.
+Across the suite the spread from best design to worst is a median \BnSpreadOverGapMed{} times the
+gap between the best two, and reaches \BnSpreadOverGapMax{}. Since the replication needed to
+separate two designs goes as the square of that ratio, distinguishing the returned design from the
+best one is on the order of \BnCheaper{} times cheaper than distinguishing the best from the
+runner-up. Choosing a design well is worth a lot and is affordable. Proving which single design is
+best is worth little and frequently is not.
+
+That is an argument about what to grade, and the benchmark follows it. A problem whose key cannot
+separate its own top two is kept and scored on regret rather than dropped, with the flag recorded on
+every row so either grading can be recovered from one sweep. Dropping them would have discarded
+eighteen of thirty problems, including every problem on the metric a sponsor actually reads, on the
+grounds that a question nobody needs answered could not be answered.
+
+\paragraph{Two scores, because they disagree.} A method is scored on whether it returned the best
+design, which is a yes or a no, and on how much mission performance the design it returned gives up
+against the best one, which is a number. Regret is carried as a fraction of the achievable spread,
+zero for the best design and one for the worst, so that problems scored on delivered service,
+mission success and blue loss can be averaged at all; in raw metric units they cannot be. These two
+scores do not agree, and the disagreement is one of the paper's results rather than a nuisance. On
+the backlog-sizing problem the best two capacities differ by under one percent of delivered service,
+so a method that returns the runner-up has almost no regret and has still got the answer wrong.
+Which failure matters depends on what the search is for. A study choosing a setting cares about
+regret; a study writing a requirement cares about the answer. The measurement above says which of
+those two questions a benchmark can afford to grade.
 
 \section{Methods under a common budget}
 \label{sec:methods}
