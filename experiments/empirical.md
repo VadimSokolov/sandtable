@@ -1963,3 +1963,78 @@ Suite 416 passed, 1 skipped. Pre-flight PASS on all five including compile, 87 o
 Still running: 9459739 ghost (CR-65), 9460876 loss (CR-70, resubmitted), 9460877 crosstier (CR-71,
 resubmitted). The first `loss` and `crosstier` submissions died at their time limits because I
 passed TIME=6 and TIME=3 where `submit.sh` wants HH:MM:SS, so SLURM read them as minutes.
+
+### 2026-08-25. W4 scored at last, and a one-parameter account of the ceiling
+
+**W4 (loss battery 9460876, already on disk since 2026-08-24).** The CR-70 registration named W4 as
+the guard against a W3 result holding only at one hand-picked opposing strength. It ran with the rest
+of that battery and was never surveyed; adversarial review noticed the omission in the scored entry.
+Read now, at fixed span twenty-four and n_red swept 4/6/8/10/12, the backlog bound against the
+unbounded console on `success`: +0.0024 (4/32 blocks, equivalent), +0.0161 (21/32, equivalent),
++0.0889 (29/32, gate), +0.1411 (29/32, gate), +0.1372 (31/32, gate). On `blue_loss_frac` it gates
+down at every dose: -0.0103, -0.0311, -0.0539, -0.0738, -0.0820, with t from -4.06 to -14.96. The
+admission rule runs parallel and slightly lower throughout. The registered shape was an interior
+maximum; the ceiling limb is established and the floor limb rests on the single fall from +0.1411 to
++0.1372, because the sweep stopped at a baseline of 0.220 rather than reaching the floor.
+
+**CR-74, a fitted account (`tools/make_latent_numbers.py`, 38 macros).** Treating success as a
+threshold reading of a latent margin and a capability as a constant added to that margin gives
+`effect(b) = Phi(Phi^-1(b) + delta) - b`, one parameter and no freedom in the shape. Fitted across
+the twenty cells of W1 through W4, spanning two knobs (span and opposing strength), two scenarios,
+and baselines from 0.079 to 1.000: `delta = 0.454` for the bound, R-squared 0.935, RMS residual
+0.0172 against effects reaching 0.188, section mean residuals +0.0073, -0.0050, +0.0089, -0.0153.
+Leave-one-section-out gives pooled R-squared 0.888, RMS 0.0225, with delta between 0.420 and 0.494.
+The admission rule: delta 0.394, out-of-sample R-squared 0.768, folds 0.364 to 0.448. Two
+capabilities, different constants, the same curve. The curve puts its maximum at baseline 0.500 with
+no freedom; W4's observed maximum is at 0.484.
+
+This is POST HOC and is labelled so everywhere it appears. **CR-75 is the registered test**
+(`hopper/batteries/ceiling.sh`, job 9468539): delta is fixed at the values above and refitted
+nowhere, and the prediction at a new cell is conditional on the baseline that cell's own control arm
+reads. Falsifiers registered in advance: RMS deviation above 0.045 (twice the out-of-sample RMS), or
+the success maximum falling outside the baseline band 0.35 to 0.65. Three sections, none of whose
+cells are in the fit: X1 sweeps opposing strength to twenty, past where W4 stopped; X2 interpolates
+at strengths W4 skipped; X3 moves the baseline with span instead, at a strength W4 never used.
+
+**The manuscript's CR-70 gloss is narrowed.** "The capability was never the thing that decayed. The
+measurement was" claimed more than W1 and W3 can carry, because lifting the ceiling moves the
+operating point, and at four opposing units and twenty-four assets "the bound buys no success here"
+and "the instrument cannot see what it buys here" are one fact at two levels. The paper now says
+what the evidence supports and names the experiment that would close the rest.
+
+### 2026-08-25. The search benchmark moves onto stored mission pools
+
+**What the answer key costs, measured (`tools/make_bench_numbers.py`, 40 macros).** Of the thirty
+problems, twelve separate their own top two designs at two standard errors: nine of twelve on
+delivered service, three of ten on blue loss, zero of eight on mission success. Extrapolating from
+achieved standard error, the median unresolved problem needs about 12,059 missions per design and
+the worst success problem 340,470; `disc_s8_loss` separates its top two by nine parts in one hundred
+thousand and would need 52,317,293. The genus-two check was run first and clears it: the success
+problems keep their range, the hardest spanning 0.156 with its best at 0.8075, and only
+`disc_s16_succ` (0.9895 over a span of 0.0025) is ceiling-adjacent. The spread from best design to
+worst is a median 8.9 times the top-two gap and reaches 283, so distinguishing the returned design
+from the best is about 79 times cheaper than distinguishing the best from the runner-up. The
+benchmark therefore keeps all thirty problems and grades on normalized regret, with an argmax flag
+per row.
+
+**Pools.** The truth stage now keeps its per-mission draws (`experiments/results/search_pools`,
+108 cells, 553,200 missions) and the head-to-head resamples them, which makes pairing across methods
+exact rather than nominal and makes the replicate count a matter of precision rather than of
+simulator budget. Sharded sixteen ways for backfill (job 9468593) after a single thirty-two-core
+request sat a day behind the account's other work; chunked within a cell after one-task-per-cell
+fixed the critical path at forty-seven minutes; written straight to shared storage after a
+copy-back-at-exit lost a preempted shard's whole output.
+
+**Four defects, all found before any result was published, all in the ledger.** Both bandits seeded
+arms in enumeration order and so touched only a prefix of the design set at low budgets, where the
+capacity problems hold their optimum at index zero or one and `discipline` at index four. The pool
+meter drew every design's mission ordering from one shared generator, so a design's stream depended
+on how many others a method had visited first. A pull of n missions counted array slices rather than
+missions and averaged up to thirty-six while charging eight. The mission allowance divided by a
+literal six while the method table held eight. Twenty-five tests now pin these.
+
+**Method set final at ten:** grid, random, halving, ucb, ucb_raw, ucb_pooled, thompson, gp_ei,
+gp_raw, gp_noisy. Three baselines, two families each carrying its unrepaired control and one
+variant that differs in a single estimator, so a broken estimator can be told apart from a claim
+about adaptive search. `tools/score_bench.py` was written and committed before the benchmark
+produced a row, and scores CR-72's M1/M2/M3 and CR-73's B/C against their registered falsifiers.
