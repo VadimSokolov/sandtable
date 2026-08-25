@@ -66,11 +66,11 @@ tightly than the optimizer it searches with.
       the rest by a high-precision table computed on seeds disjoint from every search
       (Section~\ref{sec:bench}).
 \item The measurement that most of those problems have no affordable best design at all. Only
-      \BnKeyResolved{} of \BnKeyProblems{} separate their own top two designs at two standard errors,
-      \BnKeyResSucc{} of \BnKeyNSucc{} on mission success, and the median unresolved problem would
-      need about \BnKeyMedianNeed{} missions per design. We check first that this is a cost and not
-      a bound effect, since a metric pinned at its ceiling would tie its top two as a matter of
-      definition (Section~\ref{sec:bench}).
+      \BnKeyResolved{} of \BnKeyProblems{} separate their own top two designs at two standard
+      errors, \BnKeyResSucc{} of \BnKeyNSucc{} on mission success, and on that axis the smallest
+      gap a key can detect is a median \BnKeyDetSucc{}\% of the entire distance from best design to
+      worst. We check first that this is a cost and not a bound effect, since a metric pinned at
+      its ceiling would tie its top two as a matter of definition (Section~\ref{sec:bench}).
 \item The consequence for what a benchmark should grade. The spread from best design to worst is a
       median \BnSpreadOverGapMed{} times the gap between the best two, so distinguishing the
       returned design from the best one is about \BnCheaper{} times cheaper than distinguishing the
@@ -198,12 +198,29 @@ be answered instead of estimated, and the answer is severe. Of the \BnKeyProblem
 \BnKeyResolved{} separate their own top two designs at two standard errors, at replication counts
 of \BnRepsSrv{} to \BnRepsLoss{} missions per design. By axis: \BnKeyResSrv{} of \BnKeyNSrv{} on
 delivered service, \BnKeyResLoss{} of \BnKeyNLoss{} on blue loss, and \BnKeyResSucc{} of
-\BnKeyNSucc{} on mission success. Extrapolating from the standard error each table actually
-achieved, the median unresolved problem would need about \BnKeyMedianNeed{} missions per design and
-the worst of the success problems \BnKeyWorstSucc{}. One loss problem separates its two best
-designs by nine parts in one hundred thousand and would need \BnKeyWorstNeed{}. These are not
-budgets any study pays, which is the point: at the operating points a mission study actually cares
-about, the question ``which single design is best'' frequently has no affordable answer.
+\BnKeyNSucc{} on mission success.
+
+The natural next number is how many missions an unresolved table would have needed, and we do not
+report one, because it cannot be measured from a table that failed. That extrapolation divides by
+the observed gap, and a table is called unresolved precisely when its gap sits inside two standard
+errors of zero, so the quantity is ill-conditioned exactly on the problems it would be quoted for.
+It is close to entailed as well: a gap of zero returns the replication count already spent and a
+gap at the resolving threshold returns a quarter of it, so whatever the data say the answer lands
+in a fixed band. On \BnKeyNoisy{} of the \BnKeyProblems{} tables the observed gap is smaller than
+one standard error of itself, and on the worst of them the extrapolation read fifty-two million
+missions per design from a gap of nine parts in one hundred thousand measured to plus or minus
+thirty-eight hundredths of a percent.
+
+What can be measured is the resolving power itself, against the room the design axis has, and both
+halves of that are estimated directly. The smallest top-two gap a key can detect is two standard
+errors of the difference; the room is the distance from best design to worst. On delivered service
+the key detects a gap of \BnKeyDetSrv{}\% of that room, on blue loss \BnKeyDetLoss{}\%, and on
+mission success \BnKeyDetSucc{}\%. On success, in other words, an answer key that spent
+\BnRepsSucc{} missions per design can only separate two designs that differ by about half of
+everything the design axis is able to do. \BnKeyUnrankable{} problem is worse than that:
+\BnKeyDetWorstSuccKey{} cannot detect a gap smaller than \BnKeyDetWorstSucc{}\% of its own spread,
+so it cannot rank its design set at all. That is what ``no affordable answer'' means here, stated
+without dividing by a quantity consistent with zero.
 
 One check has to come before that is read as a cost. A metric pinned at its bound would tie its top
 two designs as a matter of definition, and no replication would ever separate them; the tie would be
@@ -216,11 +233,14 @@ which is reported as ceiling-adjacent rather than as a replication cost.
 \paragraph{Choosing well and proving which is best differ by two orders of magnitude.} The
 structure underneath the previous paragraph is the useful part, and it is not that these problems
 are flat. The design axis moves the metric a great deal; it is the top two designs that are close.
-Across the suite the spread from best design to worst is a median \BnSpreadOverGapMed{} times the
-gap between the best two, and reaches \BnSpreadOverGapMax{}. Since the replication needed to
-separate two designs goes as the square of that ratio, distinguishing the returned design from the
-best one is on the order of \BnCheaper{} times cheaper than distinguishing the best from the
-runner-up. Choosing a design well is worth a lot and is affordable. Proving which single design is
+Across the suite the spread from best design to worst is at least a median
+\BnSpreadOverGapMed{} times the gap between the best two, and at least \BnSpreadOverGapMax{} at the
+extreme. Both are floors rather than estimates: on the \BnSpreadBounded{} problems whose gap is not
+resolved the gap is known only to be at most two standard errors, and dividing by that ceiling
+gives a bound from two measured quantities, while on the rest the same expression returns the ratio
+exactly. Since the replication needed to separate two designs goes as the square of that ratio,
+distinguishing the returned design from the best one is at least \BnCheaper{} times cheaper than
+distinguishing the best from the runner-up. Choosing a design well is worth a lot and is affordable. Proving which single design is
 best is worth little and frequently is not.
 
 That is an argument about what to grade, and the benchmark follows it. A problem whose key cannot

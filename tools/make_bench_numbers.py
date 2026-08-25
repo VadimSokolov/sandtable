@@ -37,10 +37,24 @@ TRUTH = HERE.parent / "experiments" / "results" / "search_truth"
 
 
 def _key_cost() -> list[tuple[str, str]]:
-    """How many missions per design it takes to establish each problem's answer key, and how often
-    that is unaffordable. Extrapolated from the standard error each table actually achieved, so the
-    number is a measurement with an assumption (that the error falls as the root of the count)
-    rather than a projection from a model of the simulator."""
+    """What each problem's answer key can and cannot resolve.
+
+    This used to extrapolate how many missions per design a table would need to separate its top
+    two, as `reps * (2 se / gap) ** 2`. That number is not a measurement and it has been removed.
+    The denominator is the observed gap, and a table is called UNRESOLVED precisely when that gap
+    sits inside two standard errors of zero, so the extrapolation is ill-conditioned exactly on the
+    problems it was quoted for. Worse, it is nearly entailed: put `gap = 0` and it returns the
+    replication count already spent, put `gap = 2 se` and it returns a quarter of it, so for any
+    unresolved table the answer lies in a fixed band whatever the data say. It reported fifty-two
+    million missions for a gap of nine parts in a hundred thousand measured to plus or minus
+    thirty-eight hundredths of a percent.
+
+    That is the third genus of the first paper, met in a derived quantity rather than in a verdict:
+    a number computed from a below-floor reading inherits the floor and cannot carry more than the
+    reading did. So the question is replaced with one whose parts are both well measured: what is
+    the smallest top-two gap this table could have detected, against how far the design axis moves
+    the metric at all. Detectable gap is two standard errors of the difference; spread is best
+    design to worst. Neither divides by a quantity consistent with zero."""
     import json
     import statistics
 
@@ -55,9 +69,10 @@ def _key_cost() -> list[tuple[str, str]]:
         gap, se, reps = m["_gap"], m["_se_top2"], m["_reps"]
         vals = [v for k, v in d.items() if not k.startswith("_")]
         spread = abs(max(vals) - min(vals))
-        need = reps * (2 * se / gap) ** 2 if gap > 0 else float("inf")
         rows.append({"key": f.stem, "metric": m["_metric"], "res": bool(m["_resolved"]),
-                     "need": need, "spread": spread, "gap": gap,
+                     "spread": spread, "gap": gap, "se": se, "reps": reps,
+                     "det": 2 * se, "frac": (2 * se / spread) if spread > 0 else float("inf"),
+                     "noisy": gap < se,
                      "ratio": spread / gap if gap > 0 else float("inf")})
     if not rows:
         return []
@@ -70,23 +85,33 @@ def _key_cost() -> list[tuple[str, str]]:
             out += [(f"BnKeyRes{tag}", str(sum(r['res'] for r in sub))),
                     (f"BnKeyN{tag}", str(len(sub)))]
 
-    unres = [r for r in rows if not r["res"] and r["need"] != float("inf")]
-    if unres:
-        med = statistics.median(r["need"] for r in unres)
-        out += [("BnKeyMedianNeed", f"{med:,.0f}".replace(",", "{,}")),
-                ("BnKeyWorstNeed", f"{max(r['need'] for r in unres):,.0f}".replace(",", "{,}")),
-                ("BnKeyWorst", max(unres, key=lambda r: r["need"])["key"].replace("_", r"\_"))]
-        succ = [r for r in unres if r["metric"] == "success"]
-        if succ:
-            out.append(("BnKeyWorstSucc",
-                        f"{max(r['need'] for r in succ):,.0f}".replace(",", "{,}")))
+    # The smallest gap each key could have detected, as a percentage of the room the design axis
+    # has. Both halves are measured directly; nothing here divides by a quantity consistent with
+    # zero. `BnKeyNoisy` counts the tables whose observed top-two gap is smaller than one standard
+    # error of itself, which is the count the removed extrapolation was quietly built on.
+    out.append(("BnKeyNoisy", str(sum(r["noisy"] for r in rows))))
+    out.append(("BnKeyDetMed", f"{100 * statistics.median(r['frac'] for r in rows):.1f}"))
+    for metric, tag in NAME.items():
+        sub = [r for r in rows if r["metric"] == metric]
+        if sub:
+            w = max(sub, key=lambda r: r["frac"])
+            out += [(f"BnKeyDet{tag}", f"{100 * statistics.median(r['frac'] for r in sub):.1f}"),
+                    (f"BnKeyDetWorst{tag}", f"{100 * w['frac']:.0f}"),
+                    (f"BnKeyDetWorst{tag}Key", w["key"].replace("_", r"\_"))]
+    out.append(("BnKeyUnrankable", str(sum(r["frac"] > 1.0 for r in rows))))
 
     # The quantity the paper's grading rule turns on: how much further the design axis moves the
-    # metric than the two best designs differ from each other.
-    fin = [r["ratio"] for r in rows if r["ratio"] != float("inf")]
-    out += [("BnSpreadOverGapMed", f"{statistics.median(fin):.1f}"),
-            ("BnSpreadOverGapMax", f"{max(fin):.0f}"),
-            ("BnCheaper", f"{statistics.median(fin) ** 2:.0f}")]
+    # metric than the two best designs differ from each other. Reported as a LOWER bound, because
+    # the gap in the denominator is only a measurement where the table resolved it. Where it did
+    # not, the gap is known only to be at most two standard errors, and dividing by that ceiling
+    # gives a valid floor on the ratio from two quantities that are both measured. Where the table
+    # did resolve, the gap exceeds two standard errors and the same expression returns it exactly.
+    # A ratio whose denominator is consistent with zero is not reported at all.
+    bnd = [r["spread"] / max(r["gap"], r["det"]) for r in rows if r["spread"] > 0]
+    out += [("BnSpreadOverGapMed", f"{statistics.median(bnd):.1f}"),
+            ("BnSpreadOverGapMax", f"{max(bnd):.0f}"),
+            ("BnCheaper", f"{statistics.median(bnd) ** 2:.0f}"),
+            ("BnSpreadBounded", str(sum(1 for r in rows if not r["res"]))) ]
     return out
 
 
