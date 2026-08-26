@@ -99,7 +99,7 @@ than a missing one. A conjecture scored more than once keeps its last word.
 | CR-76 | holds, 262 gated success contrasts audited and none below the floor | 9664 | the gate has a resolution, it is set by block size, and more blocks do not move it |
 | CR-77 | A holds against both controls at 3 of 4 arms, B retracted on its falsi | 9777 | scored |
 | CR-78 | RETRACTED, all three parts | 9836 | the same fit, asked to predict an operating point nobody has simulated |
-| CR-79 | registered, not yet run | 10110 | REGISTERED. THE BATCH SIZE, NOT THE ACQUISITION RULE, IS WHAT FAILS AT SMALL BUDGETS |
+| CR-79 | A, B and C hold; `WmBeatUni` is zero | 10158 | scored: all three hold, and the one thing not predicted did not happen either |
 
 <!-- SCOREBOARD:END -->
 
@@ -10109,7 +10109,8 @@ however plausible it sounds.
 
 ## CR-79, REGISTERED. THE BATCH SIZE, NOT THE ACQUISITION RULE, IS WHAT FAILS AT SMALL BUDGETS
 
-**Verdict:** registered, not yet run.
+**Verdict:** A, B and C all hold; the deficit falls from +0.3990 to +0.0023 and no repaired method
+beats uniform allocation, which is what was NOT predicted.
 
 Registered before any repaired method exists, because the repair is obvious enough that adopting it
 first and reporting it afterwards would be indistinguishable from tuning.
@@ -10153,3 +10154,44 @@ change will have been registered as a surprise rather than presented as the plan
 **How it will be run.** A separate sweep with the repaired methods added, so the shipped
 `bench-r300.jsonl` and its balanced-cell intersection are untouched and the current manuscript stays
 reproducible from the file it names.
+
+## CR-79 scored: all three hold, and the one thing not predicted did not happen either
+
+**Verdict:** A, B and C hold; `WmBeatUni` is zero.
+
+Job `st-warm-9471928`, 756,000 rows in 1,954 s, fourteen methods at 300 replicates, written to
+`$ROOT/search/bench-warm.jsonl`. The shipped ten-method sweep is untouched, so the main comparison
+keeps its own provenance and this follow-up keeps its own.
+
+**A holds by two orders of magnitude.** Coverage at the bottom rung goes from 2.3 designs of 8.3 to
+7.4, which is exactly what `grid` reaches. The argmax-recovery deficit against uniform allocation
+falls from +0.3990 to +0.0023 at worst and -0.0074 at best, against a falsifier that would have
+fired above 0.20. Two of the four repaired methods now recover the best design very slightly more
+often than uniform allocation does, and neither difference is anywhere near the tier.
+
+**B holds, and more cleanly than expected.** Three of the four repaired methods are BYTE-IDENTICAL
+to their controls at the top rung: effect exactly +0.0000, t exactly 0.00, sign consistency 0%
+because every paired difference is zero. That is the strongest possible evidence the repair is
+surgical, since `_fit_chunk` returns the original eight whenever the budget affords it. Only
+`gp_ei_warm` differs, at -0.0018, t=-2.23, equivalent, because its warm start also changed: it now
+fits the surrogate to the whole design set rather than to four of it.
+
+**C holds.** All four repaired methods are equivalent to `grid` at the bottom rung on argmax
+recovery, at effects of +0.0023 to -0.0074. A method that spends its whole budget on one full pass
+IS uniform allocation, and the numbers say so.
+
+**The claim deliberately not predicted did not fire.** No repaired method beats uniform allocation
+at any rung. The repair removes a large artefact and changes no conclusion.
+
+**What this does to the paper.** It strengthens it. Without CR-79 the low-budget result reads as a
+finding about adaptive search, and it is not one: it is a batch size chosen for a different budget
+regime. With CR-79 the paper says something sharper and more useful to a program office. Adaptive
+search does not beat enumeration on mission-design problems of this shape at any budget, AND the
+forty points of argmax recovery the standard implementations throw away at small budgets are a
+fixable defect worth fixing, and fixing them buys parity rather than advantage.
+
+**Why the controls earned their keep.** A benchmark that had not carried the unrepaired versions
+would have reported the artefact as a property of the methods. A benchmark that had only carried
+repaired versions would have had nothing to report. CR-72 registered those controls for a different
+reason, to separate a broken estimator from a claim about adaptive search, and they paid off here
+for a reason nobody anticipated when they were added.

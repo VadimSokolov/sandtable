@@ -264,8 +264,19 @@ python3 tools/make_results_numbers.py $ROOT/search/bench-r300.jsonl \
     --old  experiments/results/bench-all.jsonl  # -> paper-search/gen/results_numbers.tex
 ```
 
-Both read the truth tables and the sweep, so they run on Hopper (`$ROOT` is
-`/scratch/vsokolov/sandtable-ar`) and the two `.tex` files are rsynced back.
+A third generator covers CR-79's follow-up, which comes from a DIFFERENT sweep:
+
+```bash
+python3 tools/make_warm_numbers.py $ROOT/search/bench-warm.jsonl  # -> gen/warm_numbers.tex
+python3 tools/score_cr79.py        $ROOT/search/bench-warm.jsonl  # A/B/C against the registration
+```
+
+`bench-warm.jsonl` runs fourteen methods and `bench-r300.jsonl` runs ten, so their balanced-cell
+intersections differ and a number from one must never be read as a number from the other. That is
+why the macros live in separate files with different prefixes, `Rs` and `Wm`.
+
+All of these read the truth tables and a sweep, so they run on Hopper (`$ROOT` is
+`/scratch/vsokolov/sandtable-ar`) and the `.tex` files are rsynced back.
 
 Three traps, all of which have cost a session already:
 

@@ -2258,3 +2258,36 @@ allocator uniform. It makes it round-robin in intent, but a round-robin that has
 and runs out of budget before it runs out of arms is not uniform allocation, it is uniform
 allocation truncated after 28% of the arms. That is a different object and it loses to the real
 thing by 39.9 points of argmax recovery.
+
+**CR-79 scored, and all three registered predictions hold, 2026-08-26.** Job `st-warm-9471928` on
+`normal --constraint=intel`, 756,000 rows in 1,954 s, fourteen methods at 300 replicates, written to
+`$ROOT/search/bench-warm.jsonl`. The shipped ten-method sweep is untouched: the two files have
+different balanced-cell intersections, so their macros live in separate generated files
+(`results_numbers.tex` and `warm_numbers.tex`) and cannot be read as each other's.
+
+A holds by two orders of magnitude. Bottom-rung coverage goes from 2.3 designs of 8.3 to 7.4,
+exactly what `grid` reaches, and the argmax-recovery deficit against uniform allocation falls from
++0.3990 to +0.0023 at worst and -0.0074 at best, against a registered falsifier that would have
+fired above 0.20.
+
+B holds more cleanly than expected. Three of the four repaired methods are byte-identical to their
+controls at the top rung: effect exactly +0.0000, t exactly 0.00, sign consistency 0% because every
+paired difference is zero. `_fit_chunk` returns the original eight whenever the budget affords it,
+so the repair cannot touch a rung where the budget was never the binding constraint. Only
+`gp_ei_warm` differs, at -0.0018, t=-2.23, equivalent, because its warm start also changed: it fits
+the surrogate to the whole design set rather than to four of it.
+
+C holds. All four repaired methods are equivalent to `grid` at the bottom rung on argmax recovery.
+A method that spends its whole budget on one full pass IS uniform allocation.
+
+The claim deliberately not predicted did not fire: no repaired method beats uniform allocation at
+any rung, `WmBeatUni` is zero. The repair removes a large artefact and changes no conclusion, which
+is the useful shape. The paper now says two things instead of one. Adaptive search does not beat
+enumeration on mission-design problems of this shape at any budget, and separately, the forty points
+of argmax recovery the standard implementations throw away at small budgets are a fixable defect
+worth fixing, whose repair buys parity rather than advantage.
+
+Worth recording about the controls. CR-72 added the unrepaired variants to separate a broken
+estimator from a claim about adaptive search. They paid off here for a reason nobody anticipated when
+they were added: without them the artefact would have been reported as a property of the methods,
+and with only repaired versions there would have been nothing to report.

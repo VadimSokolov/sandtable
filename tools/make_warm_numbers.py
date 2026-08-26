@@ -100,7 +100,11 @@ def main() -> None:
                 (f"Wm{tag}LowVsUniEff", f"{gp['eff']:+.4f}"),
                 (f"Wm{tag}LowVsUniT", f"{gp['t']:+.2f}")]
 
-    out += [("WmWorstDeficit", f"{worst_def:+.4f}"), ("WmBestDeficit", f"{best_def:+.4f}")]
+    # The registered threshold itself, taken from the scorer that owns it rather than typed into
+    # the prose. A falsifier a reader cannot check against the code is a claim about our memory.
+    from score_cr79 import DEFICIT_MAX
+    out += [("WmWorstDeficit", f"{worst_def:+.4f}"), ("WmBestDeficit", f"{best_def:+.4f}"),
+            ("WmDeficitMax", f"{DEFICIT_MAX:.2f}")]
 
     # The claim deliberately NOT predicted: that a repaired method beats uniform allocation.
     beat = []

@@ -13,6 +13,7 @@
 \newcommand{\sandtable}{\textsc{SandTable}}
 \input{gen/bench_numbers}
 \input{gen/results_numbers}
+\input{gen/warm_numbers}
 
 \title{Searching a mission design space: what a fast simulator changes about\\
        optimization, and what it does not}
@@ -41,7 +42,10 @@ argued, in a column the sweep records for every run: at the budgets where unifor
 methods evaluate \RsLowCoverAdapt{}\% of the design set and uniform evaluates \RsLowCoverUni{}\%. An
 allocator can only concentrate on evidence that ranks the arms, on these problems that evidence is
 expensive, and until it is affordable the allocator is spending its budget on a fraction of the
-designs. A design that is never evaluated cannot be returned. This is the third answer the
+designs. A design that is never evaluated cannot be returned. That failure is a fixable
+implementation constant rather than a property of adaptive search, and we register the repair before
+making it: sizing the pull to the design set recovers \WmUcbPooledWarmLowDeficitWas{} of argmax
+recovery at small budgets and still beats uniform allocation nowhere. This is the third answer the
 same comparison has given us. The first, uniform unbeatable everywhere, was an artefact of a budget
 ladder whose top rung sat below the replication at which anything is learnable; the second, a
 crossing that reversed the ranking, was an artefact of \RsPrevReplicates{} replicates. Both are reported here
@@ -519,6 +523,40 @@ optimistic target, and chasing it costs more than the acquisition rule recovers.
 saying plainly, because three of these four differences are exactly the kind of tuning a comparison
 without controls would have reported as a method contribution, and the fourth would have been
 reported with its sign the wrong way round.
+
+\paragraph{The small-budget collapse is an implementation constant, not a property of adaptive
+search.} The coverage figures above name a suspect, and it is not the acquisition rule. Every
+allocator here seeds by walking a permutation of the designs, one pull of a fixed \texttt{chunk} of
+missions each, and only then begins to adapt. With \texttt{chunk} at eight and a bottom rung of
+sixteen missions on seven designs, that seed pass covers two arms and the search proper never runs.
+Eight is a reasonable pull when the budget is thousands. Carried into a rung of sixteen it silently
+redefines the method.
+
+We registered the repair and its falsifiers before implementing it, because a fix this obvious is
+otherwise indistinguishable from tuning. Let the pull size fall with the budget, taking the largest
+chunk that still seeds every design, and never go below one mission. Four repaired variants were
+added beside their unrepaired controls, never instead of them, and run in a separate sweep of
+\WmRows{} rows over \WmMethods{} methods at \WmReplicates{} replicates so that the comparison above
+keeps its own provenance.
+
+All three registered predictions hold. Coverage at the bottom rung goes from \WmUcbPooledWarmLowTouchWas{}
+designs of \WmDesigns{} to \WmUcbPooledWarmLowTouch{}, which is what uniform allocation reaches. The
+argmax-recovery deficit against uniform allocation falls from \WmUcbPooledWarmLowDeficitWas{} to
+\WmWorstDeficit{} in the worst case and \WmBestDeficit{} in the best, against a registered falsifier
+that would have fired above \WmDeficitMax{}. The repair costs nothing at the top rung, where three of the four
+are byte-identical to their controls because the budget was never the binding constraint there. And
+at the bottom rung every repaired method is \WmUcbPooledWarmLowVsUni{} to uniform allocation rather
+than better than it, which is the third prediction and the one that matters: a method that spends
+its whole budget on one full pass IS uniform allocation.
+
+What we deliberately did not predict is that any repaired method would beat uniform allocation. None
+does, at any rung: \WmBeatUni{} of the four. So the repair removes a large artefact and changes no
+conclusion. That is the useful shape of the result. The
+\WmUcbPooledWarmLowDeficitWas{} of argmax recovery the standard implementations give away at small
+budgets is recoverable and worth recovering, and recovering it buys parity with enumeration rather
+than an advantage over it. A benchmark that had not carried the
+unrepaired versions as controls would have reported the artefact as a finding about adaptive search,
+and a benchmark that had only repaired them would have had nothing to report at all.
 
 \paragraph{Registered verdicts, reported whichever way they went.} Three of the five predictions
 registered before the sweep failed. CR-72 M1 held that the unscaled allocator would be equivalent
