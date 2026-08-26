@@ -343,6 +343,15 @@ def test_the_margin_is_the_gates_own_floor_and_is_capacity_anchored_for_rates():
     assert margin("success", base=0.5) == pytest.approx(0.06 * 0.5)
 
 
+# The ledger writes into the first paper's gen/ tree, which the cluster sync deliberately omits
+# because no manuscript is ever built there. These two checks call the generator for real, so they
+# skip where that tree is absent rather than failing on a missing directory.
+needs_report = pytest.mark.skipif(
+    not (pathlib.Path(__file__).resolve().parents[1] / "report" / "gen").is_dir(),
+    reason="report tree not present")
+
+
+@needs_report
 def test_an_instrument_row_without_a_guard_does_not_ship():
     """The ledger's own criterion, enforced rather than remembered. A recorded defect earns its
     place only if it names the guard that makes recurrence impossible; without one it is a war
@@ -364,6 +373,7 @@ def test_an_instrument_row_without_a_guard_does_not_ship():
     make_ledger.main()          # and the real table still builds
 
 
+@needs_report
 def test_every_shipped_instrument_row_names_its_guard():
     import sys as _sys
     from pathlib import Path as _P

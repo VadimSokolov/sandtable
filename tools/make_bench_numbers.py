@@ -78,9 +78,19 @@ def _key_cost() -> list[tuple[str, str]]:
     import json
     import statistics
 
-    rows = []
+    rows, skipped = [], []
     for f in sorted(TRUTH.glob("*.json")):
         if f.stem.endswith(".difficulty"):
+            continue
+        if f.stem not in PROBLEMS:
+            # A truth table for a cell that is not in the benchmark registry. The predict grid
+            # writes its tables into this same directory, and globbing the directory rather than
+            # iterating the registry would let a published inventory grow by thirty to thirty-two
+            # because a file was dropped next to the others. Two of those cells sit at a metric
+            # ceiling with a top-two gap and a standard error of exactly zero, so they would also
+            # have taken a ratio to a denominator with no bound. Which problems are in the
+            # benchmark is a registry decision, not a filesystem one.
+            skipped.append(f.stem)
             continue
         d = json.loads(f.read_text())
         m = d.get("_meta", {})
@@ -91,14 +101,28 @@ def _key_cost() -> list[tuple[str, str]]:
         spread = abs(max(vals) - min(vals))
         rows.append({"key": f.stem, "metric": m["_metric"], "res": bool(m["_resolved"]),
                      "spread": spread, "gap": gap, "se": se, "reps": reps,
+                     "best": max(vals), "worst": min(vals),
                      "det": 2 * se, "frac": (2 * se / spread) if spread > 0 else float("inf"),
                      "noisy": gap < se,
                      "ratio": spread / gap if gap > 0 else float("inf")})
     if not rows:
         return []
+    if skipped:
+        print(f"  skipped {len(skipped)} truth tables not in the benchmark registry: "
+              + ", ".join(sorted(skipped)))
 
+    # The benchmark grades argmax on more problems than the tables resolve, because a problem
+    # whose optimum was established by a separate registered study has a known argmax whatever its
+    # own table can see. Publishing only one of the two counts is how a reader ends up comparing
+    # eighteen against seventeen and finding neither wrong.
+    from sandtable.search.problems import PROBLEMS as _P
+    study = sum(1 for r in rows if not r["res"] and getattr(_P.get(r["key"]), "optimum", None))
+    sizes = [_P[r["key"]].n_designs for r in rows if r["key"] in _P]
     out = [("BnKeyProblems", str(len(rows))),
-           ("BnKeyResolved", str(sum(r["res"] for r in rows)))]
+           ("BnKeyResolved", str(sum(r["res"] for r in rows))),
+           ("BnKeyUnresolved", str(sum(1 for r in rows if not r["res"]))),
+           ("BnArgmaxFromStudy", str(study)),
+           ("BnDesignsMax", str(max(sizes))), ("BnDesignsMin", str(min(sizes)))]
     for metric, tag in NAME.items():
         sub = [r for r in rows if r["metric"] == metric]
         if sub:
@@ -119,6 +143,33 @@ def _key_cost() -> list[tuple[str, str]]:
                     (f"BnKeyDetWorst{tag}", f"{100 * w['frac']:.0f}"),
                     (f"BnKeyDetWorst{tag}Key", w["key"].replace("_", r"\_"))]
     out.append(("BnKeyUnrankable", str(sum(r["frac"] > 1.0 for r in rows))))
+
+    # Whether the unresolved success tables are unresolved because replication is expensive or
+    # because the metric is pinned at its bound. The second would be a theorem rather than a cost,
+    # and reporting it as a cost would be wrong. The test is reachability, the same question the
+    # first paper's second genus of defect turns on: does the design axis still move this metric
+    # further than the answer key can resolve? Where it does, the tie between the top two designs
+    # is a measurement about the designs and not an artefact of the ceiling. Both halves are
+    # measured, the span from best design to worst and two standard errors of the top-two
+    # difference, and neither is a modelled quantity.
+    succ = [r for r in rows if r["metric"] == "success"]
+    if succ:
+        moves = [r for r in succ if r["spread"] > r["det"]]
+        wide = max(succ, key=lambda r: r["spread"])
+        tight = min(succ, key=lambda r: r["spread"])
+        out += [("BnBoundNSucc", str(len(succ))),
+                ("BnBoundMoves", str(len(moves))),
+                ("BnBoundWideKey", wide["key"].replace("_", r"\_")),
+                ("BnBoundWideSpan", f"{wide['spread']:.3f}"),
+                ("BnBoundWideBest", f"{wide['best']:.4f}"),
+                ("BnBoundWideHead", f"{1.0 - wide['best']:.4f}"),
+                ("BnBoundCeilKey", tight["key"].replace("_", r"\_")),
+                ("BnBoundCeilSpan", f"{tight['spread']:.4f}"),
+                ("BnBoundCeilBest", f"{tight['best']:.4f}"),
+                ("BnBoundCeilDet", f"{tight['det']:.4f}")]
+        if moves:
+            out.append(("BnBoundMovesMin",
+                        f"{min(r['spread'] / r['det'] for r in moves):.1f}"))
 
     # The quantity the paper's grading rule turns on: how much further the design axis moves the
     # metric than the two best designs differ from each other. Reported as a LOWER bound, because

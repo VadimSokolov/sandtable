@@ -102,11 +102,34 @@ def ucb_raw(problem: Problem, budget: int, rng, pull, c: float = 1.0, chunk: int
     return _ucb(problem, budget, rng, pull, c=c, chunk=chunk, scaled=False)
 
 
+def _fit_chunk(budget: int, n: int, chunk: int) -> int:
+    """Shrink the pull size until one pass over the design set fits in the budget.
+
+    CR-79. Every allocator here seeds by walking a permutation of the designs, one `chunk` of
+    missions each, and only then starts to adapt. With `chunk` fixed at eight and a bottom rung of
+    sixteen missions on seven designs, that seed pass covers two arms and the search proper never
+    runs: measured coverage at the bottom rung is 2.3 designs of 8.3 against 7.4 for `grid`, and the
+    argmax-recovery deficit that follows is 0.40. A design that was never evaluated cannot be
+    returned, whatever the acquisition rule would have done with it.
+
+    Eight is a sensible pull when the budget is thousands. Carried into a rung of sixteen it
+    silently redefines the method, which is this project's first genus of defect met in a constant.
+    The fix is not a larger budget but a pull size that knows what it is being spent on: take the
+    largest chunk that still seeds every arm, and never go below one mission. Where the budget
+    cannot afford one mission per design, no allocator can cover the set and this returns 1.
+    """
+    if n <= 0:
+        raise ValueError("a design set with no designs has no pull size")
+    return max(1, min(chunk, budget // n))
+
+
 def _ucb(problem: Problem, budget: int, rng, pull, c: float, chunk: int, scaled: bool,
-         pooled: bool = False) -> dict:
+         pooled: bool = False, cover: bool = False) -> dict:
     p = _mk_pull(problem, pull)
     designs = problem.designs()
     n = len(designs)
+    if cover:
+        chunk = _fit_chunk(budget, n, chunk)
     draws: list[list[float]] = [[] for _ in range(n)]
     spent = 0
     # PERMUTED, not enumeration order. A budget below n * chunk cannot seed every arm, and walking
@@ -166,7 +189,8 @@ def ucb_pooled(problem: Problem, budget: int, rng, pull, c: float = 1.0, chunk: 
     return _ucb(problem, budget, rng, pull, c=c, chunk=chunk, scaled=True, pooled=True)
 
 
-def thompson(problem: Problem, budget: int, rng, pull, chunk: int = 8) -> dict:
+def thompson(problem: Problem, budget: int, rng, pull, chunk: int = 8,
+             cover: bool = False) -> dict:
     """Thompson sampling with a Gaussian posterior per design.
 
     The variance is estimated from the design's own draws rather than assumed, because mission
@@ -176,6 +200,8 @@ def thompson(problem: Problem, budget: int, rng, pull, chunk: int = 8) -> dict:
     p = _mk_pull(problem, pull)
     designs = problem.designs()
     n = len(designs)
+    if cover:
+        chunk = _fit_chunk(budget, n, chunk)
     draws: list[list[float]] = [[] for _ in range(n)]
     spent = 0
     # PERMUTED, not enumeration order. A budget below n * chunk cannot seed every arm, and walking
@@ -208,7 +234,7 @@ def thompson(problem: Problem, budget: int, rng, pull, chunk: int = 8) -> dict:
 # ------------------------------------------------------------------ Bayesian surrogate
 
 def gp_ei(problem: Problem, budget: int, rng, pull, chunk: int = 8, warm: int = 4,
-          standardize: bool = True, incumbent: str = "observed") -> dict:
+          standardize: bool = True, incumbent: str = "observed", cover: bool = False) -> dict:
     """Gaussian-process surrogate with expected improvement over the discrete design set.
 
     Deliberately a plain implementation over the enumerated designs rather than a call into a BO
@@ -226,7 +252,14 @@ def gp_ei(problem: Problem, budget: int, rng, pull, chunk: int = 8, warm: int = 
     obs_i: list[int] = []
     obs_y: list[float] = []
     spent = 0
-    order = rng.permutation(n)[:max(2, min(warm, n))]
+    # CR-79: with coverage on, the surrogate is warmed on the WHOLE design set at whatever pull
+    # size fits, rather than on `warm` designs at a fixed pull. A GP fitted to four of seven
+    # designs is extrapolating over the other three, and at the bottom rung it never observes them.
+    if cover:
+        chunk = _fit_chunk(budget, n, chunk)
+        order = rng.permutation(n)
+    else:
+        order = rng.permutation(n)[:max(2, min(warm, n))]
     for i in order:
         if spent + chunk > budget:
             break
@@ -348,6 +381,31 @@ def _gp_posterior(X, idx, y, cho_factor, cho_solve, ls: float = 0.4, noise: floa
     return mu, np.sqrt(var) * ys
 
 
+def ucb_pooled_warm(problem: Problem, budget: int, rng, pull, c: float = 1.0,
+                    chunk: int = 8) -> dict:
+    """CR-79's repair applied to the best-performing bandit. Control: `ucb_pooled`."""
+    return _ucb(problem, budget, rng, pull, c=c, chunk=chunk, scaled=True, pooled=True, cover=True)
+
+
+def ucb_raw_warm(problem: Problem, budget: int, rng, pull, c: float = 1.0, chunk: int = 8) -> dict:
+    """CR-79's repair applied to CR-72's unscaled control. Control: `ucb_raw`.
+
+    Kept because CR-72 M1 predicted this method would behave as uniform allocation and it does not.
+    If the coverage account is right, this is the variant for which it becomes true.
+    """
+    return _ucb(problem, budget, rng, pull, c=c, chunk=chunk, scaled=False, cover=True)
+
+
+def thompson_warm(problem: Problem, budget: int, rng, pull, chunk: int = 8) -> dict:
+    """CR-79's repair applied to Thompson sampling. Control: `thompson`."""
+    return thompson(problem, budget, rng, pull, chunk=chunk, cover=True)
+
+
+def gp_ei_warm(problem: Problem, budget: int, rng, pull, chunk: int = 8, warm: int = 4) -> dict:
+    """CR-79's repair applied to the surrogate. Control: `gp_ei`."""
+    return gp_ei(problem, budget, rng, pull, chunk=chunk, warm=warm, cover=True)
+
+
 METHODS = {
     "ucb_raw": ucb_raw,
     "gp_raw": gp_raw,
@@ -359,4 +417,10 @@ METHODS = {
     "thompson": thompson,
     "gp_ei": gp_ei,
     "gp_noisy": gp_noisy,
+    # CR-79's repaired variants. They ship BESIDE their controls, never instead of them, so a
+    # sweep that includes them still reports what the unrepaired versions do.
+    "ucb_pooled_warm": ucb_pooled_warm,
+    "ucb_raw_warm": ucb_raw_warm,
+    "thompson_warm": thompson_warm,
+    "gp_ei_warm": gp_ei_warm,
 }

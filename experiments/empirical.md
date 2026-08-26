@@ -2126,3 +2126,135 @@ jobs per worker. Job `st-search-9471782` wrote 1,400 rows in twenty-two seconds.
 
 Recorded because the defect only appears above a size threshold, so a driver validated at one scale
 and reused at another is the same genus this project keeps cataloguing.
+
+**The authoritative sweep landed, 2026-08-26.** Job `st-search-9471782`, `normal` partition with
+`--constraint=intel`, 32 workers, 540,000 rows in 1,352 s, written to
+`$ROOT/search/bench-r300.jsonl`. Ten methods, thirty problems, six rungs, three hundred replicates,
+every one of the 54,000 cells reached by all ten methods, so no mean is taken over a denominator
+another mean did not have. All 192 `\Rs` macros in `paper-search/gen/results_numbers.tex` are
+generated from this file.
+
+The verdict changed for the third time, and this is the version that stands. At the bottom rung
+uniform allocation leads the strongest adaptive allocator by 0.1066 of the achievable spread,
+t=30.07, 73% sign consistency over 9,000 matched runs, recovering the best design 69% of the time
+against 29%. At the top rung `ucb_pooled` still leads on the raw means, 0.041 against 0.051, but the
+paired effect is -0.0097 against a minimum practical effect of 0.0157, so the tier reads it as
+equivalent. `RsBeatGrid` is zero: no method separates from uniform allocation at any budget.
+
+The instructive part is which way the statistics moved. Against the twenty-replicate sweep the
+effect halved, from -0.0183 to -0.0097, while |t| more than doubled, from 3.74 to 8.09, because
+fifteen times the matched runs outran the shrinking estimate. More data made the difference more
+certain and less worth acting on at once. A tier written only in significance would have read the
+extra replicates as confirmation. That contrast is now generated rather than remembered:
+`make_results_numbers.py --prev` rescore the archived twenty-replicate sweep through the same gate
+on the same method pair, and `--old` counts how far the superseded ladder reached (25 of 30 problems
+short of the separating budget, against 15 of 30 for the corrected one).
+
+Registered arms at three hundred replicates. CR-72 M1 predicted equivalence to `grid` at every
+budget on both grading rules; 4 of the 6 rung and grading-rule combinations gate away, worst at the
+low rung on argmax recovery where `ucb_raw` is worse by 0.3990 at t=-42.49. At the top rung the two
+are equivalent at -0.0006, t=-0.89, so scoring M1 where every other contrast is scored would have
+called it held. M2 refuted at the middle rung as registered, +0.0015, t=1.44, 46% sign.
+M3 cannot be scored. CR-73 B retracted, Spearman 0.988 with the same winner on 11 of 13. CR-73 C
+holds on its registered falsifier but far more narrowly than first reported: on the 17 unresolved
+problems 2 of 9 methods separate from `random`, and in opposite directions, `ucb_pooled` better at
+-0.0400 and `gp_noisy` worse at +0.0602. The seven that miss almost all miss on sign consistency
+rather than on effect size, 53% to 59%. The 8-of-9 figure recorded earlier in this session came from
+`RsBeatRandom`, which counts the top rung across all thirty problems, carried into a sentence about
+the unresolved seventeen across all rungs: the same genus as the ladder-count error below, two
+populations and two budget selections confused for one. Of the four estimator discriminators only Prior gates, and it gates
+against the method it was meant to help: expected improvement fitted to the best observed value is
+worse than to the raw surrogate by +0.0357, t=40.46, 69% sign. Var, Inc and Scale are all equivalent
+despite |t| of 22.06, 15.26 and 11.79, which is what a minimum-practical-effect clause is for. Pool
+reuse touched 4.0% of rows.
+
+**Two defects found while promoting these numbers, both genus one.** First, the manuscript's account
+of the ladder artefact cited `\BnSpreadBounded`, the count of answer keys that cannot resolve their
+own top two, as though it were the count of problems whose top rung fell short of the separating
+budget. They are different quantities, 18 against 25, and the first was correct only for the
+sentence it was originally derived for. Both counts are now generated from the sweep files
+themselves. Second, `make_bench_numbers.py` globbed the truth-table DIRECTORY rather than iterating
+the problem registry, so the six span-24 tables written for CR-78 had joined the benchmark's
+published inventory by being saved next to the others. Two of them sit at the success ceiling with a
+top-two gap and a standard error of exactly zero, which is what surfaced it: the generator raised
+rather than dividing by an unbounded denominator, which is the guard added after the 52-million
+extrapolation. Which problems constitute the benchmark is a registry decision, not a filesystem one,
+and the generator now says so.
+
+A third error in the same paragraph was not a genus instance, just prose written from one remembered
+number: the bound-effect check claimed the success problems' spans were "comparable" to the widest at
+0.156, when they run 0.134, 0.087, 0.041, 0.027, 0.024, 0.021 and 0.003. The claim that paragraph
+actually needs is reachability, and it now makes it: on 7 of the 8 success problems the design axis
+moves the metric further than that problem's own key can resolve, by a factor of at least 1.3, so
+the tie between the top two designs is not entailed by the ceiling. The one exception,
+`disc_s16_succ`, spans 0.0025 against a detectable gap of 0.0065 and is reported as ceiling-adjacent.
+
+**Three more corrections in the same promotion pass, 2026-08-26.** All three were found by writing a
+generator for a number the manuscript had been stating in prose.
+
+CR-73 C was reported in the manuscript as 7 of 9 methods separating from `random` on the unresolved
+problems. The measured figure is 2 of 9, in opposite directions. The 7 came from `RsBeatRandom`,
+which counts the top rung across all thirty problems, carried into a sentence about the unresolved
+seventeen across all rungs. Two populations and two budget selections read as one.
+
+CR-72 M1 was reported as refuted with the sign reversed against a predicted +0.0772. M1 predicted
+EQUIVALENCE, at every budget, on both grading rules, restricted to problems whose key resolves. It
+is refuted, but by 4 of 6 rung and grading-rule combinations gating away, worst at the low rung on
+argmax recovery where `ucb_raw` is 0.3990 worse at t=-42.49. At the top rung, which is where every
+other contrast in the paper is scored, the two ARE equivalent at -0.0006, t=-0.89. Scoring a claim
+registered as "every budget" at the paper's default rung would have called it held. The scorer now
+walks the rungs the registration named.
+
+The eighteen-against-seventeen discrepancy is not an error and is now stated as such. Twelve of
+thirty answer-key tables resolve their own top two, so eighteen do not. The sweep grades argmax on
+thirteen problems, so seventeen are regret-only. The extra one is `ladder_span`, which carries an
+optimum from the ladder battery V2 and V4 at full tier, job 9459669, and therefore has a known
+argmax its own table cannot recover. `_gradeable` returns True on a registered optimum before it
+consults the table, which is correct and was undocumented. Both counts now have macros and the paper
+prints both.
+
+**A result the pairwise contrasts had hidden, 2026-08-26.** Paper two had no results table, and
+none of the hundred per-method macros the generator emits were used, so every statement about the
+comparison was a pairwise contrast between two named methods. Putting all ten methods at all three
+rungs into one generated table changed the reading.
+
+We expected the methods to converge as the budget grows, and wrote that the gap between best and
+worst narrows by about an order of magnitude. Generating the number refuted it: the range is 0.143
+of the achievable spread at the bottom rung and 0.116 at the top, a factor of 1.2. What converges is
+the middle of the field. The interquartile range falls 0.040, 0.019, 0.015 across the three rungs
+while the full range stays open, because the two expected-improvement surrogates end at 0.137 and
+0.157 against 0.041 for the best method. Seven of the ten sit within 0.026 of each other at the top
+rung and two sit three times higher.
+
+The reading is that this benchmark separates working from broken and not good from better. That is a
+weaker claim than a ranking, and it is the claim the instrument supports. It also explains why the
+top-rung crossing was so fragile: among the methods that work at all, there is almost nothing left
+to measure.
+
+Recorded because the defect was structural rather than arithmetic. A paper reporting only pairwise
+contrasts can be entirely correct in every contrast and still leave its main shape unstated, and the
+only reason this one surfaced was writing the table the paper did not have.
+
+**The mechanism behind the low-budget result, measured rather than argued, 2026-08-26.** The table
+above shows seven of the ten methods recovering the best design on exactly 29% of low-rung cells.
+Seven identical figures is not a coincidence, and the `distinct` column, which every row of the
+sweep has carried since the runner was written, explains it.
+
+At the bottom rung the budget is 16 missions on a design set averaging 8.3 designs, about 2.3
+missions per design. Mean distinct designs actually evaluated: grid 7.4, halving 7.4, random 5.0,
+and every UCB, Thompson and GP variant 2.3. Found-rates track coverage almost exactly: grid 0.6874,
+halving 0.6541, random 0.5559, and 0.2885 to 0.2908 for all seven adaptive methods, against 2.3/8.3
+= 0.28 if a method returns the best design precisely when the best design is among those it touched.
+
+So the low-budget deficit is not an allocator concentrating on noise among designs it has assessed.
+It is an allocator that never evaluates most of the design set. A design that was never run cannot
+be returned, whatever the acquisition rule does with the evidence it has. This also disposes of the
+explanation the manuscript carried for one draft, that unequal sampling inflates the variance of the
+argmax; the coverage column does not support that and does support this. Both the manuscript and
+CR-72's discussion now state the measured version.
+
+It sharpens CR-72 M1 too. The registration reasoned that a bonus swamping the gap makes the
+allocator uniform. It makes it round-robin in intent, but a round-robin that has to pull in batches
+and runs out of budget before it runs out of arms is not uniform allocation, it is uniform
+allocation truncated after 28% of the arms. That is a different object and it loses to the real
+thing by 39.9 points of argmax recovery.

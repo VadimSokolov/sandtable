@@ -535,3 +535,52 @@ def test_an_empty_pool_refuses_instead_of_spinning():
     m._pos[json.dumps({"a": 1}, sort_keys=True)] = 0
     with pytest.raises(SystemExit, match="empty"):
         m.pull({"a": 1}, 4)
+
+
+def test_the_pull_size_shrinks_until_one_pass_over_the_design_set_fits():
+    """CR-79. A fixed chunk of eight on a rung of sixteen missions seeds two arms of seven, so the
+    allocator never evaluates most of the design set and cannot return a design it never ran."""
+    from sandtable.search.methods import _fit_chunk
+
+    assert _fit_chunk(16, 7, 8) == 2, "a 16-mission budget must seed all seven designs"
+    assert _fit_chunk(16, 7, 8) * 7 <= 16, "one pass must fit inside the budget"
+    assert _fit_chunk(14336, 7, 8) == 8, "an ample budget must not shrink the pull"
+    assert _fit_chunk(16, 28, 8) == 1, "below one mission per design, the floor is one"
+    with pytest.raises(ValueError):
+        _fit_chunk(16, 0, 8)
+
+
+def test_a_repaired_method_covers_the_design_set_where_its_control_does_not():
+    """The property the repair exists for, checked on a recording pull rather than on a sweep."""
+    from sandtable.search import methods
+    from sandtable.search.problems import PROBLEMS
+
+    p = PROBLEMS["discipline"]
+    n = p.n_designs
+    for warm_name, base_name in (("ucb_pooled_warm", "ucb_pooled"),
+                                 ("thompson_warm", "thompson"),
+                                 ("ucb_raw_warm", "ucb_raw")):
+        touched = {}
+        for name in (warm_name, base_name):
+            seen = set()
+
+            def rec(design, k, _seen=seen):
+                _seen.add(tuple(sorted(design.items())))
+                return 0.5
+
+            methods.METHODS[name](p, 16, np.random.default_rng(0), rec)
+            touched[name] = len(seen)
+        assert touched[warm_name] == n, (
+            f"{warm_name} touched {touched[warm_name]} of {n} designs")
+        assert touched[base_name] < n, (
+            f"{base_name} is the control and should NOT cover; it touched {touched[base_name]}")
+
+
+def test_every_repaired_method_ships_beside_its_control():
+    """A repaired variant that replaced its control would leave nothing to compare it against."""
+    from sandtable.search.methods import METHODS
+
+    warm = [m for m in METHODS if m.endswith("_warm")]
+    assert warm, "CR-79's repaired variants are missing from the registry"
+    for m in warm:
+        assert m[: -len("_warm")] in METHODS, f"{m} has no unrepaired control"

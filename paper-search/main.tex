@@ -28,16 +28,25 @@ and the standard answer is Bayesian optimization. We test that answer on a suite
 \BnKeyProblems{} mission-design search problems whose optima were established by separate registered
 studies of the simulator that involved no optimizer, with the budget denominated in mission
 replications rather than evaluations and every method paired on the same missions in the same order.
-Which method wins depends on the budget, and the crossing point is predictable in advance from a
-quantity the answer key already reports. Below the replication at which a design set can be ranked
-at all, uniform allocation beats every one of the nine other methods, leading the strongest adaptive
-allocator by \RsCrossLowEff{} of the achievable spread at $t = \RsCrossLowT{}$ and recovering the
-best design \RsCrossLowUniFound{}\% of the time against \RsCrossLowAdaptFound{}\%. Above it the
-ordering reverses and a variance-pooled bandit leads. The cause is a property of the problem rather
-than of the methods: an allocator can only concentrate on evidence that ranks the arms, and on these
-problems that evidence is expensive. A benchmark whose budget ladder stops below that point recovers
-only the first half and reports it as a property of the methods, which is what our own first sweep
-did before the ladder was corrected.
+Across \RsRows{} graded runs at \RsReplicates{} replicates per cell, \RsBeatGrid{} of the nine
+adaptive methods beat uniform allocation over the design set at any budget on the decision tier we
+registered before running them. Below the replication at which a design set can be ranked at all,
+uniform wins outright, leading the strongest adaptive allocator by \RsCrossLowEff{} of the
+achievable spread at $t = \RsCrossLowT{}$ and recovering the best design \RsCrossLowUniFound{}\% of
+the time against \RsCrossLowAdaptFound{}\%. Above it a variance-pooled bandit does pull ahead,
+\RsCrossTopAdapt{} normalized regret against \RsCrossTopUni{}, but the paired contrast
+\RsCrossTopBinds{}: the difference is real and reproducible at $t = \RsCrossTopT{}$ and it is
+smaller than the \RsCrossTopMpe{} of spread we had registered as worth acting on. The cause is measured rather than
+argued, in a column the sweep records for every run: at the budgets where uniform wins, the adaptive
+methods evaluate \RsLowCoverAdapt{}\% of the design set and uniform evaluates \RsLowCoverUni{}\%. An
+allocator can only concentrate on evidence that ranks the arms, on these problems that evidence is
+expensive, and until it is affordable the allocator is spending its budget on a fraction of the
+designs. A design that is never evaluated cannot be returned. This is the third answer the
+same comparison has given us. The first, uniform unbeatable everywhere, was an artefact of a budget
+ladder whose top rung sat below the replication at which anything is learnable; the second, a
+crossing that reversed the ranking, was an artefact of \RsPrevReplicates{} replicates. Both are reported here
+with the sweeps that produced them, because a benchmark that reports only its final answer gives a
+reader no way to tell which kind of artefact it is still carrying.
 
 Establishing the answer key made the cost measurable, and it is severe. Only \BnKeyResolved{} of the
 \BnKeyProblems{} problems separate their own top two designs at two standard errors, none of the
@@ -116,10 +125,13 @@ tightly than the optimizer it searches with.
       operating point) rather than of the metric, established by holding one design set fixed and
       scoring the same missions on three axes at four operating points (Section~\ref{sec:results}).
 \item The consequence for method design, which appears inside a method rather than between two of
-      them: an exploration constant is denominated in the metric's noise, so the textbook bandit
-      bonus, derived for rewards on the unit interval, exceeds the gap it must resolve by two orders
-      of magnitude here and collapses the allocator into uniform sampling. We keep the unscaled
-      version as a control rather than repairing it silently (Section~\ref{sec:methods}).
+      them: an exploration constant is denominated in the metric's noise, because the textbook
+      bandit bonus, derived for rewards on the unit interval, exceeds the gap it must resolve by
+      \BnBonusOverGapWorst{} times here. We kept the unscaled version as a control rather than
+      repairing it silently, and the control is what showed our reasoning for the repair to be
+      wrong: we registered that the unscaled allocator would behave as uniform sampling and it does
+      not, it is \RsMOneWorstDir{} uniform allocation at the low rung by \RsMOneWorstMag{} on
+      \RsMOneWorstField{} (Sections~\ref{sec:methods} and \ref{sec:results}).
 \end{itemize}
 
 The honest summary of the result is a negative one about method choice and a positive one about
@@ -249,11 +261,15 @@ without dividing by a quantity consistent with zero.
 
 One check has to come before that is read as a cost. A metric pinned at its bound would tie its top
 two designs as a matter of definition, and no replication would ever separate them; the tie would be
-a theorem and reporting it as expensive would be wrong. It is not the explanation here. The success
-problems retain most of their range: the hardest of them spans 0.156 from best design to
-worst with the best at 0.8075, and six of the other seven are comparable. The single
-exception is the one problem whose best design reads 0.9895 across a span of 0.0025,
-which is reported as ceiling-adjacent rather than as a replication cost.
+a theorem and reporting it as expensive would be wrong. It is not the explanation here, and the test is reachability rather
+than eyeballing: on \BnBoundMoves{} of the \BnBoundNSucc{} success problems the design axis moves
+mission success further than that problem's own answer key can resolve, by a factor of at least
+\BnBoundMovesMin{}, so a tie between the top two designs is a statement about the designs and not
+one the bound entails. The widest of them, \BnBoundWideKey{}, spans \BnBoundWideSpan{} from best
+design to worst with the best at \BnBoundWideBest{} and \BnBoundWideHead{} of room still above it.
+The single exception is \BnBoundCeilKey{}, whose best design reads \BnBoundCeilBest{} across a span
+of \BnBoundCeilSpan{} against a detectable gap of \BnBoundCeilDet{}: there the axis moves the metric
+less than the key can see, and it is reported as ceiling-adjacent rather than as a replication cost.
 
 \paragraph{Choosing well and proving which is best differ by two orders of magnitude.} The
 structure underneath the previous paragraph is the useful part, and it is not that these problems
@@ -271,8 +287,13 @@ best is worth little and frequently is not.
 That is an argument about what to grade, and the benchmark follows it. A problem whose key cannot
 separate its own top two is kept and scored on regret rather than dropped, with the flag recorded on
 every row so either grading can be recovered from one sweep. Dropping them would have discarded
-eighteen of thirty problems, including every problem on the metric a sponsor actually reads, on the
-grounds that a question nobody needs answered could not be answered.
+\BnKeyUnresolved{} of \BnKeyProblems{} problems, including every problem on the metric a sponsor
+actually reads, on the grounds that a question nobody needs answered could not be answered. The
+sweep nonetheless grades argmax on one more problem than the tables resolve, because
+\BnArgmaxFromStudy{} of the unresolved problems carries an optimum established by a separate
+registered study and so has a known argmax its own table cannot recover. Both counts are reported
+because they are different questions, and a reader who meets only one of them will find the other
+inexplicable.
 
 \paragraph{Two scores, because they disagree.} A method is scored on whether it returned the best
 design, which is a yes or a no, and on how much mission performance the design it returned gives up
@@ -374,15 +395,16 @@ rungs each, \RsReplicates{} replicates per cell, every method on every replicate
 missions in the same order from the stored pools. \RsGradeable{} of the problems can be graded on
 argmax recovery and all of them on normalized regret.
 
-The replicate count is the one number here set by convenience rather than by the precision the
-comparison needs, and it is stated rather than left to be inferred. At \RsReplicates{} replicates
-the paired contrasts below carry several hundred matched runs each, which is enough for the two
-gated verdicts to clear the tier with room and not enough to call any contrast reported as
-equivalent settled.
+At \RsReplicates{} replicates every paired contrast below carries tens of thousands of matched
+runs, enough that all of them reach a $t$ statistic above ten. That matters for how the verdicts
+should be read: where a contrast is reported as equivalent, it is not that the comparison was
+underpowered, it is that the difference is smaller than the tier's minimum practical effect. An
+earlier \RsPrevReplicates{}-replicate version of this same sweep returned two verdicts the full run
+does not support, and both are reported below rather than quietly replaced.
 
-\paragraph{The ranking reverses with the budget, and where it reverses is predictable.} Means are
-taken over the \RsCells{} problem, budget and replicate cells that every one of the \RsMethods{}
-methods reached, so no two are averaged over different denominators.
+\paragraph{Uniform allocation is not beaten at any budget, and at small budgets it wins by a wide
+margin.} Means are taken over the \RsCells{} problem, budget and replicate cells that every one of
+the \RsMethods{} methods reached, so no two are averaged over different denominators.
 
 At the bottom rung the lowest mean normalized regret belongs to \RsCrossLow{}, at
 \RsCrossLowUni{} of the achievable spread against \RsCrossLowAdapt{} for the strongest adaptive
@@ -391,81 +413,152 @@ favour of uniform allocation at $t = \RsCrossLowT{}$ with \RsCrossLowSign{}\% si
 Argmax recovery reads the same way and more starkly, \RsCrossLowUniFound{}\% against
 \RsCrossLowAdaptFound{}\%.
 
-At the top rung the ordering reverses. \RsCrossTop{} leads at \RsCrossTopAdapt{} against
-\RsCrossTopUni{}, and paired on the replicate the difference \RsCrossTopBinds{}:
-\RsCrossTopEff{} at $t = \RsCrossTopT{}$ with \RsCrossTopSign{}\% sign consistency. It is the
-\RsBeatGrid{} method of the nine that separates from uniform allocation at the top of the ladder.
-Argmax recovery has converged by then, \RsCrossTopUniFound{}\% against \RsCrossTopAdaptFound{}\%,
-which is what a regime where every method can rank the design set should look like.
+At the top rung the mean ordering changes places, \RsCrossTopAdapt{} for \RsCrossTop{} against
+\RsCrossTopUni{}, and the change does not clear the tier: the paired effect is \RsCrossTopEff{} and
+\RsCrossTopBinds{}, which here is \RsCrossTopMpe{} in units of the contrast's own spread. It is not
+a question of precision. At \RsReplicates{} replicates the contrast reaches $t = \RsCrossTopT{}$
+with \RsCrossTopSign{}\% sign consistency; it is simply too small a difference to matter. Across the
+whole method set, \RsBeatGrid{} of the nine others separate from uniform allocation in the
+favourable direction at the top of the ladder and \RsWorseGrid{} separate in the unfavourable one:
+\RsWorseGridNames{}. Both counts are given, because a table reporting only the first would say that
+nothing separates from uniform allocation about a set in which the two surrogate methods lose to it
+by \RsGpEiVsGridEff{} and \RsGpNoisyVsGridEff{} of the spread. Argmax recovery has converged by
+then, \RsCrossTopUniFound{}\% against \RsCrossTopAdaptFound{}\%. Table~\ref{tab:methods} gives every
+method at all three rungs, and it does not say what we expected it to. The gap between best and
+worst method barely narrows with budget, \RsRangeLow{} of the spread at the bottom rung against
+\RsRangeTop{} at the top. What changes is which methods are outliers. The interquartile range falls
+from \RsIqrLow{} to \RsIqrTop{}, so the middle of the field converges tightly while the range is
+held open by the two expected-improvement surrogates, which end at \RsTopGpEi{} and \RsTopGpNoisy{}
+against \RsCrossTopAdapt{} for the best method. At a budget that can rank the design set, the
+methods that work are indistinguishable from each other and from enumeration, and the methods that
+do not work fail by a wide margin. That is a benchmark separating working from broken, which is a
+weaker thing than separating good from better, and it is what this suite can support.
 
-\paragraph{The ladder has to span the regime or it decides the comparison.} That reversal is
-invisible on a ladder that stops too soon, and the first version of this sweep had one. Sizing the
-top rung to four times the budget that tells the best design from the worst put it below the budget
-that separates the top two on \BnSpreadBounded{} of the \BnKeyProblems{} problems, in one case by a
-factor of a thousand. Every method was then allocating on evidence that cannot order the arms,
-uniform allocation is trivially optimal in that regime, and the comparison returned that as a
-property of the methods. It is a property of the ladder. The ladder now reaches for the separating
-budget wherever the stored missions and the cost bound allow, which is \RsReachSep{} of the
-\BnKeyProblems{} problems, and the rest are reported as unable to reach it rather than pooled in.
+\begin{table}[H]
+\centering
+\caption{Every method at three points on each problem's budget ladder, averaged over the
+\RsCells{} cells all \RsMethods{} methods reached. Normalized regret is the fraction of the
+achievable spread the returned design gives up, so lower is better and zero is the best design.
+Argmax recovery is over the \RsGradeable{} problems whose key can rank its design set. Rows are
+ordered by top-rung regret; the two enumeration baselines are italicised. The ordering at the top
+rung is real and is not actionable: the best adaptive method leads uniform allocation by less than
+the \RsCrossTopMpe{} of spread the tier asks for.}
+\label{tab:methods}
+\input{gen/tab_methods}
+\end{table}
 
-\paragraph{Why the crossing is where it is.} An adaptive allocator earns its keep by spending less
-on designs it has ruled out, and ruling a design out means separating it from the leader.
-Section~\ref{sec:bench} measured what separation costs on these problems, and the crossing sits
-where that measurement says it should. Below it a searcher is deciding where to allocate on
-evidence that cannot rank the arms it is choosing between, so it concentrates on noise, and
-concentrating on noise is worse than not concentrating at all. That is why the deficit at the
-bottom rung is wide rather than marginal, and why it shows up far more sharply in argmax recovery
-than in regret: a misallocated budget still lands somewhere reasonable in regret terms and picks
-the wrong design outright.
+\paragraph{This is the third answer this comparison has given, and the first two were artefacts of
+the study design.} The sequence is reported because each step was caused by something a reader
+should check in their own benchmark. The first sweep found uniform allocation unbeatable at every
+budget, and that was a property of the ladder: sizing the top rung to four times the budget that
+separates best design from worst put it below the budget that separates the top TWO on
+\RsOldLadderShort{} of the \RsOldLadderHave{} problems, in one case by a factor of a thousand, so
+every method was allocating on evidence that cannot order the arms and uniform allocation is
+trivially optimal there. The corrected ladder reaches the separating budget wherever the stored
+mission pools allow, which is \RsReachSep{} of \RsLadderHave{} problems; on the remaining
+\RsLadderShort{} the top rung is still short, and the finding below is therefore a statement about
+the regime this suite can afford to reach rather than about every budget a study might have. With the ladder corrected to reach the separating budget, a
+\RsPrevReplicates{}-replicate sweep found a crossing: the same pair of methods gave
+\RsPrevCrossTopEff{} at the top rung at $t = \RsPrevCrossTopT{}$, which the tier read as
+\RsPrevCrossTopVerdict{}, adaptive allocation in front. At \RsReplicates{} replicates that crossing
+does not survive. The effect falls to \RsCrossTopEff{} and lands under the minimum practical
+effect, while the $t$ statistic more than DOUBLES in magnitude, from
+$\RsPrevCrossTopT{}$ to $\RsCrossTopT{}$, because the fifteenfold increase in matched runs outruns
+the shrinking estimate. That combination is the useful part: more
+data made the difference more certain and less worth acting on at the same time, and a tier written
+only in significance would have taken the wrong lesson from the extra replicates. The finding is
+one-directional after all, but for a different reason than the first sweep gave, and only the third
+version rests on a ladder that spans the regime and a replicate count that settles the contrast.
+
+\paragraph{Why adaptive allocation is a liability at small budgets and no help at large ones.} An
+adaptive allocator earns its keep by spending less on designs it has ruled out, and ruling a design
+out means separating it from the leader. Section~\ref{sec:bench} measured what separation costs on
+these problems. Below that budget a searcher is deciding where to allocate on evidence that cannot
+rank the arms it is choosing between, so it concentrates on noise. Every row of the sweep records
+how many DISTINCT designs its method actually evaluated, and at the bottom rung that column settles
+the question. On problems averaging \RsLowDesigns{} designs, \RsCrossTop{} evaluates
+\RsLowTouchAdapt{} of them, \RsLowCoverAdapt{}\% of the set, while \RsCrossLow{} evaluates
+\RsLowTouchUni{}, \RsLowCoverUni{}\%. The adaptive methods are not choosing badly among the designs
+they have seen. They are never seeing most of the design set, and a design that was never evaluated
+cannot be returned. That is why the deficit at the bottom rung is wide rather than marginal, and why
+it shows up far more sharply in argmax recovery than in regret: committing early to two or three
+designs still lands somewhere reasonable in regret terms while picking the wrong design outright.
+Above that budget the evidence is finally worth acting on, and by then there is nothing left to win,
+because on a design space this small uniform allocation has already reached every arm to a
+precision that ranks them.
 
 This gives a program office a rule it can apply before choosing a method, using a quantity the
 answer key already reports. Compare the study's per-design budget against the replication at which
 the design set can be ranked. Below it, enumerate; the adaptive machinery will cost real
-performance and will cost it mostly in the answer, not in the outcome. Above it, allocate, and
-prefer the allocator that pools its variance estimate across the design set.
+performance, and it will cost it mostly in the answer rather than in the outcome. Above it, the
+choice stops mattering on a space of this size, so enumerate anyway and spend the effort on the
+answer key instead.
 
-\paragraph{One estimator matters and the other three do not.} Four of the \RsMethods{} methods
-exist as members of a pair differing in exactly one estimator, so that a reader can tell an
-implementation choice apart from a claim about adaptive search. Each pair is gated on
-\RsDiscVarN{} matched runs.
+\paragraph{Only one of four estimator choices makes a difference that matters.} Four of the
+\RsMethods{} methods exist as members of a pair differing in exactly one estimator, so that a reader
+can tell an implementation choice apart from a claim about adaptive search. Each pair is gated on
+\RsDiscVarN{} matched runs, which is enough that every one of the four reaches a $t$ statistic
+above ten. Three of them are still equivalent at the tier, because the tier asks for a difference
+that is large as well as consistent.
 
 Denominating the exploration bonus in the metric's own noise, rather than in the unit interval the
-textbook derivation assumes, does not repay itself: the scaled allocator differs from its unscaled
-twin by \RsDiscScaleEff{} at $t = \RsDiscScaleT{}$ with \RsDiscScaleSign{}\% sign consistency,
-which is \RsDiscScaleVerdict{}. Taking the surrogate's incumbent from the posterior mean rather
-than from the best observed value is also \RsDiscIncVerdict{}, at \RsDiscIncEff{}. Fitting the
-Gaussian process to the observed incumbent is worse than the raw variant, \RsDiscPriorEff{} at
-$t = \RsDiscPriorT{}$, \RsDiscPriorVerdict{}.
+textbook derivation assumes, does not repay itself: \RsDiscScaleEff{} at $t = \RsDiscScaleT{}$ with
+\RsDiscScaleSign{}\% sign consistency, which the tier reads as \RsDiscScaleVerdict{}. Taking the
+surrogate's incumbent from the posterior mean rather than from the best observed value is
+\RsDiscIncVerdict{} at \RsDiscIncEff{}. Pooling the per-mission standard deviation across arms
+rather than estimating it per arm is \RsDiscVarVerdict{} at \RsDiscVarEff{} despite $t =
+\RsDiscVarT{}$; at \RsPrevReplicates{}
+replicates this one gated, and it is the clearest case in the paper of a difference that is real,
+reproducible, and too small to act on.
 
-The one estimator that does move the result is how the allocator estimates variance. Pooling the
-per-mission standard deviation across arms rather than estimating it per arm improves regret by
-\RsDiscVarEff{} at $t = \RsDiscVarT{}$ with \RsDiscVarSign{}\% sign consistency,
-\RsDiscVarVerdict{}. That is consistent with the rest of the paper: on these problems an arm's own
-draws are too few to estimate its variance, so an allocator that tries does worse than one that
-borrows strength across the design set. It is also the only one of the four differences that
-survives, which is worth saying plainly, because three of the four are exactly the kind of tuning a
-comparison without controls would have reported as a method contribution.
+The one estimator choice that does clear the tier runs against the method it was supposed to
+improve. Fitting expected improvement to the best observed value rather than to the raw surrogate
+is worse, by \RsDiscPriorEff{} at $t = \RsDiscPriorT{}$ with \RsDiscPriorSign{}\% sign
+consistency, the one contrast of the four the tier scores as \RsDiscPriorVerdict{}. An incumbent read off the noisiest arm the searcher has yet seen is an
+optimistic target, and chasing it costs more than the acquisition rule recovers. That is worth
+saying plainly, because three of these four differences are exactly the kind of tuning a comparison
+without controls would have reported as a method contribution, and the fourth would have been
+reported with its sign the wrong way round.
 
 \paragraph{Registered verdicts, reported whichever way they went.} Three of the five predictions
 registered before the sweep failed. CR-72 M1 held that the unscaled allocator would be equivalent
-to uniform allocation, since a bonus two orders of magnitude larger than the gap it must resolve
-should collapse it into round-robin sampling. It is refuted on both scores: the unscaled allocator
-is worse than uniform allocation, not equal to it. CR-72 M2 held that scaling the bonus would
-recover the loss, and it does not. CR-72 M3 cannot be scored at all, because it asked for an
+to uniform allocation at every budget on both grading rules, since a bonus two orders of magnitude
+larger than the gap it must resolve should collapse it into round-robin sampling. It is
+\RsMOneVerdict{}: \RsMOneGates{} of the \RsMOneOf{} rung and grading-rule combinations gate away
+from uniform allocation, worst at the \RsMOneWorstRung{} rung on \RsMOneWorstField{}, where the
+unscaled allocator is \RsMOneWorstDir{} uniform allocation by \RsMOneWorstMag{} at $t =
+\RsMOneWorstT{}$. The registration was right that the bonus swamps the gap and wrong that this
+makes the allocator uniform, and the coverage column above says why. A bonus that always selects
+the least-pulled arm still has to pull it in batches, and at a budget of a few missions per design
+the batches run out before the arms do: the unscaled allocator reaches \RsLowCoverRaw{}\% of the
+design set at the bottom rung where uniform allocation reaches \RsLowCoverUni{}\%. Degenerating
+toward round-robin is not the same as completing one, and the difference is exactly the designs it
+never evaluates. At the top rung, where the budget covers every design either way, the two ARE
+equivalent, so scoring M1 there alone would have called it held. CR-72 M2 held that scaling the bonus would recover the loss at the middle rung. It is
+\RsMTwoVerdict{} at \RsMTwoEff{}, $t = \RsMTwoT{}$, \RsMTwoSign{}\% sign consistency. CR-72 M3 cannot be scored at all, because it asked for an
 ordering across three axes and the mission-success axis has no problem whose key can rank its
 design set, which Section~\ref{sec:bench} had already measured and the registration had not
 allowed for.
 
 CR-73 B held that argmax recovery and regret would rank methods differently, so that the choice of
-grading rule mattered. It is retracted: the two rankings agree closely and the same method wins
-both on ten of thirteen problems. The grading rule still matters for which problems can be graded,
+grading rule mattered. It is retracted: the two rankings agree at Spearman
+\RsRankSpearman{} and the same method wins both on \RsRankSame{} of the \RsRankProblems{}
+problems, which clears both branches of its falsifier: the
+registration asked for agreement above nine tenths OR the same winner on ten of twelve problems,
+and both fired. The grading rule still matters for which problems can be graded,
 which is the claim Section~\ref{sec:bench} makes and this one does not touch, but the ranking
 argument was academic and is withdrawn.
 
-CR-73 C holds. On the \RsRegretOnly{} problems whose key cannot resolve its own top two, seven of
-the nine other methods separate from \texttt{random} under regret at the full tier. Those problems
-carry information about method quality even though they cannot say which design is best, which is
-what justified keeping them in the suite rather than dropping more than half of it.
+CR-73 C holds, and by a narrower margin than the registration expected. Its falsifier said the
+\RsSepUnresN{} problems the sweep cannot grade on argmax should be dropped if NO method separates
+from \texttt{random} under regret. \RsSepUnresEither{} of \RsSepUnresOf{} do, in opposite
+directions: \RsSepUnresRegNames{} is better than random and \RsSepUnresWorseNames{} is worse, both
+at the registered two clauses. The remaining \RsSepUnresTied{} are indistinguishable from random on
+these problems, almost always because sign consistency falls short of sixty percent rather than because
+the effect is small. So the problems do carry information about method quality, which is what
+justified keeping them rather than dropping more than half the suite, but what they mainly separate
+is a bad method from an arbitrary one. A benchmark built only from them would be a weak instrument,
+and the paper does not claim otherwise.
 
 \paragraph{Pool reuse.} A method that asks for more missions of a design than the pool holds
 resamples draws it has already seen, and the precision it reports is then optimistic. Across the
@@ -483,14 +576,16 @@ the metric and the operating point rather than by the optimizer. Every method in
 missions, and which way of spending them wins is decided by whether the budget clears the cost of
 ranking the arms. The literature that motivates surrogate search assumes the opposite regime, a
 space too large to enumerate and an evaluation whose value is known once taken, and neither half of
-that assumption holds below the crossing.
+that assumption holds below the ranking threshold.
 
 That reading is what makes the result portable rather than a property of this simulator. The
 condition under which uniform allocation wins is stated in quantities a study can measure before
 choosing a method: the design set is small enough to enumerate inside the budget, and the budget per
 design is below the replication at which the set can be ranked at all. Both are reported by the
-answer key, so a study can place itself on the correct side of the crossing without running the
-comparison. Where a mission study has a genuinely large or continuous design space, or an outcome
+answer key, so a study can tell which side of that threshold it is on without running the comparison
+at all. Below it, uniform is not merely safe but strictly better and the choice is settled. Above
+it, the best adaptive method is ahead by less than the tier calls actionable, so the choice is
+settled the other way, by whichever method is cheaper to defend. Where a mission study has a genuinely large or continuous design space, or an outcome
 cheap enough that its ranking is settled early, the argument does not apply and the surrogate
 literature should be expected to hold.
 
@@ -515,12 +610,22 @@ argmax of such a sweep is written from noise; a requirement written from the ach
 not.
 
 The limits are worth stating in the same terms. This is one simulator, two design knobs, three
-outcome metrics, and design spaces of at most twenty-eight points, all discrete. The methods were
-given a fixed budget and no tuning, which is the right convention for a comparison and the wrong one
-for a deployment. The comparison rests on \RsReplicates{} replicates per cell, which settles the two
-contrasts it is asked to settle and does not settle those reported as equivalent. And the search operates on a static design space; the question of whether a
-learned policy can do better by choosing where to look as a sequential decision problem, rather than
-by fitting a surrogate to what it has seen, is the natural next step and is not answered here.
+outcome metrics, and design spaces of \BnDesignsMin{} to \BnDesignsMax{} points, all discrete. The
+methods were given a fixed budget and no tuning, which is the right convention for a comparison and
+the wrong one for a deployment. The comparison rests on \RsReplicates{} replicates per cell, enough
+that the contrasts reported as equivalent are equivalent on effect size and not merely unresolved.
+
+The sharpest limit is the one the ladder still imposes. Even after the correction, the top rung
+reaches the budget that separates the top two designs on only \RsReachSep{} of \RsLadderHave{}
+problems, because the stored mission pools cap it on the rest. So the claim that uniform allocation
+is not beaten holds over the budgets this suite can afford to buy, not over every budget a study
+might have. What would settle it is deeper pools on the problems that are short, which is a
+measurement cost rather than a method question, and we say what it would take rather than leaving
+the reader to find the gap.
+
+And the search operates on a static design space; the question of whether a learned policy can do
+better by choosing where to look as a sequential decision problem, rather than by fitting a
+surrogate to what it has seen, is the natural next step and is not answered here.
 
 \bibliographystyle{plainnat}
 \bibliography{ref}

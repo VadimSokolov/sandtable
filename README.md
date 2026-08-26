@@ -174,7 +174,8 @@ scenarios/      declarative scenario specs (JSON)
 studies/        polarisopt study YAMLs (LHS/Morris sweeps + GP/qEI Bayesian optimization)
 experiments/    empirical.md lab notebook + results/
 tests/          unit + reproducibility + sensitivity tests
-report/         academic-paper deliverable (LaTeX, generated figures/tables/numbers)
+report/         academic-paper deliverable one: the simulator and its findings
+paper-search/   academic-paper deliverable two: the mission-design search benchmark
 doc/            proposal, TDD, and console mockup (internal, not tracked)
 ```
 
@@ -248,6 +249,33 @@ python3 tools/audit.py                                         # 5 mechanical ch
 `report/tools/audit.py` checks citation provenance (every `ref.bib` entry carries a `% verified:`
 line), AI-writing signs, em-dash absence, that every `\ref{}` in the contribution block resolves, and
 a clean compile. Pass `--no-compile` to skip the slow LaTeX check while iterating.
+
+### Paper two, the search benchmark
+
+`paper-search/` is the second manuscript: ten search methods on thirty mission-design problems whose
+optima come from separate registered studies. It has the same `tools/audit.py`. Every number in it
+comes from a macro, and a test fails the build if a decimal appears in its prose, so the way to
+change a number is to rerun a generator.
+
+```bash
+python3 tools/make_bench_numbers.py     # -> paper-search/gen/bench_numbers.tex, from the truth tables
+python3 tools/make_results_numbers.py $ROOT/search/bench-r300.jsonl \
+    --prev experiments/results/bench-wide.jsonl \
+    --old  experiments/results/bench-all.jsonl  # -> paper-search/gen/results_numbers.tex
+```
+
+Both read the truth tables and the sweep, so they run on Hopper (`$ROOT` is
+`/scratch/vsokolov/sandtable-ar`) and the two `.tex` files are rsynced back.
+
+Three traps, all of which have cost a session already:
+
+- The shipping sweep is `$ROOT/search/bench-r300.jsonl`, 540,000 rows from job `st-search-9471782`.
+  There is a similarly named 17,610-row fragment at `experiments/results/bench-r300.jsonl` that
+  produces a complete-looking but wrong set of macros. Check the row count the generator prints.
+- `--prev` and `--old` are the superseded sweeps, kept so the paper can report the two verdicts that
+  changed rather than describing them. They are not optional if you want those macros.
+- `make_bench_numbers.py` iterates the problem REGISTRY, not the truth-table directory. The predict
+  grid writes tables into the same directory and they are not part of the benchmark.
 
 ## Conventions
 
