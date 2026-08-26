@@ -128,6 +128,13 @@ class PoolMeter(Meter):
         key = json.dumps(design, sort_keys=True)
         pool = self._stream(key, design)
         idx, pos, N = self._order[key], self._pos[key], len(pool)
+        # An empty pool makes the loop below spin forever: `pos >= N` is always true, the
+        # reshuffle yields an empty permutation, `want` is zero, `got` never advances, and `take`
+        # grows without bound. It has never fired, because every stored pool holds at least six
+        # hundred missions, but the failure mode is a silent hang rather than an error and it
+        # would be indistinguishable from a slow run. Refuse instead.
+        if N == 0:
+            raise SystemExit(f"pool for {key} is empty; rebuild it before running the sweep")
         take, got = [], 0                                   # `got` counts MISSIONS, not chunks
         while got < n:
             if pos >= N:                                    # pool exhausted; reshuffle and reuse

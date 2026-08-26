@@ -517,3 +517,21 @@ def test_the_sweep_submits_through_a_bounded_window():
     assert "futs = {ex.submit(_job, s): s for s in specs}" not in src, \
         "the sweep is back to submitting every spec before consuming any result"
     assert "WINDOW_PER_WORKER" in src and "itertools.islice(pending" in src
+
+
+def test_an_empty_pool_refuses_instead_of_spinning():
+    """`pos >= N` is always true for an empty pool, the reshuffle yields an empty permutation,
+    `want` is zero and `got` never advances, so the meter hangs and `take` grows without bound.
+    A silent hang is indistinguishable from a slow run, which is how a sweep loses an hour."""
+    import numpy as np
+    from sandtable.search.runner import PoolMeter
+
+    import json
+    m = PoolMeter.__new__(PoolMeter)
+    m.budget, m.spent, m.calls, m.replicate = 100, 0, 0, 0
+    m.seen, m.reused, m._wraps, m._order, m._pos = set(), 0, {}, {}, {}
+    m._stream = lambda key, design: np.array([])
+    m._order[json.dumps({"a": 1}, sort_keys=True)] = np.array([], dtype=int)
+    m._pos[json.dumps({"a": 1}, sort_keys=True)] = 0
+    with pytest.raises(SystemExit, match="empty"):
+        m.pull({"a": 1}, 4)
