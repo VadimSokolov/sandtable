@@ -27,6 +27,29 @@ def test_conjecture_scoreboard_matches_the_sections():
     assert r.returncode == 0, r.stdout + r.stderr
 
 
+@needs_docs
+def test_rebuilding_the_scoreboard_once_is_enough():
+    """One rebuild must leave the index current, not merely closer to current.
+
+    The table prints the line number of each section and sits above every section it points at, so
+    a table whose height changes moves its own targets. A single splice therefore writes line
+    numbers that were true of the document as it stood BEFORE the splice, and `--check` fails on a
+    file that was just regenerated. That is not a stale doc, it is a generator that is an input to
+    itself, and the fix is a fixed point rather than a second pass. This starts from a document
+    with no table at all, which is the worst case for height change, and it fails on the one-pass
+    version of the generator.
+    """
+    sys.path.insert(0, str(ROOT / "tools"))
+    import make_conjecture_index as gen
+
+    stripped = gen.DOC.read_text()
+    a, b = stripped.index(gen.BEGIN), stripped.index(gen.END) + len(gen.END)
+    stripped = stripped[:a] + stripped[b:]
+
+    settled = gen.settle(stripped)
+    assert gen.splice(settled) == settled, "a rebuild of the rebuilt index still moves it"
+
+
 def test_no_conjecture_claims_a_verdict_from_a_run_that_has_not_landed():
     """A generator that guesses a verdict from prose once reported CR-75 as holding while its
     batteries were still queued. Verdicts are read from an explicit line; this pins that."""

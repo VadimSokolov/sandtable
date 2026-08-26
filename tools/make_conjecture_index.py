@@ -74,15 +74,40 @@ def render(rows) -> str:
     return "\n".join(body)
 
 
-def main() -> int:
-    text = DOC.read_text()
+def splice(text: str) -> str:
+    """Put a freshly rendered table into `text`, replacing any table already there."""
     table = render(scan(text))
     if BEGIN in text:
         a, b = text.index(BEGIN), text.index(END) + len(END)
-        new = text[:a] + table + text[b:]
-    else:
-        anchor = text.index("## Verdict key")
-        new = text[:anchor] + table + "\n\n" + text[anchor:]
+        return text[:a] + table + text[b:]
+    anchor = text.index("## Verdict key")
+    return text[:anchor] + table + "\n\n" + text[anchor:]
+
+
+def settle(text: str, limit: int = 8) -> str:
+    """Splice until the result stops changing.
+
+    The table cites the LINE NUMBER of each section, and the table sits above those sections, so a
+    table whose height changes moves every line it points at. One pass therefore writes line numbers
+    that were correct for the document as it stood before the pass, and the next `--check` fails on
+    a file that was just regenerated. The generator's output is an input to itself and the answer is
+    a fixed point, not a pass.
+
+    Convergence is not assumed. If the height keeps oscillating this raises rather than writing a
+    document whose pointers are wrong in a way only a careful reader would catch.
+    """
+    for _ in range(limit):
+        nxt = splice(text)
+        if nxt == text:
+            return text
+        text = nxt
+    raise SystemExit(f"conjecture index did not settle in {limit} passes; the table height is "
+                     f"oscillating and the line numbers it prints cannot be trusted")
+
+
+def main() -> int:
+    text = DOC.read_text()
+    new = settle(text)
     if "--check" in sys.argv:
         if new != text:
             print("conjecture index is stale; run tools/make_conjecture_index.py")
@@ -90,7 +115,7 @@ def main() -> int:
         print("conjecture index is current")
         return 0
     DOC.write_text(new)
-    print(f"scoreboard rebuilt: {len(scan(text))} sections scanned")
+    print(f"scoreboard rebuilt: {len(scan(new))} sections scanned")
     return 0
 
 
