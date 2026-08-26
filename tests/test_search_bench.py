@@ -506,3 +506,14 @@ def test_the_ladder_reaches_the_learnable_regime_wherever_the_pool_allows():
                 f"with a ceiling of {ceiling} available")
             assert reaches_separation(p)
     assert checked >= 5, "no problem exercised the guard"
+
+
+def test_the_sweep_submits_through_a_bounded_window():
+    """Handing the executor every spec at once builds one future per spec before a single result
+    is consumed, so the parent sits in the submit loop while the workers starve. At 540,000 specs
+    that produced 57 minutes of silence on a 32-core allocation running at a load of seven."""
+    import pathlib
+    src = (pathlib.Path(__file__).resolve().parents[1] / "tools" / "search_bench.py").read_text()
+    assert "futs = {ex.submit(_job, s): s for s in specs}" not in src, \
+        "the sweep is back to submitting every spec before consuming any result"
+    assert "WINDOW_PER_WORKER" in src and "itertools.islice(pending" in src

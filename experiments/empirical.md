@@ -2114,3 +2114,15 @@ The authoritative sweep is hopper job `st-search-9471740`, `normal` partition wi
 `--constraint=intel`, 32 workers, 300 replicates, ten methods, the corrected ladder, writing
 `$ROOT/search/bench-r300.jsonl`. Every `\Rs` macro is to be regenerated from it before either
 manuscript is called current, and the 20-replicate caveat in Section 5 comes out only when it has.
+
+**Why the first hopper submission produced nothing.** Job `st-search-9471740` sat RUNNING for
+fifty-seven minutes on a thirty-two core allocation and wrote zero rows. The cause was in the sweep
+driver, not the cluster: it built one future per spec for all five hundred and forty thousand specs
+before consuming a single result, so the parent stayed in the submit loop while the workers starved.
+The node's load average was 6.9 against thirty-two requested cores, which is the visible symptom. At
+the thirty-six thousand specs the laptop runs had used, the same code was merely wasteful and
+finished, which is why it had never shown up. Submission now goes through a bounded window of four
+jobs per worker. Job `st-search-9471782` wrote 1,400 rows in twenty-two seconds.
+
+Recorded because the defect only appears above a size threshold, so a driver validated at one scale
+and reused at another is the same genus this project keeps cataloguing.

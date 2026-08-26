@@ -15,6 +15,8 @@ import json
 import pathlib
 import sys
 import time
+import itertools
+import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
@@ -185,6 +187,9 @@ def _init_worker(backend: str) -> None:
     _BACKEND = backend
 
 
+WINDOW_PER_WORKER = 4      # jobs queued per worker; keeps memory flat and workers fed
+
+
 def cmd_run(a) -> None:
     global _BACKEND
     _BACKEND = a.backend
@@ -289,27 +294,43 @@ def cmd_run(a) -> None:
     with out.open("a") as fh, ProcessPoolExecutor(
             max_workers=a.workers, initializer=_init_worker,
             initargs=(a.backend,)) as ex:
-        futs = {ex.submit(_job, s): s for s in specs}
-        for fut in as_completed(futs):
-            s = futs[fut]
-            try:
-                row = fut.result()
-            except Exception as e:                       # a method that dies is recorded, not fatal
-                print(f"  !! {s} raised {type(e).__name__}: {e}", flush=True)
-                continue
-            k = row["problem"]
-            fh.write(json.dumps({**row, "key_agrees": agrees[k], "metric": get(k).metric,
-                                 "n_designs": get(k).n_designs,
-                                 "reps_per_design": diffs[k]["reps_per_design"],
-                                 "gap": diffs[k]["gap"],
-                                 "sd_per_mission": diffs[k]["sd_per_mission"]}) + "\n")
-            fh.flush()          # so a preemption loses at most the row in flight
-            n += 1
-            if n % 100 == 0:
-                el = time.time() - t0
-                fh.flush()
-                print(f"  {n}/{len(specs)}  {el:6.0f}s  eta {el / n * (len(specs) - n):6.0f}s",
-                      flush=True)
+        # Submit through a BOUNDED window. Handing the executor every spec at once builds one
+        # future per spec before a single result is consumed, so the parent sits in the submit
+        # loop while the workers starve and nothing is written. At thirty-six thousand specs that
+        # is merely wasteful; at five hundred and forty thousand it produced fifty-seven minutes
+        # of silence on a thirty-two core allocation running at a load of seven, and the run had
+        # to be killed. The window keeps a few jobs queued per worker and refills as they land, so
+        # memory is flat, the first row appears in seconds, and progress reflects real throughput.
+        pending = iter(specs)
+        inflight: dict = {}
+        for s in itertools.islice(pending, WINDOW_PER_WORKER * a.workers):
+            inflight[ex.submit(_job, s)] = s
+        while inflight:
+            done, _ = concurrent.futures.wait(
+                inflight, return_when=concurrent.futures.FIRST_COMPLETED)
+            for fut in done:
+                s = inflight.pop(fut)
+                nxt = next(pending, None)
+                if nxt is not None:
+                    inflight[ex.submit(_job, nxt)] = nxt
+                try:
+                    row = fut.result()
+                except Exception as e:                   # a method that dies is recorded, not fatal
+                    print(f"  !! {s} raised {type(e).__name__}: {e}", flush=True)
+                    continue
+                k = row["problem"]
+                fh.write(json.dumps({**row, "key_agrees": agrees[k], "metric": get(k).metric,
+                                     "n_designs": get(k).n_designs,
+                                     "reps_per_design": diffs[k]["reps_per_design"],
+                                     "gap": diffs[k]["gap"],
+                                     "sd_per_mission": diffs[k]["sd_per_mission"]}) + "\n")
+                fh.flush()      # so a preemption loses at most the row in flight
+                n += 1
+                if n % 100 == 0:
+                    el = time.time() - t0
+                    fh.flush()
+                    print(f"  {n}/{len(specs)}  {el:6.0f}s  "
+                          f"eta {el / n * (len(specs) - n):6.0f}s", flush=True)
     print(f"\n{n} rows -> {out}  ({time.time() - t0:.0f}s)")
 
 
