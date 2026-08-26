@@ -416,6 +416,26 @@ ROWS = [
      "from block size alone; guarded by an announcement in the survey that prints the floor and "
      "the contrasts sitting under it"),
 
+    ("the latent account asked to hold where span moves the baseline",
+     "CR-75",
+     "\\textsc{retracted} on the shape falsifier, with the level falsifier passing. Effects "
+     "predicted from a delta fixed at CR-74's fitted value, nothing refitted, deviate by RMS 0.0229 "
+     "over 26 gradeable cells against a registered 0.045. But the success gain peaks at baseline "
+     "0.2319 and the registered band was 0.35 to 0.65; the curve puts its maximum at exactly 0.500 "
+     "with no freedom, so this is the wrong shape rather than a near miss. The section registered "
+     "to decide the question answered it: the two sections that move the baseline by opposing "
+     "strength give RMS 0.0115 and 0.0193, the one that moves it by span gives 0.0310."),
+
+    ("the same offsets asked to price an operating point nobody ran",
+     "CR-78",
+     "\\textsc{retracted} in all three parts. A null predictor beats the fitted offsets at twenty-"
+     "four assets, 0.0066 against 0.0201, so offsets fitted at eight actively hurt. The "
+     "extrapolated baseline predicted blue loss 0.0437 against a measured 0.1046, six times the "
+     "registered tolerance and with the sign wrong, since loss rises with span past sixteen. Two "
+     "of six registered directions reverse. Read with CR-75 the pattern is one thing: both "
+     "failures are where span rather than opposing strength moves the baseline, so the account is "
+     "kept for what opposing strength does and dropped as a general threshold reading."),
+
     ("a budget ladder that never reached the regime it was comparing",
      "(floored, not a claim)",
      "\\textsc{retracted}. The second paper's headline was that uniform allocation is never beaten "
@@ -501,7 +521,13 @@ def main() -> None:
     entailed = [r for r in ROWS if "entailed" in r[1]]
     floored = [r for r in ROWS if "floored" in r[1]]
     claims = [r for r in ROWS if r not in instr and r not in entailed and r not in floored]
-    failed = [r for r in claims if "refuted" in r[2] or "cut" in r[2] or "partial" in r[2]]
+    # A retracted claim is a failed claim. The predicate used to match refuted, cut and partial
+    # only, so every row whose verdict was written as "retracted" was counted as held, and
+    # \ldHeld was the wrong number in the manuscript. Same genus as the rest of this table: a
+    # vocabulary that was complete when it was typed and was not revisited when the log started
+    # saying "retracted".
+    FAIL_WORDS = ("refuted", "retracted", "withdrawn", "cut", "partial")
+    failed = [r for r in claims if any(w in r[2].lower() for w in FAIL_WORDS)]
     counts = {"ldRows": len(ROWS), "ldClaims": len(claims), "ldInstr": len(instr),
               "ldEntailed": len(entailed), "ldFloored": len(floored),
               "ldGenus": len(genus),

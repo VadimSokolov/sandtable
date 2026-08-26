@@ -95,10 +95,10 @@ than a missing one. A conjecture scored more than once keeps its last word.
 | CR-72 | M1 refuted, M2 refuted, M3 not scorable (no gradeable success problem) | 9345 | REGISTERED. AN EXPLORATION CONSTANT IS DENOMINATED IN THE METRIC'S NOISE |
 | CR-73 | A measured, B retracted, C holds (7 of 9 methods separate) | 9533 | what a benchmark's answer key costs, and whether argmax is the right thing to grade |
 | CR-74 | post hoc account, fitted with an out-of-sample check, not a prediction | 9581 | the ceiling account, made quantitative on data already in hand |
-| CR-75 | unscored, batteries queued on hopper as of 2026-08-25 | 9629 | the ceiling model as a registered prediction with no free parameters |
+| CR-75 | RETRACTED on falsifier two (shape); falsifier one (level) passes | 9629 | the ceiling model as a registered prediction with no free parameters |
 | CR-76 | holds, 262 gated success contrasts audited and none below the floor | 9656 | the gate has a resolution, it is set by block size, and more blocks do not move it |
 | CR-77 | A holds against both controls at 3 of 4 arms, B retracted on its falsi | 9769 | scored |
-| CR-78 | unscored, span-24 tables queued on hopper as of 2026-08-25 | 9828 | the same fit, asked to predict an operating point nobody has simulated |
+| CR-78 | RETRACTED, all three parts | 9828 | the same fit, asked to predict an operating point nobody has simulated |
 
 <!-- SCOREBOARD:END -->
 
@@ -9628,7 +9628,7 @@ the predicted effect written down before it runs.
 
 ## CR-75: the ceiling model as a registered prediction with no free parameters
 
-**Verdict:** unscored, batteries queued on hopper as of 2026-08-25
+**Verdict:** RETRACTED on falsifier two (shape); falsifier one (level) passes
 
 CR-74 is a fit. This is the test, registered before it runs, and the point of it is that nothing is
 estimated from the new data at all. `delta` is fixed at 0.454 for the backlog bound and 0.394 for
@@ -9827,7 +9827,7 @@ service is the control the ceiling account never had.
 
 ## CR-78: the same fit, asked to predict an operating point nobody has simulated
 
-**Verdict:** unscored, span-24 tables queued on hopper as of 2026-08-25
+**Verdict:** RETRACTED, all three parts
 
 **Registered before the tables at `n_blue = 24` were built.** Nothing at that span exists on disk
 for these metrics when this is written. The offsets below were fitted at `n_blue = 8` alone and
@@ -9890,3 +9890,44 @@ directions, registered.
 
 **Falsifier for C.** Any one of the six going the other way.
 
+
+
+## Scored together: the two span-moving tests, and what they jointly kill
+
+**Verdict:** both retracted; the latent account survives only where opposing strength moves the baseline
+
+**CR-75, retracted on falsifier two.** Level passes: RMS deviation of observed from predicted
+effects is 0.0229 over 26 gradeable success cells against a registered 0.045, and against CR-74's
+own out-of-sample 0.0225. Nothing was refitted; `delta` stayed at 0.454 and 0.394. Shape fails: the
+success gain peaks at baseline 0.2319 and the registered band was 0.35 to 0.65. The curve puts its
+maximum at exactly 0.500 with no freedom, so a peak at 0.23 is not a near miss, it is the wrong
+shape.
+
+**The diagnostic is the section split, and it is the one X3 was registered to provide.** X1 and X2
+move the baseline by opposing strength and give RMS 0.0115 and 0.0193. X3 moves it by span and
+gives 0.0310, with a worst cell of +0.0654. The registration said X3 decides whether the model is
+about the metric or merely about opposing strength. It decided.
+
+**CR-78, retracted in all three parts, and it moves the baseline by span too.** A fails: at
+`n_blue = 24` a null predictor beats the fitted offsets, 0.0066 against 0.0201 on the backlog bound
+and 0.0038 against 0.0048 on the queue discipline, so offsets fitted at `n_blue = 8` actively hurt
+at 24. B fails: the extrapolated anchor baseline predicted blue loss 0.0437 and measured 0.1046, an
+error of 0.061 against a registered tolerance of 0.010, with the sign wrong, since loss RISES with
+span past sixteen rather than continuing to fall. C fails: two of six registered directions reverse,
+both on the queue discipline.
+
+**Part D was declared untestable in advance and the declaration was wrong in its reasoning.** It
+predicted success at `n_blue = 24` would sit within six hundredths of a standard error of ceiling,
+computed from an ASSUMED standard error of 0.011. The measured standard error is 0.00049, twenty
+times smaller, because Bernoulli variance collapses as the mean approaches one. The arm is therefore
+gradeable at 3.05 and 2.59 standard errors even though every design reads 1.0000. The conclusion,
+that this arm cannot support the shape claim, survives; the number used to justify it did not.
+Assuming a standard error rather than computing one is the same defect this project catalogues
+elsewhere, committed inside a registration whose purpose was to prevent exactly that.
+
+**Joint reading.** Two registered tests, run on different data, both fail specifically where the
+baseline is moved by span rather than by opposing strength, and the one that moves it furthest by
+span fails hardest. The latent-shift account is retained as a description of what opposing strength
+does to a bounded metric over the range CR-74 fitted, and retracted as a general threshold reading
+of the metric. It goes into neither manuscript as an account. CR-74 stands as what it always said it
+was: a post hoc fit with an out-of-sample check.
