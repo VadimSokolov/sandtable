@@ -44,8 +44,8 @@ allocator can only concentrate on evidence that ranks the arms, on these problem
 expensive, and until it is affordable the allocator is spending its budget on a fraction of the
 designs. A design that is never evaluated cannot be returned. That failure is a fixable
 implementation constant rather than a property of adaptive search, and we register the repair before
-making it: sizing the pull to the design set recovers \WmUcbPooledWarmLowDeficitWas{} of argmax
-recovery at small budgets and still beats uniform allocation nowhere. This is the third answer the
+making it: sizing the pull to the design set closes an argmax-recovery gap of
+\WmUcbPooledWarmLowDeficitWas{} to \WmWorstDeficit{}, and still beats uniform allocation nowhere. This is the third answer the
 same comparison has given us. The first, uniform unbeatable everywhere, was an artefact of a budget
 ladder whose top rung sat below the replication at which anything is learnable; the second, a
 crossing that reversed the ranking, was an artefact of \RsPrevReplicates{} replicates. Both are reported here
@@ -136,6 +136,13 @@ tightly than the optimizer it searches with.
       wrong: we registered that the unscaled allocator would behave as uniform sampling and it does
       not, it is \RsMOneWorstDir{} uniform allocation at the low rung by \RsMOneWorstMag{} on
       \RsMOneWorstField{} (Sections~\ref{sec:methods} and \ref{sec:results}).
+\item A second constant, found by reading a column the sweep had always recorded and repaired under
+      a registration written before the repair existed. Every allocator seeds one fixed batch per
+      design, so at a budget of a few missions per design it evaluates \RsLowCoverAdapt{}\% of the
+      design set and can only return what it evaluated. Sizing the batch to the design set closes an
+      argmax-recovery gap of \WmUcbPooledWarmLowDeficitWas{} to \WmWorstDeficit{}, costs nothing
+      where the budget was never binding, and beats uniform allocation nowhere, which is what we
+      registered would happen (Section~\ref{sec:results}).
 \end{itemize}
 
 The honest summary of the result is a negative one about method choice and a positive one about
@@ -552,8 +559,8 @@ its whole budget on one full pass IS uniform allocation.
 What we deliberately did not predict is that any repaired method would beat uniform allocation. None
 does, at any rung: \WmBeatUni{} of the four. So the repair removes a large artefact and changes no
 conclusion. That is the useful shape of the result. The
-\WmUcbPooledWarmLowDeficitWas{} of argmax recovery the standard implementations give away at small
-budgets is recoverable and worth recovering, and recovering it buys parity with enumeration rather
+argmax recovery the standard implementations give away at small budgets,
+\WmUcbPooledWarmLowDeficitWas{} of it, is recoverable and worth recovering, and recovering it buys parity with enumeration rather
 than an advantage over it. A benchmark that had not carried the
 unrepaired versions as controls would have reported the artefact as a finding about adaptive search,
 and a benchmark that had only repaired them would have had nothing to report at all.
