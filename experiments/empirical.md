@@ -2102,3 +2102,15 @@ by 0.1147 of the achievable spread, t=8.23, 75% sign consistency, and recovers t
 of the time against 25%. At the top rung `ucb_pooled` leads by 0.0183, t=-3.74, 71% sign
 consistency, which clears the tier, and argmax recovery has converged at 91% against 92%. One of the
 nine methods separates from uniform allocation at the top of the ladder.
+
+**Provenance correction, 2026-08-26.** The sweeps recorded above
+(`bench-preview.jsonl`, `bench-rest.jsonl`, `bench-all.jsonl`, `bench-wide.jsonl`) were run on the
+laptop, against the standing instruction that compute goes to hopper. They were run there because
+the cluster queue was congested behind other projects, which is a reason and not an authorisation.
+They are retained as the record of how the ladder defect was found and corrected, and they are NOT
+the provenance for any number that ships.
+
+The authoritative sweep is hopper job `st-search-9471740`, `normal` partition with
+`--constraint=intel`, 32 workers, 300 replicates, ten methods, the corrected ladder, writing
+`$ROOT/search/bench-r300.jsonl`. Every `\Rs` macro is to be regenerated from it before either
+manuscript is called current, and the 20-replicate caveat in Section 5 comes out only when it has.
