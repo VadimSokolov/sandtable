@@ -126,7 +126,7 @@ tightly than the optimizer it searches with.
       scoring the same missions on three axes at four operating points (Section~\ref{sec:results}).
 \item The consequence for method design, which appears inside a method rather than between two of
       them: an exploration constant is denominated in the metric's noise, because the textbook
-      bandit bonus, derived for rewards on the unit interval, exceeds the gap it must resolve by
+      bandit bonus \citep{auer2002finite}, derived for rewards on the unit interval, exceeds the gap it must resolve by
       \BnBonusOverGapWorst{} times here. We kept the unscaled version as a control rather than
       repairing it silently, and the control is what showed our reasoning for the repair to be
       wrong: we registered that the unscaled allocator would behave as uniform sampling and it does
@@ -502,7 +502,7 @@ above ten. Three of them are still equivalent at the tier, because the tier asks
 that is large as well as consistent.
 
 Denominating the exploration bonus in the metric's own noise, rather than in the unit interval the
-textbook derivation assumes, does not repay itself: \RsDiscScaleEff{} at $t = \RsDiscScaleT{}$ with
+textbook derivation assumes \citep{auer2002finite}, does not repay itself: \RsDiscScaleEff{} at $t = \RsDiscScaleT{}$ with
 \RsDiscScaleSign{}\% sign consistency, which the tier reads as \RsDiscScaleVerdict{}. Taking the
 surrogate's incumbent from the posterior mean rather than from the best observed value is
 \RsDiscIncVerdict{} at \RsDiscIncEff{}. Pooling the per-mission standard deviation across arms

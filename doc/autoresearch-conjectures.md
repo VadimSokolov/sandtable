@@ -35,71 +35,71 @@ than a missing one. A conjecture scored more than once keeps its last word.
 
 | # | verdict | line | conjecture |
 | --- | --- | --- | --- |
-| C1 | closed form derived and tested against the live channel; gate running | 1142 | The ladder's drop rate is not a sufficient statistic for the link |
-| C9 | see section | 517 | fan-out is load-dependent and does not see the cliff |
-| C10 | see section | 627 | the staffing curve, confirmed at full tier (Hopper, `st-gateB-9437187`) |
-| CR-15 | see section | 690 | confirmed: correlated demand puts the published scenario over the cliff |
-| CR-16 | refuted | 892 | refuted, and the diagnosis is more useful than the null |
-| CR-17 | mechanism built, closed form derived, gate submitted (`st-hyst-9443432 | 1094 | Closed-loop reliance opens a fold band in span-of-control |
-| CR-19 | see section | 1180 | the coherence ratio decides whether burst structure is visible at all |
-| CR-19e | see section | 1573 | REFUTED, and CR-19's core claim survives in half the size I thought |
-| CR-20 | see section | 1296 | two vehicles on one step are in one radio environment |
-| CR-21 | see section | 1509 | the retry does two things, and only one of them was named |
-| CR-22 | see section | 1836 | RETRACTED on its registered falsifier, and the shape it predicted survives |
-| CR-23 | see section | 2133 | completed with the Bernoulli ladder, and the n=4 cell decides something else entirely |
-| CR-23R | see section | 2200 | support: the smooth decline survives on success with the smear removed |
-| CR-24 | see section | 2096 | VERDICT: the dominance claim died on goodput, and the insurance claim is what ships |
-| CR-25 | see section | 2176 | VERDICT: the headline is not a threshold artifact |
-| CR-26 | see section | 2401 | VERDICT: prediction 1 refuted, and the truth is sharper than the prediction |
-| CR-27 | see section | 2539 | D7. THE CROSS-CHANNEL RE-READ, AND THE EXPLANATION IT KILLS |
-| CR-28 | see section | 2210 | is "do not re-ask" an artifact of pricing a wait flat? |
-| CR-29 | see section | 3531 | VERDICT, AND CR-42: THE CLIFF HAS A CLOSED FORM AND THE MEDIATOR IS ZERO ON THE OTHER PHYSICS |
-| CR-30 | see section | 3199 | VERDICT (full tier). THE ORACLE ASSUMPTION IS CONSERVATIVE, NOT LOAD-BEARING |
-| CR-31 | see section | 2958 | VERDICT. THE FALSIFIER FIRES, AND IT TAKES A HEADLINE WITH IT |
-| CR-32 | see section | 2816 | VERDICT. LEWIS ET AL. 2010: THE PREDICTION HOLDS, AND THE MEDIATOR IS SHARPER THAN THE ONE I REG |
-| CR-33 | see section | 2695 | . THE DWELL RESIDUE: TWO STORIES, REGISTERED TOGETHER, AND A TEST THAT KILLS BOTH |
-| CR-34 | see section | 3861 | P6 VERDICT: THE FALSIFIER FIRED, AND IT RETIRES THE WHOLE RESIDUAL ARGUMENT |
-| CR-35 | see section | 4411 | VERDICT: CONFIRMED. THE SERVICE THE RATE RULE GIVES UP IS SERVICE THAT WAS GOING TO BE WASTED |
-| CR-36 | see section | 3062 | . EVERY GOODPUT CONTRAST IN THE PAPER, RE-READ ON THE ABSOLUTE RATE |
-| CR-37 | see section | 3333 | VERDICT. P1R CONFIRMED, AND THE ORIGINAL REFUTATION WAS THE WINDOW IN FULL |
-| CR-38 | see section | 4471 | VERDICT: THE STAFFING EQUIVALENCE SURVIVES THE CLEAN METRICS, SPLITS, AND VALIDATES THE $c$-SCAL |
-| CR-39 | see section | 4023 | P2 RECLASSIFIED: **VOID-UNREACHABLE**, WITH THE FOUR FIELDS THE CATEGORY REQUIRES |
-| CR-40 | see section | 4070 | VERDICT: TWO CONFIRMED ON THE CLEAN METRIC, ONE FALSIFIER FIRED WHERE I EXPECTED IT |
-| CR-41 | see section | 4444 | LINE TWO CLOSED, AND THE TAIL SAYS SOMETHING THE MEAN COULD NOT |
-| CR-42 | see section | 3658 | CORRECTION: THE REFUTATION IS VOID, AND I HAVE TO SAY WHY BEFORE SAYING WHAT REPLACES IT |
-| CR-43 | see section | 3766 | VERDICT: BOTH FALSIFIERS FIRED. THE TEMPO BUDGET IS DEAD AND WHAT KILLED IT IS THE ANSWER |
-| CR-44 | see section | 3807 | . THE JITTER HEADLINE, READ ON EVERY METRIC THAT IS NOT INFLATABLE |
-| CR-45 | see section | 3977 | . THE GLOBAL SENSITIVITY ANALYSIS THE DISCUSSION PROMISES, RUN AS A TEST RATHER THAN A SURVEY |
-| CR-46 | see section | 4287 | VERDICT: VOID-UNREACHABLE. THE MODEL COMMITS AT ARRIVAL, SO THERE IS NO QUEUE TO ORDER |
-| CR-47 | see section | 5327 | P1-P6 VERDICT: NEWEST-FIRST WORKS, AND THE BOUND IS THE CHEAPEST OF ITS EQUALS |
-| CR-48 | see section | 4569 | . THE CONSOLE HAS BUFFERBLOAT, AND THE RIGHT BUFFER SIZE IS ALREADY DERIVED IN THIS PAPER |
-| CR-49 | see section | 5792 | Q3-Q5 VERDICT: THE CORRECTION TERM MATTERS AND ITS VALUE DOES NOT |
-| CR-50 | see section | 4884 | . THE CONSOLE SHOULD NOT BE SIZED, IT SHOULD BE TIMED |
-| CR-51 | see section | 5077 | . THE OPERATOR IS A METRONOME, AND EVERY CLOSED FORM IN THIS PAPER WAS DERIVED ON ONE |
-| CR-52 | see section | 5754 | P3 RETRACTED ON ITS OWN FALSIFIER, AND THE NEGATIVE IS THE BETTER RESULT |
-| CR-53 | see section | 5710 | v2 VERDICT: DISCERNMENT IS WORTH 2.5 TIMES CONSISTENCY, AND A COUNTER SUBSTITUTES FOR BOTH |
-| CR-54 | see section | 5666 | P1 VERDICT: THE FALSIFIER FIRES ON MY OWN ARITHMETIC, AND WHAT SURVIVES IS BETTER |
-| CR-55 | see section | 6112 | A1 VERDICT: THE FOLLOW CHANNEL IS MISSION-IMMATERIAL, AND THE POINT ESTIMATE GOES THE WRONG WAY |
-| CR-56 | see section | 6774 | A3 AND B4 VERDICT: THE COUNTER-ONLY RUNG IS MEASURED, AND THE COUNTER CHANGES SIGN |
-| CR-57 | see section | 6337 | D1 VERDICT: STATION-KEEPING ERROR DOES NOT PREDICT MISSION OUTCOME, AND THE COUNTEREXAMPLE IS IN |
-| CR-58 | see section | 6732 | E1 VERDICT: THE BRIDGE IS RETRACTED ON ITS REGISTERED WINDOW, AND THE ARITHMETIC FAILED FOR A RE |
-| CR-59 | see section | 6971 | CONTROL VERDICT: THE HONEST CONSOLE RECOVERS THE INFLATED ONE, THE PRICE TURN IS NOT WHERE I SAI |
-| CR-60 | see section | 7842 | VERDICT, CORRECTED AND SHARPENED BY ITS OWN NUMBER SCRIPT |
-| CR-61 | see section | 7532 | VERDICT: THE INSTRUMENT IS SOUND, ONE PREDICTION IS FALSIFIED, AND WHETHER TO VERIFY THE AUTOMAT |
-| CR-62 | see section | 7602 | VERDICT, PART TWO: SAME FIELD, OPPOSITE SIGN, AND THE FREE LUNCH HAS A PRECONDITION |
-| CR-63 | see section | 7773 | . THE VERIFICATION FRONTIER, AND THE DEGENERATE CORNER THAT WAS CARRYING CR-61's HEADLINE |
-| CR-64 | see section | 7886 | . THE FAIRNESS FIX THAT NEEDS NO MESSAGE FIELD |
-| CR-65 | see section | 9154 | SCORED. THE REPAIR REMOVES ALL OF THE WASTE AND RECLAIMS NONE OF THE LOSS |
-| CR-69 | see section | 8768 | (audit, not a conjecture): is `success` readable at large span? |
-| CR-70 | see section | 9477 | SCORED. THE REQUIREMENT DOES NOT STOP MATTERING; THE INSTRUMENT STOPS SEEING IT |
-| CR-72 | M1 refuted, M2 refuted, M3 unscoreable; CR-73 B retracted, C holds; on | 9942 | CR-73 and the estimator controls, scored at three hundred replicates |
-| CR-73 | holds on its registered falsifier, but 2 of 9 rather than 7 of 9, and | 10023 | C, rescored at three hundred replicates, and it is weaker than first reported |
-| CR-74 | post hoc account, fitted with an out-of-sample check, not a prediction | 9588 | the ceiling account, made quantitative on data already in hand |
-| CR-75 | RETRACTED on falsifier two (shape); falsifier one (level) passes | 9636 | the ceiling model as a registered prediction with no free parameters |
-| CR-76 | holds, 262 gated success contrasts audited and none below the floor | 9663 | the gate has a resolution, it is set by block size, and more blocks do not move it |
-| CR-77 | A holds against both controls at 3 of 4 arms, B retracted on its falsi | 9776 | scored |
-| CR-78 | RETRACTED, all three parts | 9835 | the same fit, asked to predict an operating point nobody has simulated |
-| CR-79 | registered, not yet run | 10109 | REGISTERED. THE BATCH SIZE, NOT THE ACQUISITION RULE, IS WHAT FAILS AT SMALL BUDGETS |
+| C1 | closed form derived and tested against the live channel; gate running | 1143 | The ladder's drop rate is not a sufficient statistic for the link |
+| C9 | see section | 518 | fan-out is load-dependent and does not see the cliff |
+| C10 | see section | 628 | the staffing curve, confirmed at full tier (Hopper, `st-gateB-9437187`) |
+| CR-15 | see section | 691 | confirmed: correlated demand puts the published scenario over the cliff |
+| CR-16 | refuted | 893 | refuted, and the diagnosis is more useful than the null |
+| CR-17 | mechanism built, closed form derived, gate submitted (`st-hyst-9443432 | 1095 | Closed-loop reliance opens a fold band in span-of-control |
+| CR-19 | see section | 1181 | the coherence ratio decides whether burst structure is visible at all |
+| CR-19e | see section | 1574 | REFUTED, and CR-19's core claim survives in half the size I thought |
+| CR-20 | see section | 1297 | two vehicles on one step are in one radio environment |
+| CR-21 | see section | 1510 | the retry does two things, and only one of them was named |
+| CR-22 | see section | 1837 | RETRACTED on its registered falsifier, and the shape it predicted survives |
+| CR-23 | see section | 2134 | completed with the Bernoulli ladder, and the n=4 cell decides something else entirely |
+| CR-23R | see section | 2201 | support: the smooth decline survives on success with the smear removed |
+| CR-24 | see section | 2097 | VERDICT: the dominance claim died on goodput, and the insurance claim is what ships |
+| CR-25 | see section | 2177 | VERDICT: the headline is not a threshold artifact |
+| CR-26 | see section | 2402 | VERDICT: prediction 1 refuted, and the truth is sharper than the prediction |
+| CR-27 | see section | 2540 | D7. THE CROSS-CHANNEL RE-READ, AND THE EXPLANATION IT KILLS |
+| CR-28 | see section | 2211 | is "do not re-ask" an artifact of pricing a wait flat? |
+| CR-29 | see section | 3532 | VERDICT, AND CR-42: THE CLIFF HAS A CLOSED FORM AND THE MEDIATOR IS ZERO ON THE OTHER PHYSICS |
+| CR-30 | see section | 3200 | VERDICT (full tier). THE ORACLE ASSUMPTION IS CONSERVATIVE, NOT LOAD-BEARING |
+| CR-31 | see section | 2959 | VERDICT. THE FALSIFIER FIRES, AND IT TAKES A HEADLINE WITH IT |
+| CR-32 | see section | 2817 | VERDICT. LEWIS ET AL. 2010: THE PREDICTION HOLDS, AND THE MEDIATOR IS SHARPER THAN THE ONE I REG |
+| CR-33 | see section | 2696 | . THE DWELL RESIDUE: TWO STORIES, REGISTERED TOGETHER, AND A TEST THAT KILLS BOTH |
+| CR-34 | see section | 3862 | P6 VERDICT: THE FALSIFIER FIRED, AND IT RETIRES THE WHOLE RESIDUAL ARGUMENT |
+| CR-35 | see section | 4412 | VERDICT: CONFIRMED. THE SERVICE THE RATE RULE GIVES UP IS SERVICE THAT WAS GOING TO BE WASTED |
+| CR-36 | see section | 3063 | . EVERY GOODPUT CONTRAST IN THE PAPER, RE-READ ON THE ABSOLUTE RATE |
+| CR-37 | see section | 3334 | VERDICT. P1R CONFIRMED, AND THE ORIGINAL REFUTATION WAS THE WINDOW IN FULL |
+| CR-38 | see section | 4472 | VERDICT: THE STAFFING EQUIVALENCE SURVIVES THE CLEAN METRICS, SPLITS, AND VALIDATES THE $c$-SCAL |
+| CR-39 | see section | 4024 | P2 RECLASSIFIED: **VOID-UNREACHABLE**, WITH THE FOUR FIELDS THE CATEGORY REQUIRES |
+| CR-40 | see section | 4071 | VERDICT: TWO CONFIRMED ON THE CLEAN METRIC, ONE FALSIFIER FIRED WHERE I EXPECTED IT |
+| CR-41 | see section | 4445 | LINE TWO CLOSED, AND THE TAIL SAYS SOMETHING THE MEAN COULD NOT |
+| CR-42 | see section | 3659 | CORRECTION: THE REFUTATION IS VOID, AND I HAVE TO SAY WHY BEFORE SAYING WHAT REPLACES IT |
+| CR-43 | see section | 3767 | VERDICT: BOTH FALSIFIERS FIRED. THE TEMPO BUDGET IS DEAD AND WHAT KILLED IT IS THE ANSWER |
+| CR-44 | see section | 3808 | . THE JITTER HEADLINE, READ ON EVERY METRIC THAT IS NOT INFLATABLE |
+| CR-45 | see section | 3978 | . THE GLOBAL SENSITIVITY ANALYSIS THE DISCUSSION PROMISES, RUN AS A TEST RATHER THAN A SURVEY |
+| CR-46 | see section | 4288 | VERDICT: VOID-UNREACHABLE. THE MODEL COMMITS AT ARRIVAL, SO THERE IS NO QUEUE TO ORDER |
+| CR-47 | see section | 5328 | P1-P6 VERDICT: NEWEST-FIRST WORKS, AND THE BOUND IS THE CHEAPEST OF ITS EQUALS |
+| CR-48 | see section | 4570 | . THE CONSOLE HAS BUFFERBLOAT, AND THE RIGHT BUFFER SIZE IS ALREADY DERIVED IN THIS PAPER |
+| CR-49 | see section | 5793 | Q3-Q5 VERDICT: THE CORRECTION TERM MATTERS AND ITS VALUE DOES NOT |
+| CR-50 | see section | 4885 | . THE CONSOLE SHOULD NOT BE SIZED, IT SHOULD BE TIMED |
+| CR-51 | see section | 5078 | . THE OPERATOR IS A METRONOME, AND EVERY CLOSED FORM IN THIS PAPER WAS DERIVED ON ONE |
+| CR-52 | see section | 5755 | P3 RETRACTED ON ITS OWN FALSIFIER, AND THE NEGATIVE IS THE BETTER RESULT |
+| CR-53 | see section | 5711 | v2 VERDICT: DISCERNMENT IS WORTH 2.5 TIMES CONSISTENCY, AND A COUNTER SUBSTITUTES FOR BOTH |
+| CR-54 | see section | 5667 | P1 VERDICT: THE FALSIFIER FIRES ON MY OWN ARITHMETIC, AND WHAT SURVIVES IS BETTER |
+| CR-55 | see section | 6113 | A1 VERDICT: THE FOLLOW CHANNEL IS MISSION-IMMATERIAL, AND THE POINT ESTIMATE GOES THE WRONG WAY |
+| CR-56 | see section | 6775 | A3 AND B4 VERDICT: THE COUNTER-ONLY RUNG IS MEASURED, AND THE COUNTER CHANGES SIGN |
+| CR-57 | see section | 6338 | D1 VERDICT: STATION-KEEPING ERROR DOES NOT PREDICT MISSION OUTCOME, AND THE COUNTEREXAMPLE IS IN |
+| CR-58 | see section | 6733 | E1 VERDICT: THE BRIDGE IS RETRACTED ON ITS REGISTERED WINDOW, AND THE ARITHMETIC FAILED FOR A RE |
+| CR-59 | see section | 6972 | CONTROL VERDICT: THE HONEST CONSOLE RECOVERS THE INFLATED ONE, THE PRICE TURN IS NOT WHERE I SAI |
+| CR-60 | see section | 7843 | VERDICT, CORRECTED AND SHARPENED BY ITS OWN NUMBER SCRIPT |
+| CR-61 | see section | 7533 | VERDICT: THE INSTRUMENT IS SOUND, ONE PREDICTION IS FALSIFIED, AND WHETHER TO VERIFY THE AUTOMAT |
+| CR-62 | see section | 7603 | VERDICT, PART TWO: SAME FIELD, OPPOSITE SIGN, AND THE FREE LUNCH HAS A PRECONDITION |
+| CR-63 | see section | 7774 | . THE VERIFICATION FRONTIER, AND THE DEGENERATE CORNER THAT WAS CARRYING CR-61's HEADLINE |
+| CR-64 | see section | 7887 | . THE FAIRNESS FIX THAT NEEDS NO MESSAGE FIELD |
+| CR-65 | see section | 9155 | SCORED. THE REPAIR REMOVES ALL OF THE WASTE AND RECLAIMS NONE OF THE LOSS |
+| CR-69 | see section | 8769 | (audit, not a conjecture): is `success` readable at large span? |
+| CR-70 | see section | 9478 | SCORED. THE REQUIREMENT DOES NOT STOP MATTERING; THE INSTRUMENT STOPS SEEING IT |
+| CR-72 | M1 refuted, M2 refuted, M3 unscoreable; CR-73 B retracted, C holds; on | 9943 | CR-73 and the estimator controls, scored at three hundred replicates |
+| CR-73 | holds on its registered falsifier, but 2 of 9 rather than 7 of 9, and | 10024 | C, rescored at three hundred replicates, and it is weaker than first reported |
+| CR-74 | post hoc account, fitted with an out-of-sample check, not a prediction | 9589 | the ceiling account, made quantitative on data already in hand |
+| CR-75 | RETRACTED on falsifier two (shape); falsifier one (level) passes | 9637 | the ceiling model as a registered prediction with no free parameters |
+| CR-76 | holds, 262 gated success contrasts audited and none below the floor | 9664 | the gate has a resolution, it is set by block size, and more blocks do not move it |
+| CR-77 | A holds against both controls at 3 of 4 arms, B retracted on its falsi | 9777 | scored |
+| CR-78 | RETRACTED, all three parts | 9836 | the same fit, asked to predict an operating point nobody has simulated |
+| CR-79 | registered, not yet run | 10110 | REGISTERED. THE BATCH SIZE, NOT THE ACQUISITION RULE, IS WHAT FAILS AT SMALL BUDGETS |
 
 <!-- SCOREBOARD:END -->
 

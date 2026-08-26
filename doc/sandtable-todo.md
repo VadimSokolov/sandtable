@@ -59,7 +59,11 @@ Every change below follows the idiom the package already uses for optional layer
 4. **Every CR ships an off-path byte-identity test** modelled on
    `tests/test_counter_uas.py::test_off_is_byte_identical`.
 
-Run the suite with `conda run -n mgl python -m pytest tests/ -q` (127 tests, about 2 min).
+Run the suite with `conda run -n mgl python -m pytest tests/ -q`. It is 463 tests and about
+eighteen minutes on sixteen cores, so it goes to the cluster: `sbatch hopper/tests.sbatch`. Seven
+of them skip there, the ones that read the `doc/`, `report/` and `paper-search/` trees, which the
+sync script deliberately does not push. Run those seven on the laptop with
+`PYTHONPATH=src python3 -m pytest tests/test_docs_current.py -q`.
 
 ---
 
