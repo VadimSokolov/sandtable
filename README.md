@@ -205,7 +205,7 @@ Every command below runs from the repository root, in the `mgl` env. Scripts res
 to the wrong place.
 
 ```bash
-# full suite: 127 tests, about 2 min
+# full suite: 467 tests, about 8 min
 conda run -n mgl python -m pytest tests/ -q
 # one file, then one test
 conda run -n mgl python -m pytest tests/test_counter_uas.py -q
