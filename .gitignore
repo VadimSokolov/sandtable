@@ -57,3 +57,6 @@ results.tsv
 .autoresearch/
 run.log
 report/build_comp/
+
+# Internal project material, not for the public repo
+tmp/

@@ -51,7 +51,7 @@ flagship UGV effort. Load-bearing evidence:
 
 - **CRS (primary):** the Army hopes AI/navigation will "eventually permit a single operator to
   control multiple RCVs or for RCVs to operate in a more autonomous mode"; today off-road autonomy
-  needs "a lot of intervention where the soldier has to step in."
+  needs "a lot of interventions where the soldier has to step in" (Maj. Gen. Glenn Dean, program executive officer for ground combat systems, quoted by Inside Defense on 6 November 2024, excerpt of a paywalled article; the CRS text does not contain this quote).
 - **DEVCOM ARL Human-Autonomy Teaming ERP (primary):** built for NGCV, targeting "reduced
   Soldier-System ratios" and crew reduction.
 - **ARL (Jessie Chen):** the shift is that "the human becomes a supervisor rather than an operator."
