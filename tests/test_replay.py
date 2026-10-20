@@ -78,3 +78,16 @@ def test_entities_carry_static_metadata(skirmish_scenario):
         assert e["side"] in (0, 1)
         assert e["domain"] in (0, 1)
         assert e["sensor_range"] >= 0.0 and e["weapon_range"] >= 0.0
+
+
+def test_trace_outcome_matches_run_mission_behavior_layer():
+    """The blue behavior layer (CR-1) is part of the run: a trace that skipped it showed another run.
+
+    Before the fix, record_trace left out `behavior.step` and the other opt-in layers, so a follower
+    convoy replayed as a different mission on every seed (seed 1: mission_time 1800 against 271).
+    """
+    scn = load_scenario(str(REPO_ROOT / "experiments" / "ar_scenarios" / "convoy_leader_follower.json"))
+    for seed in (0, 1, 2, 3):
+        kpi = run_mission(scn, seed=seed)
+        tr = record_trace(scn, seed=seed, stride=5)
+        _outcome_matches(kpi, tr)

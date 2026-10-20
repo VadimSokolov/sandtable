@@ -101,8 +101,8 @@ tightly than the optimizer it searches with.
 \begin{itemize}
 \item A suite of mission-design search problems on a fast multi-agent simulator, six of them
       carrying an optimum established by a separate registered study that involved no optimizer, and
-      the rest by a high-precision table computed on seeds disjoint from every search
-      (Section~\ref{sec:bench}).
+      the rest by a high-precision table computed on its own seed block, which the head-to-head
+      then resamples (Section~\ref{sec:bench}).
 \item The measurement that most of those problems have no affordable best design at all. Only
       \BnKeyResolved{} of \BnKeyProblems{} separate their own top two designs at two standard
       errors, \BnKeyResSucc{} of \BnKeyNSucc{} on mission success, and on that axis the smallest
@@ -219,8 +219,13 @@ the shape decides which family of methods wins.
 \end{itemize}
 
 \paragraph{Auditing the key.} An answer key can be wrong, so it is checked rather than trusted.
-Every design in every problem is evaluated on a seed block disjoint from the ones the searches draw
-on, and the resulting table is compared against the registered optimum. Agreement is reported per
+Every design in every problem is evaluated on its own seed block, disjoint from the seeds a fresh-mission search would draw,
+and the resulting table is compared against the registered optimum. The head-to-head comparison
+resamples that same stored table (the pool backend), so the key and a search's readings share
+missions: a search that pulls a design's whole pool recovers the key's value for it exactly, and
+the regret of a search that draws a large share of a pool is optimistic by the overlap. This is the
+price of exact pairing, and the fresh-mission backend, which does not share missions with the key,
+would be the check on it. Agreement is reported per
 problem and disagreement is reported rather than reconciled: a table that put the optimum somewhere
 else would be a finding about the original study or about the precision of the table, and hiding it
 would defeat the purpose of having a key at all.

@@ -11,9 +11,21 @@ from __future__ import annotations
 
 import numpy as np
 
-from sandtable import c2, engagement, metrics, motion, planning, sensing
+from sandtable import (
+    behavior,
+    belief,
+    c2,
+    counter_uas,
+    engagement,
+    mechanics,
+    metrics,
+    motion,
+    personality,
+    planning,
+    sensing,
+)
 from sandtable.comms_ew import build_comms
-from sandtable.entities import BLUE, GROUND, RED
+from sandtable.entities import AIR, BLUE, GROUND, RED
 from sandtable.scenario import Scenario, build_entities
 from sandtable.seeding import make_rng
 from sandtable.world import build_world
@@ -38,15 +50,26 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
     comms = build_comms(scn)
     op = c2.build_c2(scn, ent, rng)   # same signature as sim.run_mission, so a
                                   # staggered or mixed-patience fleet replays as it ran
+    # The opt-in layers run_mission builds, built here in the same order so each draws the same
+    # randomness. A layer left out of this loop changes the run that gets animated (CR-1 follower
+    # convoys diverged on every seed), so a new layer in sim.py needs the matching lines below.
+    tracks = belief.build_tracks(scn, ent)
+    mech = mechanics.build_mech(scn)
+    if mech is not None:
+        mechanics.arm(ent, mech)
+    pers = personality.build_personality(scn)
+    cuas = counter_uas.build_counter_uas(scn, ent)
+    bhv = behavior.build_behavior(scn, ent)
 
     init_counts = {BLUE: int((ent.side == BLUE).sum()), RED: int((ent.side == RED).sum())}
     blue_mask0 = ent.side == BLUE
     spawn_x = float(ent.x[blue_mask0].min()) if blue_mask0.any() else 0.0
     tempo = float(scn.params.get("tempo", 1.0))
     dt = scn.dt
-    n_steps = max(int(scn.duration / dt), 1)
+    n_steps = max(int(float(scn.params.get("duration", scn.duration)) / dt), 1)
     ground_blue0 = int(((ent.side == BLUE) & (ent.domain == GROUND)).sum())
     assault0 = ground_blue0 if ground_blue0 > 0 else init_counts[BLUE]
+    air_blue0 = int(((ent.side == BLUE) & (ent.domain == AIR)).sum())
     need = scn.objective.survive_fraction * assault0
 
     frames: list[dict] = []
@@ -73,12 +96,24 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
     # recorded trajectory is exactly the run the optimizer scored. The only additions are the
     # per-stride snapshots, which draw no randomness.
     for k in range(n_steps):
+        comms.set_step(k)
         if op is not None:
-            c2.step(ent, op, comms, scn, k, rng)
-        planning.step(ent, world, scn, spawn_x)
+            c2.step(ent, op, comms, scn, k, rng, world)
+        if bhv is not None:
+            behavior.step(ent, bhv, op, comms, scn, k, rng)
+        planning.step(ent, world, scn, spawn_x, pers=pers, bhv=bhv)
         motion.step(ent, world, dt, tempo)
         sensing.step(ent, world, rng, comms)
-        engagement.step(ent, world, dt, rng, events=kill_buf)
+        if mech is not None:
+            mechanics.decay(ent, mech)
+        if tracks is None:
+            engagement.step(ent, world, dt, rng, events=kill_buf, mech=mech)
+        else:
+            # belief.engage takes no event hook, so a belief run animates without kill markers.
+            belief.update(ent, tracks, comms, rng)
+            belief.engage(ent, world, tracks, rng, mech=mech)
+        if cuas is not None:
+            counter_uas.step(ent, cuas, rng)
         t = (k + 1) * dt
 
         red_alive = ent.side_mask(RED)
@@ -97,7 +132,8 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
             snapshot(t)
             break
 
-    result = metrics.compute(scn, init_counts, ent, t_reached, t, assault0=assault0)
+    result = metrics.compute(scn, init_counts, ent, t_reached, t, assault0=assault0, air0=air_blue0,
+                             bhv=bhv, op=op)
     result["detection_coverage"] = cov_sum / max(cov_steps, 1)
     gx, gy = scn.objective.goal
     return {

@@ -4,8 +4,10 @@ The question this package is built to answer is not "what is the best mission de
 family of search methods finds it, on what kind of space, under a fixed budget of mission
 replications". Three families are compared on equal terms:
 
-  * enumeration      -- grid, random, Latin hypercube. The baselines that are usually skipped and
-                        that surprisingly often win.
+  * enumeration      -- grid and random. The baselines that are usually skipped and that
+                        surprisingly often win. A Latin hypercube is not implemented here;
+                        `polarisopt` offers one for studies, and a nearly orthogonal design is
+                        wanted for the convoy sweep (issue #15).
   * Bayesian         -- a Gaussian-process surrogate with an acquisition function, the standard
                         answer, run through `polarisopt` and `botorch`.
   * bandit           -- successive halving, Thompson sampling, UCB. Mission design over a small

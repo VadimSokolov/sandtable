@@ -36,6 +36,9 @@ import pathlib
 import statistics as st
 import sys
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from ar_gate import tost  # noqa: E402
+
 T_MIN, MPE, SIGN_MIN = 1.70, 0.06, 0.60
 AXIS_ORDER = ["served_per_step", "blue_loss_frac", "success"]     # registered in CR-72 M3
 
@@ -66,6 +69,17 @@ def paired(rows, a, b, field, problems=None, budgets=None):
     return diffs
 
 
+def _equivalent(eff, t, n, margin):
+    """Equivalence needs its own test: failing to gate is not evidence that two arms are the same.
+
+    Two one-sided tests against a margin of the project's minimum practical effect (`MPE` of the
+    contrast's spread). A contrast that neither gates nor passes this is "unresolved".
+    """
+    if not (margin > 0) or n < 2:
+        return False
+    return tost(eff, t, n, margin, t_min=T_MIN)[0]
+
+
 def gate(diffs, spread):
     """The project's full tier, applied to a paired difference."""
     n = len(diffs)
@@ -80,7 +94,8 @@ def gate(diffs, spread):
     big = abs(eff) >= MPE * spread if spread > 0 else abs(eff) > 0
     ok = abs(t) >= T_MIN and sign >= SIGN_MIN and big
     return {"n": n, "eff": eff, "t": t, "sign": sign,
-            "verdict": ("gate up" if eff > 0 else "gate down") if ok else "equivalent"}
+            "verdict": ("gate up" if eff > 0 else "gate down") if ok else
+                       ("equivalent" if _equivalent(eff, t, n, MPE * spread) else "unresolved")}
 
 
 def spread_of(rows, field, problems=None):
@@ -126,9 +141,12 @@ def main() -> None:
         g = gate(paired(rows, "ucb_raw", "grid", field, problems=gradeable), spread)
         print(f"  {field:12s} eff={g['eff']:+.4f} t={g['t']:+7.2f} "
               f"sign={g['sign']:.0%} n={g['n']:5d}  {g['verdict']}")
-        if g["verdict"] != "equivalent":
+        if g["verdict"] in ("gate up", "gate down"):
             m1_fired.append(field)
-    print(f"  VERDICT M1: {'REFUTED on ' + ', '.join(m1_fired) if m1_fired else 'HOLDS'}\n")
+    m1_ok = all(gate(paired(rows, "ucb_raw", "grid", f, problems=gradeable), sp)["verdict"] == "equivalent"
+                for f, sp in (("regret_frac", sr), ("found", sf)))
+    print(f"  VERDICT M1: {'REFUTED on ' + ', '.join(m1_fired) if m1_fired else 'NOT REFUTED'}"
+          f"{'' if m1_fired else (', equivalence shown by TOST' if m1_ok else ', equivalence NOT shown (no gate, but TOST unresolved)')}\n")
 
     # ---------------------------------------------------------------- CR-72 M2
     print("=" * 78)
@@ -212,11 +230,11 @@ def main() -> None:
                     if d]
         gp = gate(per_prob, st.pstdev(per_prob) if len(per_prob) > 1 else 1.0)
         gr = gate(paired(rows, m, "random", "regret_frac", problems=ungradeable), sr)
-        mark = " <--" if gp["verdict"] != "equivalent" else ""
+        mark = " <--" if gp["verdict"] in ("gate up", "gate down") else ""
         print(f"  {m:12s} eff={gp['eff']:+.4f} t={gp['t']:+6.2f} "
               f"sign={gp['sign']:.0%} n={gp['n']:3d} {gp['verdict']:11s}"
               f" | eff={gr['eff']:+.4f} t={gr['t']:+7.2f} {gr['verdict']:11s}{mark}")
-        if gp["verdict"] != "equivalent":
+        if gp["verdict"] in ("gate up", "gate down"):
             sep.append(m)
     c = f"HOLDS, {len(sep)} of {len(methods) - 1} methods separate" if sep else "DROP STANDS"
     print(f"  VERDICT C: {c}\n")
