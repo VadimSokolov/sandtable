@@ -302,7 +302,7 @@ Three traps, all of which have cost a session already:
 ## Doctrine, standards, and references
 
 - **Army doctrine (scenarios trace to these):** FM 3-0, ATP 3-90, JP 3-12.
-- **Mission engineering:** MEG 2.0 (Mission Engineering Guide), SysML/LML, kill-web and
+- **Mission engineering:** MEG 2.0 (Mission Engineering Guide, which names SysML, UAFML and BPMN for mission threads), kill-web and
   system-of-systems analysis.
 - **Background literature:** RAND *One Team, One Fight* (Vols I-II); CRS Robotic Combat Vehicle
   primer; Raz et al. (2024), IEEE Systems Journal, on mission-engineering foundations; Sokolov et al.
