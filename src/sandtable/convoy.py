@@ -1,0 +1,113 @@
+"""Convoy baseline: hierarchy of march units, serials, and vehicle roles (ATP 4-11)."""
+from __future__ import annotations
+
+import numpy as np
+
+# Convoy Sections (within a March Unit)
+SECTION_HEAD = 0        # Pacesetter / Lead vehicle
+SECTION_MAIN = 1        # Main body (cargo, fuel)
+SECTION_TRAIL = 2       # Trail element (recovery, maintenance)
+
+# Convoy Roles
+ROLE_CONTROL = 0        # Command & control / pacesetter
+ROLE_CARGO = 1          # Logistics / freight
+ROLE_SECURITY = 2       # Armed escort / gun truck
+ROLE_RECOVERY = 3       # Maintenance / wrecker
+
+ROLE_MAP = {
+    "control": ROLE_CONTROL,
+    "cargo": ROLE_CARGO,
+    "security": ROLE_SECURITY,
+    "recovery": ROLE_RECOVERY,
+}
+
+
+def validate_convoy_spec(spec: dict) -> None:
+    """Validate convoy parameters against Army doctrine (ATP 4-11, G-7 & G-11).
+
+    Raises ValueError naming the range if any parameter is outside doctrinal limits.
+    """
+    march_size = spec.get("march_unit_size")
+    if march_size is None or march_size < 1 or march_size > 25:
+        raise ValueError(f"march unit size must be between 1 and 25, got {march_size}")
+
+    march_per_serial = spec.get("march_units_per_serial")
+    if march_per_serial is None or march_per_serial < 2 or march_per_serial > 5:
+        raise ValueError(f"march units per serial must be between 2 and 5, got {march_per_serial}")
+
+    serials_per_column = spec.get("serials_per_column")
+    if serials_per_column is None or serials_per_column < 1 or serials_per_column > 5:
+        raise ValueError(f"serials per column must be between 1 and 5, got {serials_per_column}")
+
+    total = march_size * march_per_serial * serials_per_column
+    if total < 6 or total > 300:
+        raise ValueError(f"convoy total vehicles must be between 6 and 300, got {total}")
+
+    roles = spec.get("roles")
+    if roles is not None:
+        if len(roles) != march_size:
+            raise ValueError(f"roles length ({len(roles)}) must match march unit size ({march_size})")
+        for r in roles:
+            if r not in ROLE_MAP:
+                raise ValueError(f"unknown convoy role {r!r}; must be one of {sorted(ROLE_MAP)}")
+
+
+def build_convoy_layout(spec: dict) -> dict:
+    """Compute per-vehicle hierarchy arrays for the convoy from spec."""
+    validate_convoy_spec(spec)
+
+    march_size = int(spec["march_unit_size"])
+    march_per_serial = int(spec["march_units_per_serial"])
+    serials_per_column = int(spec["serials_per_column"])
+    total = march_size * march_per_serial * serials_per_column
+
+    # (Default: Head=Control, Trail=Recovery, Middle=Cargo)
+    raw_roles = spec.get("roles")
+    if raw_roles:
+        pos_roles = [ROLE_MAP[r] for r in raw_roles]
+    else:
+        pos_roles = [ROLE_CONTROL] + [ROLE_CARGO] * max(0, march_size - 2)
+        if march_size > 1:
+            pos_roles.append(ROLE_RECOVERY)
+
+    march_units = np.zeros(total, dtype=np.int16)
+    serials = np.zeros(total, dtype=np.int16)
+    sections = np.zeros(total, dtype=np.int8)
+    convoy_roles = np.zeros(total, dtype=np.int8)
+    leaders = np.full(total, -1, dtype=np.int32)
+    roles = np.ones(total, dtype=np.int8)  # 0=Leader, 1=Follower
+
+    for i in range(total):
+        march_idx = i // march_size
+        serial_idx = i // (march_size * march_per_serial)
+
+        k = i % march_size
+        march_units[i] = march_idx
+        serials[i] = serial_idx
+        convoy_roles[i] = pos_roles[k]
+
+        # Head / Main / Trail
+        head_idx = march_idx * march_size
+
+        if k == 0:
+            sections[i] = SECTION_HEAD
+            roles[i] = 0        # Leader
+            leaders[i] = -1     # No leader above it in the march unit
+        elif k == march_size - 1:
+            sections[i] = SECTION_TRAIL
+            roles[i] = 1        # Follower
+            leaders[i] = head_idx  # Follow the leader of its march unit
+        else:
+            sections[i] = SECTION_MAIN
+            roles[i] = 1        # Follower
+            leaders[i] = head_idx  # Follow the leader of its march unit
+
+    return {
+        "march_unit": march_units,
+        "serial": serials,
+        "section": sections,
+        "convoy_role": convoy_roles,
+        "leader": leaders,
+        "role": roles,
+        "total": total,
+    }

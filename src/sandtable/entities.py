@@ -73,6 +73,13 @@ class Entities:
     suppression: np.ndarray = None       # float in [0, 1]: incoming-fire suppression; degrades fire and acquisition
     ammo: np.ndarray = None              # float: rounds remaining (inf = unlimited)
 
+    # Convoy hierarchy state (Increment: Convoy baseline, Issue #8). Optional: defaulted in
+    # __post_init__ to -1 (neutral / non-convoy) so non-convoy scenarios behave byte-identically.
+    march_unit: np.ndarray = None   # int16: march unit index (0, 1, 2, ...) or -1
+    serial: np.ndarray = None       # int16: serial index (0, 1, ...) or -1
+    section: np.ndarray = None      # int8: 0=HEAD, 1=MAIN, 2=TRAIL, or -1
+    convoy_role: np.ndarray = None  # int8: 0=CONTROL, 1=CARGO, 2=SECURITY, 3=RECOVERY, or -1
+
     def __post_init__(self) -> None:
         n = self.x.shape[0]
         if self.control_quality is None:
@@ -85,6 +92,15 @@ class Entities:
             self.suppression = np.zeros(n)
         if self.ammo is None:
             self.ammo = np.full(n, np.inf)
+       
+        if self.march_unit is None:
+            self.march_unit = np.full(n, -1, np.int16)
+        if self.serial is None:
+            self.serial = np.full(n, -1, np.int16)
+        if self.section is None:
+            self.section = np.full(n, -1, np.int8)
+        if self.convoy_role is None:
+            self.convoy_role = np.full(n, -1, np.int8)
 
     @property
     def n(self) -> int:
