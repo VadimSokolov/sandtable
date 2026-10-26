@@ -27,6 +27,9 @@ MAX_FRAMES = 90        # cap frames per trace (subsample beyond this)
 # Curated contrasts: each row is the sensitive result of one scenario, shown as a before/after the
 # viewer can flip between. (group, label, scenario, params).
 SPECS = [
+    ("Convoy Hierarchy (ATP 4-11)",
+     "Reference Convoy (15 vehicles: 1x3x5)", "scenarios/uc3_convoy.json",
+     {}),
     ("UC-3  Route vs defilade",
      "Aggressive route (cover weight 0.15)", "scenarios/uc3_route_defilade.json",
      {"route_bias": 0.15}),
