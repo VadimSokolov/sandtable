@@ -145,9 +145,15 @@ def build_entities(scn: Scenario, rng: np.random.Generator) -> Entities:
                 e.convoy_role[i] = convoy_layout["convoy_role"][k]
                 e.role[i] = convoy_layout["role"][k]
                 e.leader[i] = convoy_layout["leader"][k] + base_i if convoy_layout["leader"][k] != -1 else -1
+                pace = convoy_layout.get("pace")
+                if pace is not None and e.role[i] == 0:
+                    e.speed_cap[i] = float(pace)
             else:
                 e.role[i] = 0 if k == 0 else 1
                 e.leader[i] = -1 if k == 0 else (i - k)
+                pace = scn.params.get("pace")
+                if pace is not None and e.role[i] == 0:
+                    e.speed_cap[i] = float(pace)
 
             e.hp[i] = pt.hp
             e.fuel[i] = pt.endurance

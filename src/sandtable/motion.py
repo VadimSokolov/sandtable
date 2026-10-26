@@ -40,6 +40,10 @@ def step(ent: Entities, world: World, dt: float, tempo: float = 1.0) -> None:
     q = getattr(ent, "control_quality", None)
     if q is not None:
         v = v * (0.35 + 0.65 * q)
+    # Per-vehicle speed cap (Issue #10, pace regulation): neutral at inf.
+    cap = getattr(ent, "speed_cap", None)
+    if cap is not None:
+        v = np.minimum(v, cap)
     # do not overshoot the target within a single step
     v = np.minimum(v, dist / dt)
     v = np.where(alive, v, 0.0)

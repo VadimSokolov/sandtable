@@ -135,11 +135,17 @@ def _behavior_targets(ent: Entities, scn: Scenario, bhv, tx_new, ty_new):
     # station and runs the lane in, exactly as the scripted planner already converges. Without this
     # a follower stationed `rank*gap` behind the leader can never reach the objective at all, and
     # the mission is unscoreable rather than merely hard.
+    convoy_cfg = scn.params.get("convoy")
+    time_gap = convoy_cfg.get("time_gap") if isinstance(convoy_cfg, dict) else None
+    if time_gap is None:
+        time_gap = scn.params.get("time_gap")
+    time_gap = float(time_gap) if time_gap is not None else 0.0
+
     gx = scn.objective.goal[0]
     x_conv = gx - float(scn.params.get("converge_dist", 900.0))
     foll = np.nonzero((bhv.state == _behavior.LEADER_FOLLOW) & ent.alive & (ent.x < x_conv))[0]
     for i in foll:
-        # Station `rank * gap` metres behind the lead vehicle along its heading, taken from this
+        # Station `rank * eff_gap` metres behind the lead vehicle along its heading, taken from this
         # follower's own picture of it (live or dead-reckoned per `follow_mode`). Rank comes from
         # the spawn bookkeeping: `leader[i] = i - k` makes every follower reference the group's
         # lead vehicle, so `i - leader[i]` is its place in the column. That star topology is the
@@ -154,8 +160,9 @@ def _behavior_targets(ent: Entities, scn: Scenario, bhv, tx_new, ty_new):
         rank = 1 if bhv.topology == "chain" else max(int(i - ent.leader[i]), 1)
         v = np.hypot(bhv.trk_vx[i], bhv.trk_vy[i])
         ux, uy = (bhv.trk_vx[i] / v, bhv.trk_vy[i] / v) if v > 1e-6 else (1.0, 0.0)
-        tx_new[i] = bhv.trk_x[i] - rank * gap * ux
-        ty_new[i] = bhv.trk_y[i] - rank * gap * uy
+        eff_gap = max(gap, v * time_gap) if time_gap > 0.0 else gap
+        tx_new[i] = bhv.trk_x[i] - rank * eff_gap * ux
+        ty_new[i] = bhv.trk_y[i] - rank * eff_gap * uy
         # Station-keeping error against the TRUE pose of the reference, not the tracked one: how
         # far this vehicle is from where the formation wants it, which is the mission-level
         # quantity a path error is a proxy for. Zero when the column is closed up and driving.
@@ -166,8 +173,9 @@ def _behavior_targets(ent: Entities, scn: Scenario, bhv, tx_new, ty_new):
             ruy = ent.speed[ref] * np.sin(ent.heading[ref]) / rv
         else:
             rux, ruy = 1.0, 0.0
-        ex = ent.x[i] - (ent.x[ref] - rank * gap * rux)
-        ey = ent.y[i] - (ent.y[ref] - rank * gap * ruy)
+        ref_eff_gap = max(gap, rv * time_gap) if time_gap > 0.0 else gap
+        ex = ent.x[i] - (ent.x[ref] - rank * ref_eff_gap * rux)
+        ey = ent.y[i] - (ent.y[ref] - rank * ref_eff_gap * ruy)
         bhv.st_err_sum[i] += float(np.hypot(ex, ey))
         # The same error resolved onto the reference's heading and its normal. A vehicle that is
         # merely late is displaced ALONG the column and is still on the route; one that is off to

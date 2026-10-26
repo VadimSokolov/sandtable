@@ -214,6 +214,9 @@ def _update_convoy_succession(ent: Entities, bhv: Behavior) -> None:
             ent.role[new_head] = 0
             ent.leader[new_head] = -1
             bhv.state[new_head] = WAYPOINT
+            orig_head = int(np.nonzero(mask)[0][0])
+            if ent.speed_cap is not None and ent.speed_cap[orig_head] < np.inf:
+                ent.speed_cap[new_head] = ent.speed_cap[orig_head]
 
         # Update remaining living vehicles in the march unit to follow the new head
         for foll in living[1:]:

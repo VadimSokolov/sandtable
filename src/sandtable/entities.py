@@ -80,6 +80,10 @@ class Entities:
     section: np.ndarray = None      # int8: 0=HEAD, 1=MAIN, 2=TRAIL, or -1
     convoy_role: np.ndarray = None  # int8: 0=CONTROL, 1=CARGO, 2=SECURITY, 3=RECOVERY, or -1
 
+    # Convoy pace and speed cap (Increment: Convoy pace, Issue #10). Optional: defaulted in
+    # __post_init__ to inf (unconstrained) so non-convoy scenarios behave byte-identically.
+    speed_cap: np.ndarray = None    # float: maximum allowed speed (m/s) or inf
+
     def __post_init__(self) -> None:
         n = self.x.shape[0]
         if self.control_quality is None:
@@ -92,7 +96,7 @@ class Entities:
             self.suppression = np.zeros(n)
         if self.ammo is None:
             self.ammo = np.full(n, np.inf)
-       
+
         if self.march_unit is None:
             self.march_unit = np.full(n, -1, np.int16)
         if self.serial is None:
@@ -101,6 +105,8 @@ class Entities:
             self.section = np.full(n, -1, np.int8)
         if self.convoy_role is None:
             self.convoy_role = np.full(n, -1, np.int8)
+        if self.speed_cap is None:
+            self.speed_cap = np.full(n, np.inf)
 
     @property
     def n(self) -> int:

@@ -51,6 +51,21 @@ def validate_convoy_spec(spec: dict) -> None:
             if r not in ROLE_MAP:
                 raise ValueError(f"unknown convoy role {r!r}; must be one of {sorted(ROLE_MAP)}")
 
+    pace = spec.get("pace")
+    if pace is not None:
+        if not isinstance(pace, (int, float)) or pace <= 0 or pace > 50.0:
+            raise ValueError(f"convoy pace must be between 0 and 50 m/s, got {pace}")
+
+    time_gap = spec.get("time_gap")
+    if time_gap is not None:
+        if not isinstance(time_gap, (int, float)) or time_gap <= 0 or time_gap > 60.0:
+            raise ValueError(f"convoy time gap must be between 0 and 60 s, got {time_gap}")
+
+    elem_gap = spec.get("element_time_gap")
+    if elem_gap is not None:
+        if not isinstance(elem_gap, (int, float)) or elem_gap <= 0 or elem_gap > 300.0:
+            raise ValueError(f"convoy element time gap must be between 0 and 300 s, got {elem_gap}")
+
 
 def build_convoy_layout(spec: dict) -> dict:
     """Compute per-vehicle hierarchy arrays for the convoy from spec."""
@@ -102,6 +117,10 @@ def build_convoy_layout(spec: dict) -> dict:
             roles[i] = 1        # Follower
             leaders[i] = head_idx  # Follow the leader of its march unit
 
+    pace = float(spec["pace"]) if spec.get("pace") is not None else None
+    time_gap = float(spec["time_gap"]) if spec.get("time_gap") is not None else None
+    elem_gap = float(spec["element_time_gap"]) if spec.get("element_time_gap") is not None else None
+
     return {
         "march_unit": march_units,
         "serial": serials,
@@ -110,4 +129,7 @@ def build_convoy_layout(spec: dict) -> dict:
         "leader": leaders,
         "role": roles,
         "total": total,
+        "pace": pace,
+        "time_gap": time_gap,
+        "element_time_gap": elem_gap,
     }

@@ -58,6 +58,8 @@
       "march_unit_size": 5,
       "march_units_per_serial": 3,
       "serials_per_column": 1,
+      "pace": 10.0,
+      "time_gap": 4.0,
       "roles": ["control", "cargo", "cargo", "security", "recovery"]
     }
   }
