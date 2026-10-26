@@ -196,6 +196,31 @@ def _predecessor(ent: Entities, bhv: Behavior, i: int) -> int:
     return ldr
 
 
+
+def _update_convoy_succession(ent: Entities, bhv: Behavior) -> None:
+    """When a march unit head is lost, promote the earliest living vehicle in that march unit."""
+    if ent.march_unit is None or (ent.march_unit < 0).all():
+        return
+
+    mus = np.unique(ent.march_unit[ent.march_unit >= 0])
+    for mu in mus:
+        mask = (ent.march_unit == mu)
+        living = np.nonzero(mask & ent.alive)[0]
+        if len(living) == 0:
+            continue
+        new_head = int(living[0])
+        # If head vehicle was lost, promote the earliest living vehicle to head
+        if ent.leader[new_head] != -1 or ent.role[new_head] != 0:
+            ent.role[new_head] = 0
+            ent.leader[new_head] = -1
+            bhv.state[new_head] = WAYPOINT
+
+        # Update remaining living vehicles in the march unit to follow the new head
+        for foll in living[1:]:
+            ent.role[foll] = 1
+            ent.leader[foll] = new_head
+
+
 def _follow(ent: Entities, bhv: Behavior, comms, scn: Scenario, k: int,
             rng: np.random.Generator, blue_ground: np.ndarray) -> None:
     """Refresh each follower's picture of the vehicle it stations on (CR-3, instrument defect 10).
@@ -221,6 +246,7 @@ def _follow(ent: Entities, bhv: Behavior, comms, scn: Scenario, k: int,
     Both paths draw the same uniform whatever the mode, so the two are paired on a shared seed.
     """
     dt = scn.dt
+    _update_convoy_succession(ent, bhv)
     for i in np.nonzero(blue_ground & (ent.role == 1))[0]:
         ref = _predecessor(ent, bhv, int(i))
         got_link = comms.delivered(rng)     # drawn on BOTH paths: keeps the streams aligned

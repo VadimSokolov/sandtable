@@ -14,8 +14,8 @@ from pathlib import Path
 
 import numpy as np
 
-from sandtable.entities import AIR, GROUND, Entities
-
+from sandtable.entities import AIR, GROUND, BLUE, Entities
+from sandtable.convoy import build_convoy_layout
 
 @dataclass
 class PlatformType:
@@ -104,18 +104,32 @@ def _force_count(f: ForceSpec, scn: Scenario) -> int:
 
 def build_entities(scn: Scenario, rng: np.random.Generator) -> Entities:
     """Instantiate SoA `Entities` from the scenario force specs."""
+    convoy_spec = scn.params.get("convoy")
+    convoy_layout = build_convoy_layout(convoy_spec) if convoy_spec else None
+
     total = sum(_force_count(f, scn) for f in scn.forces)
     e = Entities.allocate(total)
     ptype_index = {name: i for i, name in enumerate(scn.platform_types)}
     spread = float(scn.params.get("formation_spread", 30.0))
 
     i = 0
+    convoy_applied = False
     for f in scn.forces:
         pt = scn.platform_types[f.ptype]
         fdir = _FORMATION_DIR.get(f.formation, (-1.0, 0.0))
         gap = f.spacing if f.spacing is not None else spread   # per-force unit spacing (depth of laydown)
         cx, cy = f.spawn
-        for k in range(_force_count(f, scn)):
+
+        n_f = _force_count(f, scn)
+        is_convoy = (convoy_layout is not None) and (f.side == BLUE) and (pt.domain == GROUND) and (not convoy_applied)
+
+        if is_convoy:
+            if n_f != convoy_layout["total"]:
+                raise ValueError("Convoy layout size must match force size")
+            base_i = i
+            convoy_applied = True
+
+        for k in range(n_f):
             # place along the formation direction with small lateral jitter
             ox = fdir[0] * gap * k
             oy = fdir[1] * gap * k + rng.normal(0.0, f.spawn_spread * 0.1)
@@ -123,8 +137,18 @@ def build_entities(scn: Scenario, rng: np.random.Generator) -> Entities:
             e.z[i] = 200.0 if pt.domain == AIR else 0.0
             e.side[i] = f.side
             e.ptype[i] = ptype_index[f.ptype]
-            e.role[i] = 0 if k == 0 else 1
-            e.leader[i] = -1 if k == 0 else (i - k)     # first entity of the group is leader
+
+            if is_convoy:
+                e.march_unit[i] = convoy_layout["march_unit"][k]
+                e.serial[i] = convoy_layout["serial"][k]
+                e.section[i] = convoy_layout["section"][k]
+                e.convoy_role[i] = convoy_layout["convoy_role"][k]
+                e.role[i] = convoy_layout["role"][k]
+                e.leader[i] = convoy_layout["leader"][k] + base_i if convoy_layout["leader"][k] != -1 else -1
+            else:
+                e.role[i] = 0 if k == 0 else 1
+                e.leader[i] = -1 if k == 0 else (i - k)
+
             e.hp[i] = pt.hp
             e.fuel[i] = pt.endurance
             e.max_speed[i] = pt.max_speed
