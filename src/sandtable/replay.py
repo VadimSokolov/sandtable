@@ -59,7 +59,7 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
     kill_buf: list = []          # (shooter, target) kill pairs since the last snapshot
 
     def snapshot(t: float) -> None:
-        frames.append({
+        frame_dict = {
             "t": round(float(t), 1),
             "x": [round(float(v), 1) for v in ent.x],
             "y": [round(float(v), 1) for v in ent.y],
@@ -68,7 +68,10 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
             "cq": [round(float(v), 2) for v in ent.control_quality],
             "kills": [[s, tg] for s, tg in kill_buf],
             "cargo_delivered": [round(float(v), 2) for v in ent.cargo_delivered] if cargo_active else [],
-        })
+        }
+        if getattr(world, "route", None) is not None and hasattr(ent, "progress"):
+            frame_dict["progress"] = [round(float(v), 1) if not np.isnan(v) else None for v in ent.progress]
+        frames.append(frame_dict)
         kill_buf.clear()
 
     snapshot(0.0)
@@ -134,6 +137,7 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
             "cover": _downsample(world.cover),
             "conceal": _downsample(world.conceal),
         },
+        "route": world.route.waypoints.tolist() if getattr(world, "route", None) is not None else [],
         "entities": [
             {
                 "side": int(ent.side[i]),

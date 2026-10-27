@@ -17,6 +17,7 @@ a routing parameter trades time-to-objective against attrition.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -30,6 +31,7 @@ class World:
     speed: np.ndarray          # [ny, nx] trafficability multiplier in [0, 1]
     cover: np.ndarray          # [ny, nx] in [0, 1]
     conceal: np.ndarray        # [ny, nx] in [0, 1]
+    route: Any = None          # optional RoutePolyline along which ground units navigate
 
     def _idx(self, x: np.ndarray, y: np.ndarray) -> tuple:
         ny, nx = self.speed.shape
@@ -52,7 +54,8 @@ class World:
 
     def in_bounds(self, x, y) -> np.ndarray:
         w, h = self.size
-        x = np.asarray(x); y = np.asarray(y)
+        x = np.asarray(x)
+        y = np.asarray(y)
         return (x >= 0) & (x < w) & (y >= 0) & (y < h)
 
     def los(self, x0, y0, x1, y1) -> np.ndarray:
@@ -143,4 +146,23 @@ def build_world(scn: Scenario, rng: np.random.Generator) -> World:
 
     speed = np.clip(speed + rng.normal(0.0, 0.02, size=speed.shape), 0.1, 1.0)
 
-    return World(size=(w, h), cell=cell, speed=speed, cover=cover, conceal=conceal)
+    route_data = scn.params.get("route")
+    start_pt = None
+    if route_data is None:
+        for f in scn.forces:
+            if getattr(f, "route", None) is not None:
+                route_data = f.route
+                start_pt = f.spawn
+                break
+    if route_data is None:
+        route_data = t.get("route")
+
+    route_obj = None
+    if route_data is not None:
+        from sandtable.route import RoutePolyline
+        if isinstance(route_data, RoutePolyline):
+            route_obj = route_data
+        else:
+            route_obj = RoutePolyline.from_waypoints(route_data, start_point=start_pt)
+
+    return World(size=(w, h), cell=cell, speed=speed, cover=cover, conceal=conceal, route=route_obj)

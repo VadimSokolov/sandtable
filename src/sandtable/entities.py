@@ -93,6 +93,10 @@ class Entities:
     cargo: np.ndarray = None            # float: cargo payload loaded at departure (tons/units)
     cargo_delivered: np.ndarray = None  # float: cargo payload delivered at objective (tons/units)
 
+    # Convoy route stationing (Phase 3, Issue #13). Optional: defaulted in
+    # __post_init__ to NaN (unrouted) so non-route scenarios behave byte-identically.
+    progress: np.ndarray = None         # float: arc-length coordinate along the route (m), or NaN
+
     def __post_init__(self) -> None:
         n = self.x.shape[0]
         if self.control_quality is None:
@@ -122,6 +126,8 @@ class Entities:
             self.cargo = np.zeros(n, np.float64)
         if self.cargo_delivered is None:
             self.cargo_delivered = np.zeros(n, np.float64)
+        if self.progress is None:
+            self.progress = np.full(n, np.nan, np.float64)
 
     @property
     def n(self) -> int:
@@ -144,4 +150,5 @@ class Entities:
             max_speed=z(), turn_rate=z(), sensor_range=z(), weapon_range=z(),
             pk_base=z(), domain=z(np.int8),
             cargo=z(), cargo_delivered=z(),
+            progress=np.full(n, np.nan, np.float64),
         )

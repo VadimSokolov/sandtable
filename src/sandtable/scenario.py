@@ -156,11 +156,34 @@ def build_entities(scn: Scenario, rng: np.random.Generator) -> Entities:
             base_i = i
             convoy_applied = True
 
+        # Check if route polyline is specified for this force or scenario
+        f_route_data = getattr(f, "route", None)
+        if f_route_data is None and f.side == BLUE and pt.domain == GROUND:
+            f_route_data = scn.params.get("route") or scn.terrain.get("route")
+
+        f_route_poly = None
+        if f_route_data is not None and f.side == BLUE and pt.domain == GROUND:
+            from sandtable.route import RoutePolyline
+            f_route_poly = f_route_data if isinstance(f_route_data, RoutePolyline) else RoutePolyline.from_waypoints(f_route_data, start_point=f.spawn)
+
+        s_spawn = 0.0
+        if f_route_poly is not None:
+            s_spawn, _ = f_route_poly.project(cx, cy)
+
         for k in range(n_f):
-            # place along the formation direction with small lateral jitter
-            ox = fdir[0] * gap * k
-            oy = fdir[1] * gap * k + rng.normal(0.0, f.spawn_spread * 0.1)
-            e.x[i], e.y[i] = cx + ox, cy + oy
+            # place along the formation direction or route with small lateral jitter
+            if f_route_poly is not None and f.formation == "column":
+                s_k = s_spawn - k * gap
+                rx, ry, rth = f_route_poly.point_at(s_k)
+                lat_jitter = float(rng.normal(0.0, f.spawn_spread * 0.1))
+                e.x[i] = rx - np.sin(rth) * lat_jitter
+                e.y[i] = ry + np.cos(rth) * lat_jitter
+                e.progress[i] = s_k
+                e.heading[i] = rth
+            else:
+                ox = fdir[0] * gap * k
+                oy = fdir[1] * gap * k + rng.normal(0.0, f.spawn_spread * 0.1)
+                e.x[i], e.y[i] = cx + ox, cy + oy
             e.z[i] = 200.0 if pt.domain == AIR else 0.0
             e.side[i] = f.side
             e.ptype[i] = ptype_index[f.ptype]
@@ -204,7 +227,8 @@ def build_entities(scn: Scenario, rng: np.random.Generator) -> Entities:
             e.domain[i] = pt.domain
             e.length[i] = pt.length
             # initial heading toward objective (blue) or toward map centre (red)
-            gx, gy = scn.objective.goal
-            e.heading[i] = np.arctan2(gy - e.y[i], gx - e.x[i])
+            if f_route_poly is None or f.formation != "column":
+                gx, gy = scn.objective.goal
+                e.heading[i] = np.arctan2(gy - e.y[i], gx - e.x[i])
             i += 1
     return e
