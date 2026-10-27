@@ -49,6 +49,12 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
     assault0 = ground_blue0 if ground_blue0 > 0 else init_counts[BLUE]
     need = scn.objective.survive_fraction * assault0
 
+    cargo_total = float(ent.cargo[ent.side_mask(BLUE)].sum()) if ent.cargo is not None else 0.0
+    cargo_active = cargo_total > 0.0
+    from sandtable.convoy import resolve_delivery_fraction
+    req_del_frac = resolve_delivery_fraction(scn)
+    req_cargo = float(req_del_frac) * cargo_total if cargo_active else 0.0
+
     frames: list[dict] = []
     kill_buf: list = []          # (shooter, target) kill pairs since the last snapshot
 
@@ -61,6 +67,7 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
             "seen": [int(v) for v in ent.seen],
             "cq": [round(float(v), 2) for v in ent.control_quality],
             "kills": [[s, tg] for s, tg in kill_buf],
+            "cargo_delivered": [round(float(v), 2) for v in ent.cargo_delivered] if cargo_active else [],
         })
         kill_buf.clear()
 
@@ -89,10 +96,26 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
 
         if (k + 1) % stride == 0:
             snapshot(t)
-        if t_reached is None and metrics.blue_at_goal(ent, scn).sum() >= need:
-            t_reached = t
-            snapshot(t)
-            break
+        if cargo_active:
+            at_goal = metrics.blue_at_goal(ent, scn)
+            if at_goal.any():
+                ent.cargo_delivered[at_goal] = ent.cargo[at_goal]
+            c_del = float(ent.cargo_delivered[ent.side == BLUE].sum())
+            delivered_target_met = (c_del >= req_cargo) if req_cargo > 0.0 else (at_goal.any() and c_del >= req_cargo)
+            if t_reached is None and delivered_target_met:
+                t_reached = t
+                snapshot(t)
+                break
+            blue_alive = ent.side_mask(BLUE)
+            c_in_transit = float((ent.cargo[blue_alive] - ent.cargo_delivered[blue_alive]).sum())
+            if c_in_transit <= 1e-6:
+                snapshot(t)
+                break
+        else:
+            if t_reached is None and metrics.blue_at_goal(ent, scn).sum() >= need:
+                t_reached = t
+                snapshot(t)
+                break
         if not ent.side_mask(BLUE).any():
             snapshot(t)
             break
@@ -117,6 +140,8 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
                 "domain": int(ent.domain[i]),
                 "sensor_range": float(ent.sensor_range[i]),
                 "weapon_range": float(ent.weapon_range[i]),
+                "convoy_role": int(ent.convoy_role[i]) if hasattr(ent, "convoy_role") and ent.convoy_role is not None else -1,
+                "cargo": float(ent.cargo[i]) if hasattr(ent, "cargo") and ent.cargo is not None else 0.0,
             }
             for i in range(ent.n)
         ],
@@ -130,7 +155,7 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
             **{
                 k: (round(v, 2) if isinstance(v, float) else v)
                 for k, v in result.items()
-                if k.startswith("convoy_")
+                if k.startswith("convoy_") or k.startswith("cargo_") or k in ("delivered_frac", "time_to_delivery")
             },
         },
     }
