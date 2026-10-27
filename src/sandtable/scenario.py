@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 
 from sandtable.entities import AIR, GROUND, BLUE, Entities
-from sandtable.convoy import build_convoy_layout, resolve_convoy_spec
+from sandtable.convoy import ROLE_CARGO, build_convoy_layout, resolve_convoy_spec
 
 @dataclass
 class PlatformType:
@@ -31,10 +31,13 @@ class PlatformType:
     hp: float = 1.0
     endurance: float = np.inf          # s (finite for UAS)
     length: float = 6.0                # m, physical vehicle length (front to rear bumper)
+    cargo_capacity: float = 0.0        # payload capacity in metric tons / units
 
     def __post_init__(self) -> None:
         if self.length < 0.0:
             raise ValueError(f"platform length must be non-negative, got {self.length}")
+        if self.cargo_capacity < 0.0:
+            raise ValueError(f"platform cargo capacity must be non-negative, got {self.cargo_capacity}")
 
 
 @dataclass
@@ -59,6 +62,11 @@ class Objective:
     goal: tuple                        # (x, y) objective location
     goal_radius: float = 120.0         # m, arrival tolerance
     survive_fraction: float = 0.5      # min fraction of the assaulting force that must arrive
+    delivery_fraction: float | None = None  # min fraction of cargo that must be delivered
+
+    def __post_init__(self) -> None:
+        if self.delivery_fraction is not None and not (0.0 <= self.delivery_fraction <= 1.0):
+            raise ValueError(f"delivery fraction must be between 0.0 and 1.0, got {self.delivery_fraction}")
 
 
 @dataclass
@@ -167,12 +175,24 @@ def build_entities(scn: Scenario, rng: np.random.Generator) -> Entities:
                 pace = convoy_layout.get("pace")
                 if pace is not None and e.role[i] == 0:
                     e.speed_cap[i] = float(pace)
+                # Cargo payload: only ROLE_CARGO carries freight
+                if e.convoy_role[i] == ROLE_CARGO:
+                    c_veh = convoy_layout.get("cargo_per_vehicle")
+                    if c_veh is not None:
+                        e.cargo[i] = float(c_veh)
+                    elif pt.cargo_capacity > 0.0:
+                        e.cargo[i] = float(pt.cargo_capacity)
+                    else:
+                        e.cargo[i] = 0.0
+                else:
+                    e.cargo[i] = 0.0
             else:
                 e.role[i] = 0 if k == 0 else 1
                 e.leader[i] = -1 if k == 0 else (i - k)
                 pace = scn.params.get("pace")
                 if pace is not None and e.role[i] == 0:
                     e.speed_cap[i] = float(pace)
+                e.cargo[i] = float(pt.cargo_capacity) if pt.cargo_capacity > 0.0 else 0.0
 
             e.hp[i] = pt.hp
             e.fuel[i] = pt.endurance

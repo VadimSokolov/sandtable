@@ -143,11 +143,15 @@ def compute(scn: Scenario, init_counts: dict, ent: Entities,
 
     out_extra = _teaming_metrics(scn, ent, bhv, op, t_elapsed)
     out_convoy = _convoy_doctrine_metrics(scn, ent)
+    out_cargo = _cargo_delivery_metrics(scn, ent, t_reached, t_elapsed)
+    if out_cargo:
+        success = out_cargo["cargo_success"]
 
     return {
         **out_cfg,
         **out_extra,
         **out_convoy,
+        **out_cargo,
         "success": success,                                   # MOE: mission accomplished
         "time_to_objective": tto,                             # MOE: tempo (s)
         "blue_losses": float(blue_losses),                    # MOE: attrition
@@ -218,6 +222,58 @@ def _convoy_doctrine_metrics(scn: Scenario, ent: Entities) -> dict:
         "convoy_road_clearance_time": summary["road_clearance_time"],
         "convoy_rate_of_march": summary["rate_of_march"],
         "convoy_measured_column_length": meas_cl,
+    }
+
+
+def _cargo_delivery_metrics(scn: Scenario, ent: Entities, t_reached: float | None,
+                            t_elapsed: float) -> dict:
+    """Cargo delivery, throughput, and conservation metrics (FM 4-0 / Issue #9).
+
+    Returned only when cargo is active (cargo_loaded > 0.0), preserving 100%
+    byte-identical KPIs for non-cargo scenarios.
+    """
+    if ent.cargo is None:
+        return {}
+
+    blue_mask = ent.side == BLUE
+    cargo_loaded = float(ent.cargo[blue_mask].sum())
+    if cargo_loaded <= 0.0:
+        return {}
+
+    from sandtable.convoy import resolve_delivery_fraction
+
+    cargo_delivered = float(ent.cargo_delivered[blue_mask].sum())
+
+    # Lost cargo: undelivered cargo on destroyed blue vehicles
+    blue_dead = blue_mask & (ent.alive == 0)
+    cargo_lost = float((ent.cargo[blue_dead] - ent.cargo_delivered[blue_dead]).sum())
+
+    # In-transit cargo: undelivered cargo on living blue vehicles
+    blue_alive = ent.side_mask(BLUE)
+    cargo_in_transit = float((ent.cargo[blue_alive] - ent.cargo_delivered[blue_alive]).sum())
+
+    # Strict conservation invariant: C_loaded = C_delivered + C_lost + C_in_transit
+    assert abs(cargo_loaded - (cargo_delivered + cargo_lost + cargo_in_transit)) < 1e-6, (
+        f"Cargo conservation violated: loaded={cargo_loaded}, "
+        f"delivered={cargo_delivered}, lost={cargo_lost}, in_transit={cargo_in_transit}"
+    )
+
+    delivered_frac = cargo_delivered / cargo_loaded if cargo_loaded > 0.0 else 0.0
+    req_del = resolve_delivery_fraction(scn)
+    success = 1.0 if delivered_frac >= req_del else 0.0
+
+    throughput = cargo_delivered / max(t_elapsed, 1e-6)
+    time_to_delivery = float(t_reached) if t_reached is not None else float(scn.duration)
+
+    return {
+        "cargo_loaded": cargo_loaded,
+        "cargo_delivered": cargo_delivered,
+        "cargo_lost": cargo_lost,
+        "cargo_in_transit": cargo_in_transit,
+        "delivered_frac": delivered_frac,
+        "cargo_throughput": throughput,
+        "time_to_delivery": time_to_delivery,
+        "cargo_success": success,
     }
 
 
