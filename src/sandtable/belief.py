@@ -148,8 +148,9 @@ def engage(ent: Entities, world: World, tracks: Tracks, rng: np.random.Generator
         si = np.nonzero(shooters)[0]
         rng_gate = ent.weapon_range[si][:, None]
         d_real = cdist(shooter_pos[si], real_pos)                     # (S, N)
+        los_real = world.los(shooter_pos[si, 0:1], shooter_pos[si, 1:2], real_pos[None, :, 0], real_pos[None, :, 1])
         eng_real = ((ent.side[None, :] != s) & ent.alive[None, :] & tracks.live[None, :]
-                    & (ent.domain[None, :] == GROUND) & (d_real <= rng_gate))
+                    & (ent.domain[None, :] == GROUND) & (d_real <= rng_gate) & los_real)
         d_real = np.where(eng_real, d_real, np.inf)
         if m:
             fsel = tracks.flive & (tracks.fside == s)

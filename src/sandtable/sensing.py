@@ -42,6 +42,9 @@ def step(ent: Entities, world: World, rng: np.random.Generator, comms=None) -> N
     opposing = ent.side[:, None] != ent.side[None, :]
     within = dist <= ent.sensor_range[:, None]  # observer o (row) can range target t (col)
     los_ok = world.los(ent.x[:, None], ent.y[:, None], ent.x[None, :], ent.y[None, :])
+    # Air entities look over 2D building footprints unless otherwise occluded
+    is_air = (ent.domain[:, None] == AIR) | (ent.domain[None, :] == AIR)
+    los_ok = los_ok | is_air
     observable = alive[:, None] & alive[None, :] & opposing & within & los_ok
 
     detected_by_any = observable.any(axis=0)    # per target column

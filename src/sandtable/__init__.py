@@ -14,5 +14,15 @@ __version__ = "0.1.0"
 
 from sandtable.scenario import Scenario, load_scenario
 from sandtable.sim import evaluate, run_mission
+from sandtable.street_graph import StreetEdge, StreetGraph, StreetNode
 
-__all__ = ["Scenario", "load_scenario", "run_mission", "evaluate", "__version__"]
+__all__ = [
+    "Scenario",
+    "load_scenario",
+    "run_mission",
+    "evaluate",
+    "StreetGraph",
+    "StreetNode",
+    "StreetEdge",
+    "__version__",
+]

@@ -1,3 +1,4 @@
+
 """Engagement: probability-of-kill attrition modulated by cover.
 
 Each living shooter engages its nearest detected enemy within weapon range. A kill is a Bernoulli
@@ -28,6 +29,7 @@ def _side_damage(ent: Entities, world: World, dist: np.ndarray, shooter_side: in
     if not shooters.any():
         return
     opposing = ent.side[:, None] != ent.side[None, :]
+    los_ok = world.los(ent.x[:, None], ent.y[:, None], ent.x[None, :], ent.y[None, :])
     engageable = (
         shooters[:, None]
         & ent.alive[None, :]
@@ -35,6 +37,7 @@ def _side_damage(ent: Entities, world: World, dist: np.ndarray, shooter_side: in
         & (dist <= ent.weapon_range[:, None])
         & ent.seen[None, :]                 # may only fire on detected enemies
         & (ent.domain[None, :] == GROUND)   # air recon (UAS) is not engaged (no SHORAD modeled)
+        & los_ok
     )
     dmasked = np.where(engageable, dist, np.inf)
     has_target = np.isfinite(dmasked).any(axis=1)

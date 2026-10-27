@@ -32,6 +32,9 @@ class World:
     cover: np.ndarray          # [ny, nx] in [0, 1]
     conceal: np.ndarray        # [ny, nx] in [0, 1]
     route: Any = None          # optional RoutePolyline along which ground units navigate
+    buildings: np.ndarray | None = None      # optional [ny, nx] bool: True where buildings block LOS
+    building_boxes: np.ndarray | None = None # optional [B, 4] float: [xmin, ymin, xmax, ymax]
+    street_graph: Any = None                 # optional StreetGraph
 
     def _idx(self, x: np.ndarray, y: np.ndarray) -> tuple:
         ny, nx = self.speed.shape
@@ -59,8 +62,52 @@ class World:
         return (x >= 0) & (x < w) & (y >= 0) & (y < h)
 
     def los(self, x0, y0, x1, y1) -> np.ndarray:
-        """Line-of-sight clear? Flat-terrain stub: always True (shape-broadcast)."""
-        return np.ones(np.broadcast(x0, x1).shape, bool)
+        """Line-of-sight clear between (x0, y0) and (x1, y1).
+
+        Returns boolean array matching the broadcast shape of the inputs.
+        If self.buildings is None: returns np.ones(..., bool) (flat-terrain baseline).
+        If self.buildings is present: checks ray traversal against building cells.
+        """
+        b_x0, b_y0, b_x1, b_y1 = np.broadcast_arrays(x0, y0, x1, y1)
+        out_shape = b_x0.shape
+
+        if self.buildings is None:
+            return np.ones(out_shape, dtype=bool)
+
+        flat_x0 = b_x0.ravel()
+        flat_y0 = b_y0.ravel()
+        flat_x1 = b_x1.ravel()
+        flat_y1 = b_y1.ravel()
+
+        k_rays = flat_x0.size
+        if k_rays == 0:
+            return np.ones(out_shape, dtype=bool)
+
+        dx = flat_x1 - flat_x0
+        dy = flat_y1 - flat_y0
+        dist = np.hypot(dx, dy)
+        max_d = float(np.max(dist)) if dist.size else 0.0
+
+        if max_d < 1e-6:
+            iy, ix = self._idx(flat_x0, flat_y0)
+            clear = ~self.buildings[iy, ix]
+            return clear.reshape(out_shape)
+
+        step_len = max(1.0, self.cell * 0.5)
+        n_steps = int(np.clip(np.ceil(max_d / step_len), 2, 200))
+
+        t = np.linspace(0.01, 0.99, n_steps)
+        pts_x = flat_x0[:, None] + dx[:, None] * t[None, :]
+        pts_y = flat_y0[:, None] + dy[:, None] * t[None, :]
+
+        ny, nx = self.buildings.shape
+        ix = np.clip((pts_x / self.cell).astype(np.intp), 0, nx - 1)
+        iy = np.clip((pts_y / self.cell).astype(np.intp), 0, ny - 1)
+
+        blocked = np.any(self.buildings[iy, ix], axis=1)
+        clear = ~blocked
+
+        return clear.reshape(out_shape)
 
     # covered-route centre-line y (used by planning to steer toward defilade)
     @property
@@ -117,10 +164,12 @@ def build_world(scn: Scenario, rng: np.random.Generator) -> World:
     # moderate elsewhere (~0.6). This is the speed-vs-cover tradeoff route_bias explores.
     speed_col = np.clip(0.60 + 0.40 * open_band - 0.20 * band, 0.15, 1.0)
 
-    # broadcast lateral profiles across x, add light spatial noise for texture
     cover = np.repeat(cover_col[:, None], nx, axis=1)
     conceal = np.repeat(conceal_col[:, None], nx, axis=1)
     speed = np.repeat(speed_col[:, None], nx, axis=1)
+
+    buildings_mask: np.ndarray | None = None
+    building_boxes: np.ndarray | None = None
 
     if profile == "open":
         cover = np.full_like(cover, float(t.get("open_cover", cover_col.mean())))
@@ -140,11 +189,96 @@ def build_world(scn: Scenario, rng: np.random.Generator) -> World:
         block = ridge * (1.0 - gap)                                  # [ny, nx] in [0, 1)
         speed = np.clip(speed - float(t.get("ridge_slow", 0.55)) * block, 0.05, 1.0)
         cover = np.clip(cover + float(t.get("ridge_cover", 0.30)) * ridge * gap, 0.0, 1.0)
+    elif profile == "urban":
+        block_w = float(t.get("block_width", 200.0))
+        block_h = float(t.get("block_height", 200.0))
+        street_w = float(t.get("street_width", 50.0))
+        period_x = block_w + street_w
+        period_y = block_h + street_w
+
+        xs = (np.arange(nx) + 0.5) * cell
+        ys_2d = ys[:, None]
+        xs_2d = xs[None, :]
+
+        mod_x = xs_2d % period_x
+        mod_y = ys_2d % period_y
+
+        is_building = (mod_x > street_w) & (mod_y > street_w)
+        margin_x = int(np.ceil(street_w / cell))
+        margin_y = int(np.ceil(street_w / cell))
+        is_building[:, :margin_x] = False
+        is_building[:, -margin_x:] = False
+        is_building[:margin_y, :] = False
+        is_building[-margin_y:, :] = False
+
+        speed = np.where(is_building, 0.05, 1.0)
+        cover = np.where(is_building, 0.90, 0.05)
+        conceal = np.where(is_building, 0.90, 0.05)
+        buildings_mask = is_building
     elif profile != "band":
         raise ValueError(f"unknown terrain profile {profile!r}; "
-                         f"expected one of 'band', 'chokepoint', 'open'")
+                         f"expected one of 'band', 'chokepoint', 'open', 'urban'")
 
-    speed = np.clip(speed + rng.normal(0.0, 0.02, size=speed.shape), 0.1, 1.0)
+    if profile != "urban":
+        speed = np.clip(speed + rng.normal(0.0, 0.02, size=speed.shape), 0.1, 1.0)
+    else:
+        street_noise = rng.normal(0.0, 0.02, size=speed.shape)
+        speed = np.where(is_building, 0.05, np.clip(speed + street_noise, 0.1, 1.0))
+
+    raw_buildings = scn.params.get("buildings")
+    if raw_buildings is None:
+        raw_buildings = t.get("buildings") or t.get("building_boxes")
+
+    if raw_buildings is not None:
+        if isinstance(raw_buildings, np.ndarray) and raw_buildings.ndim == 2 and raw_buildings.shape == (ny, nx):
+            buildings_mask = raw_buildings.astype(bool)
+        elif isinstance(raw_buildings, (list, tuple, np.ndarray)):
+            boxes = np.asarray(raw_buildings, dtype=np.float64)
+            if boxes.ndim == 2 and boxes.shape[1] == 4:
+                building_boxes = boxes
+                if buildings_mask is None:
+                    buildings_mask = np.zeros((ny, nx), dtype=bool)
+                for b in boxes:
+                    x_min, y_min, x_max, y_max = b
+                    ix0 = int(np.clip(np.floor(x_min / cell), 0, nx - 1))
+                    ix1 = int(np.clip(np.ceil(x_max / cell), 0, nx))
+                    iy0 = int(np.clip(np.floor(y_min / cell), 0, ny - 1))
+                    iy1 = int(np.clip(np.ceil(y_max / cell), 0, ny))
+                    buildings_mask[iy0:iy1, ix0:ix1] = True
+                    speed[iy0:iy1, ix0:ix1] = 0.05
+                    cover[iy0:iy1, ix0:ix1] = 0.90
+                    conceal[iy0:iy1, ix0:ix1] = 0.90
+
+    raw_sg = scn.params.get("street_graph")
+    if raw_sg is None:
+        raw_sg = t.get("street_graph")
+
+    street_graph_obj = None
+    if raw_sg is not None:
+        from sandtable.street_graph import StreetGraph
+        if isinstance(raw_sg, StreetGraph):
+            street_graph_obj = raw_sg
+        elif isinstance(raw_sg, dict):
+            street_graph_obj = StreetGraph.from_dict(raw_sg)
+    elif profile == "urban":
+        from sandtable.street_graph import StreetGraph
+        block_w = float(t.get("block_width", 200.0))
+        block_h = float(t.get("block_height", 200.0))
+        street_w = float(t.get("street_width", 50.0))
+        period_x = block_w + street_w
+        period_y = block_h + street_w
+        n_inter_x = max(2, int(np.ceil(w / period_x)) + 1)
+        n_inter_y = max(2, int(np.ceil(h / period_y)) + 1)
+        street_graph_obj = StreetGraph.create_grid(
+            nx=n_inter_x,
+            ny=n_inter_y,
+            spacing_x=period_x,
+            spacing_y=period_y,
+            origin=(street_w * 0.5, street_w * 0.5),
+            width=street_w,
+            speed_mult=1.0,
+            exposure=0.5,
+        )
 
     route_data = scn.params.get("route")
     start_pt = None
@@ -164,5 +298,28 @@ def build_world(scn: Scenario, rng: np.random.Generator) -> World:
             route_obj = route_data
         else:
             route_obj = RoutePolyline.from_waypoints(route_data, start_point=start_pt)
+    elif street_graph_obj is not None:
+        gx, gy = scn.objective.goal
+        sx, sy = (0.0, h * 0.5)
+        for f in scn.forces:
+            if getattr(f, "spawn", None) is not None:
+                sx, sy = f.spawn
+                break
+        u_start = street_graph_obj.find_nearest_node(sx, sy)
+        u_goal = street_graph_obj.find_nearest_node(gx, gy)
+        route_bias = float(scn.params.get("route_bias", 0.0))
+        path_nodes = street_graph_obj.find_path(u_start, u_goal, route_bias=route_bias)
+        if len(path_nodes) >= 2:
+            route_obj = street_graph_obj.to_route_polyline(path_nodes)
 
-    return World(size=(w, h), cell=cell, speed=speed, cover=cover, conceal=conceal, route=route_obj)
+    return World(
+        size=(w, h),
+        cell=cell,
+        speed=speed,
+        cover=cover,
+        conceal=conceal,
+        route=route_obj,
+        buildings=buildings_mask,
+        building_boxes=building_boxes,
+        street_graph=street_graph_obj,
+    )

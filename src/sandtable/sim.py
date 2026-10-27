@@ -129,7 +129,7 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
         if op is not None:
             c2.step(ent, op, comms, scn, k, rng, world)
         if bhv is not None:
-            behavior.step(ent, bhv, op, comms, scn, k, rng)
+            behavior.step(ent, bhv, op, comms, scn, k, rng, world=world)
         planning.step(ent, world, scn, spawn_x, pers=pers, bhv=bhv)
         motion.step(ent, world, dt, tempo)
         sensing.step(ent, world, rng, comms)

@@ -12,7 +12,7 @@ the battery and job that produced it and none of those runs involved any search 
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 

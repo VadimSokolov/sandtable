@@ -25,7 +25,7 @@ from sandtable.behavior import Behavior, LEADER_FOLLOW, WAYPOINT
 from sandtable.entities import BLUE, GROUND, Entities
 from sandtable.route import RoutePolyline
 from sandtable.scenario import ForceSpec, Objective, PlatformType, Scenario, build_entities
-from sandtable.world import World, build_world
+from sandtable.world import build_world
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 VIZ_DIR = REPO_ROOT / "report" / "viz"
@@ -93,14 +93,25 @@ def simulate_run(scn: Scenario, route_poly: RoutePolyline, is_routed: bool, step
     for step_idx in range(steps):
         t = round(step_idx * dt, 1)
 
-        # Update follower tracking
+        # Update follower tracking with line-of-sight occlusion
+        los_to_lead = [True] * n
         for i in range(n):
             if ent.role[i] == 1:
                 ref = behavior._predecessor(ent, bhv, i)
-                bhv.trk_x[i] = ent.x[ref]
-                bhv.trk_y[i] = ent.y[ref]
-                bhv.trk_vx[i] = ent.speed[ref] * np.cos(ent.heading[ref])
-                bhv.trk_vy[i] = ent.speed[ref] * np.sin(ent.heading[ref])
+                in_range = float(np.hypot(ent.x[ref] - ent.x[i], ent.y[ref] - ent.y[i])) <= bhv.sense_range
+                has_los = bool(world.los(ent.x[i], ent.y[i], ent.x[ref], ent.y[ref])) if world.buildings is not None else True
+                los_to_lead[i] = has_los
+                if in_range and has_los:
+                    bhv.trk_x[i] = ent.x[ref]
+                    bhv.trk_y[i] = ent.y[ref]
+                    bhv.trk_vx[i] = ent.speed[ref] * np.cos(ent.heading[ref])
+                    bhv.trk_vy[i] = ent.speed[ref] * np.sin(ent.heading[ref])
+                    bhv.trk_age[i] = 0
+                else:
+                    bhv.trk_age[i] += 1
+                    bhv.trk_stale_steps[i] += 1
+                    bhv.trk_x[i] += bhv.trk_vx[i] * dt
+                    bhv.trk_y[i] += bhv.trk_vy[i] * dt
 
         planning.step(ent, world, scn, float(ent.x[0]), bhv=bhv)
 
@@ -142,6 +153,8 @@ def simulate_run(scn: Scenario, route_poly: RoutePolyline, is_routed: bool, step
             "progress": [round(float(v), 1) for v in s_vals],
             "cross_track": [round(float(v), 1) for v in d_perp_vals],
             "inter_gap": inter_gaps,
+            "los_to_lead": los_to_lead,
+            "stale_steps": [int(v) for v in bhv.trk_stale_steps],
             "tgt_x": [round(float(v), 1) for v in ent.tgt_x],
             "tgt_y": [round(float(v), 1) for v in ent.tgt_y],
         })
@@ -327,6 +340,98 @@ def generate_dashboard():
             "Control Lead (MU 3)", "Cargo", "Cargo", "Trail Recovery",
         ],
         "traces": {"routed": run3_routed, "euclidean": run3_eucl},
+    })
+
+    # Preset 4: Urban Street Graph & Occlusion (Issue #16)
+    pts4 = [
+        (150.0, 350.0),
+        (750.0, 350.0),
+        (750.0, 850.0),
+        (1350.0, 850.0),
+        (1350.0, 1350.0),
+    ]
+    poly4 = RoutePolyline.from_waypoints(pts4)
+    urban_boxes = [
+        [300.0, 450.0, 650.0, 750.0],
+        [850.0, 450.0, 1200.0, 750.0],
+        [300.0, 950.0, 650.0, 1250.0],
+        [850.0, 950.0, 1200.0, 1250.0],
+    ]
+    scn4_routed = Scenario(
+        name="urban_routed",
+        size=(1800.0, 1600.0),
+        platform_types=ptypes,
+        terrain={"profile": "open", "open_speed": 1.0, "buildings": urban_boxes},
+        forces=[
+            ForceSpec(
+                side=BLUE,
+                ptype="truck",
+                count=6,
+                spawn=(150.0, 350.0),
+                spawn_spread=0.0,
+                route=pts4,
+                spacing=50.0,
+            ),
+        ],
+        objective=Objective(goal=(1350.0, 1350.0), goal_radius=80.0),
+        params={
+            "convoy": {
+                "march_unit_size": 3,
+                "march_units_per_serial": 2,
+                "serials_per_column": 1,
+                "pace": 10.0,
+                "time_gap": 2.5,
+            },
+            "formation_spread": 50.0,
+            "route": pts4,
+            "buildings": urban_boxes,
+        },
+        duration=180.0,
+        dt=1.0,
+    )
+    scn4_eucl = Scenario(
+        name="urban_eucl",
+        size=(1800.0, 1600.0),
+        platform_types=ptypes,
+        terrain={"profile": "open", "open_speed": 1.0, "buildings": urban_boxes},
+        forces=[
+            ForceSpec(
+                side=BLUE,
+                ptype="truck",
+                count=6,
+                spawn=(150.0, 350.0),
+                spawn_spread=0.0,
+                spacing=50.0,
+            ),
+        ],
+        objective=Objective(goal=(1350.0, 1350.0), goal_radius=80.0),
+        params={
+            "convoy": {
+                "march_unit_size": 3,
+                "march_units_per_serial": 2,
+                "serials_per_column": 1,
+                "pace": 10.0,
+                "time_gap": 2.5,
+            },
+            "formation_spread": 50.0,
+            "buildings": urban_boxes,
+        },
+        duration=180.0,
+        dt=1.0,
+    )
+    run4_routed = simulate_run(scn4_routed, poly4, is_routed=True, steps=180)
+    run4_eucl = simulate_run(scn4_eucl, poly4, is_routed=False, steps=180)
+    presets.append({
+        "id": "urban_grid",
+        "title": "Urban Street Graph & Occlusion",
+        "subtitle": "ATP 4-11 Urban Convoy Operations & Blind Corner Occlusion (Issue #16)",
+        "desc": "Sequential 90-degree street turns around large building blocks. Demonstrates follower line-of-sight loss on blind corners: tracking falls back to road dead-reckoning until the follower turns the corner and re-acquires optical contact, preventing vehicles from collision-cutting through solid buildings.",
+        "route": [[float(x), float(y)] for x, y in pts4],
+        "building_boxes": urban_boxes,
+        "total_length": round(poly4.total_length, 1),
+        "vehicle_count": 6,
+        "roles": ["Lead Truck", "Follower", "Follower", "Lead Truck (MU 2)", "Follower", "Follower"],
+        "traces": {"routed": run4_routed, "euclidean": run4_eucl},
     })
 
     # Write data JSON
@@ -934,6 +1039,10 @@ def generate_html(data_payload: dict) -> str:
             <span class="kpi-label">Route Progress (s / L)</span>
             <span class="kpi-val highlight" id="valProgress">0%</span>
           </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Line-of-Sight Status</span>
+            <span class="kpi-val good" id="valLOSStatus">CLEAR (OPTICAL TRACK)</span>
+          </div>
         </div>
 
         <!-- Comparative Audit Card -->
@@ -1076,6 +1185,14 @@ def generate_html(data_payload: dict) -> str:
         minY = Math.min(minY, p[1]);
         maxY = Math.max(maxY, p[1]);
       }});
+      if (activePreset.building_boxes) {{
+        activePreset.building_boxes.forEach(b => {{
+          minX = Math.min(minX, b[0], b[2]);
+          maxX = Math.max(maxX, b[0], b[2]);
+          minY = Math.min(minY, b[1], b[3]);
+          maxY = Math.max(maxY, b[1], b[3]);
+        }});
+      }}
       const pad = 180;
       return {{ minX: minX - pad, maxX: maxX + pad, minY: minY - pad, maxY: maxY + pad }};
     }}
@@ -1111,6 +1228,11 @@ def generate_html(data_payload: dict) -> str:
 
       // Draw Road Corridor
       drawRoad(bounds);
+
+      // Draw Buildings if present
+      if (activePreset.building_boxes && activePreset.building_boxes.length > 0) {{
+        drawBuildings(bounds, activePreset.building_boxes);
+      }}
 
       // Draw Vehicle Trails (Past positions)
       drawBreadcrumbs(bounds);
@@ -1180,6 +1302,44 @@ def generate_html(data_payload: dict) -> str:
       }});
     }}
 
+    function drawBuildings(bounds, boxes) {{
+      boxes.forEach((b, idx) => {{
+        const [x0, y0, x1, y1] = b;
+        const [sx0, sy0] = toCanvasCoords(x0, y1, bounds);
+        const [sx1, sy1] = toCanvasCoords(x1, y0, bounds);
+        const w = sx1 - sx0;
+        const h = sy1 - sy0;
+
+        // Shadow / 3D depth
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(sx0 + 4, sy0 + 4, w, h);
+
+        // Building roof
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(sx0, sy0, w, h);
+
+        // Architectural wall stroke
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(sx0, sy0, w, h);
+
+        // Inner roof pattern
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(sx0 + 6, sy0 + 6, Math.max(0, w - 12), Math.max(0, h - 12));
+
+        // Building Label
+        ctx.font = '11px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.fillText(`BLOCK ${{idx + 1}}`, sx0 + w / 2, sy0 + h / 2 - 3);
+        ctx.font = '9px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText('SOLID MASONRY', sx0 + w / 2, sy0 + h / 2 + 11);
+        ctx.textAlign = 'left';
+      }});
+    }}
+
     function drawBreadcrumbs(bounds) {{
       const trace = (activeMode === 'euclidean') ? activePreset.traces.euclidean : activePreset.traces.routed;
       const frames = trace.frames.slice(0, currentStep + 1);
@@ -1202,6 +1362,32 @@ def generate_html(data_payload: dict) -> str:
 
     function drawConvoyFrame(frame, bounds, leadColor, follColor, isGhost) {{
       if (!frame) return;
+
+      // Draw Line-of-sight sightlines from followers to predecessor
+      if (!isGhost && frame.los_to_lead) {{
+        for (let i = 1; i < frame.x.length; i++) {{
+          const ref = i - 1;
+          const [sx, sy] = toCanvasCoords(frame.x[i], frame.y[i], bounds);
+          const [rx, ry] = toCanvasCoords(frame.x[ref], frame.y[ref], bounds);
+          const hasLos = frame.los_to_lead[i];
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(rx, ry);
+          if (hasLos) {{
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 4]);
+          }} else {{
+            ctx.strokeStyle = 'rgba(244, 63, 94, 0.85)';
+            ctx.lineWidth = 2.0;
+            ctx.setLineDash([6, 4]);
+          }}
+          ctx.stroke();
+          ctx.restore();
+        }}
+      }}
 
       for (let i = 0; i < frame.x.length; i++) {{
         const x = frame.x[i];
@@ -1291,6 +1477,26 @@ def generate_html(data_payload: dict) -> str:
       const progPct = Math.min(100, Math.max(0, (leadProg / activePreset.total_length) * 100));
       document.getElementById('valProgress').textContent = `${{progPct.toFixed(0)}}% (${{leadProg.toFixed(0)}}m)`;
 
+      // Line of Sight status for selected vehicle
+      const elLos = document.getElementById('valLOSStatus');
+      if (elLos) {{
+        if (selectedVehicleIdx === 0) {{
+          elLos.textContent = 'POINT LEAD (NAV)';
+          elLos.className = 'kpi-val';
+        }} else if (frame.los_to_lead && frame.los_to_lead[selectedVehicleIdx] !== undefined) {{
+          if (frame.los_to_lead[selectedVehicleIdx]) {{
+            elLos.textContent = 'CLEAR (OPTICAL TRACK)';
+            elLos.className = 'kpi-val good';
+          }} else {{
+            elLos.textContent = 'OCCLUDED (DEAD-RECKON)';
+            elLos.className = 'kpi-val bad';
+          }}
+        }} else {{
+          elLos.textContent = 'CLEAR (OPTICAL TRACK)';
+          elLos.className = 'kpi-val good';
+        }}
+      }}
+
       // Vehicle List
       const vList = document.getElementById('vehicleList');
       vList.innerHTML = frame.x.map((_, i) => {{
@@ -1299,6 +1505,9 @@ def generate_html(data_payload: dict) -> str:
         const s = frame.progress[i];
         const gap = frame.inter_gap[i];
         const isSel = (i === selectedVehicleIdx);
+        const losTag = (i > 0 && frame.los_to_lead && frame.los_to_lead[i] !== undefined)
+          ? (frame.los_to_lead[i] ? '<span style="color:#38bdf8;font-size:9.5px;font-weight:600;margin-left:4px;">[LOS]</span>' : '<span style="color:#fb7185;font-size:9.5px;font-weight:600;margin-left:4px;">[BLIND]</span>')
+          : '';
 
         return `
           <div class="vehicle-item ${{isSel ? 'selected' : ''}}" onclick="selectVehicle(${{i}})">
@@ -1307,7 +1516,7 @@ def generate_html(data_payload: dict) -> str:
               <div class="v-role">${{role}}</div>
             </div>
             <div class="v-metrics">
-              <div>s: ${{s.toFixed(0)}}m | d<sub>⊥</sub>: <span style="color:${{d_perp > 8.0 ? '#fb7185' : '#34d399'}}">${{d_perp.toFixed(1)}}m</span></div>
+              <div>s: ${{s.toFixed(0)}}m | d<sub>⊥</sub>: <span style="color:${{d_perp > 8.0 ? '#fb7185' : '#34d399'}}">${{d_perp.toFixed(1)}}m</span> ${{losTag}}</div>
               <div style="color:var(--text-sub)">${{i > 0 ? `Δs: ${{gap.toFixed(1)}}m` : 'Point Lead'}}</div>
             </div>
           </div>

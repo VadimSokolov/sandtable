@@ -88,7 +88,7 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
         if op is not None:
             c2.step(ent, op, comms, scn, k, rng)
         if bhv is not None:
-            behavior.step(ent, bhv, op, comms, scn, k, rng)
+            behavior.step(ent, bhv, op, comms, scn, k, rng, world=world)
         planning.step(ent, world, scn, spawn_x, pers=pers, bhv=bhv)
         motion.step(ent, world, dt, tempo)
         sensing.step(ent, world, rng, comms)
@@ -140,7 +140,10 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
         "terrain": {
             "cover": _downsample(world.cover),
             "conceal": _downsample(world.conceal),
+            "buildings": _downsample(world.buildings.astype(float)) if world.buildings is not None else [],
         },
+        "building_boxes": world.building_boxes.tolist() if getattr(world, "building_boxes", None) is not None else [],
+        "street_graph": world.street_graph.to_dict() if getattr(world, "street_graph", None) is not None else None,
         "route": world.route.waypoints.tolist() if getattr(world, "route", None) is not None else [],
         "entities": [
             {

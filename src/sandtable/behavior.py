@@ -30,6 +30,7 @@ that way, in planning-target space.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -142,7 +143,7 @@ def build_behavior(scn: Scenario, ent: Entities) -> Behavior | None:
 
 
 def step(ent: Entities, bhv: Behavior, op, comms, scn: Scenario, k: int,
-         rng: np.random.Generator) -> None:
+         rng: np.random.Generator, world: Any = None) -> None:
     """Advance behaviour state one tick. Runs after `c2.step`, before `planning.step`.
 
     Writes `bhv.state` and `bhv.holding`; `planning.step` reads both. Counts a recovery-trigger
@@ -163,7 +164,7 @@ def step(ent: Entities, bhv: Behavior, op, comms, scn: Scenario, k: int,
         hold = blue_ground.copy()
 
     elif bhv.mode == LEADER_FOLLOW:
-        _follow(ent, bhv, comms, scn, k, rng, blue_ground)
+        _follow(ent, bhv, comms, scn, k, rng, blue_ground, world=world)
 
     d = np.abs(ent.heading - bhv.prev_heading)
     d = np.minimum(d, 2 * np.pi - d)          # wrapped, so a heading crossing pi is not a half turn
@@ -225,7 +226,7 @@ def _update_convoy_succession(ent: Entities, bhv: Behavior) -> None:
 
 
 def _follow(ent: Entities, bhv: Behavior, comms, scn: Scenario, k: int,
-            rng: np.random.Generator, blue_ground: np.ndarray) -> None:
+            rng: np.random.Generator, blue_ground: np.ndarray, world: Any = None) -> None:
     """Refresh each follower's picture of the vehicle it stations on (CR-3, instrument defect 10).
 
     Both variants run the SAME estimator: refresh the track when the channel delivers, dead reckon
@@ -263,8 +264,12 @@ def _follow(ent: Entities, bhv: Behavior, comms, scn: Scenario, k: int,
         elif bhv.follow_mode == "link":
             got = got_link
         else:
-            got = float(np.hypot(ent.x[ref] - ent.x[i],
-                                 ent.y[ref] - ent.y[i])) <= bhv.sense_range
+            in_range = float(np.hypot(ent.x[ref] - ent.x[i],
+                                     ent.y[ref] - ent.y[i])) <= bhv.sense_range
+            if in_range and world is not None and getattr(world, "buildings", None) is not None:
+                got = bool(world.los(ent.x[i], ent.y[i], ent.x[ref], ent.y[ref]))
+            else:
+                got = in_range
         if got:
             bhv.trk_x[i], bhv.trk_y[i] = ent.x[ref], ent.y[ref]
             bhv.trk_vx[i] = ent.speed[ref] * np.cos(ent.heading[ref])
