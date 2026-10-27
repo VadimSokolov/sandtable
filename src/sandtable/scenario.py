@@ -30,6 +30,11 @@ class PlatformType:
     pk_base: float = 0.25              # base probability of kill per opportunity
     hp: float = 1.0
     endurance: float = np.inf          # s (finite for UAS)
+    length: float = 6.0                # m, physical vehicle length (front to rear bumper)
+
+    def __post_init__(self) -> None:
+        if self.length < 0.0:
+            raise ValueError(f"platform length must be non-negative, got {self.length}")
 
 
 @dataclass
@@ -163,6 +168,7 @@ def build_entities(scn: Scenario, rng: np.random.Generator) -> Entities:
             e.weapon_range[i] = pt.weapon_range
             e.pk_base[i] = pt.pk_base
             e.domain[i] = pt.domain
+            e.length[i] = pt.length
             # initial heading toward objective (blue) or toward map centre (red)
             gx, gy = scn.objective.goal
             e.heading[i] = np.arctan2(gy - e.y[i], gx - e.x[i])

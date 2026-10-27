@@ -66,6 +66,21 @@ def validate_convoy_spec(spec: dict) -> None:
         if not isinstance(elem_gap, (int, float)) or elem_gap <= 0 or elem_gap > 300.0:
             raise ValueError(f"convoy element time gap must be between 0 and 300 s, got {elem_gap}")
 
+    safety_factor = spec.get("safety_factor")
+    if safety_factor is not None:
+        if not isinstance(safety_factor, (int, float)) or safety_factor < 0.0 or safety_factor > 1.0:
+            raise ValueError(f"convoy safety factor must be between 0.0 and 1.0, got {safety_factor}")
+
+    serial_gap = spec.get("serial_time_gap")
+    if serial_gap is not None:
+        if not isinstance(serial_gap, (int, float)) or serial_gap <= 0 or serial_gap > 600.0:
+            raise ValueError(f"convoy serial time gap must be between 0 and 600 s, got {serial_gap}")
+
+    halt_dur = spec.get("halt_duration")
+    if halt_dur is not None:
+        if not isinstance(halt_dur, (int, float)) or halt_dur < 0.0 or halt_dur > 3600.0:
+            raise ValueError(f"convoy halt duration must be between 0 and 3600 s, got {halt_dur}")
+
 
 def build_convoy_layout(spec: dict) -> dict:
     """Compute per-vehicle hierarchy arrays for the convoy from spec."""
@@ -120,6 +135,9 @@ def build_convoy_layout(spec: dict) -> dict:
     pace = float(spec["pace"]) if spec.get("pace") is not None else None
     time_gap = float(spec["time_gap"]) if spec.get("time_gap") is not None else None
     elem_gap = float(spec["element_time_gap"]) if spec.get("element_time_gap") is not None else None
+    safety_factor = float(spec["safety_factor"]) if spec.get("safety_factor") is not None else 0.0
+    serial_gap = float(spec["serial_time_gap"]) if spec.get("serial_time_gap") is not None else None
+    halt_dur = float(spec["halt_duration"]) if spec.get("halt_duration") is not None else 0.0
 
     return {
         "march_unit": march_units,
@@ -132,4 +150,7 @@ def build_convoy_layout(spec: dict) -> dict:
         "pace": pace,
         "time_gap": time_gap,
         "element_time_gap": elem_gap,
+        "safety_factor": safety_factor,
+        "serial_time_gap": serial_gap,
+        "halt_duration": halt_dur,
     }

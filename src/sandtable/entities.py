@@ -84,6 +84,10 @@ class Entities:
     # __post_init__ to inf (unconstrained) so non-convoy scenarios behave byte-identically.
     speed_cap: np.ndarray = None    # float: maximum allowed speed (m/s) or inf
 
+    # Convoy doctrine arithmetic (Increment: Convoy doctrine, Issue #11). Optional: defaulted in
+    # __post_init__ to 6.0 m (standard tactical vehicle length).
+    length: np.ndarray = None       # float: vehicle physical length front-to-rear bumper (m)
+
     def __post_init__(self) -> None:
         n = self.x.shape[0]
         if self.control_quality is None:
@@ -107,6 +111,8 @@ class Entities:
             self.convoy_role = np.full(n, -1, np.int8)
         if self.speed_cap is None:
             self.speed_cap = np.full(n, np.inf)
+        if self.length is None:
+            self.length = np.full(n, 6.0)
 
     @property
     def n(self) -> int:

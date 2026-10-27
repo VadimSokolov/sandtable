@@ -13,7 +13,7 @@ import numpy as np
 
 from scipy.special import ndtri as _ndtri
 
-from sandtable.entities import AIR, BLUE, RED, Entities
+from sandtable.entities import AIR, BLUE, GROUND, RED, Entities
 from sandtable.scenario import Scenario
 
 
@@ -142,10 +142,12 @@ def compute(scn: Scenario, init_counts: dict, ent: Entities,
     red_cost_lost = red_losses * cost_red
 
     out_extra = _teaming_metrics(scn, ent, bhv, op, t_elapsed)
+    out_convoy = _convoy_doctrine_metrics(scn, ent)
 
     return {
         **out_cfg,
         **out_extra,
+        **out_convoy,
         "success": success,                                   # MOE: mission accomplished
         "time_to_objective": tto,                             # MOE: tempo (s)
         "blue_losses": float(blue_losses),                    # MOE: attrition
@@ -165,6 +167,56 @@ def compute(scn: Scenario, init_counts: dict, ent: Entities,
         "blue_cost_lost": float(blue_cost_lost),              # cost-weighted blue attrition
         "cost_exchange": red_cost_lost / max(blue_cost_lost, 1.0),  # MOP: cost-weighted exchange
         "mission_time": float(t_elapsed),
+    }
+
+
+def _convoy_doctrine_metrics(scn: Scenario, ent: Entities) -> dict:
+    """Doctrinal movement-control metrics from ATP 4-16 (Issue #11).
+
+    Returned only when `scn.params.get('convoy')` is configured, so non-convoy scenarios
+    remain 100% byte-identical.
+    """
+    convoy_spec = scn.params.get("convoy")
+    if not convoy_spec:
+        return {}
+
+    from sandtable import convoy_metrics
+
+    # Route distance from blue spawn centroid to objective goal
+    blue_ground = [f for f in scn.forces if f.side == BLUE and scn.platform_types[f.ptype].domain == GROUND]
+    if blue_ground:
+        sx, sy = blue_ground[0].spawn
+        gx, gy = scn.objective.goal
+        route_dist = float(np.hypot(gx - sx, gy - sy))
+        platform_len = scn.platform_types[blue_ground[0].ptype].length
+        spacing = blue_ground[0].spacing if blue_ground[0].spacing is not None else float(scn.params.get("formation_spread", 30.0))
+    else:
+        gx, gy = scn.objective.goal
+        route_dist = float(np.hypot(gx, gy))
+        platform_len = 6.0
+        spacing = float(scn.params.get("formation_spread", 30.0))
+
+    summary = convoy_metrics.doctrinal_convoy_summary(
+        convoy_spec,
+        route_distance=route_dist,
+        platform_length=platform_len,
+        default_spacing=spacing,
+    )
+
+    blue_mask = ent.side_mask(BLUE) & (ent.domain == GROUND)
+    if blue_mask.any():
+        meas_cl = convoy_metrics.measured_column_length(ent.x, ent.y, ent.length, mask=blue_mask)
+    else:
+        meas_cl = 0.0
+
+    return {
+        "convoy_column_length": summary["column_length"],
+        "convoy_road_space": summary["road_space"],
+        "convoy_pass_time": summary["pass_time"],
+        "convoy_time_distance": summary["time_distance"],
+        "convoy_road_clearance_time": summary["road_clearance_time"],
+        "convoy_rate_of_march": summary["rate_of_march"],
+        "convoy_measured_column_length": meas_cl,
     }
 
 
