@@ -30,6 +30,18 @@ SPECS = [
     ("Convoy Hierarchy (ATP 4-11)",
      "Reference Convoy (15 vehicles: 1x3x5)", "scenarios/uc3_convoy.json",
      {}),
+    ("Convoy Separation Search (Issue #15)",
+     "Dispersed March (Pace 14 m/s, Gap 6s, Sec 0.50)", "scenarios/uc3_convoy.json",
+     {"pace": 14.0, "time_gap": 6.0, "element_time_gap": 30.0, "security_ratio": 0.5}),
+    ("Convoy Separation Search (Issue #15)",
+     "Tight March / Low Road Space (Pace 8 m/s, Gap 2s)", "scenarios/uc3_convoy.json",
+     {"pace": 8.0, "time_gap": 2.0, "element_time_gap": 15.0, "security_ratio": 0.2}),
+    ("Convoy Separation Search (Issue #15)",
+     "Heavy Gun Truck Escort (Sec Ratio 0.67: 6 Gun Trucks)", "scenarios/uc3_convoy.json",
+     {"security_ratio": 0.67}),
+    ("Convoy Separation Search (Issue #15)",
+     "Extended March Units (6 veh/unit: 18 total)", "scenarios/uc3_convoy.json",
+     {"march_unit_size": 6}),
     ("UC-3  Route vs defilade",
      "Aggressive route (cover weight 0.15)", "scenarios/uc3_route_defilade.json",
      {"route_bias": 0.15}),
@@ -211,6 +223,9 @@ TEMPLATE = r"""<style>
     <span class="sub">Mission-level ProjectGL testbed &nbsp;&middot;&nbsp; FP6111 VIPR-GS HMT &nbsp;&middot;&nbsp;
       <span class="mono">representative runs recorded from run_mission</span></span>
     <select id="pick" aria-label="Select recorded mission"></select>
+    <a href="convoy_results.html" style="color:var(--amber);text-decoration:none;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:var(--panel2);border:1px solid var(--edge);border-radius:6px;margin-left:auto">
+      <span>Convoy Sweep Results Dashboard &rarr;</span>
+    </a>
   </div>
 
   <div class="stage">
@@ -267,6 +282,13 @@ TEMPLATE = r"""<style>
         <div class="stat"><span class="k">blue losses (avg)</span><span class="v" id="a_bl">—</span></div>
         <div class="stat"><span class="k">red losses (avg)</span><span class="v" id="a_rl">—</span></div>
         <div class="stat"><span class="k">coverage (avg)</span><span class="v" id="a_cov">—</span></div>
+      </div>
+      <div class="card" id="convoy_card" style="display:none">
+        <h3>Convoy Doctrine (ATP 4-16)</h3>
+        <div class="stat"><span class="k">road space (RS)</span><span class="v" id="c_rs">—</span></div>
+        <div class="stat"><span class="k">column length (CL)</span><span class="v" id="c_cl">—</span></div>
+        <div class="stat"><span class="k">pass time (PT)</span><span class="v" id="c_pt">—</span></div>
+        <div class="stat"><span class="k">rate of march</span><span class="v" id="c_vm">—</span></div>
       </div>
       <div class="card">
         <h3>Run parameters</h3>
@@ -351,6 +373,17 @@ TEMPLATE = r"""<style>
       document.getElementById("a_bl").textContent=a.blue_losses.toFixed(1);
       document.getElementById("a_rl").textContent=a.red_losses.toFixed(1);
       document.getElementById("a_cov").textContent=(a.detection_coverage*100).toFixed(0)+"%";
+    }
+    // Convoy doctrine KPIs if present
+    const cc = document.getElementById("convoy_card");
+    if(T.outcome.convoy_road_space !== undefined){
+      cc.style.display = "block";
+      document.getElementById("c_rs").textContent = Math.round(T.outcome.convoy_road_space) + " m";
+      document.getElementById("c_cl").textContent = Math.round(T.outcome.convoy_column_length || 0) + " m";
+      document.getElementById("c_pt").textContent = (T.outcome.convoy_pass_time || 0).toFixed(1) + " s";
+      document.getElementById("c_vm").textContent = (T.outcome.convoy_rate_of_march || 0).toFixed(1) + " m/s";
+    } else {
+      cc.style.display = "none";
     }
     document.getElementById("foot").textContent =
       `${T.name}  ·  representative run (seed ${T.seed}) of ${a?a.n:"?"}  ·  ${T.frames.length} frames  ·  `+

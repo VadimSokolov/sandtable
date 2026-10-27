@@ -127,5 +127,10 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
             "red_losses": result["red_losses"],
             "detection_coverage": round(result["detection_coverage"], 4),
             "mission_time": result["mission_time"],
+            **{
+                k: (round(v, 2) if isinstance(v, float) else v)
+                for k, v in result.items()
+                if k.startswith("convoy_")
+            },
         },
     }
