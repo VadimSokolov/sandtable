@@ -56,18 +56,24 @@ class MissionScoreMetric(Metric):
         w_fail: float = 1.0,
         w_time: float = 0.3,
         w_loss: float = 0.5,
+        w_road: float = 0.0,
         time_scale: float = 1800.0,
+        road_scale: float = 2000.0,
     ) -> None:
-        weights = {"w_fail": w_fail, "w_time": w_time, "w_loss": w_loss}
+        weights = {"w_fail": w_fail, "w_time": w_time, "w_loss": w_loss, "w_road": w_road}
         bad = [k for k, v in weights.items() if float(v) < 0]
         if bad:
             raise MetricError(f"mission_score: weights must be >= 0, got negative {bad}")
         if float(time_scale) <= 0:
             raise MetricError(f"mission_score: time_scale must be > 0, got {time_scale}")
+        if float(road_scale) <= 0:
+            raise MetricError(f"mission_score: road_scale must be > 0, got {road_scale}")
         self.w_fail = float(w_fail)
         self.w_time = float(w_time)
         self.w_loss = float(w_loss)
+        self.w_road = float(w_road)
         self.time_scale = float(time_scale)
+        self.road_scale = float(road_scale)
 
     @property
     def n_objectives(self) -> int:
@@ -96,4 +102,7 @@ class MissionScoreMetric(Metric):
             + self.w_time * time_norm
             + self.w_loss * loss_frac
         )
+        if self.w_road > 0.0 and "convoy_road_space" in output:
+            road_norm = float(output["convoy_road_space"]) / self.road_scale
+            j += self.w_road * road_norm
         return np.asarray([float(j)])

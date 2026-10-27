@@ -173,10 +173,11 @@ def compute(scn: Scenario, init_counts: dict, ent: Entities,
 def _convoy_doctrine_metrics(scn: Scenario, ent: Entities) -> dict:
     """Doctrinal movement-control metrics from ATP 4-16 (Issue #11).
 
-    Returned only when `scn.params.get('convoy')` is configured, so non-convoy scenarios
+    Returned only when convoy is configured, so non-convoy scenarios
     remain 100% byte-identical.
     """
-    convoy_spec = scn.params.get("convoy")
+    from sandtable.convoy import resolve_convoy_spec
+    convoy_spec = resolve_convoy_spec(scn.params)
     if not convoy_spec:
         return {}
 

@@ -1,0 +1,59 @@
+# UC-3 Convoy Separation BO -- Bayesian optimization of convoy parameters (local).
+# Optimizes pace, time gap, element gap, and security ratio minimizing the
+# multi-objective mission score (failure + tempo + losses + road space).
+# Run from repo root:
+#
+#   polarisopt validate studies/uc3_convoy_bo.yaml
+#   polarisopt run      studies/uc3_convoy_bo.yaml
+
+name: uc3-convoy-bo
+workspace: "{{ env.HOME }}/sandtable-runs/uc3-convoy-bo"
+seed: 42
+
+simulator:
+  type: mission
+  options:
+    scenario: scenarios/uc3_convoy.json
+    n_repeats: 10
+    base_seed: 42
+
+runner:
+  type: local
+  options: {}
+
+parameters:
+  inline:
+    - { name: pace,             file: inputs.json, min: 6.0,  max: 14.0 }
+    - { name: time_gap,         file: inputs.json, min: 2.0,  max: 8.0  }
+    - { name: element_time_gap, file: inputs.json, min: 10.0, max: 40.0 }
+    - { name: security_ratio,   file: inputs.json, min: 0.0,  max: 0.5  }
+
+metric:
+  type: mission_score
+  options:
+    w_fail: 1.0
+    w_time: 0.3
+    w_loss: 0.5
+    w_road: 0.2
+    time_scale: 1800.0
+    road_scale: 1500.0
+
+phases:
+  - name: bo
+    type: sequential
+    minimize: true
+    warm_up:
+      type: lhs
+      options:
+        n: 10
+    generator:
+      type: acquisition
+      options:
+        surrogate:   { type: gp,  options: {} }
+        acquisition: { type: qei, options: { mc_samples: 256 } }
+    batch_size: 4
+    stop:
+      type: any
+      criteria:
+        - { type: max_iter, options: { n: 6 } }
+        - { type: plateau,  options: { tol: 0.01, window: 3 } }

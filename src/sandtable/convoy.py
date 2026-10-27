@@ -21,6 +21,59 @@ ROLE_MAP = {
     "recovery": ROLE_RECOVERY,
 }
 
+CONVOY_KEYS = (
+    "march_unit_size",
+    "march_units_per_serial",
+    "serials_per_column",
+    "pace",
+    "time_gap",
+    "element_time_gap",
+    "serial_time_gap",
+    "security_ratio",
+    "safety_factor",
+    "halt_duration",
+    "roles",
+)
+
+
+def resolve_convoy_spec(params: dict | None) -> dict | None:
+    """Resolve convoy configuration from scenario params, merging any flat search overrides.
+
+    Allows optimization frameworks (like polarisopt) to sweep parameters like `pace`, `time_gap`,
+    `march_unit_size`, and `security_ratio` as flat design variables without requiring a nested dict.
+
+    Returns None if convoy is not active, preserving 100% byte-identity for non-convoy scenarios.
+    """
+    if not params:
+        return None
+
+    base_spec = params.get("convoy")
+    if base_spec is not None:
+        spec = dict(base_spec)
+    elif "march_unit_size" in params:
+        spec = {
+            "march_unit_size": params["march_unit_size"],
+            "march_units_per_serial": params.get("march_units_per_serial", 2),
+            "serials_per_column": params.get("serials_per_column", 1),
+        }
+    else:
+        return None
+
+    # Merge flat overrides
+    for k in CONVOY_KEYS:
+        if k in params and k != "convoy":
+            spec[k] = params[k]
+
+    # If security_ratio or march_unit_size is swept without explicit roles,
+    # clear static base roles if security_ratio is specified or length mismatches
+    if "roles" not in params:
+        if "security_ratio" in params:
+            spec.pop("roles", None)
+        elif "roles" in spec and "march_unit_size" in params and len(spec["roles"]) != spec["march_unit_size"]:
+            spec.pop("roles", None)
+
+    return spec
+
 
 def validate_convoy_spec(spec: dict) -> None:
     """Validate convoy parameters against Army doctrine (ATP 4-11, G-7 & G-11).
@@ -81,6 +134,11 @@ def validate_convoy_spec(spec: dict) -> None:
         if not isinstance(halt_dur, (int, float)) or halt_dur < 0.0 or halt_dur > 3600.0:
             raise ValueError(f"convoy halt duration must be between 0 and 3600 s, got {halt_dur}")
 
+    sec_ratio = spec.get("security_ratio")
+    if sec_ratio is not None:
+        if not isinstance(sec_ratio, (int, float)) or sec_ratio < 0.0 or sec_ratio > 1.0:
+            raise ValueError(f"convoy security ratio must be between 0.0 and 1.0, got {sec_ratio}")
+
 
 def build_convoy_layout(spec: dict) -> dict:
     """Compute per-vehicle hierarchy arrays for the convoy from spec."""
@@ -91,10 +149,19 @@ def build_convoy_layout(spec: dict) -> dict:
     serials_per_column = int(spec["serials_per_column"])
     total = march_size * march_per_serial * serials_per_column
 
-    # (Default: Head=Control, Trail=Recovery, Middle=Cargo)
+    # (Default: Head=Control, Trail=Recovery, Middle=Cargo, with security_ratio allocating Gun Trucks)
     raw_roles = spec.get("roles")
+    sec_ratio = spec.get("security_ratio")
     if raw_roles:
         pos_roles = [ROLE_MAP[r] for r in raw_roles]
+    elif sec_ratio is not None and march_size > 2:
+        n_middle = march_size - 2
+        n_sec = min(n_middle, max(0, int(round(n_middle * float(sec_ratio)))))
+        n_cargo = n_middle - n_sec
+        middle = [ROLE_CARGO] * n_cargo + [ROLE_SECURITY] * n_sec
+        pos_roles = [ROLE_CONTROL] + middle
+        if march_size > 1:
+            pos_roles.append(ROLE_RECOVERY)
     else:
         pos_roles = [ROLE_CONTROL] + [ROLE_CARGO] * max(0, march_size - 2)
         if march_size > 1:
@@ -138,6 +205,7 @@ def build_convoy_layout(spec: dict) -> dict:
     safety_factor = float(spec["safety_factor"]) if spec.get("safety_factor") is not None else 0.0
     serial_gap = float(spec["serial_time_gap"]) if spec.get("serial_time_gap") is not None else None
     halt_dur = float(spec["halt_duration"]) if spec.get("halt_duration") is not None else 0.0
+    sec_ratio_val = float(sec_ratio) if sec_ratio is not None else None
 
     return {
         "march_unit": march_units,
@@ -153,4 +221,5 @@ def build_convoy_layout(spec: dict) -> dict:
         "safety_factor": safety_factor,
         "serial_time_gap": serial_gap,
         "halt_duration": halt_dur,
+        "security_ratio": sec_ratio_val,
     }

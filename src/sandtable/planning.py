@@ -135,7 +135,8 @@ def _behavior_targets(ent: Entities, scn: Scenario, bhv, tx_new, ty_new):
     # station and runs the lane in, exactly as the scripted planner already converges. Without this
     # a follower stationed `rank*gap` behind the leader can never reach the objective at all, and
     # the mission is unscoreable rather than merely hard.
-    convoy_cfg = scn.params.get("convoy")
+    from sandtable.convoy import resolve_convoy_spec
+    convoy_cfg = resolve_convoy_spec(scn.params)
     time_gap = convoy_cfg.get("time_gap") if isinstance(convoy_cfg, dict) else None
     if time_gap is None:
         time_gap = scn.params.get("time_gap")

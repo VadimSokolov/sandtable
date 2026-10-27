@@ -1,21 +1,23 @@
-# Convoy Baseline (Issues #8, #10 & #11) - Summary of Work
+# Convoy Baseline (Issues #8, #10, #11 & #15) - Summary of Work
 
 **References**: Army Doctrine ATP 4-11 (Tactical Convoy Operations, App. G & M), ATP 4-16 (Movement Control, App. C), FM 3-90, FM 4-0  
 **Branches**:  
 - Issue #8: `issue-8-convoy-hierarchy` (Merged via [PR #20](https://github.com/VadimSokolov/sandtable/pull/20))  
 - Issue #10: `issue-10-convoy-pace-time-gap` -> `convoy-dev`  
 - Issue #11: `issue-11-convoy-doctrine-arithmetic` -> `convoy-dev`  
+- Issue #15: `issue-15-convoy-separation-search` -> `convoy-dev`  
 
 ---
 
 ## Executive Summary
 
-Implemented Phase 1 of the military convoy model in SandTable across three foundational issues:
+Implemented Phase 1 of the military convoy model in SandTable across four foundational issues:
 1. **Issue #8 (Hierarchy & Command Succession)**: Established organizational structure (Columns, Serials, March Units, Sections, and Roles) with march-unit-scoped leader tracking and dynamic command succession on head loss.
 2. **Issue #10 (Pace & Time Gap)**: Established regulated speed set by the pacesetter vehicle (`speed_cap = pace` in `motion.step`), and dynamic time-distance follower stationing (`station = max(gap, v * time_gap)` in `planning.py`).
 3. **Issue #11 (Doctrine Arithmetic from ATP 4-16)**: Implemented standard movement-control formulas: Column Length ($CL$), Road Space ($RS$), Pass Time ($PT$), Time Distance ($TD$), Road Clearance Time ($RCT$), and Rate of March ($v_{\text{march}}$). Added physical vehicle length to `PlatformType` and `Entities`, built `convoy_metrics.py` beside `formation_metrics.py`, and integrated doctrinal KPIs into mission scoring.
+4. **Issue #15 (Separation Parameters as Search Dimensions)**: Exposed vehicle spacing, element gaps, march speed, hierarchy sizing, and gun truck security ratio as flat design dimensions for DOE sweeps and Bayesian optimization via `polarisopt`. Integrated road-space multi-objective penalty into `MissionScoreMetric` (ATP 4-11, G-9 tradeoff), enabled dynamic force sizing during parameter sweeps, and authored declarative LHS screening and Bayesian optimization studies.
 
-The implementation is strictly opt-in, preserving 100% byte-identical simulation outcomes when unconfigured, and is validated by an 18-test acceptance suite and interactive HTML tactical replay viewers.
+The implementation is strictly opt-in, preserving 100% byte-identical simulation outcomes when unconfigured, and is validated by a 25-test acceptance suite and interactive HTML tactical replay viewers.
 
 ---
 
@@ -48,11 +50,21 @@ The implementation is strictly opt-in, preserving 100% byte-identical simulation
   - **Empirical Estimators**: `measured_column_length` (along column axis + bumper extents) and `PassageTracker` (records $t_{\text{head}}$, $t_{\text{trail}}$, empirical pass time, and inter-vehicle time gaps at observation lines).
 - **Mission Scoring Integration (`src/sandtable/metrics.py`)**: Populates `convoy_column_length`, `convoy_road_space`, `convoy_pass_time`, `convoy_time_distance`, `convoy_road_clearance_time`, `convoy_rate_of_march`, and `convoy_measured_column_length` when `convoy` parameters exist, remaining strictly byte-identical when unconfigured.
 
+### 4. Separation Parameters as Search Dimensions (Issue #15)
+- **Flat Parameter Resolution (`src/sandtable/convoy.py`)**: `resolve_convoy_spec(params)` seamlessly merges flat design overrides (`pace`, `time_gap`, `element_time_gap`, `safety_factor`, `march_unit_size`, `march_units_per_serial`, `serials_per_column`, `security_ratio`) over any existing nested `convoy` configuration. Allows `polarisopt` and LHS sweep drivers to sweep convoy variables directly as flat keys.
+- **Dynamic Security Ratio (`src/sandtable/convoy.py`)**: Added `security_ratio` ($[0.0, 1.0]$) parameter to doctrinal validation. When specified without static roles, `build_convoy_layout` automatically reserves the first slot for Control and the last slot for Recovery, dynamically allocating intermediate positions to Gun Trucks (`ROLE_SECURITY`) vs. Cargo (`ROLE_CARGO`) based on the ratio.
+- **Dynamic Force Sizing on Hierarchy Sweeps (`src/sandtable/scenario.py`)**: Updated `_force_count` and `build_entities` to calculate Blue ground platform counts from the resolved convoy layout size ($K \times M \times S$) when convoy search dimensions change, eliminating platform count mismatch exceptions while preserving exact registered baseline counts when un-swept.
+- **Road-Space Multi-Objective Cost Penalty (`src/sandtable/opt_metrics.py`)**: Added `w_road` (default 0.0) and `road_scale` (default 2000.0 m) to `MissionScoreMetric`, penalizing excessive road space footprint according to ATP 4-11 (G-9) doctrine tradeoffs:
+  $$J = w_{\text{fail}}(1 - \text{success}) + w_{\text{time}}\frac{T}{T_{\text{scale}}} + w_{\text{loss}}\text{loss\_frac} + w_{\text{road}}\frac{RS}{RS_{\text{scale}}}$$
+- **Declarative Polarisopt Studies (`studies/`)**:
+  - `studies/uc3_convoy_sweep.yaml`: 32-sample Latin Hypercube Sampling (LHS) screening sweep over pace (8 to 14 m/s), time gap (3 to 8 s), element gap (15 to 45 s), march unit size (4 to 6), and security ratio (0.1 to 0.7).
+  - `studies/uc3_convoy_bo.yaml`: Bayesian Optimization study with 16 Sobol initialization points and 24 BoTorch SingleTaskGP/Expected Improvement rounds optimizing survival and road clearance.
+
 ---
 
 ## Verification & Acceptance Testing
 
-### Acceptance Suites: 18/18 Tests PASSED
+### Acceptance Suites: 25/25 Tests PASSED
 
 1. **Hierarchy Suite (`tests/test_convoy_hierarchy.py`) - 5/5 PASSED**:
    - `test_off_is_byte_identical`: 100% byte-identity across seeds when convoy is off.
@@ -78,7 +90,16 @@ The implementation is strictly opt-in, preserving 100% byte-identical simulation
    - `test_passage_tracker_pass_time`: Empirical pass time and inter-vehicle time gaps measured accurately.
    - `test_convoy_kpis_in_mission_scoring`: All doctrinal convoy KPIs present and verified in mission scoring output.
 
+4. **Separation Search Suite (`tests/test_convoy_separation_search.py`) - 7/7 PASSED**:
+   - `test_registered_baseline_reproduction`: Flat baseline parameters reproduce registered baseline metrics across seeds with 100% byte-identity.
+   - `test_flat_parameter_overrides_update_kinematics_and_doctrine`: Flat overrides cleanly propagate to speed caps, pass time, and road space.
+   - `test_security_ratio_role_allocation`: Gun truck security ratio allocates security roles across middle slots proportionally (0.0 to 1.0).
+   - `test_security_ratio_bounds_rejection`: Values outside [0.0, 1.0] rejected with descriptive `ValueError`.
+   - `test_dynamic_force_sizing_on_hierarchy_sweep`: Hierarchy sweeps dynamically scale Blue ground force count without size mismatch errors.
+   - `test_mission_score_road_space_penalty`: MissionScoreMetric penalizes road space when $w_{\text{road}} > 0$.
+   - `test_resolve_convoy_spec_helper`: Correct handling of empty, nested, and merged flat override dictionaries.
+
 ### Regression & Linting
-- **All 18 Convoy Tests Passing**: Verified via `pytest tests/test_convoy_*.py`.
+- **All 25 Convoy Tests Passing**: Verified via `pytest tests/test_convoy_*.py`.
 - **Linter (`ruff check`)**: 0 errors across all modified and new files.
 - **Conventions**: No em dashes in code, markdown, or commits.

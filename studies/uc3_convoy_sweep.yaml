@@ -1,0 +1,51 @@
+# UC-3 Convoy Separation Sweep -- Latin-hypercube screening (local runner).
+# Sweeps convoy separation parameters (march speed, time gap, element gap,
+# march unit size, security ratio) to map the ATP 4-11 G-9 tradeoff surface.
+# Run from repo root:
+#
+#   polarisopt validate studies/uc3_convoy_sweep.yaml
+#   polarisopt run      studies/uc3_convoy_sweep.yaml
+
+name: uc3-convoy-sweep
+workspace: "{{ env.HOME }}/sandtable-runs/uc3-convoy-sweep"
+seed: 42
+
+simulator:
+  type: mission
+  options:
+    scenario: scenarios/uc3_convoy.json
+    n_repeats: 10
+    base_seed: 42
+
+runner:
+  type: local
+  options: {}
+
+parameters:
+  inline:
+    - { name: pace,             file: inputs.json, min: 6.0,  max: 14.0 }
+    - { name: time_gap,         file: inputs.json, min: 2.0,  max: 8.0  }
+    - { name: element_time_gap, file: inputs.json, min: 10.0, max: 40.0 }
+    - { name: march_unit_size,  file: inputs.json, min: 3,    max: 7,   type: int }
+    - { name: security_ratio,   file: inputs.json, min: 0.0,  max: 0.5  }
+
+metric:
+  type: identity
+  options:
+    keys:
+      - success_rate
+      - blue_losses
+      - red_losses
+      - time_to_objective
+      - convoy_column_length
+      - convoy_road_space
+      - convoy_pass_time
+      - convoy_road_clearance_time
+
+phases:
+  - name: lhs
+    type: static
+    design:
+      type: lhs
+      options:
+        n: 32

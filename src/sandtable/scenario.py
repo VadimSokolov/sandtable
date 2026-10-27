@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 
 from sandtable.entities import AIR, GROUND, BLUE, Entities
-from sandtable.convoy import build_convoy_layout
+from sandtable.convoy import build_convoy_layout, resolve_convoy_spec
 
 @dataclass
 class PlatformType:
@@ -100,32 +100,46 @@ def load_scenario(path: str | Path) -> Scenario:
 _FORMATION_DIR = {"column": (-1.0, 0.0), "line": (0.0, 1.0), "wedge": (-1.0, 1.0)}
 
 
-def _force_count(f: ForceSpec, scn: Scenario) -> int:
+def _force_count(f: ForceSpec, scn: Scenario, convoy_total: int | None = None,
+                 is_convoy: bool = False) -> int:
     """Effective platform count for a force (a `count_param` lets the optimizer sweep N)."""
     if f.count_param is not None and f.count_param in scn.params:
         return max(0, int(scn.params[f.count_param]))
+    if is_convoy and convoy_total is not None:
+        return convoy_total
     return f.count
 
 
 def build_entities(scn: Scenario, rng: np.random.Generator) -> Entities:
     """Instantiate SoA `Entities` from the scenario force specs."""
-    convoy_spec = scn.params.get("convoy")
+    convoy_spec = resolve_convoy_spec(scn.params)
     convoy_layout = build_convoy_layout(convoy_spec) if convoy_spec else None
 
-    total = sum(_force_count(f, scn) for f in scn.forces)
+    convoy_applied = False
+    force_counts = []
+    for f in scn.forces:
+        pt = scn.platform_types[f.ptype]
+        is_convoy = (convoy_layout is not None) and (f.side == BLUE) and (pt.domain == GROUND) and (not convoy_applied)
+        c_tot = convoy_layout["total"] if is_convoy else None
+        n = _force_count(f, scn, convoy_total=c_tot, is_convoy=is_convoy)
+        force_counts.append(n)
+        if is_convoy:
+            convoy_applied = True
+
+    total = sum(force_counts)
     e = Entities.allocate(total)
     ptype_index = {name: i for i, name in enumerate(scn.platform_types)}
     spread = float(scn.params.get("formation_spread", 30.0))
 
     i = 0
     convoy_applied = False
-    for f in scn.forces:
+    for f_idx, f in enumerate(scn.forces):
         pt = scn.platform_types[f.ptype]
         fdir = _FORMATION_DIR.get(f.formation, (-1.0, 0.0))
         gap = f.spacing if f.spacing is not None else spread   # per-force unit spacing (depth of laydown)
         cx, cy = f.spawn
 
-        n_f = _force_count(f, scn)
+        n_f = force_counts[f_idx]
         is_convoy = (convoy_layout is not None) and (f.side == BLUE) and (pt.domain == GROUND) and (not convoy_applied)
 
         if is_convoy:
