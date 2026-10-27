@@ -97,8 +97,14 @@ class MissionScoreMetric(Metric):
         time_norm = self._get(output, "time_to_objective") / self.time_scale
         loss_frac = self._get(output, "blue_loss_frac")
 
+        if "delivered_frac" in output:
+            del_frac = float(output["delivered_frac"])
+            fail_term = 1.0 - del_frac
+        else:
+            fail_term = 1.0 - success_rate
+
         j = (
-            self.w_fail * (1.0 - success_rate)
+            self.w_fail * fail_term
             + self.w_time * time_norm
             + self.w_loss * loss_frac
         )

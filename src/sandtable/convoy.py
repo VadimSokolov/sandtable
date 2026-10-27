@@ -1,7 +1,10 @@
 """Convoy baseline: hierarchy of march units, serials, and vehicle roles (ATP 4-11)."""
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
+
 
 # Convoy Sections (within a March Unit)
 SECTION_HEAD = 0        # Pacesetter / Lead vehicle
@@ -32,6 +35,8 @@ CONVOY_KEYS = (
     "security_ratio",
     "safety_factor",
     "halt_duration",
+    "cargo_per_vehicle",
+    "delivery_fraction",
     "roles",
 )
 
@@ -73,6 +78,35 @@ def resolve_convoy_spec(params: dict | None) -> dict | None:
             spec.pop("roles", None)
 
     return spec
+
+
+def resolve_delivery_fraction(scn_or_params: Any) -> float:
+    """Return the required delivery fraction for the mission.
+
+    Checks:
+    1. scn.objective.delivery_fraction if Scenario object passed.
+    2. convoy_spec["delivery_fraction"] or params["delivery_fraction"].
+    3. scn.objective.survive_fraction (or 0.5 default).
+    """
+    if hasattr(scn_or_params, "objective"):
+        if scn_or_params.objective.delivery_fraction is not None:
+            return float(scn_or_params.objective.delivery_fraction)
+        params = scn_or_params.params
+        default_frac = float(scn_or_params.objective.survive_fraction)
+    elif isinstance(scn_or_params, dict):
+        params = scn_or_params
+        default_frac = 0.5
+    else:
+        params = getattr(scn_or_params, "params", {})
+        default_frac = 0.5
+
+    spec = resolve_convoy_spec(params)
+    if spec and spec.get("delivery_fraction") is not None:
+        return float(spec["delivery_fraction"])
+    if isinstance(params, dict) and "delivery_fraction" in params:
+        return float(params["delivery_fraction"])
+    return default_frac
+
 
 
 def validate_convoy_spec(spec: dict) -> None:
@@ -138,6 +172,16 @@ def validate_convoy_spec(spec: dict) -> None:
     if sec_ratio is not None:
         if not isinstance(sec_ratio, (int, float)) or sec_ratio < 0.0 or sec_ratio > 1.0:
             raise ValueError(f"convoy security ratio must be between 0.0 and 1.0, got {sec_ratio}")
+
+    cargo_veh = spec.get("cargo_per_vehicle")
+    if cargo_veh is not None:
+        if not isinstance(cargo_veh, (int, float)) or cargo_veh <= 0 or cargo_veh > 100.0:
+            raise ValueError(f"convoy cargo per vehicle must be between 0 and 100 tons, got {cargo_veh}")
+
+    del_frac = spec.get("delivery_fraction")
+    if del_frac is not None:
+        if not isinstance(del_frac, (int, float)) or del_frac < 0.0 or del_frac > 1.0:
+            raise ValueError(f"convoy delivery fraction must be between 0.0 and 1.0, got {del_frac}")
 
 
 def build_convoy_layout(spec: dict) -> dict:
@@ -206,6 +250,8 @@ def build_convoy_layout(spec: dict) -> dict:
     serial_gap = float(spec["serial_time_gap"]) if spec.get("serial_time_gap") is not None else None
     halt_dur = float(spec["halt_duration"]) if spec.get("halt_duration") is not None else 0.0
     sec_ratio_val = float(sec_ratio) if sec_ratio is not None else None
+    cargo_veh_val = float(spec["cargo_per_vehicle"]) if spec.get("cargo_per_vehicle") is not None else None
+    del_frac_val = float(spec["delivery_fraction"]) if spec.get("delivery_fraction") is not None else None
 
     return {
         "march_unit": march_units,
@@ -222,4 +268,6 @@ def build_convoy_layout(spec: dict) -> dict:
         "serial_time_gap": serial_gap,
         "halt_duration": halt_dur,
         "security_ratio": sec_ratio_val,
+        "cargo_per_vehicle": cargo_veh_val,
+        "delivery_fraction": del_frac_val,
     }

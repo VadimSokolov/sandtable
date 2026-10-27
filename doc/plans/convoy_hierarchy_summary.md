@@ -1,23 +1,25 @@
-# Convoy Baseline (Issues #8, #10, #11 & #15) - Summary of Work
+# Convoy Baseline (Issues #8, #10, #11, #15 & #9) - Summary of Work
 
-**References**: Army Doctrine ATP 4-11 (Tactical Convoy Operations, App. G & M), ATP 4-16 (Movement Control, App. C), FM 3-90, FM 4-0  
+**References**: Army Doctrine ATP 4-11 (Tactical Convoy Operations, App. G & M), ATP 4-16 (Movement Control, App. C), FM 3-90, FM 4-0 (Sustainment Operations, March 2026)  
 **Branches**:  
 - Issue #8: `issue-8-convoy-hierarchy` (Merged via [PR #20](https://github.com/VadimSokolov/sandtable/pull/20))  
 - Issue #10: `issue-10-convoy-pace-time-gap` -> `convoy-dev`  
 - Issue #11: `issue-11-convoy-doctrine-arithmetic` -> `convoy-dev`  
 - Issue #15: `issue-15-convoy-separation-search` -> `convoy-dev`  
+- Issue #9: `issue-9-convoy-cargo-delivery` -> `convoy-dev`  
 
 ---
 
 ## Executive Summary
 
-Implemented Phase 1 of the military convoy model in SandTable across four foundational issues:
+Implemented Phase 1 and Phase 2 of the military convoy model in SandTable across five foundational issues:
 1. **Issue #8 (Hierarchy & Command Succession)**: Established organizational structure (Columns, Serials, March Units, Sections, and Roles) with march-unit-scoped leader tracking and dynamic command succession on head loss.
 2. **Issue #10 (Pace & Time Gap)**: Established regulated speed set by the pacesetter vehicle (`speed_cap = pace` in `motion.step`), and dynamic time-distance follower stationing (`station = max(gap, v * time_gap)` in `planning.py`).
 3. **Issue #11 (Doctrine Arithmetic from ATP 4-16)**: Implemented standard movement-control formulas: Column Length ($CL$), Road Space ($RS$), Pass Time ($PT$), Time Distance ($TD$), Road Clearance Time ($RCT$), and Rate of March ($v_{\text{march}}$). Added physical vehicle length to `PlatformType` and `Entities`, built `convoy_metrics.py` beside `formation_metrics.py`, and integrated doctrinal KPIs into mission scoring.
 4. **Issue #15 (Separation Parameters as Search Dimensions)**: Exposed vehicle spacing, element gaps, march speed, hierarchy sizing, and gun truck security ratio as flat design dimensions for DOE sweeps and Bayesian optimization via `polarisopt`. Integrated road-space multi-objective penalty into `MissionScoreMetric` (ATP 4-11, G-9 tradeoff), enabled dynamic force sizing during parameter sweeps, and authored declarative LHS screening and Bayesian optimization studies.
+5. **Issue #9 (Cargo & Logistics Delivery Metrics)**: Extended mission metrics beyond survival fractions to actual delivered payload tonnage, throughput, and delivery timelines (FM 4-0). Eliminated the Escort Paradox (where losing all cargo trucks but delivering gun trucks previously scored as 100% success), enforced strict conservation of payload ($C_{\text{loaded}} = C_{\text{delivered}} + C_{\text{lost}} + C_{\text{in\_transit}}$), and enabled payload-driven early stopping and optimization objectives.
 
-The implementation is strictly opt-in, preserving 100% byte-identical simulation outcomes when unconfigured, and is validated by a 25-test acceptance suite and interactive HTML tactical replay viewers.
+The implementation is strictly opt-in, preserving 100% byte-identical simulation outcomes when unconfigured, and is validated by a 32-test acceptance suite and interactive HTML tactical replay viewers.
 
 ---
 
@@ -60,11 +62,33 @@ The implementation is strictly opt-in, preserving 100% byte-identical simulation
   - `studies/uc3_convoy_sweep.yaml`: 32-sample Latin Hypercube Sampling (LHS) screening sweep over pace (8 to 14 m/s), time gap (3 to 8 s), element gap (15 to 45 s), march unit size (4 to 6), and security ratio (0.1 to 0.7).
   - `studies/uc3_convoy_bo.yaml`: Bayesian Optimization study with 16 Sobol initialization points and 24 BoTorch SingleTaskGP/Expected Improvement rounds optimizing survival and road clearance.
 
+### 5. Cargo & Logistics Delivery Metrics (Issue #9)
+- **Doctrinal State Variables (`src/sandtable/entities.py`, `src/sandtable/scenario.py`)**:
+  - Added `cargo: np.ndarray` (float64, tons loaded at departure) and `cargo_delivered: np.ndarray` (float64, tons delivered at objective) to `Entities`, defaulting to 0.0 in `__post_init__`.
+  - Added `cargo_capacity: float = 0.0` (tons) to `PlatformType` with non-negative validation.
+  - Added optional `delivery_fraction: float | None = None` to `Objective`.
+- **Role-Based Payload Allocation (`src/sandtable/scenario.py`, `src/sandtable/convoy.py`)**:
+  - Cargo freight assigned exclusively to `ROLE_CARGO` platforms (`cargo_per_vehicle`, e.g., 5.0 tons).
+  - Control (`ROLE_CONTROL`), Security gun trucks (`ROLE_SECURITY`), and Maintenance/Recovery (`ROLE_RECOVERY`) carry 0.0 tons payload.
+  - Added `cargo_per_vehicle` and `delivery_fraction` validation and resolution in `resolve_convoy_spec` and `resolve_delivery_fraction`.
+- **Dynamic Delivery & Early Stopping (`src/sandtable/sim.py`)**:
+  - At each simulation timestep, living Blue vehicles within `goal_radius` unload their cargo (`cargo_delivered[at_goal] = cargo[at_goal]`).
+  - Simulation terminates early with mission success as soon as delivered tonnage meets or exceeds the required share ($C_{\text{delivered}} \ge \phi_{\text{req}} C_{\text{total}}$).
+  - Terminates immediately if remaining in-transit cargo drops to zero ($C_{\text{in\_transit}} \le 10^{-6}$), preventing wasted simulation cycles when all undelivered trucks are destroyed.
+  - Retains exact legacy vehicle-count stopping condition when cargo is unconfigured, preserving 100% byte-identity.
+- **Delivery Metrics & Strict Conservation Invariant (`src/sandtable/metrics.py`)**:
+  - Produces `cargo_loaded`, `cargo_delivered`, `cargo_lost`, `cargo_in_transit`, `delivered_frac`, `cargo_throughput` (tons/s), and `time_to_delivery`.
+  - Strictly asserts the fundamental conservation law at every step:
+    $$C_{\text{loaded}} = C_{\text{delivered}} + C_{\text{lost}} + C_{\text{in\_transit}}$$
+  - Sets `success = 1.0 if delivered_frac >= delivery_fraction else 0.0`, completely eliminating the Escort Paradox.
+- **Multi-Objective Cost Optimization (`src/sandtable/opt_metrics.py`)**:
+  - Enhanced `MissionScoreMetric` failure penalty term to use $(1.0 - \phi_{\text{del}})$ when cargo is active, providing a smooth, continuous gradient for Bayesian optimization to trade off gun trucks vs. cargo payload.
+
 ---
 
 ## Verification & Acceptance Testing
 
-### Acceptance Suites: 25/25 Tests PASSED
+### Acceptance Suites: 32/32 Tests PASSED
 
 1. **Hierarchy Suite (`tests/test_convoy_hierarchy.py`) - 5/5 PASSED**:
    - `test_off_is_byte_identical`: 100% byte-identity across seeds when convoy is off.
@@ -99,7 +123,16 @@ The implementation is strictly opt-in, preserving 100% byte-identical simulation
    - `test_mission_score_road_space_penalty`: MissionScoreMetric penalizes road space when $w_{\text{road}} > 0$.
    - `test_resolve_convoy_spec_helper`: Correct handling of empty, nested, and merged flat override dictionaries.
 
+5. **Cargo & Logistics Delivery Suite (`tests/test_convoy_cargo_delivery.py`) - 7/7 PASSED**:
+   - `test_cargo_off_is_byte_identical`: 100% byte-identity across seeds when cargo is unconfigured.
+   - `test_cargo_conservation_invariant`: Strict conservation invariant $C_{\text{loaded}} = C_{\text{delivered}} + C_{\text{lost}} + C_{\text{in\_transit}}$ holds without floating-point loss.
+   - `test_non_cargo_attrition_preserves_cargo`: Killing 100% of gun trucks/control results in zero cargo lost and 100% delivery (resolving the Escort Paradox).
+   - `test_cargo_loss_proportional_to_truck_attrition`: Destruction of cargo trucks reduces delivered payload tonnage accurately.
+   - `test_delivery_threshold_stops_mission`: Early mission termination triggers when required delivery fraction is met.
+   - `test_cargo_validation_bounds`: Rejection of negative capacities, excessive weights (>100 tons), and out-of-range delivery fractions.
+   - `test_mission_score_reflects_cargo_delivery`: MissionScoreMetric penalizes failure based on undelivered cargo fraction.
+
 ### Regression & Linting
-- **All 25 Convoy Tests Passing**: Verified via `pytest tests/test_convoy_*.py`.
+- **All 32 Convoy Tests Passing**: Verified via `pytest tests/test_convoy_*.py`.
 - **Linter (`ruff check`)**: 0 errors across all modified and new files.
 - **Conventions**: No em dashes in code, markdown, or commits.

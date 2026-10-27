@@ -25,6 +25,7 @@ from sandtable import (
     sensing,
 )
 from sandtable.comms_ew import build_comms
+from sandtable.convoy import resolve_delivery_fraction
 from sandtable.entities import AIR, BLUE, GROUND, RED
 from sandtable.scenario import Scenario, build_entities
 from sandtable.seeding import make_rng
@@ -79,6 +80,11 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     assault0 = ground_blue0 if ground_blue0 > 0 else init_counts[BLUE]
     air_blue0 = int(((ent.side == BLUE) & (ent.domain == AIR)).sum())   # recon swarm size (for cost KPI)
     need = scn.objective.survive_fraction * assault0
+
+    cargo_total = float(ent.cargo[ent.side_mask(BLUE)].sum()) if ent.cargo is not None else 0.0
+    cargo_active = cargo_total > 0.0
+    req_del_frac = resolve_delivery_fraction(scn)
+    req_cargo = float(req_del_frac) * cargo_total if cargo_active else 0.0
 
     t = 0.0
     t_reached = None
@@ -171,9 +177,23 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
                 g_disc += s["disconnected"]
                 g_steps += 1
 
-        if t_reached is None and metrics.blue_at_goal(ent, scn).sum() >= need:
-            t_reached = t
-            break
+        if cargo_active:
+            at_goal = metrics.blue_at_goal(ent, scn)
+            if at_goal.any():
+                ent.cargo_delivered[at_goal] = ent.cargo[at_goal]
+            c_del = float(ent.cargo_delivered[ent.side == BLUE].sum())
+            delivered_target_met = (c_del >= req_cargo) if req_cargo > 0.0 else (at_goal.any() and c_del >= req_cargo)
+            if t_reached is None and delivered_target_met:
+                t_reached = t
+                break
+            blue_alive = ent.side_mask(BLUE)
+            c_in_transit = float((ent.cargo[blue_alive] - ent.cargo_delivered[blue_alive]).sum())
+            if c_in_transit <= 1e-6:
+                break
+        else:
+            if t_reached is None and metrics.blue_at_goal(ent, scn).sum() >= need:
+                t_reached = t
+                break
         if not ent.side_mask(BLUE).any():
             break
 
