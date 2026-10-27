@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from sandtable import c2, engagement, metrics, motion, planning, sensing
+from sandtable import behavior, c2, engagement, metrics, motion, personality, planning, sensing
 from sandtable.comms_ew import build_comms
 from sandtable.entities import BLUE, GROUND, RED
 from sandtable.scenario import Scenario, build_entities
@@ -38,6 +38,8 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
     comms = build_comms(scn)
     op = c2.build_c2(scn, ent, rng)   # same signature as sim.run_mission, so a
                                   # staggered or mixed-patience fleet replays as it ran
+    pers = personality.build_personality(scn)
+    bhv = behavior.build_behavior(scn, ent)
 
     init_counts = {BLUE: int((ent.side == BLUE).sum()), RED: int((ent.side == RED).sum())}
     blue_mask0 = ent.side == BLUE
@@ -85,7 +87,9 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
     for k in range(n_steps):
         if op is not None:
             c2.step(ent, op, comms, scn, k, rng)
-        planning.step(ent, world, scn, spawn_x)
+        if bhv is not None:
+            behavior.step(ent, bhv, op, comms, scn, k, rng)
+        planning.step(ent, world, scn, spawn_x, pers=pers, bhv=bhv)
         motion.step(ent, world, dt, tempo)
         sensing.step(ent, world, rng, comms)
         engagement.step(ent, world, dt, rng, events=kill_buf)
