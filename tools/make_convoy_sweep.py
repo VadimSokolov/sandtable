@@ -489,11 +489,17 @@ def generate_html(results: list[dict]) -> str:
       <span class="badge-tag">Issue #15 &middot; ATP 4-11 &amp; ATP 4-16</span>
     </div>
     <div class="nav-links">
-      <a href="mission_viewer.html" class="btn-link primary">
-        <span>&#9654; Tactical Mission Replay Console</span>
+      <a href="mission_viewer_v2.html" class="btn-link primary">
+        <span>&#9654; ⭐ Mission Viewer v2</span>
       </a>
-      <a href="player.html" class="btn-link">
-        <span>Lightweight Player</span>
+      <a href="route_dashboard.html" class="btn-link">
+        <span>🛣️ Route Stationing</span>
+      </a>
+      <a href="cargo_dashboard.html" class="btn-link">
+        <span>📦 Cargo Logistics</span>
+      </a>
+      <a href="mission_viewer.html" class="btn-link">
+        <span>🗺️ Mission Viewer (v1)</span>
       </a>
       <button id="exportBtn" class="btn-link" onclick="downloadJSON()">
         <span>&#8681; Export JSON</span>

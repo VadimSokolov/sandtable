@@ -756,8 +756,11 @@ def write_dashboard_html(data: dict, out_path: Path):
       <span class="header-tag">FM 4-0 Sustainment Operations</span>
     </div>
     <div class="header-nav">
+      <a href="mission_viewer_v2.html" class="nav-btn">⭐ Mission Viewer v2</a>
+      <a href="cargo_dashboard.html" class="nav-btn active">📦 Cargo & Logistics (FM 4-0)</a>
+      <a href="route_dashboard.html" class="nav-btn">🛣️ Route Stationing (Issue #13)</a>
       <a href="convoy_results.html" class="nav-btn">📊 Separation Search (Issue #15)</a>
-      <a href="mission_viewer.html" class="nav-btn">🗺️ Mission Viewer</a>
+      <a href="mission_viewer.html" class="nav-btn">🗺️ Mission Viewer (v1)</a>
     </div>
   </header>
 
