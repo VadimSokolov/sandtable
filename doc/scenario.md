@@ -265,3 +265,27 @@ Both are opt-in under the `convoy` spec (or as flat params); absent, runs are by
 - Limitation: Red does not exploit a halted column, so `halt` carries no attrition cost beyond time.
   Do not read halt-vs-continue results as findings until that cost exists. Comparison arms:
   `tools/make_contact_arms.py`.
+
+## Autonomous march unit and personnel exposure (Issue #14)
+
+Opt-in under the `convoy` spec (or flat params); absent, runs are byte-identical and no new keys appear.
+
+- `autonomy_arm`: `"manned"` | `"autonomous_march_unit"`. Without explicit `roles` or `security_ratio`, the
+  autonomous arm is one control vehicle plus four cargo trucks per march unit. It defaults
+  `blue_behavior` to `leader_follow` and `succession` to `manned_only`. The manned arm defaults
+  `blue_behavior` to `leader_follow` with `follow_mode="human"`.
+- `escort_vehicles`: number of security vehicles added on top of task vehicles (ATP 4-11 G-8),
+  holding cargo payload constant across arms.
+- `crew`: role -> count override; `crew_metrics`: turn the metrics on without an arm. Default crew: control 2,
+  cargo 2 (0 in the autonomous arm), security 3, recovery 2 (ATP 4-11 2-56, M-1, M-5; security and recovery are
+  assumptions). Crew is read by the metrics only.
+- `succession`: `"any"` (existing) | `"manned_only"` (an unmanned vehicle is never promoted to head).
+- Metrics: `crew_steps_at_risk` (+ `_control/_cargo/_security/_recovery`, summing exactly to the total),
+  `crew_total`, `crew_lost` (+ by role), `autonomous_headless_steps`. At risk = within weapon range of a living
+  Red entity with `weapon_range > 0` and `pk_base > 0`, no detection or line of sight needed, each crew member
+  counted once per step. This is a model-defined geometric exposure, not casualty risk; a destroyed vehicle loses
+  its whole crew. Mines and indirect fire are outside the metric.
+- Followers in the manned arm hold station on the vehicle ahead using human perception (`follow_mode="human"`),
+  matching column discipline without radio link dependence; the follower response after the control vehicle
+  is lost is the existing waypoint fallback (Issue #17 owns the policy).
+  Comparison arms: `tools/make_autonomy_arms.py`.

@@ -25,7 +25,7 @@ from sandtable import (
     sensing,
 )
 from sandtable.comms_ew import build_comms
-from sandtable.convoy import ROLE_SECURITY, resolve_convoy_spec, resolve_delivery_fraction
+from sandtable.convoy import ROLE_SECURITY, resolve_convoy_spec, resolve_crew_table, resolve_delivery_fraction
 from sandtable.entities import AIR, BLUE, GROUND, RED
 from sandtable.scenario import Scenario, build_entities
 from sandtable.seeding import make_rng
@@ -75,6 +75,11 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     _cs = resolve_convoy_spec(scn.params)
     escort_on = bool(_cs) and (_cs.get("security_ptype") is not None or fired_at is not None)
     escort_steps = 0
+    # Personnel exposure (Issue #14): only when crew is declared. Per-role accumulators, role 0..3.
+    crew_on = resolve_crew_table(_cs) is not None
+    crew_risk = np.zeros(4, np.int64)
+    crew_init = np.bincount(ent.convoy_role[ent.side == BLUE].clip(0), weights=ent.crew[ent.side == BLUE],
+                            minlength=4).astype(np.int64) if crew_on else None
 
     init_counts = {BLUE: int((ent.side == BLUE).sum()), RED: int((ent.side == RED).sum())}
     blue_mask0 = ent.side == BLUE
@@ -167,6 +172,8 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
             cov_steps += 1
 
         blue_exposure += float(ent.side_mask(BLUE).sum())
+        if crew_on:
+            metrics.accumulate_crew_at_risk(ent, crew_risk)
         if escort_on:
             escort_steps += int((ent.side_mask(BLUE) & (ent.convoy_role == ROLE_SECURITY)).sum())
 
@@ -219,6 +226,8 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
         result["escort_vehicle_steps"] = float(escort_steps)
     if fired_at is not None:
         result.update(metrics.contact_metrics(bhv, dt))
+    if crew_on:
+        result.update(metrics.crew_metrics(ent, crew_risk, crew_init, bhv))
     result["detection_coverage"] = cov_sum / max(cov_steps, 1)
     result["fleet_spread_mean"] = disp_sum / max(disp_steps, 1)
     result["fleet_along_mean"] = along_sum / max(disp_steps, 1)

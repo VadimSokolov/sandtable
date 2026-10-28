@@ -174,6 +174,45 @@ def compute(scn: Scenario, init_counts: dict, ent: Entities,
     }
 
 
+_ROLE_NAMES = ("control", "cargo", "security", "recovery")
+
+
+def accumulate_crew_at_risk(ent: Entities, acc: np.ndarray) -> None:
+    """Add this step's crew-at-risk to `acc` (per convoy role). Integer arithmetic, so the by-role
+    parts sum to the total exactly.
+
+    A vehicle is at risk when it is within weapon range of at least one living Red shooter (alive,
+    `weapon_range > 0` and `pk_base > 0`). Detection and line of sight are not required, and each
+    crew member counts once per step however many shooters cover the vehicle.
+    """
+    shooters = np.nonzero(ent.alive & (ent.side == RED) & (ent.weapon_range > 0) & (ent.pk_base > 0))[0]
+    veh = np.nonzero(ent.alive & (ent.side == BLUE) & (ent.crew > 0))[0]
+    if shooters.size == 0 or veh.size == 0:
+        return
+    d = np.hypot(ent.x[veh][:, None] - ent.x[shooters][None, :],
+                 ent.y[veh][:, None] - ent.y[shooters][None, :])
+    hit = veh[(d <= ent.weapon_range[shooters][None, :]).any(axis=1)]
+    np.add.at(acc, ent.convoy_role[hit], ent.crew[hit].astype(np.int64))
+
+
+def crew_metrics(ent: Entities, risk: np.ndarray, init: np.ndarray, bhv=None) -> dict:
+    """Personnel exposure KPIs (Issue #14). A destroyed vehicle loses its whole crew."""
+    blue = ent.alive & (ent.side == BLUE)
+    left = np.bincount(ent.convoy_role[blue].clip(0), weights=ent.crew[blue], minlength=4).astype(np.int64)
+    lost = init - left
+    out = {
+        "crew_steps_at_risk": float(risk.sum()),
+        "crew_total": float(init.sum()),
+        "crew_lost": float(lost.sum()),
+    }
+    for i, name in enumerate(_ROLE_NAMES):
+        out[f"crew_steps_at_risk_{name}"] = float(risk[i])
+        out[f"crew_lost_{name}"] = float(lost[i])
+    if bhv is not None and bhv.succession == "manned_only":
+        out["autonomous_headless_steps"] = float(bhv.headless_steps)
+    return out
+
+
 def contact_metrics(bhv, dt: float) -> dict:
     """Contact reaction KPIs (Issue #12). Emitted only when a reaction is declared."""
     return {

@@ -15,7 +15,9 @@ from pathlib import Path
 import numpy as np
 
 from sandtable.entities import AIR, GROUND, BLUE, Entities
-from sandtable.convoy import ROLE_CARGO, ROLE_SECURITY, build_convoy_layout, resolve_convoy_spec
+from sandtable.convoy import (
+    ROLE_CARGO, ROLE_SECURITY, build_convoy_layout, resolve_convoy_spec, resolve_crew_table,
+)
 
 @dataclass
 class PlatformType:
@@ -122,6 +124,7 @@ def build_entities(scn: Scenario, rng: np.random.Generator) -> Entities:
     """Instantiate SoA `Entities` from the scenario force specs."""
     convoy_spec = resolve_convoy_spec(scn.params)
     convoy_layout = build_convoy_layout(convoy_spec) if convoy_spec else None
+    crew_table = resolve_crew_table(convoy_spec)
     sec_pt = None
     if convoy_spec and convoy_spec.get("security_ptype") is not None:
         sec_name = convoy_spec["security_ptype"]
@@ -233,6 +236,8 @@ def build_entities(scn: Scenario, rng: np.random.Generator) -> Entities:
             e.pk_base[i] = pt.pk_base
             e.domain[i] = pt.domain
             e.length[i] = pt.length
+            if is_convoy and crew_table is not None:
+                e.crew[i] = crew_table[int(e.convoy_role[i])]
             if is_convoy and sec_pt is not None and e.convoy_role[i] == ROLE_SECURITY:
                 # Dedicated gun-truck platform (Issue #12): armament and mobility come from
                 # `security_ptype`, not from the force's cargo-truck type.

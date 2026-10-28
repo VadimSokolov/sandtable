@@ -40,7 +40,36 @@ CONVOY_KEYS = (
     "roles",
     "security_ptype",
     "contact_reaction",
+    "autonomy_arm",
+    "crew",
+    "crew_metrics",
+    "succession",
+    "escort_vehicles",
 )
+
+# Autonomous march unit and personnel exposure (Issue #14). Crew defaults per role: ATP 4-11 2-56 (truck
+# crew of a driver and an assistant driver), M-5 (the ATV-S control vehicle carries a driver and the
+# march unit commander) and M-1 (autonomous trucks carry no driver). Security (3) and recovery (2) are
+# assumptions: secondary sources only.
+AUTONOMY_ARMS = ("manned", "autonomous_march_unit")
+SUCCESSION_RULES = ("any", "manned_only")
+MANNED_CREW = {ROLE_CONTROL: 2, ROLE_CARGO: 2, ROLE_SECURITY: 3, ROLE_RECOVERY: 2}
+AUTONOMOUS_CREW = {ROLE_CONTROL: 2, ROLE_CARGO: 0, ROLE_SECURITY: 3, ROLE_RECOVERY: 2}
+AUTONOMOUS_UNIT_ROLES = ["control", "cargo", "cargo", "cargo", "cargo"]
+
+
+def resolve_crew_table(spec: dict | None) -> dict | None:
+    """Role -> crew count, or None when no crew/arm/crew_metrics is declared (feature off)."""
+    if not spec:
+        return None
+    arm = spec.get("autonomy_arm")
+    override = spec.get("crew")
+    if arm is None and not override and not spec.get("crew_metrics"):
+        return None
+    table = dict(AUTONOMOUS_CREW if arm == "autonomous_march_unit" else MANNED_CREW)
+    for name, n in (override or {}).items():
+        table[ROLE_MAP[name]] = int(n)
+    return table
 
 # Contact reaction (Issue #12). One generic rule: a trigger set, an action while in contact, and a
 # release. `disperse` is reserved for the herringbone increment and is rejected until it exists.
@@ -137,6 +166,15 @@ def resolve_convoy_spec(params: dict | None) -> dict | None:
             spec.pop("roles", None)
         elif "roles" in spec and "march_unit_size" in params and len(spec["roles"]) != spec["march_unit_size"]:
             spec.pop("roles", None)
+
+    # The autonomous march unit (Issue #14) is one control vehicle leading four autonomous trucks,
+    # unless the caller declared the roles or a security ratio explicitly.
+    if spec.get("autonomy_arm") == "autonomous_march_unit" and "roles" not in spec \
+            and "security_ratio" not in spec:
+        spec["march_unit_size"] = len(AUTONOMOUS_UNIT_ROLES)
+        spec["roles"] = list(AUTONOMOUS_UNIT_ROLES)
+        spec.setdefault("march_units_per_serial", 2)
+        spec.setdefault("serials_per_column", 1)
 
     return spec
 
@@ -248,6 +286,26 @@ def validate_convoy_spec(spec: dict) -> None:
     if sec_ptype is not None and not isinstance(sec_ptype, str):
         raise ValueError(f"convoy security_ptype must be a platform type name, got {sec_ptype!r}")
 
+    arm = spec.get("autonomy_arm")
+    if arm is not None and arm not in AUTONOMY_ARMS:
+        raise ValueError(f"convoy autonomy_arm must be None or one of {list(AUTONOMY_ARMS)}, got {arm!r}")
+    crew = spec.get("crew")
+    if crew is not None:
+        if not isinstance(crew, dict):
+            raise ValueError(f"convoy crew must be a dict role -> count, got {crew!r}")
+        for role, n in crew.items():
+            if role not in ROLE_MAP:
+                raise ValueError(f"unknown crew role {role!r}; must be one of {sorted(ROLE_MAP)}")
+            if isinstance(n, bool) or not isinstance(n, int) or n < 0:
+                raise ValueError(f"crew for role {role!r} must be a non-negative integer, got {n!r}")
+    succ = spec.get("succession")
+    if succ is not None and succ not in SUCCESSION_RULES:
+        raise ValueError(f"convoy succession must be one of {list(SUCCESSION_RULES)}, got {succ!r}")
+    escorts = spec.get("escort_vehicles")
+    if escorts is not None:
+        if isinstance(escorts, bool) or not isinstance(escorts, int) or escorts < 0 or escorts > 100:
+            raise ValueError(f"convoy escort_vehicles must be a non-negative integer <= 100, got {escorts!r}")
+
     resolve_contact_reaction(spec)
 
 
@@ -258,57 +316,101 @@ def build_convoy_layout(spec: dict) -> dict:
     march_size = int(spec["march_unit_size"])
     march_per_serial = int(spec["march_units_per_serial"])
     serials_per_column = int(spec["serials_per_column"])
-    total = march_size * march_per_serial * serials_per_column
-
-    # (Default: Head=Control, Trail=Recovery, Middle=Cargo, with security_ratio allocating Gun Trucks)
-    raw_roles = spec.get("roles")
+    n_mus = march_per_serial * serials_per_column
+    escorts = int(spec.get("escort_vehicles", 0))
     sec_ratio = spec.get("security_ratio")
-    if raw_roles:
-        pos_roles = [ROLE_MAP[r] for r in raw_roles]
-    elif sec_ratio is not None and march_size > 2:
-        n_middle = march_size - 2
-        n_sec = min(n_middle, max(0, int(round(n_middle * float(sec_ratio)))))
-        n_cargo = n_middle - n_sec
-        middle = [ROLE_CARGO] * n_cargo + [ROLE_SECURITY] * n_sec
-        pos_roles = [ROLE_CONTROL] + middle
-        if march_size > 1:
-            pos_roles.append(ROLE_RECOVERY)
-    else:
-        pos_roles = [ROLE_CONTROL] + [ROLE_CARGO] * max(0, march_size - 2)
-        if march_size > 1:
-            pos_roles.append(ROLE_RECOVERY)
 
-    march_units = np.zeros(total, dtype=np.int16)
-    serials = np.zeros(total, dtype=np.int16)
-    sections = np.zeros(total, dtype=np.int8)
-    convoy_roles = np.zeros(total, dtype=np.int8)
-    leaders = np.full(total, -1, dtype=np.int32)
-    roles = np.ones(total, dtype=np.int8)  # 0=Leader, 1=Follower
-
-    for i in range(total):
-        march_idx = i // march_size
-        serial_idx = i // (march_size * march_per_serial)
-
-        k = i % march_size
-        march_units[i] = march_idx
-        serials[i] = serial_idx
-        convoy_roles[i] = pos_roles[k]
-
-        # Head / Main / Trail
-        head_idx = march_idx * march_size
-
-        if k == 0:
-            sections[i] = SECTION_HEAD
-            roles[i] = 0        # Leader
-            leaders[i] = -1     # No leader above it in the march unit
-        elif k == march_size - 1:
-            sections[i] = SECTION_TRAIL
-            roles[i] = 1        # Follower
-            leaders[i] = head_idx  # Follow the leader of its march unit
+    if escorts == 0:
+        total = march_size * n_mus
+        # (Default: Head=Control, Trail=Recovery, Middle=Cargo, with security_ratio allocating Gun Trucks)
+        raw_roles = spec.get("roles")
+        if raw_roles:
+            pos_roles = [ROLE_MAP[r] for r in raw_roles]
+        elif sec_ratio is not None and march_size > 2:
+            n_middle = march_size - 2
+            n_sec = min(n_middle, max(0, int(round(n_middle * float(sec_ratio)))))
+            n_cargo = n_middle - n_sec
+            middle = [ROLE_CARGO] * n_cargo + [ROLE_SECURITY] * n_sec
+            pos_roles = [ROLE_CONTROL] + middle
+            if march_size > 1:
+                pos_roles.append(ROLE_RECOVERY)
         else:
-            sections[i] = SECTION_MAIN
-            roles[i] = 1        # Follower
-            leaders[i] = head_idx  # Follow the leader of its march unit
+            pos_roles = [ROLE_CONTROL] + [ROLE_CARGO] * max(0, march_size - 2)
+            if march_size > 1:
+                pos_roles.append(ROLE_RECOVERY)
+
+        march_units = np.zeros(total, dtype=np.int16)
+        serials = np.zeros(total, dtype=np.int16)
+        sections = np.zeros(total, dtype=np.int8)
+        convoy_roles = np.zeros(total, dtype=np.int8)
+        leaders = np.full(total, -1, dtype=np.int32)
+        roles = np.ones(total, dtype=np.int8)  # 0=Leader, 1=Follower
+
+        for i in range(total):
+            march_idx = i // march_size
+            serial_idx = i // (march_size * march_per_serial)
+
+            k = i % march_size
+            march_units[i] = march_idx
+            serials[i] = serial_idx
+            convoy_roles[i] = pos_roles[k]
+
+            head_idx = march_idx * march_size
+
+            if k == 0:
+                sections[i] = SECTION_HEAD
+                roles[i] = 0        # Leader
+                leaders[i] = -1     # No leader above it in the march unit
+            elif k == march_size - 1:
+                sections[i] = SECTION_TRAIL
+                roles[i] = 1        # Follower
+                leaders[i] = head_idx  # Follow the leader of its march unit
+            else:
+                sections[i] = SECTION_MAIN
+                roles[i] = 1        # Follower
+                leaders[i] = head_idx  # Follow the leader of its march unit
+    else:
+        # Equal cargo escort layout: escorts are added on top of the task vehicles
+        total = march_size * n_mus + escorts
+        march_units = np.zeros(total, dtype=np.int16)
+        serials = np.zeros(total, dtype=np.int16)
+        sections = np.zeros(total, dtype=np.int8)
+        convoy_roles = np.zeros(total, dtype=np.int8)
+        leaders = np.full(total, -1, dtype=np.int32)
+        roles = np.ones(total, dtype=np.int8)
+
+        # Distribute escorts across the n_mus march units
+        e_per_mu = [escorts // n_mus + (1 if u < (escorts % n_mus) else 0) for u in range(n_mus)]
+
+        raw_roles = spec.get("roles")
+        if raw_roles:
+            base_roles = [ROLE_MAP[r] for r in raw_roles]
+        else:
+            base_roles = [ROLE_CONTROL] + [ROLE_CARGO] * (march_size - 1)
+
+        idx = 0
+        for u in range(n_mus):
+            head_idx = idx
+            n_sec = e_per_mu[u]
+            u_roles = [base_roles[0]] + [ROLE_SECURITY] * n_sec + list(base_roles[1:])
+            u_len = len(u_roles)
+            for k, r in enumerate(u_roles):
+                march_units[idx] = u
+                serials[idx] = u // march_per_serial
+                convoy_roles[idx] = r
+                if k == 0:
+                    sections[idx] = SECTION_HEAD
+                    roles[idx] = 0
+                    leaders[idx] = -1
+                elif k == u_len - 1:
+                    sections[idx] = SECTION_TRAIL
+                    roles[idx] = 1
+                    leaders[idx] = head_idx
+                else:
+                    sections[idx] = SECTION_MAIN
+                    roles[idx] = 1
+                    leaders[idx] = head_idx
+                idx += 1
 
     pace = float(spec["pace"]) if spec.get("pace") is not None else None
     time_gap = float(spec["time_gap"]) if spec.get("time_gap") is not None else None
