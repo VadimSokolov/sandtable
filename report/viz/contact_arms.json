@@ -1,0 +1,54 @@
+{
+  "scenario": "scenarios/uc3_convoy.json",
+  "caveat": "Red does not exploit a halt; ratios and gun-truck armament are placeholders.",
+  "arms": [
+    {
+      "arm": "no_escort_no_reaction",
+      "n_seeds": 20,
+      "success": 0.9,
+      "time_to_objective": 636.7,
+      "blue_losses": 5.2,
+      "red_losses": 4.4,
+      "escort_vehicle_steps": 0.0,
+      "convoy_contact_count": null,
+      "convoy_contact_steps": null,
+      "convoy_halt_steps": null
+    },
+    {
+      "arm": "escort_no_reaction",
+      "n_seeds": 20,
+      "success": 0.95,
+      "time_to_objective": 565.65,
+      "blue_losses": 3.25,
+      "red_losses": 5.7,
+      "escort_vehicle_steps": 1470.9,
+      "convoy_contact_count": null,
+      "convoy_contact_steps": null,
+      "convoy_halt_steps": null
+    },
+    {
+      "arm": "escort_continue",
+      "n_seeds": 20,
+      "success": 0.95,
+      "time_to_objective": 565.65,
+      "blue_losses": 3.25,
+      "red_losses": 5.7,
+      "escort_vehicle_steps": 1470.9,
+      "convoy_contact_count": 1.0,
+      "convoy_contact_steps": 157.95,
+      "convoy_halt_steps": 0.0
+    },
+    {
+      "arm": "escort_halt",
+      "n_seeds": 20,
+      "success": 1.0,
+      "time_to_objective": 747.35,
+      "blue_losses": 1.15,
+      "red_losses": 6.0,
+      "escort_vehicle_steps": 2185.7,
+      "convoy_contact_count": 5.15,
+      "convoy_contact_steps": 259.55,
+      "convoy_halt_steps": 3764.45
+    }
+  ]
+}

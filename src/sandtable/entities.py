@@ -97,6 +97,10 @@ class Entities:
     # __post_init__ to NaN (unrouted) so non-route scenarios behave byte-identically.
     progress: np.ndarray = None         # float: arc-length coordinate along the route (m), or NaN
 
+    # Crew per vehicle (Issue #14). Metrics read it; no model step does. Zero unless a convoy
+    # declares crew, so nothing can read a nonzero crew by accident.
+    crew: np.ndarray = None             # int16: people aboard
+
     def __post_init__(self) -> None:
         n = self.x.shape[0]
         if self.control_quality is None:
@@ -128,6 +132,8 @@ class Entities:
             self.cargo_delivered = np.zeros(n, np.float64)
         if self.progress is None:
             self.progress = np.full(n, np.nan, np.float64)
+        if self.crew is None:
+            self.crew = np.zeros(n, np.int16)
 
     @property
     def n(self) -> int:

@@ -86,14 +86,23 @@ class Behavior:
     contact_steps: int = 0        # ticks spent in contact
     first_contact_step: int = -1
     halt_steps: int = 0           # vehicle-ticks held by the reaction
+    # Autonomous march unit (Issue #14). "manned_only" never promotes an unmanned vehicle to head.
+    succession: str = "any"
+    headless_steps: int = 0       # follower-ticks with no living manned head (manned_only only)
 
 
 def build_behavior(scn: Scenario, ent: Entities) -> Behavior | None:
     """Build the behaviour layer, or None when the scenario does not opt in."""
     spec = scn.params.get("blue_behavior")
     from sandtable.convoy import resolve_contact_reaction, resolve_convoy_spec
-    reaction = resolve_contact_reaction(resolve_convoy_spec(scn.params))
-    if spec is None and reaction is not None:
+    cspec = resolve_convoy_spec(scn.params)
+    reaction = resolve_contact_reaction(cspec)
+    arm = (cspec or {}).get("autonomy_arm")
+    if spec is None and arm == "autonomous_march_unit":
+        spec = "leader_follow"  # the unmanned trucks station on their control vehicle
+    elif spec is None and arm == "manned":
+        spec = "leader_follow"  # manned vehicles hold station with human perception
+    elif spec is None and reaction is not None:
         spec = "waypoint"       # the reaction holds vehicles through the behaviour layer
     if spec is None:
         return None
@@ -118,9 +127,12 @@ def build_behavior(scn: Scenario, ent: Entities) -> Behavior | None:
     else:
         state[blue_ground] = mode
 
+    default_follow_mode = "human" if arm == "manned" else "behavior"
+    follow_mode = str(scn.params.get("follow_mode", default_follow_mode))
+
     return Behavior(
         mode=mode,
-        follow_mode=str(scn.params.get("follow_mode", "behavior")),
+        follow_mode=follow_mode,
         teleop_stop=bool(scn.params.get("teleop_stop", True)),
         track_timeout=int(scn.params.get("track_timeout", 40)),
         state=state,
@@ -138,7 +150,7 @@ def build_behavior(scn: Scenario, ent: Entities) -> Behavior | None:
         # is how the 2x2 that separates channel from geometry is run.
         topology=str(scn.params.get(
             "follow_topology",
-            "star" if str(scn.params.get("follow_mode", "behavior")) == "link" else "chain")),
+            "star" if follow_mode == "link" else "chain")),
         sense_range=float(scn.params.get("follow_sense_range", 250.0)),
         # The disturbance measured in its own coordinate (CR-57). A channel produces outages of a
         # DISTRIBUTION; a specification is written about a LENGTH. With `follow_outage = a` the
@@ -156,6 +168,8 @@ def build_behavior(scn: Scenario, ent: Entities) -> Behavior | None:
         # covariate. Radians per tick, over blue ground.
         prev_heading=ent.heading.copy(), turn_sum=np.zeros(n), turn_steps=np.zeros(n, np.int32),
         **_contact_fields(ent, reaction),
+        succession=str((cspec or {}).get("succession")
+                       or ("manned_only" if arm == "autonomous_march_unit" else "any")),
     )
 
 
@@ -283,8 +297,15 @@ def _update_convoy_succession(ent: Entities, bhv: Behavior) -> None:
         living = np.nonzero(mask & ent.alive)[0]
         if len(living) == 0:
             continue
-        new_head = int(living[0])
-        # If head vehicle was lost, promote the earliest living vehicle to head
+        pool = living
+        if bhv.succession == "manned_only":
+            # An unmanned truck cannot command a march unit. With no manned survivor the unit stays
+            # headless and its followers take the fallback in `_follow` (policy is Issue #17).
+            pool = living[ent.crew[living] > 0]
+            if pool.size == 0:
+                continue
+        new_head = int(pool[0])
+        # If head vehicle was lost, promote the earliest eligible living vehicle to head
         if ent.leader[new_head] != -1 or ent.role[new_head] != 0:
             ent.role[new_head] = 0
             ent.leader[new_head] = -1
@@ -294,7 +315,7 @@ def _update_convoy_succession(ent: Entities, bhv: Behavior) -> None:
                 ent.speed_cap[new_head] = ent.speed_cap[orig_head]
 
         # Update remaining living vehicles in the march unit to follow the new head
-        for foll in living[1:]:
+        for foll in living[living != new_head]:
             ent.role[foll] = 1
             ent.leader[foll] = new_head
 
@@ -331,10 +352,20 @@ def _follow(ent: Entities, bhv: Behavior, comms, scn: Scenario, k: int,
         if ref < 0 or not ent.alive[ref]:
             # HALT_ON_LEADER_LOSS: nothing to follow, so hold the route independently.
             bhv.state[i] = WAYPOINT
+            if bhv.succession == "manned_only":
+                bhv.headless_steps += 1
             continue
         bhv.trk_steps[i] += 1
         if bhv.outage > 0:
             got = (k % (bhv.outage + 1)) == 0
+        elif bhv.follow_mode == "human":
+            # Human perception (Issue #14): driver observes predecessor directly; immune to comms link drops
+            in_range = float(np.hypot(ent.x[ref] - ent.x[i],
+                                     ent.y[ref] - ent.y[i])) <= bhv.sense_range
+            if in_range and world is not None and getattr(world, "buildings", None) is not None:
+                got = bool(world.los(ent.x[i], ent.y[i], ent.x[ref], ent.y[ref]))
+            else:
+                got = in_range
         elif bhv.follow_mode == "link":
             got = got_link
         else:
