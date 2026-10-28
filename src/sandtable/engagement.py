@@ -22,7 +22,8 @@ from sandtable.world import World
 
 def _side_damage(ent: Entities, world: World, dist: np.ndarray, shooter_side: int,
                  rng: np.random.Generator, damage: np.ndarray, events: list | None = None,
-                 mech: "mechanics.Mech | None" = None, supp0: np.ndarray | None = None) -> None:
+                 mech: "mechanics.Mech | None" = None, supp0: np.ndarray | None = None,
+                 fired_at: np.ndarray | None = None) -> None:
     shooters = ent.alive & (ent.side == shooter_side)
     if mech is not None:
         shooters = shooters & mechanics.has_ammo(ent, mech)   # a shooter with no rounds cannot fire
@@ -45,6 +46,8 @@ def _side_damage(ent: Entities, world: World, dist: np.ndarray, shooter_side: in
     if shooter_idx.size == 0:
         return
     target_idx = np.argmin(dmasked[shooter_idx], axis=1)
+    if fired_at is not None:
+        fired_at[target_idx] = True     # incoming-fire signal for the contact reaction; reads state only
     pk = ent.pk_base[shooter_idx] * (1.0 - world.cover_at(ent.x[target_idx], ent.y[target_idx]))
     # Control-quality coupling (Increment 2): a well-controlled shooter engages more
     # effectively; a poorly-controlled target exposes itself and is easier to hit.
@@ -70,10 +73,12 @@ def _side_damage(ent: Entities, world: World, dist: np.ndarray, shooter_side: in
 
 
 def step(ent: Entities, world: World, dt: float, rng: np.random.Generator,
-         events: list | None = None, mech: "mechanics.Mech | None" = None) -> None:
+         events: list | None = None, mech: "mechanics.Mech | None" = None,
+         fired_at: np.ndarray | None = None) -> None:
     """Resolve one round of mutual engagement in place. `events`, if given, collects kill pairs.
     `mech`, if given, applies the opt-in kill-web mechanics (suppression, munitions); when None the
-    resolution and its RNG draws are byte-identical to the baseline.
+    resolution and its RNG draws are byte-identical to the baseline. `fired_at`, if given, is set True
+    for every entity a shooter selected as its target (a write only; it never touches the RNG).
     """
     n = ent.n
     if n == 0:
@@ -84,8 +89,8 @@ def step(ent: Entities, world: World, dt: float, rng: np.random.Generator,
     # Snapshot suppression before either side fires so both read pre-step values (no order bias).
     supp0 = ent.suppression.copy() if (mech is not None and mech.suppression) else None
     damage = np.zeros(n)
-    _side_damage(ent, world, dist, BLUE, rng, damage, events, mech, supp0)
-    _side_damage(ent, world, dist, RED, rng, damage, events, mech, supp0)
+    _side_damage(ent, world, dist, BLUE, rng, damage, events, mech, supp0, fired_at)
+    _side_damage(ent, world, dist, RED, rng, damage, events, mech, supp0, fired_at)
 
     ent.hp = ent.hp - damage
     ent.alive = ent.alive & (ent.hp > 0.0)

@@ -244,3 +244,24 @@ Full sourced sweeps are retained in the scratchpad:
   gathered via automated search and should be spot-checked before formal citation. One access
   limitation: the RAND RR-A2764-1 full PDF returned an access error and was captured via its landing
   page and corroborating coverage. No classified or non-public information was used.
+
+## Convoy security vehicles and contact reaction (Issue #12)
+
+Both are opt-in under the `convoy` spec (or as flat params); absent, runs are byte-identical.
+
+- `security_ptype`: platform type name. `ROLE_SECURITY` vehicles take `weapon_range`, `pk_base`,
+  `sensor_range`, `max_speed`, `turn_rate` and `hp` from it. The count follows `security_ratio`
+  (`round(ratio * (march_unit_size - 2))` per march unit, Python half-to-even) at the positions the
+  `roles` list or the #15 allocation gives.
+- `contact_reaction`: `null`/`"none"` or `{"action": "halt"|"continue", "triggers": [...],
+  "range_m": 800, "release": {"rule": "timeout", "clear_s": 15}, "halt_scope": "all"|"non_security"}`.
+  Triggers: `receive_fire` (a Red shooter selected a convoy vehicle as target on the previous
+  engagement, one tick of latency; unavailable with belief tracks), `lead_lost` (a march-unit head
+  died), `detect_range` (a detected living Red ground entity within `range_m` of a convoy vehicle,
+  line of sight when buildings exist). `disperse` and the `leader_policy` release (Issue #17) are
+  rejected. The reaction draws no random numbers.
+- Metrics (only when declared): `escort_vehicle_steps`, `convoy_contact_count`,
+  `convoy_contact_steps`, `convoy_first_contact_step`, `convoy_halt_steps`.
+- Limitation: Red does not exploit a halted column, so `halt` carries no attrition cost beyond time.
+  Do not read halt-vs-continue results as findings until that cost exists. Comparison arms:
+  `tools/make_contact_arms.py`.

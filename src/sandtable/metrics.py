@@ -174,6 +174,16 @@ def compute(scn: Scenario, init_counts: dict, ent: Entities,
     }
 
 
+def contact_metrics(bhv, dt: float) -> dict:
+    """Contact reaction KPIs (Issue #12). Emitted only when a reaction is declared."""
+    return {
+        "convoy_contact_count": float(bhv.contact_count),
+        "convoy_contact_steps": float(bhv.contact_steps),
+        "convoy_first_contact_step": float(bhv.first_contact_step),
+        "convoy_halt_steps": float(bhv.halt_steps),
+    }
+
+
 def _convoy_doctrine_metrics(scn: Scenario, ent: Entities) -> dict:
     """Doctrinal movement-control metrics from ATP 4-16 (Issue #11).
 
