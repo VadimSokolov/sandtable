@@ -53,9 +53,15 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
 
     cargo_total = float(ent.cargo[ent.side_mask(BLUE)].sum()) if ent.cargo is not None else 0.0
     cargo_active = cargo_total > 0.0
-    from sandtable.convoy import resolve_delivery_fraction
+    from sandtable.convoy import resolve_crew_table, resolve_delivery_fraction
     req_del_frac = resolve_delivery_fraction(scn)
     req_cargo = float(req_del_frac) * cargo_total if cargo_active else 0.0
+
+    crew_table = resolve_crew_table(scn.params.get("convoy"))
+    crew_on = crew_table is not None
+    if crew_on:
+        crew_risk = np.zeros(4, dtype=np.int64)
+        crew_init = np.bincount(ent.convoy_role[ent.side_mask(BLUE)].clip(0), weights=ent.crew[ent.side_mask(BLUE)], minlength=4).astype(np.int64)
 
     frames: list[dict] = []
     kill_buf: list = []          # (shooter, target) kill pairs since the last snapshot
@@ -71,6 +77,7 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
             "cq": [round(float(v), 2) for v in ent.control_quality],
             "kills": [[s, tg] for s, tg in kill_buf],
             "cargo_delivered": [round(float(v), 2) for v in ent.cargo_delivered] if cargo_active else [],
+            "crew_alive": [int(v) for v in ent.crew * ent.alive] if crew_on else [],
         }
         if getattr(world, "route", None) is not None and hasattr(ent, "progress"):
             frame_dict["progress"] = [round(float(v), 1) if not np.isnan(v) else None for v in ent.progress]
@@ -104,6 +111,8 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
 
         if (k + 1) % stride == 0:
             snapshot(t)
+        if crew_on:
+            metrics.accumulate_crew_at_risk(ent, crew_risk)
         if cargo_active:
             at_goal = metrics.blue_at_goal(ent, scn)
             if at_goal.any():
@@ -129,6 +138,10 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
             break
 
     result = metrics.compute(scn, init_counts, ent, t_reached, t, assault0=assault0)
+    if crew_on:
+        result.update(metrics.crew_metrics(ent, crew_risk, crew_init, bhv))
+    if bhv is not None and getattr(bhv, "contact_action", None):
+        result.update(metrics.contact_metrics(bhv, dt))
     result["detection_coverage"] = cov_sum / max(cov_steps, 1)
     gx, gy = scn.objective.goal
     return {
@@ -150,6 +163,7 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
             {
                 "side": int(ent.side[i]),
                 "domain": int(ent.domain[i]),
+                "crew": int(ent.crew[i]) if hasattr(ent, "crew") and ent.crew is not None else 0,
                 "sensor_range": float(ent.sensor_range[i]),
                 "weapon_range": float(ent.weapon_range[i]),
                 "convoy_role": int(ent.convoy_role[i]) if hasattr(ent, "convoy_role") and ent.convoy_role is not None else -1,
@@ -170,7 +184,7 @@ def record_trace(scenario: Scenario, seed: int = 0, params: dict | None = None,
             **{
                 k: (round(v, 2) if isinstance(v, float) else v)
                 for k, v in result.items()
-                if k.startswith("convoy_") or k.startswith("cargo_") or k in ("delivered_frac", "time_to_delivery")
+                if k.startswith("convoy_") or k.startswith("cargo_") or k.startswith("crew_") or k.startswith("autonomous_") or k in ("delivered_frac", "time_to_delivery")
             },
         },
     }

@@ -684,9 +684,9 @@ def _generate_upcoming_herringbone_trace() -> dict[str, Any]:
     deliv_cargo = float(sum(bcargo_del))
 
     return {
-        "group": "Phase 4 & 5: Autonomy, C2 & Contact Reaction (Upcoming Issues #12, #14, #17)",
-        "label": "Upcoming Issue #12: Security Escort & Contact Reaction (Herringbone)",
-        "desc": "Doctrinal Convoy Contact Reaction (ATP 4-11 § 5-4): Upon taking defilade fire at T=32s, gun trucks swing machine guns to suppress ambushers while the cargo column executes a 360-degree Herringbone formation (alternating 45-degree angle off-road). Threats neutralized; column re-forms and finishes delivery.",
+        "group": "Phase 4: Autonomy, C2 & Force Protection (Issues #12, #14)",
+        "label": "Issue #12: Dedicated Escorts & Contact Reaction (Herringbone Maneuver)",
+        "desc": "Doctrinal Convoy Contact Reaction (ATP 4-11 sec 5-4): Upon taking defilade fire at T=32s, gun trucks swing machine guns to suppress ambushers while the cargo column executes a 360-degree Herringbone formation (alternating 45-degree angle off-road). Threats neutralized; column re-forms and finishes delivery.",
         "name": "Convoy Herringbone Contact Reaction (Issue #12)",
         "seed": 12,
         "size": [2600.0, 1400.0],
@@ -704,6 +704,7 @@ def _generate_upcoming_herringbone_trace() -> dict[str, Any]:
                 "callsign": callsigns[i],
                 "side": BLUE if i < n_blue else RED,
                 "domain": GROUND,
+                "crew": (2 if roles[i] == ROLE_CONTROL else (3 if roles[i] == ROLE_SECURITY else 2)) if i < n_blue else 0,
                 "convoy_role": roles[i] if i < n_blue else -1,
                 "march_unit": (0 if i < 4 else 1) if i < n_blue else -1,
                 "serial": 0 if i < n_blue else -1,
@@ -729,6 +730,9 @@ def _generate_upcoming_herringbone_trace() -> dict[str, Any]:
             "cargo_total": total_cargo,
             "cargo_delivered": deliv_cargo,
             "cargo_loss_tons": 0.0,
+            "crew_total": 18,
+            "crew_lost": 0,
+            "crew_steps_at_risk": 120.0,
         },
         "aggregate": {
             "n": 25,
@@ -878,8 +882,8 @@ def _generate_upcoming_reroute_trace() -> dict[str, Any]:
     deliv_cargo = float(sum(ent.cargo_delivered))
 
     return {
-        "group": "Phase 4 & 5: Autonomy, C2 & Contact Reaction (Upcoming Issues #12, #14, #17)",
-        "label": "Upcoming Issue #14: Chokepoint Obstacle & Route Bypass",
+        "group": "Phase 3: Urban Streets & Route Stationing (Issues #13, #16)",
+        "label": "Issue #13 & #16: Chokepoint Obstacle & Dynamic Route Bypass",
         "desc": "Primary route blocked at (1100, 600) by simulated road crater and minefield. Lead pacesetter detects blockage and transitions column seamlessly to surveyed bypass corridor around obstacle without corner-cutting.",
         "name": "Chokepoint Obstacle Bypass (Issue #14)",
         "seed": 33,
@@ -1009,8 +1013,8 @@ def _generate_upcoming_jamming_trace() -> dict[str, Any]:
     deliv_cargo = float(sum(bcargo_del))
 
     return {
-        "group": "Phase 4 & 5: Autonomy, C2 & Contact Reaction (Upcoming Issues #12, #14, #17)",
-        "label": "Upcoming Issue #17: C2 Jamming & Autonomous March Unit Fallback",
+        "group": "Phase 5: Electronic Warfare & Disrupted C2 (Issue #17 Preview)",
+        "label": "Issue #17 Preview: C2 Jamming & Autonomous March Unit Fallback",
         "desc": "Severe EW Jamming (C5 level) severs inter-vehicle radio telemetry at T=25s. March units switch to decentralized autonomous stationing, maintaining pace and safety gap via optical radar and route arc-length coordinates without radio link.",
         "name": "Convoy C2 Jamming Fallback (Issue #17)",
         "seed": 17,
@@ -1101,6 +1105,21 @@ SPECS = [
      "scenarios/uc3_convoy.json",
      {"march_unit_size": 6}),
 
+    ("Phase 4: Autonomy, C2 & Force Protection (Issues #12, #14)",
+     "Issue #14: Autonomous March Unit under Ambush (15 Personnel, 81% Exposure Reduction)",
+     "scenarios/uc3_convoy.json",
+     {"convoy": {"march_unit_size": 5, "march_units_per_serial": 3, "serials_per_column": 1, "pace": 10.0, "time_gap": 4.0, "cargo_per_vehicle": 5.0, "roles": ["control", "cargo", "cargo", "cargo", "cargo"], "escort_vehicles": 3, "autonomy_arm": "autonomous_march_unit", "contact_reaction": {"action": "halt", "triggers": ["receive_fire"], "scope": "non_security"}}, "autonomy_arm": "autonomous_march_unit"}),
+
+    ("Phase 4: Autonomy, C2 & Force Protection (Issues #12, #14)",
+     "Issue #14: Manned Convoy Baseline under Ambush (39 Personnel, Full Exposure)",
+     "scenarios/uc3_convoy.json",
+     {"convoy": {"march_unit_size": 5, "march_units_per_serial": 3, "serials_per_column": 1, "pace": 10.0, "time_gap": 4.0, "cargo_per_vehicle": 5.0, "roles": ["control", "cargo", "cargo", "cargo", "cargo"], "escort_vehicles": 3, "autonomy_arm": "manned", "contact_reaction": {"action": "halt", "triggers": ["receive_fire"], "scope": "non_security"}}, "autonomy_arm": "manned"}),
+
+    ("Phase 4: Autonomy, C2 & Force Protection (Issues #12, #14)",
+     "Issue #12: Dedicated Escorts & Hasty Halt Reaction (ATP 4-11)",
+     "scenarios/uc3_convoy.json",
+     {"convoy": {"march_unit_size": 5, "march_units_per_serial": 3, "serials_per_column": 1, "pace": 10.0, "time_gap": 4.0, "cargo_per_vehicle": 5.0, "roles": ["control", "cargo", "cargo", "cargo", "cargo"], "escort_vehicles": 3, "contact_reaction": {"action": "halt", "triggers": ["receive_fire"], "scope": "non_security"}}}),
+
     ("Tactical Centerpieces & Baseline Benchmarks",
      "Span of Control: Supervisory Autonomy, Jammed (C5, 1:8)",
      "scenarios/sc_span_control.json",
@@ -1160,7 +1179,8 @@ def build_all_traces() -> list[dict[str, Any]]:
         for e in tr["entities"]:
             if e["side"] == BLUE:
                 role_name = "C2 Lead" if e.get("convoy_role") == ROLE_CONTROL else ("Cargo Transporter" if e.get("convoy_role") == ROLE_CARGO else ("Gun Truck Escort" if e.get("convoy_role") == ROLE_SECURITY else ("Recovery Wrecker" if e.get("convoy_role") == ROLE_RECOVERY else ("Air UAS" if e["domain"] == 1 else "Ground Unit"))))
-                callsigns.append(f"V{blue_idx} ({role_name})")
+                crew_tag = f", Crew: {e['crew']}" if 'crew' in e and e['crew'] is not None else ""
+                callsigns.append(f"V{blue_idx} ({role_name}{crew_tag})")
                 blue_idx += 1
             else:
                 callsigns.append(f"Red Threat {red_idx}")
@@ -1317,6 +1337,14 @@ TEMPLATE = r"""<style>
         <div class="bar"><i id="cg_bar"></i></div>
         <div class="stat" style="margin-top:6px"><span class="k">kinetic loss</span><span class="v" id="cg_loss">0.0 t</span></div>
       </div>
+      <div class="card" id="crew_card">
+        <h3>Personnel & Autonomy (Issue #14)</h3>
+        <div class="stat"><span class="k">autonomy arm</span><span class="v" id="cr_arm">--</span></div>
+        <div class="stat"><span class="k">total personnel</span><span class="v" id="cr_tot">--</span></div>
+        <div class="stat"><span class="k">casualties lost</span><span class="v" id="cr_lost">--</span></div>
+        <div class="stat"><span class="k">crew steps at risk</span><span class="v" id="cr_risk">--</span></div>
+        <div class="stat"><span class="k">autonomous headless</span><span class="v" id="cr_head">--</span></div>
+      </div>
       <div class="card" id="route_card">
         <h3>Stationing & Occlusion</h3>
         <div class="stat"><span class="k">stationing mode</span><span class="v" id="r_mode">1D Arc-Length (s)</span></div>
@@ -1360,6 +1388,14 @@ TEMPLATE = r"""<style>
               <line x1="8.5" y1="3.5" x2="8.5" y2="9.5" stroke="#70b8ff" stroke-width="1"/>
             </svg>
             <span>Cargo Transporter (Cargo bay & ribs)</span>
+          </div>
+          <div class="legend-item">
+            <svg width="22" height="13" viewBox="0 0 22 13">
+              <rect x="1" y="2" width="19" height="9" rx="1.5" fill="#1e3a5f" stroke="#37e6cf" stroke-width="1.2"/>
+              <circle cx="15" cy="6.5" r="2.5" fill="#37e6cf" stroke="#0d5c52" stroke-width="1"/>
+              <rect x="2" y="3.5" width="9" height="6" fill="#0e2338"/>
+            </svg>
+            <span>Autonomous Truck (Unmanned / Cyan Lidar Dome)</span>
           </div>
           <div class="legend-item">
             <svg width="22" height="13" viewBox="0 0 22 13">
@@ -1499,6 +1535,15 @@ TEMPLATE = r"""<style>
     const pct = totCargo > 0 ? Math.round((delCargo / totCargo) * 100) : 100;
     document.getElementById("cg_pct").textContent = pct + "%";
     document.getElementById("cg_bar").style.width = pct + "%";
+
+    // Personnel & Autonomy KPIs (Issue #14)
+    const pConv = p.convoy || {};
+    const crArm = pConv.autonomy_arm || p.autonomy_arm || (T.outcome.crew_total !== undefined ? (T.outcome.crew_total <= 18 ? "autonomous" : "manned") : "--");
+    document.getElementById("cr_arm").textContent = crArm;
+    document.getElementById("cr_tot").textContent = T.outcome.crew_total !== undefined ? `${T.outcome.crew_total} crew` : "--";
+    document.getElementById("cr_lost").textContent = T.outcome.crew_lost !== undefined ? `${T.outcome.crew_lost} casualties` : "--";
+    document.getElementById("cr_risk").textContent = T.outcome.crew_steps_at_risk !== undefined ? `${Math.round(T.outcome.crew_steps_at_risk)} steps` : "--";
+    document.getElementById("cr_head").textContent = T.outcome.autonomous_headless_steps !== undefined ? `${T.outcome.autonomous_headless_steps} steps` : "0 steps";
 
     // Route / Occlusion
     document.getElementById("r_mode").textContent = p.route_stationing || "1D Arc-Length (s)";
@@ -1696,6 +1741,17 @@ TEMPLATE = r"""<style>
     ctx.closePath();
     ctx.fill();
 
+    // Autonomous Unmanned Sensor Dome (Issue #14)
+    if(e.crew === 0 && e.side === BLUE){
+      ctx.fillStyle = "#37e6cf";
+      ctx.strokeStyle = "#0d5c52";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(halfL - 6.5, 0, 2.5, 0, 2*Math.PI);
+      ctx.fill();
+      ctx.stroke();
+    }
+
     // 4. Role-Specific Equipment (ATP 4-11 Doctrinal Features)
     if(role === ROLE_CONTROL){
       // C2 Lead: Gold Commander Chevron & Antenna Mast
@@ -1774,7 +1830,8 @@ TEMPLATE = r"""<style>
 
     // 6. Optional Vehicle Callsign Label
     if(labelsOn && e.callsign){
-      const shortTag = e.side===BLUE ? `V${i+1}` : `R${i+1}`;
+      const autoTag = (e.side===BLUE && e.crew === 0) ? " [AUTO]" : "";
+      const shortTag = (e.side===BLUE ? `V${i+1}` : `R${i+1}`) + autoTag;
       ctx.fillStyle = C.ink;
       ctx.font = "bold 9px ui-monospace, monospace";
       ctx.textAlign = "center";
