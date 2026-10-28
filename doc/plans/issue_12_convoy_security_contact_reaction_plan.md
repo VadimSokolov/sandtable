@@ -390,3 +390,4 @@ This plan establishes the complete mathematical, doctrinal, and software foundat
 3. Validate with `pytest tests/test_convoy_contact_reaction.py`.
 4. Update `mission_viewer_v2.html` with real simulated traces.
 5. Merge into `convoy-dev`.
+
