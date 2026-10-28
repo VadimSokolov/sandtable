@@ -581,8 +581,8 @@ def _generate_upcoming_herringbone_trace() -> dict[str, Any]:
         "Red Ambush Team Bravo",
     ]
 
-    # Two ambush teams in defilade
-    red_pos = [(1250.0, 780.0), (1400.0, 820.0)]
+    # Two ambush teams in defilade within escort weapon range (<= 350m)
+    red_pos = [(650.0, 720.0), (750.0, 740.0)]
     total_ent = n_blue + 2
 
     # Timeline simulation
@@ -618,11 +618,21 @@ def _generate_upcoming_herringbone_trace() -> dict[str, Any]:
             # Under fire: Escorts engage, cargo trucks execute Herringbone
             rseen[:] = True
             for i in range(n_blue):
-                if roles[i] == ROLE_SECURITY:
-                    # Gun trucks halt and orient toward threats
+                if i == 1:
+                    # Gun Truck 1: Halts at contact line, turns toward Red Alpha (dist ~208m <= 350m)
                     bspeed[i] = 0.0
                     target = 0 if ralive[0] else 1
                     bh[i] = float(np.arctan2(ry[target] - by[i], rx[target] - bx[i]))
+                elif i == 4:
+                    # Gun Truck 2: Advances along shoulder to flank Red Bravo (dist ~244m <= 350m)
+                    if bx[i] < 550.0:
+                        bspeed[i] = 7.0
+                        bx[i] += bspeed[i] * dt
+                        bh[i] = 0.0
+                    else:
+                        bspeed[i] = 0.0
+                        target = 1 if ralive[1] else 0
+                        bh[i] = float(np.arctan2(ry[target] - by[i], rx[target] - bx[i]))
                 else:
                     # Herringbone: alternate 45 deg left/right off road
                     bspeed[i] = max(0.0, bspeed[i] - 2.0 * dt)
@@ -631,11 +641,11 @@ def _generate_upcoming_herringbone_trace() -> dict[str, Any]:
                     if abs(by[i] - 600.0) < 18.0:
                         by[i] += (1.5 if (i % 2 == 1) else -1.5) * dt
 
-            # At t=48s, first ambusher destroyed by Gun Truck 1
+            # At t=48s, first ambusher destroyed by Gun Truck 1 (dist 208.1m <= 350m weapon range)
             if t == 48.0:
                 ralive[0] = False
                 kills.append([1, n_blue])
-            # At t=60s, second ambusher destroyed by Gun Truck 2
+            # At t=60s, second ambusher destroyed by Gun Truck 2 (dist 244.1m <= 350m weapon range)
             if t == 60.0:
                 ralive[1] = False
                 kills.append([4, n_blue + 1])
@@ -686,7 +696,7 @@ def _generate_upcoming_herringbone_trace() -> dict[str, Any]:
     return {
         "group": "Phase 4: Autonomy, C2 & Force Protection (Issues #12, #14)",
         "label": "Issue #12: Dedicated Escorts & Contact Reaction (Herringbone Maneuver)",
-        "desc": "Doctrinal Convoy Contact Reaction (ATP 4-11 sec 5-4): Upon taking defilade fire at T=32s, gun trucks swing machine guns to suppress ambushers while the cargo column executes a 360-degree Herringbone formation (alternating 45-degree angle off-road). Threats neutralized; column re-forms and finishes delivery.",
+        "desc": "Doctrinal Convoy Contact Reaction (ATP 4-11 sec 5-4): Upon taking defilade fire at T=32s, gun trucks swing machine guns to suppress ambushers (engagements at 208m and 244m, strictly within 350m weapon range) while the cargo column executes a 360-degree Herringbone formation (alternating 45-degree angle off-road). Threats neutralized; column re-forms and finishes delivery.",
         "name": "Convoy Herringbone Contact Reaction (Issue #12)",
         "seed": 12,
         "size": [2600.0, 1400.0],
@@ -1290,6 +1300,7 @@ TEMPLATE = r"""<style>
       <div class="board">
         <canvas id="cv" width="1200" height="600" role="img" aria-label="Tactical battlefield replay"></canvas>
         <span id="verdict" class="verdict"></span>
+        <div id="hover_tooltip" style="display:none;position:absolute;pointer-events:none;background:rgba(14,21,29,0.95);border:1px solid var(--amber);border-radius:6px;padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--ink);box-shadow:0 4px 14px rgba(0,0,0,0.6);z-index:100;line-height:1.4"></div>
       </div>
       <div class="transport">
         <button class="tp" id="restart" title="Restart">&#8635;</button>
@@ -1364,6 +1375,32 @@ TEMPLATE = r"""<style>
         <div class="stat"><span class="k">blue losses (avg)</span><span class="v" id="a_bl">--</span></div>
         <div class="stat"><span class="k">red losses (avg)</span><span class="v" id="a_rl">--</span></div>
         <div class="stat"><span class="k">coverage (avg)</span><span class="v" id="a_cov">--</span></div>
+      </div>
+      <div class="card" id="safety_card">
+        <h3>Inter-Vehicle Safety & Collision</h3>
+        <div class="stat"><span class="k">hull clearance</span><span class="v" id="s_coll"><span style="color:var(--good)">Clear (>6.5m)</span></span></div>
+        <div class="stat"><span class="k">min separation</span><span class="v" id="s_mindist">--</span></div>
+      </div>
+      <div class="card">
+        <h3>Range Envelopes Legend</h3>
+        <div class="legend">
+          <div class="legend-item">
+            <span style="display:inline-block;width:14px;height:14px;border:1.5px solid #4fb0ff;border-radius:50%"></span>
+            <span>Sensoring Range (Detection / SA)</span>
+          </div>
+          <div class="legend-item">
+            <span style="display:inline-block;width:14px;height:14px;border:1.8px dashed #57d98a;border-radius:50%"></span>
+            <span>Shooting Range (Blue Lethal Fire)</span>
+          </div>
+          <div class="legend-item">
+            <span style="display:inline-block;width:14px;height:14px;border:1.8px dashed #ff5a72;border-radius:50%"></span>
+            <span>Shooting Range (Red Lethal Fire)</span>
+          </div>
+          <div class="legend-item">
+            <span style="display:inline-block;width:14px;height:14px;background:rgba(255,90,114,0.3);border:1.5px solid #ff5a72;border-radius:50%"></span>
+            <span>Collision Alert (&lt; 6.5m hull gap)</span>
+          </div>
+        </div>
       </div>
       <div class="card">
         <h3>Run parameters</h3>
@@ -1471,6 +1508,7 @@ TEMPLATE = r"""<style>
   let terrainCanvas=null;
   let head=0;
   let playing=false, speed=1, looping=false, ringsOn=true, labelsOn=true;
+  let hoveredEntity=-1;
   const FPS=9;
   let lastTs=null;
 
@@ -1637,20 +1675,37 @@ TEMPLATE = r"""<style>
     if(!alive){
       // Destroyed vehicle (charred hull + battle cross)
       ctx.fillStyle = "#1b232c";
-      ctx.fillRect(-10, -6, 20, 12);
+      ctx.fillRect(-9, -5, 18, 10);
       ctx.strokeStyle = "#54626f";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
-      ctx.moveTo(-11, -7); ctx.lineTo(11, 7);
-      ctx.moveTo(-11, 7); ctx.lineTo(11, -7);
+      ctx.moveTo(-9, -5); ctx.lineTo(9, 5);
+      ctx.moveTo(-9, 5); ctx.lineTo(9, -5);
       ctx.stroke();
       ctx.restore();
       return;
     }
 
+    // Calculate nearest living neighbor pixel distance to avoid visual collision/overlap
+    let minNeighborDistPx = Infinity;
+    for(let j = 0; j < T.entities.length; j++){
+      if(i === j || !f.alive[j]) continue;
+      const [jx, jy] = pos(j, head);
+      const dpx = Math.hypot(X(jx) - x, Y(jy) - y);
+      if(dpx < minNeighborDistPx) minNeighborDistPx = dpx;
+    }
+
+    // Adaptive sizing: scales with zoom sc, bounded strictly by neighbor spacing to avoid visual overlap
+    const spacingLimit = (minNeighborDistPx < Infinity && minNeighborDistPx > 0) ? Math.max(6, minNeighborDistPx * 0.68) : 22;
+    const baseL = Math.max(8, Math.min(22, Math.round(15 * (sc / 0.35))));
+    const L = Math.max(7, Math.min(baseL, spacingLimit));
+    const W = Math.max(4, Math.round(L * 0.55));
+    const halfL = L / 2, halfW = W / 2;
+    const scl = L / 23.0; // scale factor for inner decorations
+
     if(e.side === RED){
       // Hostile combat diamond (ATP red adversary)
-      const s = 11;
+      const s = Math.max(5, Math.min(12, Math.round(11 * scl)));
       ctx.fillStyle = C.red;
       ctx.beginPath();
       ctx.moveTo(0, -s);
@@ -1660,22 +1715,22 @@ TEMPLATE = r"""<style>
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "#801b2a";
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = Math.max(1, 1.5 * scl);
       ctx.stroke();
 
       // Red inner crosshair
       ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 1;
+      ctx.lineWidth = Math.max(0.8, 1 * scl);
       ctx.beginPath();
-      ctx.moveTo(0, -5); ctx.lineTo(0, 5);
-      ctx.moveTo(-5, 0); ctx.lineTo(5, 0);
+      ctx.moveTo(0, -Math.round(5 * scl)); ctx.lineTo(0, Math.round(5 * scl));
+      ctx.moveTo(-Math.round(5 * scl), 0); ctx.lineTo(Math.round(5 * scl), 0);
       ctx.stroke();
 
       if(seen){
         ctx.strokeStyle = C.amber;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = Math.max(1.2, 2 * scl);
         ctx.beginPath();
-        ctx.arc(0, 0, s + 5, 0, 2*Math.PI);
+        ctx.arc(0, 0, s + 4 * scl, 0, 2*Math.PI);
         ctx.stroke();
       }
       ctx.restore();
@@ -1684,49 +1739,47 @@ TEMPLATE = r"""<style>
 
     if(e.domain === AIR){
       // Blue Air UAS (Delta-wing airframe)
+      const ascl = Math.max(0.5, scl);
       ctx.fillStyle = C.air;
       ctx.beginPath();
-      ctx.moveTo(14, 0);
-      ctx.lineTo(-9, -11);
-      ctx.lineTo(-5, 0);
-      ctx.lineTo(-9, 11);
+      ctx.moveTo(14 * ascl, 0);
+      ctx.lineTo(-9 * ascl, -11 * ascl);
+      ctx.lineTo(-5 * ascl, 0);
+      ctx.lineTo(-9 * ascl, 11 * ascl);
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "#166358";
-      ctx.lineWidth = 1.2;
+      ctx.lineWidth = Math.max(0.8, 1.2 * ascl);
       ctx.stroke();
       ctx.restore();
       return;
     }
 
     // BLUE GROUND TACTICAL MILITARY VEHICLE (ATP 4-11 & 4-16)
-    // Sized for immediate battlefield legibility (~24px length x 13px width)
-    const L = 23, W = 13;
-    const halfL = L / 2, halfW = W / 2;
-
-    // 1. Dual/Triple Axle Road Wheels (black rubber pads on sides)
+    // 1. Dual/Triple Axle Road Wheels
     ctx.fillStyle = "#11161d";
+    const rw = Math.max(2, 5 * scl), rh = Math.max(1.5, 2.5 * scl);
     // Left side
-    ctx.fillRect(-halfL + 2, -halfW - 2.5, 5, 2.5);
-    ctx.fillRect(0, -halfW - 2.5, 5, 2.5);
-    ctx.fillRect(halfL - 7, -halfW - 2.5, 5, 2.5);
+    ctx.fillRect(-halfL + 2 * scl, -halfW - rh, rw, rh);
+    ctx.fillRect(0, -halfW - rh, rw, rh);
+    ctx.fillRect(halfL - (rw + 2 * scl), -halfW - rh, rw, rh);
     // Right side
-    ctx.fillRect(-halfL + 2, halfW, 5, 2.5);
-    ctx.fillRect(0, halfW, 5, 2.5);
-    ctx.fillRect(halfL - 7, halfW, 5, 2.5);
+    ctx.fillRect(-halfL + 2 * scl, halfW, rw, rh);
+    ctx.fillRect(0, halfW, rw, rh);
+    ctx.fillRect(halfL - (rw + 2 * scl), halfW, rw, rh);
 
     // 2. Armored Tactical Hull (tinted by control quality cq)
     const q = Math.max(0.15, Math.min(1.0, cq));
     ctx.fillStyle = `rgb(${Math.round(20 + 25 * q)}, ${Math.round(45 + 55 * q)}, ${Math.round(90 + 130 * q)})`;
     ctx.strokeStyle = "#70b8ff";
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = Math.max(1, 1.5 * scl);
     ctx.beginPath();
-    ctx.moveTo(halfL, -halfW + 2);
-    ctx.lineTo(halfL, halfW - 2);
-    ctx.lineTo(halfL - 3, halfW);
+    ctx.moveTo(halfL, -halfW + 2 * scl);
+    ctx.lineTo(halfL, halfW - 2 * scl);
+    ctx.lineTo(halfL - 3 * scl, halfW);
     ctx.lineTo(-halfL, halfW);
     ctx.lineTo(-halfL, -halfW);
-    ctx.lineTo(halfL - 3, -halfW);
+    ctx.lineTo(halfL - 3 * scl, -halfW);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
@@ -1734,10 +1787,10 @@ TEMPLATE = r"""<style>
     // 3. Front Cab & Windshield (forward is +X)
     ctx.fillStyle = "#80ccff";
     ctx.beginPath();
-    ctx.moveTo(halfL - 4, -halfW + 2);
-    ctx.lineTo(halfL - 4, halfW - 2);
-    ctx.lineTo(halfL - 9, halfW - 1.5);
-    ctx.lineTo(halfL - 9, -halfW + 1.5);
+    ctx.moveTo(halfL - 3 * scl, -halfW + 1.5 * scl);
+    ctx.lineTo(halfL - 3 * scl, halfW - 1.5 * scl);
+    ctx.lineTo(halfL - 8 * scl, halfW - 1 * scl);
+    ctx.lineTo(halfL - 8 * scl, -halfW + 1 * scl);
     ctx.closePath();
     ctx.fill();
 
@@ -1747,7 +1800,7 @@ TEMPLATE = r"""<style>
       ctx.strokeStyle = "#0d5c52";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(halfL - 6.5, 0, 2.5, 0, 2*Math.PI);
+      ctx.arc(halfL - 5.5 * scl, 0, Math.max(1.5, 2.5 * scl), 0, 2*Math.PI);
       ctx.fill();
       ctx.stroke();
     }
@@ -1756,62 +1809,62 @@ TEMPLATE = r"""<style>
     if(role === ROLE_CONTROL){
       // C2 Lead: Gold Commander Chevron & Antenna Mast
       ctx.strokeStyle = C.gold;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = Math.max(1.2, 2 * scl);
       ctx.beginPath();
-      ctx.moveTo(halfL - 14, -4);
-      ctx.lineTo(halfL - 10, 0);
-      ctx.lineTo(halfL - 14, 4);
+      ctx.moveTo(halfL - 13 * scl, -3.5 * scl);
+      ctx.lineTo(halfL - 9 * scl, 0);
+      ctx.lineTo(halfL - 13 * scl, 3.5 * scl);
       ctx.stroke();
 
       // Antenna beacon
       ctx.fillStyle = C.gold;
       ctx.beginPath();
-      ctx.arc(-halfL + 4, -halfW + 3, 2, 0, 2*Math.PI);
+      ctx.arc(-halfL + 4 * scl, -halfW + 2.5 * scl, Math.max(1.2, 2 * scl), 0, 2*Math.PI);
       ctx.fill();
     } else if(role === ROLE_SECURITY){
       // Armed Escort: Armored Turret Ring + Heavy Machine Gun Barrel
       ctx.fillStyle = "#1b2938";
       ctx.strokeStyle = C.good;
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = Math.max(1, 1.5 * scl);
       ctx.beginPath();
-      ctx.arc(0, 0, 4.5, 0, 2*Math.PI);
+      ctx.arc(0, 0, Math.max(2.5, 4.5 * scl), 0, 2*Math.PI);
       ctx.fill();
       ctx.stroke();
 
       // Forward Gun Barrel extending past front cab
       ctx.strokeStyle = "#e2e8f0";
-      ctx.lineWidth = 2.2;
+      ctx.lineWidth = Math.max(1.2, 2.2 * scl);
       ctx.beginPath();
-      ctx.moveTo(2, 0);
-      ctx.lineTo(halfL + 7, 0);
+      ctx.moveTo(2 * scl, 0);
+      ctx.lineTo(halfL + 7 * scl, 0);
       ctx.stroke();
       // Muzzle brake
       ctx.fillStyle = C.amber;
-      ctx.fillRect(halfL + 6, -1.5, 2.5, 3);
+      ctx.fillRect(halfL + 6 * scl, -1.5 * scl, 2.5 * scl, 3 * scl);
     } else if(role === ROLE_RECOVERY){
       // Trail Recovery: Rear A-frame Tow Boom Crane
       ctx.strokeStyle = C.gold;
-      ctx.lineWidth = 1.8;
+      ctx.lineWidth = Math.max(1, 1.8 * scl);
       ctx.beginPath();
-      ctx.moveTo(-halfL + 7, -4.5);
-      ctx.lineTo(-halfL - 5, 0);
-      ctx.lineTo(-halfL + 7, 4.5);
+      ctx.moveTo(-halfL + 6 * scl, -4 * scl);
+      ctx.lineTo(-halfL - 5 * scl, 0);
+      ctx.lineTo(-halfL + 6 * scl, 4 * scl);
       ctx.stroke();
       // Winch hook
       ctx.strokeStyle = "#cdd8e3";
       ctx.beginPath();
-      ctx.arc(-halfL - 5, 0, 2, 0, Math.PI);
+      ctx.arc(-halfL - 5 * scl, 0, Math.max(1.2, 2 * scl), 0, Math.PI);
       ctx.stroke();
     } else {
       // Cargo Transporter: Cargo Bay with Transverse Strapping Ribs
       ctx.fillStyle = "#122a44";
-      ctx.fillRect(-halfL + 3, -halfW + 2, 10, halfW * 2 - 4);
+      ctx.fillRect(-halfL + 2.5 * scl, -halfW + 1.5 * scl, 9 * scl, halfW * 2 - 3 * scl);
       ctx.strokeStyle = "rgba(140, 195, 255, 0.7)";
-      ctx.lineWidth = 1.2;
-      for(let rx = -halfL + 5; rx <= -halfL + 11; rx += 3.5){
+      ctx.lineWidth = Math.max(0.8, 1.2 * scl);
+      for(let rx = -halfL + 4.5 * scl; rx <= -halfL + 10.5 * scl; rx += 3 * scl){
         ctx.beginPath();
-        ctx.moveTo(rx, -halfW + 2);
-        ctx.lineTo(rx, halfW - 2);
+        ctx.moveTo(rx, -halfW + 1.5 * scl);
+        ctx.lineTo(rx, halfW - 1.5 * scl);
         ctx.stroke();
       }
     }
@@ -1819,10 +1872,10 @@ TEMPLATE = r"""<style>
     // 5. Headlight illumination beam projecting forward
     ctx.fillStyle = "rgba(255, 235, 160, 0.22)";
     ctx.beginPath();
-    ctx.moveTo(halfL, -3);
-    ctx.lineTo(halfL + 14, -8);
-    ctx.lineTo(halfL + 14, 8);
-    ctx.lineTo(halfL, 3);
+    ctx.moveTo(halfL, -2 * scl);
+    ctx.lineTo(halfL + 12 * scl, -7 * scl);
+    ctx.lineTo(halfL + 12 * scl, 7 * scl);
+    ctx.lineTo(halfL, 2 * scl);
     ctx.closePath();
     ctx.fill();
 
@@ -2004,17 +2057,53 @@ TEMPLATE = r"""<style>
       T.entities.forEach((e,i)=>{
         if(!f.alive[i]) return;
         const [x,y]=pos(i,head), sx=X(x), sy=Y(y);
-        if(e.side===BLUE && e.domain===AIR && e.sensor_range>0){
-          ctx.beginPath(); ctx.arc(sx,sy, e.sensor_range*sc,0,7);
-          ctx.strokeStyle="rgba(55,230,207,.16)"; ctx.lineWidth=1; ctx.stroke();
-        } else if(e.side===RED && e.weapon_range>0){
-          ctx.beginPath(); ctx.arc(sx,sy, e.weapon_range*sc,0,7);
-          ctx.setLineDash([3,4]); ctx.strokeStyle="rgba(255,90,114,.13)"; ctx.lineWidth=1; ctx.stroke(); ctx.setLineDash([]);
-        } else if(e.side===BLUE && e.convoy_role===ROLE_SECURITY && e.weapon_range>0){
-          ctx.beginPath(); ctx.arc(sx,sy, e.weapon_range*sc,0,7);
-          ctx.setLineDash([3,4]); ctx.strokeStyle="rgba(87,217,138,.16)"; ctx.lineWidth=1; ctx.stroke(); ctx.setLineDash([]);
+        // Sensoring Range (Detection boundary: subtle solid outline)
+        if(e.sensor_range > 0){
+          ctx.beginPath(); ctx.arc(sx, sy, e.sensor_range * sc, 0, 2*Math.PI);
+          ctx.strokeStyle = e.side === BLUE ? "rgba(79, 176, 255, 0.18)" : "rgba(255, 120, 90, 0.16)";
+          ctx.lineWidth = 1; ctx.stroke();
+        }
+        // Shooting Range (Lethal weapon envelope: bright dashed outline)
+        if(e.weapon_range > 0){
+          ctx.beginPath(); ctx.arc(sx, sy, e.weapon_range * sc, 0, 2*Math.PI);
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = e.side === BLUE ? "rgba(87, 217, 138, 0.40)" : "rgba(255, 90, 114, 0.35)";
+          ctx.lineWidth = 1.4; ctx.stroke(); ctx.setLineDash([]);
         }
       });
+
+      // Hovered Entity High-Visibility Range Rings
+      if(hoveredEntity !== -1 && f.alive[hoveredEntity]){
+        const he = T.entities[hoveredEntity];
+        const [hx, hy] = pos(hoveredEntity, head);
+        const hsx = X(hx), hsy = Y(hy);
+
+        // Hover target ring
+        ctx.strokeStyle = C.amber; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(hsx, hsy, 16, 0, 2*Math.PI); ctx.stroke();
+
+        if(he.sensor_range > 0){
+          ctx.beginPath(); ctx.arc(hsx, hsy, he.sensor_range * sc, 0, 2*Math.PI);
+          ctx.strokeStyle = "rgba(79, 176, 255, 0.85)"; ctx.lineWidth = 1.8; ctx.stroke();
+          const tagX = hsx + he.sensor_range * sc;
+          ctx.fillStyle = "rgba(14, 21, 29, 0.92)"; ctx.fillRect(tagX - 60, hsy - 10, 120, 16);
+          ctx.strokeStyle = "#4fb0ff"; ctx.lineWidth = 1; ctx.strokeRect(tagX - 60, hsy - 10, 120, 16);
+          ctx.fillStyle = "#80ccff"; ctx.font = "bold 9px ui-monospace, monospace"; ctx.textAlign = "center";
+          ctx.fillText(`SENSOR: ${he.sensor_range}m`, tagX, hsy + 2);
+        }
+
+        if(he.weapon_range > 0){
+          ctx.beginPath(); ctx.arc(hsx, hsy, he.weapon_range * sc, 0, 2*Math.PI);
+          ctx.setLineDash([5, 4]);
+          ctx.strokeStyle = he.side === BLUE ? "rgba(87, 217, 138, 0.95)" : "rgba(255, 90, 114, 0.95)";
+          ctx.lineWidth = 2.0; ctx.stroke(); ctx.setLineDash([]);
+          const tagY = hsy - he.weapon_range * sc;
+          ctx.fillStyle = "rgba(14, 21, 29, 0.92)"; ctx.fillRect(hsx - 65, tagY - 16, 130, 16);
+          ctx.strokeStyle = he.side === BLUE ? C.good : C.red; ctx.lineWidth = 1; ctx.strokeRect(hsx - 65, tagY - 16, 130, 16);
+          ctx.fillStyle = he.side === BLUE ? "#a3e635" : "#fca5a5"; ctx.font = "bold 9px ui-monospace, monospace"; ctx.textAlign = "center";
+          ctx.fillText(`SHOOTING: ${he.weapon_range}m`, hsx, tagY - 4);
+        }
+      }
     }
 
     // 9. Sensor-to-Shooter Cue Lines (UC-5)
@@ -2042,17 +2131,39 @@ TEMPLATE = r"""<style>
       ctx.setLineDash([]);
     });
 
-    // 10. Kill Tracers & Impact Explosions
+    // 10. Kill Tracers & Range Verification
     if(f.kills && f.kills.length){
       f.kills.forEach(([s,tg])=>{
         const [sx,sy]=pos(s,head), vx=X(f.x[tg]), vy=Y(f.y[tg]);
-        ctx.strokeStyle="rgba(255,220,120,.92)"; ctx.lineWidth=2.0;
+        const distM = Math.hypot(f.x[tg] - sx, f.y[tg] - sy);
+        const wRange = T.entities[s].weapon_range || 0;
+        const inRange = distM <= (wRange + 0.5);
+
+        ctx.strokeStyle = inRange ? "rgba(255,220,120,.95)" : "rgba(255,90,114,.95)";
+        ctx.lineWidth = 2.2;
         ctx.beginPath(); ctx.moveTo(X(sx),Y(sy)); ctx.lineTo(vx,vy); ctx.stroke();
+
+        // Muzzle flash at shooter
+        ctx.fillStyle = "rgba(255, 230, 140, 0.95)";
+        ctx.beginPath(); ctx.arc(X(sx), Y(sy), 4, 0, 2*Math.PI); ctx.fill();
+
+        // Impact explosion at victim
         ctx.strokeStyle="rgba(255,90,114,.95)"; ctx.lineWidth=1.8;
         for(let a=0;a<6;a++){
           const ang=a*Math.PI/3;
           ctx.beginPath(); ctx.moveTo(vx,vy); ctx.lineTo(vx+Math.cos(ang)*9, vy+Math.sin(ang)*9); ctx.stroke();
         }
+
+        // Tactical Range Verification Tag at midpoint
+        const mx = (X(sx) + vx)/2, my = (Y(sy) + vy)/2;
+        ctx.fillStyle = inRange ? "rgba(18, 45, 30, 0.92)" : "rgba(60, 20, 25, 0.92)";
+        ctx.fillRect(mx - 62, my - 9, 124, 18);
+        ctx.strokeStyle = inRange ? C.good : C.red; ctx.lineWidth = 1;
+        ctx.strokeRect(mx - 62, my - 9, 124, 18);
+        ctx.fillStyle = inRange ? "#a3e635" : "#fca5a5";
+        ctx.font = "bold 9px ui-monospace, monospace"; ctx.textAlign = "center";
+        const tagText = inRange ? `SHOT: ${distM.toFixed(0)}m <= ${wRange.toFixed(0)}m` : `OUT-OF-RANGE: ${distM.toFixed(0)}m > ${wRange.toFixed(0)}m`;
+        ctx.fillText(tagText, mx, my + 3.5);
       });
     }
 
@@ -2063,14 +2174,47 @@ TEMPLATE = r"""<style>
       drawATPVehicle(i, X(x), Y(y), ang, fi);
     });
 
-    updateRail(fi);
+    // 12. Physical Hull Collision Detection (< 6.5m inter-vehicle clearance)
+    let minHullDist = Infinity;
+    const collisions = [];
+    for(let i=0; i<T.entities.length; i++){
+      if(!f.alive[i] || T.entities[i].domain === AIR) continue;
+      for(let j=i+1; j<T.entities.length; j++){
+        if(!f.alive[j] || T.entities[j].domain === AIR) continue;
+        if(T.entities[i].side !== T.entities[j].side) continue;
+        const [x1, y1] = pos(i, head), [x2, y2] = pos(j, head);
+        const distM = Math.hypot(x1 - x2, y1 - y2);
+        if(distM < minHullDist) minHullDist = distM;
+        if(distM < 6.5){
+          collisions.push({i, j, x1, y1, x2, y2, distM});
+        }
+      }
+    }
+
+    if(collisions.length > 0){
+      collisions.forEach(c => {
+        const mx = X((c.x1 + c.x2)/2), my = Y((c.y1 + c.y2)/2);
+        const pulse = 16 + 5 * Math.sin(Date.now() / 120);
+        ctx.strokeStyle = "rgba(255, 90, 114, 0.85)"; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(mx, my, pulse, 0, 2*Math.PI); ctx.stroke();
+
+        ctx.fillStyle = "rgba(255, 60, 80, 0.95)";
+        ctx.fillRect(mx - 54, my - 26, 108, 17);
+        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1;
+        ctx.strokeRect(mx - 54, my - 26, 108, 17);
+        ctx.fillStyle = "#ffffff"; ctx.font = "bold 9px ui-monospace, monospace"; ctx.textAlign = "center";
+        ctx.fillText(`COLLISION: ${c.distM.toFixed(1)}m < 6.5m`, mx, my - 14);
+      });
+    }
+
+    updateRail(fi, collisions, minHullDist);
     drawSpark(fi);
   }
 
   // ---------------------------------------------------------------------------
   // Telemetry Rail Updates
   // ---------------------------------------------------------------------------
-  function updateRail(fi){
+  function updateRail(fi, collisions, minHullDist){
     const s=series[fi], d=T._den, f=T.frames[fi];
     document.getElementById("clk").textContent=Math.round(f.t);
     document.getElementById("fidx").textContent=fi;
@@ -2096,6 +2240,19 @@ TEMPLATE = r"""<style>
     } else {
       document.getElementById("r_occ").textContent = (T.building_boxes && T.building_boxes.length) ? "Active Street Corridor" : "Clear Line-of-Sight";
       document.getElementById("r_occ").style.color = C.good;
+    }
+
+    // Inter-Vehicle Safety & Hull Collision Status
+    const collEl = document.getElementById("s_coll");
+    const distEl = document.getElementById("s_mindist");
+    if(collEl && distEl){
+      if(collisions && collisions.length > 0){
+        collEl.innerHTML = `<span style="color:var(--red);font-weight:700">COLLISION (${collisions.length})</span>`;
+        distEl.innerHTML = `<span style="color:var(--red);font-weight:700">${minHullDist.toFixed(1)} m</span>`;
+      } else {
+        collEl.innerHTML = `<span style="color:var(--good)">Clear (>6.5m)</span>`;
+        distEl.textContent = (minHullDist !== undefined && minHullDist < Infinity) ? `${minHullDist.toFixed(1)} m` : "--";
+      }
     }
   }
 
@@ -2192,6 +2349,78 @@ TEMPLATE = r"""<style>
   document.getElementById("seek").oninput=(e)=>{ playing=false; updatePlayBtn(); head=(e.target.value/100)*(T.frames.length-1); draw(); };
   pick.onchange=()=>prep(parseInt(pick.value,10));
   window.addEventListener("resize", ()=>{ if(T) resize(); });
+
+  const hoverTooltip = document.getElementById("hover_tooltip");
+
+  cv.addEventListener("mousemove", (evt) => {
+    if(!T) return;
+    const rect = cv.getBoundingClientRect();
+    const mx = (evt.clientX - rect.left) * (DW / rect.width);
+    const my = (evt.clientY - rect.top) * (DH / rect.height);
+    const fi = frameAt(head), f = T.frames[fi];
+
+    let closest = -1, minD = 22; // 22px threshold
+    T.entities.forEach((e, idx) => {
+      if(!f.alive[idx]) return;
+      const [ex, ey] = pos(idx, head);
+      const dpx = Math.hypot(X(ex) - mx, Y(ey) - my);
+      if(dpx < minD){
+        minD = dpx;
+        closest = idx;
+      }
+    });
+
+    hoveredEntity = closest;
+    if(hoveredEntity !== -1){
+      const e = T.entities[hoveredEntity];
+      const [ex, ey] = pos(hoveredEntity, head);
+      const spd = f.speed ? f.speed[hoveredEntity] : 0.0;
+      const crewCount = e.crew !== undefined ? e.crew : (e.side === BLUE ? 2 : 0);
+      const isAuto = e.side === BLUE && e.crew === 0;
+
+      // Find nearest living threat
+      let threatDist = Infinity, threatName = "";
+      T.entities.forEach((o, oidx) => {
+        if(o.side === e.side || !f.alive[oidx]) return;
+        const [ox, oy] = pos(oidx, head);
+        const dm = Math.hypot(ox - ex, oy - ey);
+        if(dm < threatDist){
+          threatDist = dm;
+          threatName = o.callsign || `Threat ${oidx+1}`;
+        }
+      });
+
+      let threatText = "--";
+      if(threatDist < Infinity){
+        const inShooting = e.weapon_range > 0 && threatDist <= e.weapon_range;
+        const inSensor = e.sensor_range > 0 && threatDist <= e.sensor_range;
+        const statStr = inShooting ? "<span style='color:var(--good);font-weight:700'>IN SHOOTING RANGE</span>" : (inSensor ? "<span style='color:var(--blue)'>IN SENSOR RANGE</span>" : "<span style='color:var(--ink-dim)'>OUT OF RANGE</span>");
+        threatText = `${threatName} (${threatDist.toFixed(0)}m) &bull; ${statStr}`;
+      }
+
+      if(hoverTooltip){
+        hoverTooltip.style.display = "block";
+        hoverTooltip.style.left = (evt.clientX - rect.left + 14) + "px";
+        hoverTooltip.style.top = (evt.clientY - rect.top + 14) + "px";
+        hoverTooltip.innerHTML = `
+          <div style="font-weight:700;color:${e.side===BLUE?C.blue:C.red};margin-bottom:3px">${e.callsign || 'Vehicle ' + (hoveredEntity+1)} ${isAuto ? '<span style="color:var(--air)">[UNMANNED]</span>' : ''}</div>
+          <div><b>Speed:</b> ${spd.toFixed(1)} m/s &nbsp;&bull;&nbsp; <b>Crew:</b> ${crewCount} (ATP 4-11)</div>
+          <div style="color:var(--blue)"><b>Sensoring Range:</b> ${e.sensor_range > 0 ? e.sensor_range + ' m' : 'None'}</div>
+          <div style="color:var(--good)"><b>Shooting Range:</b> ${e.weapon_range > 0 ? e.weapon_range + ' m (Lethal)' : 'None (Unarmed)'}</div>
+          <div style="margin-top:4px;border-top:1px solid var(--edge);padding-top:3px;font-size:10px"><b>Nearest Threat:</b> ${threatText}</div>
+        `;
+      }
+    } else {
+      if(hoverTooltip) hoverTooltip.style.display = "none";
+    }
+    if(!playing) draw();
+  });
+
+  cv.addEventListener("mouseleave", () => {
+    hoveredEntity = -1;
+    if(hoverTooltip) hoverTooltip.style.display = "none";
+    if(!playing) draw();
+  });
 
   // Keyboard shortcuts (Space = Play/Pause, Left/Right = Steps, R = Restart)
   window.addEventListener("keydown", (e)=>{
