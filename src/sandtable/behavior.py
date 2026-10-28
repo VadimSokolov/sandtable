@@ -34,6 +34,7 @@ from typing import Any
 
 import numpy as np
 
+from sandtable.convoy import ROLE_SECURITY
 from sandtable.entities import BLUE, GROUND, Entities
 from sandtable.scenario import Scenario
 
@@ -74,11 +75,26 @@ class Behavior:
     prev_heading: np.ndarray      # float per entity: heading at the previous tick
     turn_sum: np.ndarray          # float per entity: summed |heading change| (rad)
     turn_steps: np.ndarray        # int32 per entity: ticks the turn sum was taken over
+    # Contact reaction (Issue #12). All None / zero unless `convoy.contact_reaction` is declared.
+    contact: dict | None = None   # resolved reaction rule (see convoy.resolve_contact_reaction)
+    fired_at: np.ndarray | None = None   # bool per entity: targeted by a shooter on the last engagement
+    heads: np.ndarray | None = None      # int indices of the march-unit heads at build time
+    heads_alive: np.ndarray | None = None
+    in_contact: bool = False
+    last_trigger_k: int = -1
+    contact_count: int = 0        # rising edges of the contact state
+    contact_steps: int = 0        # ticks spent in contact
+    first_contact_step: int = -1
+    halt_steps: int = 0           # vehicle-ticks held by the reaction
 
 
 def build_behavior(scn: Scenario, ent: Entities) -> Behavior | None:
     """Build the behaviour layer, or None when the scenario does not opt in."""
     spec = scn.params.get("blue_behavior")
+    from sandtable.convoy import resolve_contact_reaction, resolve_convoy_spec
+    reaction = resolve_contact_reaction(resolve_convoy_spec(scn.params))
+    if spec is None and reaction is not None:
+        spec = "waypoint"       # the reaction holds vehicles through the behaviour layer
     if spec is None:
         return None
 
@@ -139,7 +155,62 @@ def build_behavior(scn: Scenario, ent: Entities) -> Behavior | None:
         # follow-channel result that does not report the turn rate is not reporting its own
         # covariate. Radians per tick, over blue ground.
         prev_heading=ent.heading.copy(), turn_sum=np.zeros(n), turn_steps=np.zeros(n, np.int32),
+        **_contact_fields(ent, reaction),
     )
+
+
+def _contact_fields(ent: Entities, reaction: dict | None) -> dict:
+    """Constructor arguments for the contact reaction; empty when it is not declared."""
+    if reaction is None:
+        return {}
+    blue_ground = (ent.side == BLUE) & (ent.domain == GROUND)
+    heads = np.nonzero(blue_ground & (ent.march_unit >= 0) & (ent.leader == -1))[0]
+    return dict(contact=reaction, fired_at=np.zeros(ent.n, bool), heads=heads,
+                heads_alive=ent.alive[heads].copy())
+
+
+def _update_contact(ent: Entities, bhv: Behavior, scn: Scenario, k: int, world: Any,
+                    hold: np.ndarray) -> None:
+    """Trigger, hold and release for the convoy contact reaction. Draws no random numbers.
+
+    One rule for the whole convoy: contact is declared by any vehicle, and is instantaneous across
+    the column (comms effects on the alert are out of scope here). `receive_fire` reads the previous
+    engagement's target set, so it has one tick of latency.
+    """
+    rx = bhv.contact
+    veh = (ent.side == BLUE) & (ent.domain == GROUND) & ent.alive & (ent.convoy_role >= 0)
+    trig = False
+    if "receive_fire" in rx["triggers"]:
+        trig = trig or bool((bhv.fired_at & veh).any())
+    if "lead_lost" in rx["triggers"] and bhv.heads.size:
+        now = ent.alive[bhv.heads]
+        trig = trig or bool((bhv.heads_alive & ~now).any())
+    bhv.heads_alive = ent.alive[bhv.heads].copy() if bhv.heads.size else bhv.heads_alive
+    if not trig and "detect_range" in rx["triggers"] and veh.any():
+        red = (ent.side != BLUE) & ent.alive & (ent.domain == GROUND) & ent.seen
+        if red.any():
+            vi, ri = np.nonzero(veh)[0], np.nonzero(red)[0]
+            near = np.hypot(ent.x[vi][:, None] - ent.x[ri][None, :],
+                            ent.y[vi][:, None] - ent.y[ri][None, :]) <= rx["range_m"]
+            if near.any() and world is not None and getattr(world, "buildings", None) is not None:
+                near = near & world.los(ent.x[vi][:, None], ent.y[vi][:, None],
+                                        ent.x[ri][None, :], ent.y[ri][None, :])
+            trig = bool(near.any())
+
+    if trig:
+        bhv.last_trigger_k = k
+    was = bhv.in_contact
+    bhv.in_contact = trig or (was and (k - bhv.last_trigger_k) * scn.dt < rx["clear_s"])
+    if bhv.in_contact:
+        bhv.contact_steps += 1
+        if not was:
+            bhv.contact_count += 1
+            if bhv.first_contact_step < 0:
+                bhv.first_contact_step = k
+        if rx["action"] == "halt":
+            held = veh if rx["halt_scope"] == "all" else veh & (ent.convoy_role != ROLE_SECURITY)
+            hold |= held
+            bhv.halt_steps += int(held.sum())
 
 
 def step(ent: Entities, bhv: Behavior, op, comms, scn: Scenario, k: int,
@@ -165,6 +236,9 @@ def step(ent: Entities, bhv: Behavior, op, comms, scn: Scenario, k: int,
 
     elif bhv.mode == LEADER_FOLLOW:
         _follow(ent, bhv, comms, scn, k, rng, blue_ground, world=world)
+
+    if bhv.contact is not None:
+        _update_contact(ent, bhv, scn, k, world, hold)
 
     d = np.abs(ent.heading - bhv.prev_heading)
     d = np.minimum(d, 2 * np.pi - d)          # wrapped, so a heading crossing pi is not a half turn

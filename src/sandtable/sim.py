@@ -25,7 +25,7 @@ from sandtable import (
     sensing,
 )
 from sandtable.comms_ew import build_comms
-from sandtable.convoy import resolve_delivery_fraction
+from sandtable.convoy import ROLE_SECURITY, resolve_convoy_spec, resolve_delivery_fraction
 from sandtable.entities import AIR, BLUE, GROUND, RED
 from sandtable.scenario import Scenario, build_entities
 from sandtable.seeding import make_rng
@@ -63,6 +63,18 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     # only a quality gain. None unless params set blue_behavior; when None planning takes exactly
     # its previous code path and the run is byte-identical.
     bhv = behavior.build_behavior(scn, ent)
+
+    # Contact reaction (Issue #12): the engagement step records which entities were targeted so the
+    # next behaviour tick can react. None unless declared, so the hot path is unchanged.
+    fired_at = bhv.fired_at if (bhv is not None and bhv.contact is not None) else None
+    if fired_at is not None and tracks is not None and "receive_fire" in bhv.contact["triggers"]:
+        raise ValueError("contact trigger 'receive_fire' is not available with belief tracks "
+                         "(belief.engage does not record incoming fire)")
+    # Escort cost (Issue #12) is reported only when the escort feature is declared, so existing
+    # convoy runs keep their output keys.
+    _cs = resolve_convoy_spec(scn.params)
+    escort_on = bool(_cs) and (_cs.get("security_ptype") is not None or fired_at is not None)
+    escort_steps = 0
 
     init_counts = {BLUE: int((ent.side == BLUE).sum()), RED: int((ent.side == RED).sum())}
     blue_mask0 = ent.side == BLUE
@@ -135,8 +147,10 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
         sensing.step(ent, world, rng, comms)
         if mech is not None:
             mechanics.decay(ent, mech)          # relax suppression one step before this tick's fire
+        if fired_at is not None:
+            fired_at[:] = False
         if tracks is None:
-            engagement.step(ent, world, dt, rng, mech=mech)
+            engagement.step(ent, world, dt, rng, mech=mech, fired_at=fired_at)
         else:
             belief.update(ent, tracks, comms, rng)
             belief.engage(ent, world, tracks, rng, mech=mech)
@@ -153,6 +167,8 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
             cov_steps += 1
 
         blue_exposure += float(ent.side_mask(BLUE).sum())
+        if escort_on:
+            escort_steps += int((ent.side_mask(BLUE) & (ent.convoy_role == ROLE_SECURITY)).sum())
 
         assault = ent.side_mask(BLUE) & (ent.domain == GROUND)
         if int(assault.sum()) > 1:
@@ -199,6 +215,10 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
 
     result = metrics.compute(scn, init_counts, ent, t_reached, t, assault0=assault0, air0=air_blue0,
                              bhv=bhv, op=op)
+    if escort_on:
+        result["escort_vehicle_steps"] = float(escort_steps)
+    if fired_at is not None:
+        result.update(metrics.contact_metrics(bhv, dt))
     result["detection_coverage"] = cov_sum / max(cov_steps, 1)
     result["fleet_spread_mean"] = disp_sum / max(disp_steps, 1)
     result["fleet_along_mean"] = along_sum / max(disp_steps, 1)

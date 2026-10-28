@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 
 from sandtable.entities import AIR, GROUND, BLUE, Entities
-from sandtable.convoy import ROLE_CARGO, build_convoy_layout, resolve_convoy_spec
+from sandtable.convoy import ROLE_CARGO, ROLE_SECURITY, build_convoy_layout, resolve_convoy_spec
 
 @dataclass
 class PlatformType:
@@ -122,6 +122,13 @@ def build_entities(scn: Scenario, rng: np.random.Generator) -> Entities:
     """Instantiate SoA `Entities` from the scenario force specs."""
     convoy_spec = resolve_convoy_spec(scn.params)
     convoy_layout = build_convoy_layout(convoy_spec) if convoy_spec else None
+    sec_pt = None
+    if convoy_spec and convoy_spec.get("security_ptype") is not None:
+        sec_name = convoy_spec["security_ptype"]
+        if sec_name not in scn.platform_types:
+            raise ValueError(f"security_ptype {sec_name!r} is not a platform type of this scenario "
+                             f"({sorted(scn.platform_types)})")
+        sec_pt = scn.platform_types[sec_name]
 
     convoy_applied = False
     force_counts = []
@@ -226,6 +233,16 @@ def build_entities(scn: Scenario, rng: np.random.Generator) -> Entities:
             e.pk_base[i] = pt.pk_base
             e.domain[i] = pt.domain
             e.length[i] = pt.length
+            if is_convoy and sec_pt is not None and e.convoy_role[i] == ROLE_SECURITY:
+                # Dedicated gun-truck platform (Issue #12): armament and mobility come from
+                # `security_ptype`, not from the force's cargo-truck type.
+                e.hp[i] = sec_pt.hp
+                e.fuel[i] = sec_pt.endurance
+                e.max_speed[i] = sec_pt.max_speed
+                e.turn_rate[i] = sec_pt.turn_rate
+                e.sensor_range[i] = sec_pt.sensor_range
+                e.weapon_range[i] = sec_pt.weapon_range
+                e.pk_base[i] = sec_pt.pk_base
             # initial heading toward objective (blue) or toward map centre (red)
             if f_route_poly is None or f.formation != "column":
                 gx, gy = scn.objective.goal

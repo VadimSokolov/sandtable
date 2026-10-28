@@ -38,7 +38,68 @@ CONVOY_KEYS = (
     "cargo_per_vehicle",
     "delivery_fraction",
     "roles",
+    "security_ptype",
+    "contact_reaction",
 )
+
+# Contact reaction (Issue #12). One generic rule: a trigger set, an action while in contact, and a
+# release. `disperse` is reserved for the herringbone increment and is rejected until it exists.
+CONTACT_ACTIONS = ("halt", "continue")
+CONTACT_TRIGGERS = ("receive_fire", "lead_lost", "detect_range")
+CONTACT_HALT_SCOPES = ("all", "non_security")
+DEFAULT_DETECT_RANGE_M = 800.0
+DEFAULT_CLEAR_S = 15.0
+
+
+def resolve_contact_reaction(spec: dict | None) -> dict | None:
+    """Normalise and validate `spec["contact_reaction"]`.
+
+    Returns None when the reaction is absent (missing, None, or ``"none"``), so every spelling of
+    "off" resolves to the same thing and no reaction state is built.
+    """
+    if not spec:
+        return None
+    raw = spec.get("contact_reaction")
+    if raw is None or raw == "none":
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError(f"contact_reaction must be None, 'none' or a dict, got {raw!r}")
+
+    action = raw.get("action")
+    if action == "disperse":
+        raise NotImplementedError("contact_reaction action 'disperse' is reserved for the herringbone increment")
+    if action not in CONTACT_ACTIONS:
+        raise ValueError(f"contact_reaction action must be one of {list(CONTACT_ACTIONS)}, got {action!r}")
+
+    triggers = raw.get("triggers")
+    if not isinstance(triggers, (list, tuple)) or not triggers:
+        raise ValueError(f"contact_reaction needs a non-empty triggers list from {list(CONTACT_TRIGGERS)}")
+    for t in triggers:
+        if t not in CONTACT_TRIGGERS:
+            raise ValueError(f"unknown contact trigger {t!r}; must be one of {list(CONTACT_TRIGGERS)} "
+                             "(ied_event and obstacle have no generator yet)")
+
+    rng_m = float(raw.get("range_m", DEFAULT_DETECT_RANGE_M))
+    if not 0.0 < rng_m <= 5000.0:
+        raise ValueError(f"contact_reaction range_m must be in (0, 5000] m, got {rng_m}")
+
+    release = raw.get("release", {"rule": "timeout", "clear_s": DEFAULT_CLEAR_S})
+    rule = release.get("rule") if isinstance(release, dict) else None
+    if rule == "leader_policy":
+        raise ValueError("contact_reaction release rule 'leader_policy' depends on the leader-loss "
+                         "policy (Issue #17), which is not implemented; use rule 'timeout'")
+    if rule != "timeout":
+        raise ValueError(f"contact_reaction release rule must be 'timeout', got {rule!r}")
+    clear_s = float(release.get("clear_s", DEFAULT_CLEAR_S))
+    if not 1.0 <= clear_s <= 3600.0:
+        raise ValueError(f"contact_reaction release clear_s must be between 1 and 3600 s, got {clear_s}")
+
+    scope = raw.get("halt_scope", "all")
+    if scope not in CONTACT_HALT_SCOPES:
+        raise ValueError(f"contact_reaction halt_scope must be one of {list(CONTACT_HALT_SCOPES)}, got {scope!r}")
+
+    return {"action": action, "triggers": tuple(triggers), "range_m": rng_m,
+            "clear_s": clear_s, "halt_scope": scope}
 
 
 def resolve_convoy_spec(params: dict | None) -> dict | None:
@@ -182,6 +243,12 @@ def validate_convoy_spec(spec: dict) -> None:
     if del_frac is not None:
         if not isinstance(del_frac, (int, float)) or del_frac < 0.0 or del_frac > 1.0:
             raise ValueError(f"convoy delivery fraction must be between 0.0 and 1.0, got {del_frac}")
+
+    sec_ptype = spec.get("security_ptype")
+    if sec_ptype is not None and not isinstance(sec_ptype, str):
+        raise ValueError(f"convoy security_ptype must be a platform type name, got {sec_ptype!r}")
+
+    resolve_contact_reaction(spec)
 
 
 def build_convoy_layout(spec: dict) -> dict:
