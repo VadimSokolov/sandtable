@@ -289,3 +289,68 @@ Opt-in under the `convoy` spec (or flat params); absent, runs are byte-identical
   matching column discipline without radio link dependence; the follower response after the control vehicle
   is lost is the existing waypoint fallback (Issue #17 owns the policy).
   Comparison arms: `tools/make_autonomy_arms.py`.
+
+## Leader-loss policy and halt release (Issue #17)
+
+What a march unit does after its head is destroyed. These are configurable simulation policies for
+comparison. They are not documented ATV-S capabilities, and nothing in ATP 4-11 or the ATV-S material
+specifies them. Opt-in through `convoy.leader_loss_policy`; absent
+or `legacy` builds no new state and every run is byte-identical. A declared policy defaults
+`blue_behavior` to `leader_follow`. The code, this section and `doc/blue_behavior_design.md` call the
+event `LEADER_LOSS`.
+
+| Policy | After the head dies |
+|---|---|
+| `legacy` | Pre-#17 path: instant promotion in `LEADER_FOLLOW`, waypoint fallback when nobody can lead. |
+| `promote` | Earliest eligible survivor (lowest entity index) becomes head after `handoff_steps`. Eligibility follows `succession` (`manned_only` skips uncrewed trucks). With nobody eligible the unit behaves as `continue`. |
+| `absorb` | **Experimental logical reassignment.** After `handoff_steps`, the survivors are re-attached to the nearest living unit of the same serial (rule below). If there is none, the survivors fall back to `continue` for the rest of the run. |
+| `halt` | The unit's survivors hold in place (sensing and engagement continue) until the release rule fires, then the earliest eligible survivor leads. Other units are not held. |
+| `continue` | Survivors drive the route independently at once (waypoint). |
+
+Keys: `handoff_steps` (int >= 0, `promote`/`absorb` only) and
+`halt_release: {"clear_steps": N, "max_hold_steps": T}` (`halt` only; no release rule holds
+indefinitely, so the halt can then end only when the mission does).
+
+**Handoff latency.** `handoff_steps = 0` is an **idealized baseline**: the new head or the new
+attachment takes effect on the tick the loss is seen (one tick after the head dies). No public source gives
+handoff times or a loss-of-leader procedure for autonomous followers, so nonzero values are swept
+parameters, not measurements. While a handoff is pending nothing new is done for the followers: each keeps
+stationing on its predecessor if one is alive (chain topology) and otherwise drops to waypoint navigation,
+as under `legacy`.
+
+**`absorb` rule.** The survivors of the unit are attached to the head of the nearest other unit that
+(1) has a living head, (2) is in the same serial, and (3) is nearest by straight-line distance from the
+first survivor to that head at the moment the handoff completes. Receiving-leader eligibility: under
+`succession="manned_only"` the receiving head must also have crew (crew is zero unless declared, so
+declare it); under `succession="any"` a living head is enough, and it may then be an unmanned truck or a
+security or recovery vehicle that an earlier loss promoted. The survivors take the
+receiving unit's `march_unit` index and follow its head. No receiving unit: `continue`. This is a
+modelling device for comparing policies. ATP 4-11 and the ATV-S material do not describe arbitrary escort
+or wrecker vehicles taking over other units' followers, and nothing here claims they do.
+
+**`clear_steps` uses ground truth.** The count is of consecutive steps with no living Red shooter
+(`weapon_range > 0`, `pk_base > 0`) within that shooter's weapon range of any survivor of the unit. It reads
+true positions, not Blue's detections, so the column is assumed to know when contact has ended. Either
+release condition ends the halt: whichever of `clear_steps` or `max_hold_steps` is reached first. On
+release the earliest eligible survivor becomes head with no further delay.
+
+`contact_reaction.release.rule = "leader_policy"` keeps a contact halt on while any unit is policy-halted;
+it requires `halt`.
+
+Metrics (only with a policy): `leaderless_steps` (unit-steps with survivors and no head),
+`ll_halt_steps` (vehicle-steps held), `ll_handoffs`, `first_leader_loss_step` (-1 when none). No random
+numbers are drawn. A loss is seen one tick after the head dies.
+
+Verification and experiments are kept apart. `tests/test_convoy_leader_loss.py` forces the kill at a chosen
+step to show that each policy does what it says. `tools/make_leader_loss_arms.py` compares the policies on
+matched seeds, with a forced head kill and with real engagements, and reports means with standard errors;
+it is exploration, not a ranking of policies. How to read its table:
+
+- Every paired difference is against `legacy`. It says how an arm differs from `legacy`; it is not a
+  comparison of two non-legacy arms with each other.
+- An interval that contains zero means the data cannot separate the arm from `legacy` at 20 seeds. It does
+  not show the two are equivalent.
+- With about 110 comparisons, a few intervals will exclude zero by chance.
+- `absorb` is above `legacy` on `delivered_frac` in both experiments. The cause is not established and
+  has not been tested. It may come from the reassignment device itself (survivors are handed a living head)
+  and not from anything a real convoy could do, so treat it as an open question.

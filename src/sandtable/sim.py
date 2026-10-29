@@ -226,6 +226,8 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
         result["escort_vehicle_steps"] = float(escort_steps)
     if fired_at is not None:
         result.update(metrics.contact_metrics(bhv, dt))
+    if bhv is not None and bhv.ll is not None:
+        result.update(metrics.leader_loss_metrics(bhv))
     if crew_on:
         result.update(metrics.crew_metrics(ent, crew_risk, crew_init, bhv))
     result["detection_coverage"] = cov_sum / max(cov_steps, 1)

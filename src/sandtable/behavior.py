@@ -89,19 +89,34 @@ class Behavior:
     # Autonomous march unit (Issue #14). "manned_only" never promotes an unmanned vehicle to head.
     succession: str = "any"
     headless_steps: int = 0       # follower-ticks with no living manned head (manned_only only)
+    # Leader-loss policy (Issue #17). None unless `convoy.leader_loss_policy` is declared and not legacy.
+    ll: dict | None = None        # resolved policy (see convoy.resolve_leader_loss)
+    ll_head: np.ndarray | None = None      # int per march unit: current head entity, -1 when headless
+    ll_left: np.ndarray | None = None      # int per march unit: handoff steps remaining, -1 = none pending
+    ll_halted: np.ndarray | None = None    # bool per march unit: held by the halt policy
+    ll_hold: np.ndarray | None = None      # int per march unit: steps held
+    ll_clear: np.ndarray | None = None     # int per march unit: consecutive steps with no shooter in range
+    ll_done: np.ndarray | None = None      # bool per march unit: no head will be chosen again
+    leaderless_steps: int = 0     # unit-steps with a living vehicle and no living head
+    ll_halt_steps: int = 0        # vehicle-steps held by the policy
+    ll_handoffs: int = 0          # completed promotions or absorptions
+    first_leader_loss_step: int = -1
 
 
 def build_behavior(scn: Scenario, ent: Entities) -> Behavior | None:
     """Build the behaviour layer, or None when the scenario does not opt in."""
     spec = scn.params.get("blue_behavior")
-    from sandtable.convoy import resolve_contact_reaction, resolve_convoy_spec
+    from sandtable.convoy import resolve_contact_reaction, resolve_convoy_spec, resolve_leader_loss
     cspec = resolve_convoy_spec(scn.params)
     reaction = resolve_contact_reaction(cspec)
+    ll = resolve_leader_loss(cspec)
     arm = (cspec or {}).get("autonomy_arm")
     if spec is None and arm == "autonomous_march_unit":
         spec = "leader_follow"  # the unmanned trucks station on their control vehicle
     elif spec is None and arm == "manned":
         spec = "leader_follow"  # manned vehicles hold station with human perception
+    elif spec is None and ll is not None:
+        spec = "leader_follow"  # a leader-loss policy needs followers that station on a head
     elif spec is None and reaction is not None:
         spec = "waypoint"       # the reaction holds vehicles through the behaviour layer
     if spec is None:
@@ -168,6 +183,7 @@ def build_behavior(scn: Scenario, ent: Entities) -> Behavior | None:
         # covariate. Radians per tick, over blue ground.
         prev_heading=ent.heading.copy(), turn_sum=np.zeros(n), turn_steps=np.zeros(n, np.int32),
         **_contact_fields(ent, reaction),
+        **_leader_loss_fields(ent, ll),
         succession=str((cspec or {}).get("succession")
                        or ("manned_only" if arm == "autonomous_march_unit" else "any")),
     )
@@ -181,6 +197,143 @@ def _contact_fields(ent: Entities, reaction: dict | None) -> dict:
     heads = np.nonzero(blue_ground & (ent.march_unit >= 0) & (ent.leader == -1))[0]
     return dict(contact=reaction, fired_at=np.zeros(ent.n, bool), heads=heads,
                 heads_alive=ent.alive[heads].copy())
+
+
+def _leader_loss_fields(ent: Entities, ll: dict | None) -> dict:
+    """Constructor arguments for the leader-loss policy; empty when it is not declared."""
+    if ll is None:
+        return {}
+    nu = int(ent.march_unit.max()) + 1 if (ent.march_unit >= 0).any() else 0
+    head = np.full(nu, -1, np.int64)
+    blue_ground = (ent.side == BLUE) & (ent.domain == GROUND)
+    for mu in range(nu):
+        idx = np.nonzero(blue_ground & (ent.march_unit == mu) & (ent.leader == -1))[0]
+        if idx.size:
+            head[mu] = idx[0]
+    return dict(ll=ll, ll_head=head, ll_left=np.full(nu, -1, np.int64), ll_halted=np.zeros(nu, bool),
+                ll_hold=np.zeros(nu, np.int64), ll_clear=np.zeros(nu, np.int64), ll_done=np.zeros(nu, bool))
+
+
+def _eligible(ent: Entities, bhv: Behavior, living: np.ndarray) -> np.ndarray:
+    """Living vehicles that may take over as head (crewed only under `manned_only`)."""
+    return living[ent.crew[living] > 0] if bhv.succession == "manned_only" else living
+
+
+def _go_independent(ent: Entities, bhv: Behavior, members: np.ndarray) -> None:
+    """Every survivor drives the route on its own (the `continue` behaviour)."""
+    ent.role[members] = 0
+    ent.leader[members] = -1
+    bhv.state[members] = WAYPOINT
+
+
+def _promote(ent: Entities, bhv: Behavior, mu: int, living: np.ndarray) -> bool:
+    """Make the earliest eligible survivor the head. False when nobody is eligible."""
+    pool = _eligible(ent, bhv, living)
+    if pool.size == 0:
+        return False
+    new_head = int(pool[0])
+    old = int(np.nonzero(ent.march_unit == mu)[0][0])
+    ent.role[new_head] = 0
+    ent.leader[new_head] = -1
+    bhv.state[new_head] = WAYPOINT
+    if ent.speed_cap[old] < np.inf:
+        ent.speed_cap[new_head] = ent.speed_cap[old]
+    for foll in living[living != new_head]:
+        ent.role[foll] = 1
+        ent.leader[foll] = new_head
+    bhv.ll_head[mu] = new_head
+    bhv.ll_handoffs += 1
+    return True
+
+
+def _absorb(ent: Entities, bhv: Behavior, mu: int, living: np.ndarray) -> bool:
+    """Attach the survivors to the tail of the nearest living unit in the same serial."""
+    ser = ent.serial[living[0]]
+    best, best_d = -1, np.inf
+    for other in range(len(bhv.ll_head)):
+        h = int(bhv.ll_head[other])
+        if other == mu or h < 0 or not ent.alive[h] or ent.serial[h] != ser:
+            continue
+        if bhv.succession == "manned_only" and ent.crew[h] <= 0:
+            continue                # an unmanned head cannot take over another unit's followers
+        d = float(np.hypot(ent.x[h] - ent.x[living[0]], ent.y[h] - ent.y[living[0]]))
+        if d < best_d:
+            best, best_d = h, d
+    if best < 0:
+        return False
+    target_mu = int(ent.march_unit[best])
+    ent.march_unit[living] = target_mu
+    ent.role[living] = 1
+    ent.leader[living] = best
+    bhv.state[living] = LEADER_FOLLOW
+    bhv.ll_head[mu] = best          # the survivors are led again, so they are not counted leaderless
+    bhv.ll_handoffs += 1
+    return True
+
+
+def _shooter_in_range(ent: Entities, members: np.ndarray) -> bool:
+    shooters = np.nonzero(ent.alive & (ent.side != BLUE) & (ent.weapon_range > 0) & (ent.pk_base > 0))[0]
+    if shooters.size == 0 or members.size == 0:
+        return False
+    d = np.hypot(ent.x[members][:, None] - ent.x[shooters][None, :],
+                 ent.y[members][:, None] - ent.y[shooters][None, :])
+    return bool((d <= ent.weapon_range[shooters][None, :]).any())
+
+
+def _finish_loss(ent: Entities, bhv: Behavior, mu: int, living: np.ndarray, how: str) -> None:
+    """Complete the handoff of unit `mu`; falls back to `continue` when it cannot be done."""
+    ok = _absorb(ent, bhv, mu, living) if how == "absorb" else _promote(ent, bhv, mu, living)
+    if not ok:
+        _go_independent(ent, bhv, living)
+        bhv.ll_done[mu] = True
+
+
+def _update_leader_loss(ent: Entities, bhv: Behavior, k: int, hold: np.ndarray) -> None:
+    """Leader-loss policy for every march unit (Issue #17). Draws no random numbers.
+
+    A loss is a head that was alive at the last check and is dead now, so it has the same one-tick
+    latency as the `lead_lost` contact trigger. `halt` writes the unit's survivors into `hold`.
+    """
+    ll = bhv.ll
+    pol = ll["policy"]
+    blue = (ent.side == BLUE) & (ent.domain == GROUND) & ent.alive
+    for mu in range(len(bhv.ll_head)):
+        living = np.nonzero(blue & (ent.march_unit == mu))[0]
+        if living.size == 0 or bhv.ll_done[mu]:
+            if bhv.ll_done[mu] and living.size:
+                bhv.leaderless_steps += 1
+            continue
+        head = int(bhv.ll_head[mu])
+        if head >= 0 and not ent.alive[head]:
+            bhv.ll_head[mu] = head = -1
+            if bhv.first_leader_loss_step < 0:
+                bhv.first_leader_loss_step = k
+            if pol == "continue":
+                _go_independent(ent, bhv, living)
+                bhv.ll_done[mu] = True
+            elif pol == "halt":
+                bhv.ll_halted[mu], bhv.ll_hold[mu], bhv.ll_clear[mu] = True, 0, 0
+            elif ll["handoff_steps"] == 0:
+                _finish_loss(ent, bhv, mu, living, pol)
+            else:
+                bhv.ll_left[mu] = ll["handoff_steps"]
+        elif head < 0 and bhv.ll_left[mu] > 0:
+            bhv.ll_left[mu] -= 1
+            if bhv.ll_left[mu] == 0:
+                bhv.ll_left[mu] = -1
+                _finish_loss(ent, bhv, mu, living, pol)
+        if bhv.ll_halted[mu]:
+            bhv.ll_hold[mu] += 1
+            bhv.ll_clear[mu] = 0 if _shooter_in_range(ent, living) else bhv.ll_clear[mu] + 1
+            n, t = ll["clear_steps"], ll["max_hold_steps"]
+            if (n is not None and bhv.ll_clear[mu] >= n) or (t is not None and bhv.ll_hold[mu] >= t):
+                bhv.ll_halted[mu] = False
+                _finish_loss(ent, bhv, mu, living, "promote")
+            else:
+                hold[living] = True
+                bhv.ll_halt_steps += int(living.size)
+        if bhv.ll_head[mu] < 0:
+            bhv.leaderless_steps += 1
 
 
 def _update_contact(ent: Entities, bhv: Behavior, scn: Scenario, k: int, world: Any,
@@ -214,7 +367,10 @@ def _update_contact(ent: Entities, bhv: Behavior, scn: Scenario, k: int, world: 
     if trig:
         bhv.last_trigger_k = k
     was = bhv.in_contact
-    bhv.in_contact = trig or (was and (k - bhv.last_trigger_k) * scn.dt < rx["clear_s"])
+    if rx["release_rule"] == "leader_policy" and bhv.ll_halted is not None:
+        bhv.in_contact = trig or (was and bool(bhv.ll_halted.any()))
+    else:
+        bhv.in_contact = trig or (was and (k - bhv.last_trigger_k) * scn.dt < rx["clear_s"])
     if bhv.in_contact:
         bhv.contact_steps += 1
         if not was:
@@ -250,6 +406,9 @@ def step(ent: Entities, bhv: Behavior, op, comms, scn: Scenario, k: int,
 
     elif bhv.mode == LEADER_FOLLOW:
         _follow(ent, bhv, comms, scn, k, rng, blue_ground, world=world)
+
+    if bhv.ll is not None:
+        _update_leader_loss(ent, bhv, k, hold)
 
     if bhv.contact is not None:
         _update_contact(ent, bhv, scn, k, world, hold)
@@ -345,12 +504,14 @@ def _follow(ent: Entities, bhv: Behavior, comms, scn: Scenario, k: int,
     Both paths draw the same uniform whatever the mode, so the two are paired on a shared seed.
     """
     dt = scn.dt
-    _update_convoy_succession(ent, bhv)
+    if bhv.ll is None:
+        _update_convoy_succession(ent, bhv)
     for i in np.nonzero(blue_ground & (ent.role == 1))[0]:
         ref = _predecessor(ent, bhv, int(i))
         got_link = comms.delivered(rng)     # drawn on BOTH paths: keeps the streams aligned
         if ref < 0 or not ent.alive[ref]:
-            # HALT_ON_LEADER_LOSS: nothing to follow, so hold the route independently.
+            # LEADER_LOSS (Issue #17, `legacy`): nothing to follow, so hold the route independently.
+            # The other policies are in `_update_leader_loss`.
             bhv.state[i] = WAYPOINT
             if bhv.succession == "manned_only":
                 bhv.headless_steps += 1

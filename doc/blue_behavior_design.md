@@ -103,7 +103,7 @@ priority order:
 | --- | --- | --- |
 | `WAIT_FOR_OPERATOR` | decision pending, `TELEOP` | hold in place (speed zero) |
 | `STOP_ON_LINK_LOSS` | link down, `TELEOP` | hold in place |
-| `HALT_ON_LEADER_LOSS` | leader dead or track older than `track_timeout` | `SENTRY`, then `WAYPOINT` if the follower holds the route |
+| `LEADER_LOSS` | leader dead (Issue #17: `leader_loss_policy` `promote`, `absorb`, `halt` or `continue`; `legacy` is the old fallback to `WAYPOINT`). Track older than `track_timeout` still hands the follower back to `WAYPOINT` | per policy, see `doc/scenario.md`; `halt` is `SENTRY`-like until the release rule fires |
 | `FALL_BACK` | wait exceeded `patience` | `WAYPOINT` at `q_fallback` |
 
 ### Modality selects the repertoire, not just the gain

@@ -45,7 +45,14 @@ CONVOY_KEYS = (
     "crew_metrics",
     "succession",
     "escort_vehicles",
+    "leader_loss_policy",
+    "handoff_steps",
+    "halt_release",
 )
+
+# Leader-loss policy (Issue #17): what a march unit does after its head is destroyed. `legacy` is the
+# pre-#17 code path (instant promotion in LEADER_FOLLOW, waypoint fallback) and builds no new state.
+LEADER_LOSS_POLICIES = ("legacy", "promote", "absorb", "halt", "continue")
 
 # Autonomous march unit and personnel exposure (Issue #14). Crew defaults per role: ATP 4-11 2-56 (truck
 # crew of a driver and an assistant driver), M-5 (the ATV-S control vehicle carries a driver and the
@@ -115,10 +122,11 @@ def resolve_contact_reaction(spec: dict | None) -> dict | None:
     release = raw.get("release", {"rule": "timeout", "clear_s": DEFAULT_CLEAR_S})
     rule = release.get("rule") if isinstance(release, dict) else None
     if rule == "leader_policy":
-        raise ValueError("contact_reaction release rule 'leader_policy' depends on the leader-loss "
-                         "policy (Issue #17), which is not implemented; use rule 'timeout'")
-    if rule != "timeout":
-        raise ValueError(f"contact_reaction release rule must be 'timeout', got {rule!r}")
+        if resolve_leader_loss(spec) is None or spec.get("leader_loss_policy") != "halt":
+            raise ValueError("contact_reaction release rule 'leader_policy' needs "
+                             "leader_loss_policy 'halt' (Issue #17)")
+    elif rule != "timeout":
+        raise ValueError(f"contact_reaction release rule must be 'timeout' or 'leader_policy', got {rule!r}")
     clear_s = float(release.get("clear_s", DEFAULT_CLEAR_S))
     if not 1.0 <= clear_s <= 3600.0:
         raise ValueError(f"contact_reaction release clear_s must be between 1 and 3600 s, got {clear_s}")
@@ -128,7 +136,36 @@ def resolve_contact_reaction(spec: dict | None) -> dict | None:
         raise ValueError(f"contact_reaction halt_scope must be one of {list(CONTACT_HALT_SCOPES)}, got {scope!r}")
 
     return {"action": action, "triggers": tuple(triggers), "range_m": rng_m,
-            "clear_s": clear_s, "halt_scope": scope}
+            "clear_s": clear_s, "halt_scope": scope, "release_rule": rule}
+
+
+def resolve_leader_loss(spec: dict | None) -> dict | None:
+    """Normalise and validate the leader-loss policy. None when absent or `legacy` (feature off)."""
+    if not spec:
+        return None
+    policy = spec.get("leader_loss_policy")
+    handoff = spec.get("handoff_steps")
+    rel = spec.get("halt_release")
+    if policy is not None and policy not in LEADER_LOSS_POLICIES:
+        raise ValueError(f"convoy leader_loss_policy must be one of {list(LEADER_LOSS_POLICIES)}, got {policy!r}")
+    if handoff is not None:
+        if isinstance(handoff, bool) or not isinstance(handoff, int) or handoff < 0:
+            raise ValueError(f"convoy handoff_steps must be a non-negative integer, got {handoff!r}")
+        if policy not in ("promote", "absorb"):
+            raise ValueError("convoy handoff_steps applies only to leader_loss_policy 'promote' or 'absorb'")
+    if rel is not None:
+        if policy != "halt":
+            raise ValueError("convoy halt_release applies only to leader_loss_policy 'halt'")
+        if not isinstance(rel, dict) or not set(rel) <= {"clear_steps", "max_hold_steps"}:
+            raise ValueError("convoy halt_release must be a dict with clear_steps and/or max_hold_steps")
+        for key, v in rel.items():
+            if isinstance(v, bool) or not isinstance(v, int) or v < 1:
+                raise ValueError(f"convoy halt_release {key} must be a positive integer, got {v!r}")
+    if policy is None or policy == "legacy":
+        return None
+    rel = rel or {}
+    return {"policy": policy, "handoff_steps": int(handoff or 0),
+            "clear_steps": rel.get("clear_steps"), "max_hold_steps": rel.get("max_hold_steps")}
 
 
 def resolve_convoy_spec(params: dict | None) -> dict | None:
@@ -306,6 +343,7 @@ def validate_convoy_spec(spec: dict) -> None:
         if isinstance(escorts, bool) or not isinstance(escorts, int) or escorts < 0 or escorts > 100:
             raise ValueError(f"convoy escort_vehicles must be a non-negative integer <= 100, got {escorts!r}")
 
+    resolve_leader_loss(spec)
     resolve_contact_reaction(spec)
 
 
