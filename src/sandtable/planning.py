@@ -54,13 +54,15 @@ def overwatch_stations(n: int, cx: float, cy: float, r: float,
     return cand
 
 
-def step(ent: Entities, world: World, scn: Scenario, spawn_x: float, pers=None, bhv=None) -> None:
+def step(ent: Entities, world: World, scn: Scenario, spawn_x: float, pers=None, bhv=None,
+         lane=None, k: int = 0) -> None:
     """Set each entity's movement target in place.
 
     `pers`, if given, replaces the scripted blue-ground lane with the opt-in
     personality-movement propensity sum (byte-identical when None). `bhv`, if given, is the
     behaviour layer: it may hold an agent in place or place it on a follower station, and it is
-    applied last so it overrides the lane (byte-identical when None)."""
+    applied last so it overrides the lane (byte-identical when None). `lane` (Issue #18) is the optional
+    lane-blocking state, applied after the behaviour layer."""
     gx, gy = scn.objective.goal
     blue = ent.side == BLUE
     blue_ground = blue & (ent.domain != AIR)
@@ -125,6 +127,12 @@ def step(ent: Entities, world: World, scn: Scenario, spawn_x: float, pers=None, 
     # station behind the leader it can currently see. None leaves every target untouched.
     if bhv is not None:
         tx_new, ty_new = _behavior_targets(ent, scn, bhv, tx_new, ty_new, world=world)
+
+    # Physical lane blocking by wrecks (Issue #18): pulls the targets of vehicles behind an active wreck
+    # back to the stand-off point. Separate from the behaviour layer's holds. None leaves targets untouched.
+    if lane is not None:
+        from sandtable import lane_block as _lane_block
+        _lane_block.apply(ent, lane, k, scn.dt, tx_new, ty_new)
 
     # Blue GROUND that have reached the objective hold there (so arrivals accumulate). Air stations
     # are far from the goal, so UAS are unaffected by this.

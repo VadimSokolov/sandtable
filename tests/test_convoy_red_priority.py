@@ -438,3 +438,32 @@ def test_unique_vehicles_targeted_is_not_the_number_of_targeting_events():
     m = tp.metrics(prio)
     assert m["tp_shots"] == 3.0 and m["tp_vehicles_targeted"] == 1.0
     assert m["tp_targeted_head"] + m["tp_targeted_trail"] == 3.0       # also events, not vehicles
+
+
+# ---- withdrawal: timed from activation, and can be disabled ----------------------
+
+def test_scripted_withdrawal_is_timed_from_the_launch_not_the_mission_start():
+    scn, ent, amb = _amb()
+    ent.x[1], ent.y[1], ent.seen[1] = 2400.0, 1500.0, True
+    assert not ambush.step(ent, amb, 500, 1.0).any() and amb.launch_step == 500     # launch late, at tick 500
+    assert not ambush.step(ent, amb, 619, 1.0).any()                                 # 119 s after launch (600 s after start)
+    assert ambush.step(ent, amb, 620, 1.0).any() and amb.withdraw_step == 620        # 120 s after launch
+
+
+def test_without_a_withdraw_block_the_ambush_never_withdraws():
+    cfg = {k: v for k, v in SC.params["ambush"].items() if k != "withdraw"}
+    scn, ent, amb = _amb({"ambush": cfg})
+    ent.x[1], ent.y[1], ent.seen[1] = 2400.0, 1500.0, True
+    for k in (0, 1, 500, 5000):
+        assert not ambush.step(ent, amb, k, 1.0).any()
+    assert amb.launched and amb.withdraw_step == -1
+
+
+def test_shot_timing_metrics_record_first_and_last_priority_path_shot():
+    scn, ent, _ = _fixture({1: (2500.0, 1500.0)})
+    prio = tp.build_target_priority(scn.with_params({"target_priority": {"order": []}}), ent)
+    for k in (7, 9):
+        tp.begin_step(ent, prio, k)
+        engagement._side_damage(ent, StubWorld(), _dist(ent), RED, Sure(), np.zeros(ent.n), prio=prio)
+    m = tp.metrics(prio)
+    assert m["tp_first_shot_step"] == 7.0 and m["tp_last_shot_step"] == 9.0

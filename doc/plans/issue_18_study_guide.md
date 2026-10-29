@@ -98,6 +98,24 @@ and withdraws in order; cargo is conserved and crew-by-role sums to the total wh
   adjusting for multiple comparisons. The intervals are wide, so this does not show the policies are equivalent. The only
   equivalence test run is the negative control (Blue-loss fraction, `ends` versus legacy, Red on the route axis); it passes with
   a margin of 0.06 of the loss fraction and narrowly fails with 0.06 times the legacy level, so it depends on how the margin is read.
-- Not tested: the issue's prediction about the control vehicle in the autonomous arm, lane blocking, and a Red halt cost.
-  Without wreck blocking, destroying the first and last vehicle does not trap the column.
+- Not tested: the issue's prediction about the control vehicle in the autonomous arm. Without lane blocking (section 8), destroying
+  the first and last vehicle does not trap the column.
 - Several policies read ground truth, so their effects say what would happen IF Red could recognize roles.
+
+## 8. Later additions: lane blocking, the manifest, and what is still open
+
+**Lane blocking.** A destroyed Blue vehicle can now leave a wreck that holds up the vehicles behind it for `recovery_time_s` seconds
+(`lane_blocking`, opt-in). They stop `standoff_m` short and wait; vehicles already past are unaffected. There is no bypass and no rerouting. It is different
+from a halt: a halt (#12, #17) is a decision the column makes and can end by its own rule; a wreck is a fact about the road and ends only when its recovery time
+runs out. Both can apply at once, and neither clears the other. The recovery time and the stand-off are placeholders. A first experiment (30 seeds, three recovery times, three Red targeting rules) found that blocking did not make delivery worse; in several arms delivery was higher. That is counter-intuitive. A follow-up diagnostic checked whether the template's scripted withdrawal (Red's ambush teams stop firing 120 s after launch) explains it. It does not, by itself: the delivery increase persists with the withdrawal switched off. The cause is still unexplained, and it says nothing about wrecks helping real convoys.
+
+**The manifest.** `tools/manifest_cli.py` freezes a manifest of an experiment before it runs: scenario, arm settings, seeds, comparisons, analysis settings. The
+SHA-256 of a canonical form is the registration hash; the git commit is recorded next to it, not inside it. The lane-blocking experiment was frozen first and its run tool
+checks the hash. Each frozen manifest also records hashes of the simulation and analysis source (including uncommitted edits) separately from the configuration hash, and the run tool checks them first. The earlier target-priority sweep ran before this existed, so its manifest is marked `post_hoc` and is documentation, not a preregistration; the first lane-blocking manifest froze the configuration but not the code.
+
+**Still open (not test failures).**
+- The negative-control margin (A2) is pending clarification: the issue's "0.06 of the contrast spread" is undefined, and one reading passes while two do not.
+- The Red halt cost (indirect fire after a halt, devices against responders) has a written proposal and seven open questions
+  (`issue_18_red_halt_cost_proposal.md`); nothing is built, because the issue gives the delay but not the effect.
+- The registered prediction (control vehicle first by mission-web criticality) is untested until that ranking is supplied or defined. Target role and
+  nearest-target rank are not substitutes.

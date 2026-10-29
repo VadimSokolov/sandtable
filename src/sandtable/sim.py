@@ -17,6 +17,7 @@ from sandtable import (
     c2,
     counter_uas,
     engagement,
+    lane_block,
     formation_metrics,
     mechanics,
     metrics,
@@ -76,6 +77,7 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     # legacy engagement path (and its output keys) is unchanged.
     prio = target_priority.build_target_priority(scn, ent)
     amb = ambush.build_ambush(scn, ent)
+    lane = lane_block.build_lane_block(scn, ent, world)
     if (prio is not None or amb is not None) and tracks is not None:
         raise ValueError("target_priority and ambush are not available with belief tracks "
                          "(belief.engage has its own target rule)")
@@ -156,7 +158,9 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
             c2.step(ent, op, comms, scn, k, rng, world)
         if bhv is not None:
             behavior.step(ent, bhv, op, comms, scn, k, rng, world=world)
-        planning.step(ent, world, scn, spawn_x, pers=pers, bhv=bhv)
+        if lane is not None:
+            lane_block.update(ent, lane, k, dt)
+        planning.step(ent, world, scn, spawn_x, pers=pers, bhv=bhv, lane=lane, k=k)
         motion.step(ent, world, dt, tempo)
         sensing.step(ent, world, rng, comms)
         if mech is not None:
@@ -166,7 +170,7 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
         if tracks is None:
             hold_fire = ambush.step(ent, amb, k, dt) if amb is not None else None
             if prio is not None:
-                target_priority.begin_step(ent, prio)
+                target_priority.begin_step(ent, prio, k)
             engagement.step(ent, world, dt, rng, mech=mech, fired_at=fired_at, prio=prio, hold_fire=hold_fire)
             if prio is not None:
                 target_priority.end_step(ent, prio)
@@ -246,6 +250,8 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
         result.update(target_priority.metrics(prio))
     if amb is not None:
         result.update(ambush.metrics(amb))
+    if lane is not None:
+        result.update(lane_block.metrics(lane))
     if crew_on:
         result.update(metrics.crew_metrics(ent, crew_risk, crew_init, bhv))
     result["detection_coverage"] = cov_sum / max(cov_steps, 1)

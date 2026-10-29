@@ -114,6 +114,9 @@ class Prio:
     head_destroyed: int = 0
     trail_destroyed: int = 0
     end_steps: int = 0                  # ticks with at least one end defined
+    cur_k: int = 0                      # tick index of the engagement in progress (set by `begin_step`)
+    first_shot_step: int = -1
+    last_shot_step: int = -1            # last tick on which any priority-path Red shooter fired
     _ends_now: tuple = field(default=(-1, -1))
 
     def __post_init__(self) -> None:
@@ -165,8 +168,10 @@ def column_ends(ent: Entities, goal: tuple, definition: str, basis: str) -> tupl
     return int(idx[int(np.argmin(d))]), int(idx[int(np.argmax(d))])    # first index wins a tie
 
 
-def begin_step(ent: Entities, prio: Prio) -> None:
-    """Fix this tick's column ends before anyone fires."""
+def begin_step(ent: Entities, prio: Prio, k: int | None = None) -> None:
+    """Fix this tick's column ends before anyone fires. `k` (optional) stamps the shots with the tick."""
+    if k is not None:
+        prio.cur_k = k
     prio.head, prio.trail = column_ends(ent, prio.goal, prio.cfg["end_definition"], prio.cfg["ends_basis"])
     if prio.head >= 0:
         prio.end_steps += 1
@@ -226,6 +231,10 @@ def select(ent: Entities, prio: Prio, engageable: np.ndarray, dist: np.ndarray,
 
 
 def record(prio: Prio, target: np.ndarray, cls: np.ndarray, killed: np.ndarray) -> None:
+    if target.size:
+        if prio.first_shot_step < 0:
+            prio.first_shot_step = prio.cur_k
+        prio.last_shot_step = prio.cur_k
     np.add.at(prio.shots, cls, 1)
     np.add.at(prio.kills, cls[killed], 1)
     prio.targeted[target] = True
@@ -249,6 +258,8 @@ def metrics(prio: Prio) -> dict:
         "tp_head_destroyed": float(prio.head_destroyed),
         "tp_trail_destroyed": float(prio.trail_destroyed),
         "tp_end_steps": float(prio.end_steps),
+        "tp_first_shot_step": float(prio.first_shot_step),
+        "tp_last_shot_step": float(prio.last_shot_step),
     }
     for ci, name in enumerate(order):
         out[f"tp_shots_{name}"] = float(prio.shots[ci])

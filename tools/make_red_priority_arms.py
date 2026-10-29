@@ -171,6 +171,32 @@ def run_experiment(name: str, path: str) -> dict:
     return out
 
 
+NAME = "red_priority"
+MANIFEST = "doc/manifests/red_priority.manifest.json"
+
+
+def registration() -> dict:
+    """The definitions of this sweep as a manifest (src/sandtable/manifest.py). This sweep was run, and its
+    results examined, BEFORE this function existed, so its manifest is `post_hoc`: it fixes the definitions
+    for reproducibility and is not a preregistration."""
+    from sandtable import manifest
+    from sandtable.target_priority import resolve_target_priority
+    arms = {lab: {"params": {**FIXED, "target_priority": arm},
+                  "resolved": {"target_priority": resolve_target_priority({"target_priority": arm})}}
+            for lab, arm in ARMS.items()}
+    comparisons = [{"experiment": e, "arm": lab, "reference": "legacy", "metric": m, "pairing": "seed",
+                    "adjustment": "Holm within (experiment, metric)"}
+                   for e in EXPERIMENTS for lab in ARMS if lab != "legacy" for m in PAIRED]
+    comparisons.append({"experiment": "head_on_static", "arm": "ends_seen", "reference": "legacy",
+                        "metric": "blue_loss_fraction", "test": "ar_gate.tost", "primary_margin": MARGIN,
+                        "t_min": ar_gate.FULL_T, "primary_margin_fixed": "before results were inspected",
+                        "exploratory_margins": ["ar_gate.margin 0.06 x legacy level", "0.06 x sd of paired contrast"],
+                        "exploratory_margins_added": "after results were inspected"})
+    analysis = {"interval": "95% t interval", "p_values": "two-sided paired t, Holm-adjusted", "n_blue": N_BLUE,
+                "ranking": "none"}
+    return manifest.build_registration(NAME, EXPERIMENTS, arms, FIXED, list(range(SEEDS)), comparisons, analysis)
+
+
 def main() -> None:
     out = {"seeds": SEEDS, "fixed": FIXED, "margin": MARGIN,
            "caveat": "Verification and exploration, not a ranking. Paired differences are against legacy within "

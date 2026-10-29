@@ -418,3 +418,26 @@ fire, support-role units `support_delay_s` later, and security-role units stay. 
 leave the map. Metrics: `ambush_launched`, `ambush_launch_step`, `ambush_withdraw_step`,
 `ambush_held_steps`. The template is `scenarios/uc3_convoy_ambush.json`; its Red types share the `at_team`
 numbers and differ in fire control only.
+
+### `lane_blocking` (Issue #18, Change item 2)
+
+A destroyed Blue ground vehicle leaves a wreck that holds up the vehicles behind it. Absent, every run is byte-identical.
+
+```json
+"lane_blocking": {"recovery_time_s": 300, "standoff_m": 20, "lane_width_m": null, "wreck_roles": null}
+```
+
+`recovery_time_s` and `standoff_m` are required and have no default (both are placeholders with no public source). The wreck blocks the road at its
+along-track coordinate (route arc length if the world has a route, else distance along the line from the Blue start centroid to the objective) from the
+tick after the vehicle is destroyed until `recovery_time_s` later. Living Blue ground vehicles behind it, and within half of `lane_width_m` laterally when
+that is given, stop `standoff_m` short and never reverse; vehicles already past are unaffected; Red wrecks block nothing. There is **no bypass and no
+rerouting** and the street graph is not consulted. It is not a halt: contact halts (#12) and leader-loss halts (#17) go through `behavior.holding`, a lane
+block only moves targets back and is counted separately. Metrics (only when declared): `lane_blockages`, `lane_block_steps` (ticks with an active wreck),
+`lane_blocked_vehicle_steps` (vehicle-ticks whose target was pulled back), `lane_first_block_step`. Not wired into the replay path.
+
+### Manifest and registration hash (Issue #18, Change item 5)
+
+`src/sandtable/manifest.py` and `tools/manifest_cli.py`. The hash covers the scenario inputs, resolved arm configuration, fixed parameters, seed list, comparison
+definitions and analysis settings, serialized canonically; it excludes results, timestamps, status, notes and the source revision, which is recorded separately.
+Source hashes (simulation `src/sandtable/**/*.py` and the tool's analysis files, from the bytes on disk, so uncommitted edits count; tests, docs, scenario files, outputs and third-party code are not covered) are recorded beside it in `provenance`, never inside the registration hash. Scenario-input coverage: the registration contains the parsed content of exactly the scenario files the experiment lists (any other file, and seeds outside the listed range, are not covered). `freeze --status frozen_before_run` before running (the run tool then refuses a mismatched configuration or source hash, unless `--accept-source-drift`, which is recorded); `post_hoc` for an experiment already run, which is not a
+preregistration. Manifests are in `doc/manifests/`.

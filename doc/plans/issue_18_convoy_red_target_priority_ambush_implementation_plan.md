@@ -3,7 +3,7 @@
 **Issue**: [#18 Convoy: Red target priority and an ambush template](https://github.com/VadimSokolov/sandtable/issues/18) (part of #7, extends #12)
 **Roadmap**: Phase 4: Autonomy, C2 & Force Protection
 **Branch**: `issue-18-convoy-red-target-priority` -> `convoy-dev`
-**Status**: Reviewable checkpoint, 2026-10-29. **#18 is not complete**: the lane-blocking rule and the Red halt cost (Change items 2 and 4) are deferred, the registration hash (item 5) and the prediction (item 6) are not done (section 4).
+**Status**: Reviewable checkpoint (`8a2ad6a`) plus uncommitted follow-up and verification pass, 2026-10-29. **#18 is not complete**: the Red halt cost (item 4) is a proposal awaiting Professor Sokolov, the prediction (item 6) is untested, and the negative-control margin (A2) is pending clarification (section 4). Lane blocking (item 2) and the manifest and registration hash (item 5) are now implemented.
 **Depends on**: #8 (roles), #12 (contact reaction), #14 (crew), #17 (leader-loss). Related, not started: #19.
 
 ---
@@ -60,13 +60,13 @@ three Change items are deferred or partial and one is untested.
 | # | Requirement (issue wording, shortened) | Status |
 |---|---|---|
 | C1 | Deterministic `target_priority` in `engagement._side_damage`; ends, then armed, then armored; off by default, byte-identical when off | **Implemented** (adds `security`, `control`) |
-| C2 | Lane-blocking rule for a destroyed vehicle with `recovery_time` (needs the street graph) | **Deferred**: a new road-blockage subsystem; the issue lists it as a change, so it is a required item still open |
+| C2 | Lane-blocking rule for a destroyed vehicle with `recovery_time` (needs the street graph) | **Implemented (uncommitted)** as a minimal model with no bypass and no rerouting; the street graph is not consulted (contract below) |
 | C3 | Opt-in Red ambush template: roles, fire held until the head reaches a trigger, launch rule reacting to observed security vehicles, ordered withdrawal | **Implemented** as fire control |
-| C4 | Red halt cost: indirect fire after a halt (120 to 900 s swept placeholder, no public source) and secondary devices against responders | **Deferred**: new combat mechanics on an unsourced placeholder; a required item still open |
-| C5 | Register the Red set before any Blue variation; label each parameter sourced / bounded / placeholder; one hash across both arms; say "simulation-based analysis, not wargames" | **Partial**: labels done (section 5), non-varied inputs held fixed in the tool, wording used; **no registration hash**. It is a Change item, not an acceptance criterion |
-| C6 | Prediction to test (control vehicle ranked first by mission-web criticality in the autonomous arm; flat in the manned arm) | **Not tested; blocked** on a criticality ranking that is not in the repository. Under Acceptance the issue says the arm-difference sign/size change is "not an acceptance test" and is reported either way; it is **not required for acceptance** but is **not reported either** |
+| C4 | Red halt cost: indirect fire after a halt (120 to 900 s swept placeholder, no public source) and secondary devices against responders | **Not implemented; proposal written** (`issue_18_red_halt_cost_proposal.md`). The issue gives the delay only; the effect (area, probability, duration, what a responder or a device is) is not specified, so building it would invent the result. Awaiting Professor Sokolov |
+| C5 | Register the Red set before any Blue variation; label each parameter sourced / bounded / placeholder; one hash across both arms; say "simulation-based analysis, not wargames" | **Implemented (uncommitted)**: `src/sandtable/manifest.py`, `tools/manifest_cli.py`, `doc/manifests/`. The lane-blocking experiment's manifest was frozen before its first run; the target-priority sweep's manifest is `post_hoc` (created after its results were seen) and is not a preregistration. Labels in section 5 |
+| C6 | Prediction to test (control vehicle ranked first by mission-web criticality in the autonomous arm; flat in the manned arm) | **Explicitly untested; blocked** until the mission-web criticality ranking is supplied or its definition is agreed. Target role and nearest-target rank are NOT substitutes and are not used. Under Acceptance the issue says the arm-difference sign/size change is "not an acceptance test" and is reported either way; it is **not required for acceptance** but is **not reported either** |
 | A1 | Off state byte-identical in the style of `test_counter_uas.py::test_off_is_byte_identical` | **Met** (`test_off_is_byte_identical`, `test_report_only_keeps_the_legacy_choice_and_stream`) |
-| A2 | Negative control: Red head-on, nothing ahead of the head; on/off equivalent on Blue losses by `ar_gate.tost`, margin "0.06 of the contrast spread", at least 30 paired blocks | **Met under one reading of the margin only** (below) |
+| A2 | Negative control: Red head-on, nothing ahead of the head; on/off equivalent on Blue losses by `ar_gate.tost`, margin "0.06 of the contrast spread", at least 30 paired blocks | **PENDING CLARIFICATION.** The margin is undefined in the issue. Three readings are preserved below with their provenance; one passes and two do not. The scenario, sample size and margin are not tuned to make it pass |
 | A3 | Positive control: Red abeam, a priority on the ends changes which vehicles die | **Met** (below) |
 
 ### Negative control: margin, rationale, alpha, interval
@@ -80,6 +80,7 @@ three Change items are deferred or partial and one is untested.
   the 90.3% two-sided interval lying inside plus or minus the margin.
 - **Result**: mean paired difference -0.0017, standard error 0.0138, interval [-0.0251, +0.0218], TOST statistic 4.22 > 1.70:
   equivalent at margin 0.06.
+- **Provenance of the three analyses**: (1) absolute 0.06 of the loss fraction, fixed in the tool before any result was inspected; (2) `ar_gate.margin`, 0.06 times the legacy level, and (3) 0.06 times the standard deviation of the paired contrast, both added after the results were seen (exploratory). None was chosen to produce a pass, and none is dropped.
 - **Sensitivity (exploratory, added after the results were seen)**: with the margin `ar_gate.margin` would give for a
   non-rate metric, 0.06 times the legacy level (0.0245), the statistic is 1.65 < 1.70, **not equivalent** (narrowly); with 0.06
   times the standard deviation of the paired contrast (0.0052), it is 0.26, **not equivalent**. So the equivalence holds under
@@ -129,6 +130,45 @@ No statistically clear difference in delivery or total Blue losses was detected 
 Holm adjustment. That is not evidence the policies are equivalent: the intervals are wide (for example a Blue-loss difference
 of -0.90 with a 95% interval of -1.84 to +0.04 for control-first in the head-on setting), and only the one equivalence test above
 was run, on one metric.
+
+### Lane-blocking contract (Change item 2; `src/sandtable/lane_block.py`)
+
+| Question | Answer in this model |
+|---|---|
+| What makes a wreck block a lane? | A Blue ground vehicle destroyed while `lane_blocking` is declared leaves a wreck at its position. It blocks the road at that point (along-track coordinate = arc length on the route if there is one, else distance along the line from the Blue start centroid to the objective). Red-side wrecks block nothing |
+| Which vehicles are affected? | Living Blue ground vehicles behind the wreck; with `lane_width_m` given, only those within half a lane width laterally; with it null, the whole road width. Vehicles already past are unaffected. A vehicle waits `standoff_m` short of the wreck and never reverses. `wreck_roles` optionally limits which destroyed roles leave a wreck |
+| When does it begin and end? | It begins the tick after the vehicle is destroyed and ends `recovery_time_s` seconds after that tick |
+| What is `recovery_time_s`? | The time an unmodelled clearing or recovery effort needs to remove the wreck. One swept PLACEHOLDER constant, not derived from any recovery vehicle in the convoy |
+| Bypass or rerouting? | **None.** The column waits the whole recovery time. The street graph is not consulted, so a column on a graph with an alternative street still waits. A bypass would need runtime replanning |
+
+**Physical blockage is not a halt.** A contact halt (#12) and a leader-loss halt (#17) are decisions held in `behavior.holding`, counted by
+`convoy_halt_steps` and `ll_halt_steps`, and ended by their own rules. A lane block is a constraint of the world: it moves a vehicle's target
+back to the stand-off point and is counted by separate `lane_*` metrics. Releasing a halt does not clear a wreck and a cleared wreck does not release
+a halt (tests `test_contact_halt_and_lane_block_are_separate_and_both_must_clear`, `test_leader_loss_policies_do_not_clear_or_ignore_the_wreck`).
+Not wired into the replay path (`replay.py` calls `planning.step` without it). The street graph requirement in the issue is therefore met only in the sense
+that the world's route (which may come from a graph) supplies the along-track coordinate.
+
+### Manifest and registration hash (Change item 5)
+
+`src/sandtable/manifest.py` hashes a canonical JSON of: schema version, name, the parsed scenario inputs, each arm's resolved configuration, the fixed parameters,
+the seed list, the comparison definitions and the analysis settings. It does **not** hash results, timestamps, the status, notes, or the source revision, which is
+recorded separately in `provenance` (commit, branch, uncommitted files). `tools/manifest_cli.py freeze|verify`; a frozen manifest is never overwritten;
+`tools/make_lane_block_arms.py` refuses to run unless the frozen hash matches its definitions. Statuses: `frozen_before_run` (may be called a registration) and
+`post_hoc` (documentation only; never a preregistration). `doc/manifests/lane_block.manifest.json` was frozen before the experiment ran;
+`doc/manifests/red_priority.manifest.json` is `post_hoc` because that sweep ran first. The analysis code of a registered tool is not hashed: a crash in
+the analysis code before any output (a missing key for arms without lane metrics) was fixed after freezing without changing a definition, and the hash still verified.
+
+### Lane-blocking experiment (frozen before it ran)
+
+`tools/make_lane_block_arms.py`, manifest `doc/manifests/lane_block.manifest.json` (status `frozen_before_run`, hash `6bc4a5602a00...`): the abeam ambush scenario, three Red
+targeting rules by lane blocking off or at 60, 300 and 900 s recovery, 30 seeds, paired and Holm-adjusted. The first launch crashed on a missing key for the
+"off" arms before producing any output; the analysis code was fixed and the hash re-verified unchanged. Observations (22 of 68 comparisons have Holm p < 0.05):
+
+- Blocked-vehicle time rises with recovery time and is larger when control-first has destroyed unit heads (about +625, +2419 and +5470 vehicle-steps for legacy at 60, 300 and 900 s).
+- **Delivered fraction was HIGHER with blocking** than without in several arms (for example +0.07 for legacy at 60 s and +0.18 for control-first at 60 s), and Blue
+  losses were higher for control-first (+0.7 to +1.2). This is counter-intuitive and is not a finding about wrecks helping a convoy. A follow-up diagnostic tested one possible
+  cause, the scripted withdrawal (section 9): it does not explain the delivery increase.
+- Nothing here ranks policies. One road, one layout, placeholder recovery times, no bypass.
 
 ## 5. Parameter labels (issue item 5)
 
@@ -182,3 +222,84 @@ logistics vulnerability (CNA, CTC, AUSA, RAND) were NOT used to infer any target
 - All Red parameters in the template are placeholders. One road, one convoy layout, one terrain, 40 seeds.
 - Loss of leadership (#17), a behavioral halt (#12) and physical blockage are separate; only the first two exist.
 - The sweep is exploration, not a ranking.
+
+---
+
+## 9. Verification pass (2026-10-29, uncommitted)
+
+### 9.1 Lane-blocking audit (tests added only where coverage was missing)
+
+- **No crossing in one large timestep**: with `dt` 1, 10 and 100 s, and across a route bend with `dt` 50 s, a vehicle behind an active wreck ends no nearer than the
+  stand-off point (`test_a_vehicle_cannot_cross_*`); without the lane step the same vehicle runs 3.7 km past it, so the test discriminates. End to end at `dt` = 10 s no
+  living vehicle behind the wreck passes the stand-off point while it is active. The reason is structural: the target is pulled back to the stand-off point and `motion.step` never moves a
+  vehicle farther than its distance to the target.
+- **Two wrecks**: clearing the nearer or the farther one does not release vehicles still blocked by the other (`test_clearing_one_wreck_*`, both orders).
+- **Holds**: `update` and `apply` cannot read or write behavior state; a leader-loss halt and a contact reaction are unchanged before, during and after the wreck
+  (`test_release_changes_no_behavior_hold`). The mission tests show the converse: a halt's release does not clear the wreck.
+- **Lane width and roles**: signed lateral offsets 4.5 m inside / 5.5 m outside a 10 m lane on both sides; no `wreck_roles` filter means every destroyed role leaves a wreck; the filter is covered earlier.
+- **Scope**: the model is route-only (or the straight line to the objective). `test_the_street_graph_is_never_read` fails if the street graph is touched. It is not traffic handling: no queueing,
+  overtaking, lane choice, other streets or bypass. The module docstring and `doc/scenario.md` say so.
+
+### 9.2 Mechanism diagnostic: the delivery increase and the scripted withdrawal
+
+`tools/make_withdrawal_diagnostic.py`, manifest `doc/manifests/withdrawal.manifest.json` (`frozen_before_run`, configuration hash `f57026d47c80...`, source hashes recorded). Same abeam
+scenario; the ambush withdrawal as scripted, and disabled (the `withdraw` key removed, everything else unchanged); lane blocking off, 60 s, 300 s; legacy and control-first targeting; 30 matched
+seeds. The scripted withdrawal is timed from **ambush activation** (the launch tick, about tick 190), not from mission start (`ambush.step` measures from `launch_step`). One single-seed smoke run of one arm
+was made before freezing only to check the tool executed. No parameter was changed after seeing results.
+
+Timing (legacy, scripted, 60 s recovery, means): wreck first appears about tick 199, launch about 190, ambush and support withdraw about tick 300, blockage last released about 388, Red's last shot about 437,
+head passes Red's position about 336 and the last vehicle about 404. **Red does not fall silent at the withdrawal**: the security-role team never withdraws, so Red's last shot (mean tick 349 to 473) comes after the mean withdrawal tick (about 300 to 305) in every scripted arm.
+
+Results (paired by seed, delivered fraction, blocking minus off):
+
+| Targeting | Recovery | Scripted withdrawal | Withdrawal disabled | Interaction (disabled - scripted) |
+|---|---|---|---|---|
+| legacy | 60 s | +0.067 [+0.028, +0.105] (Holm 0.006) | +0.050 [+0.006, +0.094] (Holm 0.062) | -0.017 [-0.064, +0.031] |
+| legacy | 300 s | +0.067 [+0.011, +0.122] (Holm 0.062) | +0.006 [-0.052, +0.063] | -0.061 [-0.121, -0.001] (Holm 0.092) |
+| control-first | 60 s | +0.178 [+0.101, +0.254] (Holm < 0.001) | +0.150 [+0.057, +0.243] (Holm 0.008) | -0.028 [-0.108, +0.052] |
+| control-first | 300 s | +0.122 [+0.039, +0.205] (Holm 0.011) | +0.072 [-0.043, +0.187] | -0.050 [-0.135, +0.035] |
+
+Also (legacy targeting): with the withdrawal disabled, blocking raised Blue losses (+0.83 at 60 s, +1.37 at 300 s with Holm 0.057) and lowered success at 300 s (-0.13; interaction -0.17, Holm 0.045, the only
+interaction below 0.05 among the 36 comparisons); with it scripted, the legacy effects on losses and success are smaller and their intervals include zero. For control-first, blocking raised Blue losses with the
+withdrawal scripted (+0.67 at 60 s, +1.10 at 300 s; Holm 0.031 and 0.023) as well as disabled (+1.37 at 300 s, Holm 0.031). 8 of the 36 comparisons have Holm p < 0.05 (three delivered-fraction block effects for
+control-first, one for legacy, three Blue-loss block effects for control-first, and the one interaction).
+
+### 9.3 Provenance
+
+- **Configuration hash** (what is run) and **source hashes** (which code ran it) are separate. `manifest.source_hashes` records SHA-256 digests of `src/sandtable/**/*.py` (simulation) and the tool's
+  `ANALYSIS_FILES` (analysis), from the bytes on disk, so uncommitted content counts. Scope: not covered are tests, docs, scenario files (they are in the configuration), generated outputs and third-party code
+  (only numpy, scipy and Python versions are recorded). The run tool verifies configuration and source before executing, refuses on any mismatch unless `--accept-source-drift` (then recorded), and writes both source-hash sets and the
+  check into the results. The withdrawal run's check was `ok`, no drift.
+- **The original `lane_block` manifest is kept unchanged.** It hashes configuration only and has no source hashes. Its configuration stayed fixed while the analysis code was repaired after a crash
+  (a missing key for arms without lane metrics, before any output). Nothing about its code can be verified, and it is not claimed to have stronger preregistration than that: configuration frozen before the run, analysis code not frozen.
+  Since then the simulation also gained timing metrics (`lane_last_release_step`, `tp_first_shot_step`, `tp_last_shot_step`); these add keys only when the feature is declared.
+- The `red_priority` manifest remains `post_hoc`.
+
+### 9.4 Supported conclusions
+
+- Lane blocking holds the column: blocked vehicle-time rises with recovery time, the last vehicle passes Red later, and no vehicle crosses an active wreck in these tests, in the tested settings.
+- Priority and the ambush template behave as specified in controlled fixtures; priority changes which vehicles are destroyed when Red is abeam (head and trail), with no detectable change in total Blue losses.
+- The withdrawal is not the main cause of the delivery increase: it persists at 60 s with the withdrawal disabled (+0.05 legacy, +0.15 control-first).
+- A withdrawal-by-blocking interaction is suggested for success at 300 s (one of 36 comparisons below 0.05 after adjustment); it is not established.
+
+### 9.5 Unexplained observations
+
+- Why delivered fraction is higher with blocking than without. Not the scripted withdrawal alone. Untested candidates: how blocking changes the tick the mission ends (delivery is read at termination), the security-role Red team that never withdraws, and
+  the wreck stopping vehicles at a position that changes their exposure. None was tested.
+- Why Blue losses rise with blocking mainly for control-first and when no withdrawal exists.
+- Why the lane-block experiment's `success` falls at 900 s recovery while delivered fraction stays above the no-block level.
+
+### 9.6 Simplifications (all deliberate)
+
+Route-only blocking; no bypass, rerouting, queueing or overtaking; one swept recovery constant not tied to recovery vehicles; a wreck blocks the whole road unless `lane_width_m` is given; Red does not move
+and a withdrawn unit stays on the map; the security-role team never withdraws; the passage ticks in the diagnostic compare the Blue vehicles' x with the initial Red mean x; recovery times 60 and 300 s and the 20 m stand-off are placeholders;
+30 seeds, one road and layout.
+
+### 9.7 Awaiting Professor Sokolov
+
+1. The negative-control margin (A2): what is "0.06 of the contrast spread"?
+2. The Red halt cost (C4): the proposal and its seven open questions (`issue_18_red_halt_cost_proposal.md`). Not to be implemented until the mechanism is resolved.
+3. The criticality ranking for the registered prediction (C6), or its definition. Role and nearest-target rank are not substitutes.
+4. Whether lane blocking must reroute over the street graph, or the route-only model is acceptable.
+5. Whether a security-role team that never withdraws is the intended reading of TC 7-100.2 3-161 ("may remain to provide warning and to delay").
+6. Whether the scripted withdrawal should be timed from activation (as now) or from mission start.
