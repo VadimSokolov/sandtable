@@ -3,7 +3,7 @@
 **Issue**: [#17 Convoy: behavior after the head is lost, and a rule that releases a halt](https://github.com/VadimSokolov/sandtable/issues/17) (part of #7, extends #8 and #12)
 **Roadmap**: Phase 4: Autonomy, C2 & Force Protection
 **Branch**: `issue-17-convoy-leader-loss-policy` -> `convoy-dev`
-**Status**: Proposed plan, 2026-10-28. Based on the issue body (opened Oct 20, label `enhancement`, no comments) and the code of `convoy-dev` at `777568d`.
+**Status**: Implemented, 2026-10-29 (see section 8 for what changed from this plan and what is unresolved). Originally proposed 2026-10-28. Based on the issue body (opened Oct 20, label `enhancement`, no comments) and the code of `convoy-dev` at `777568d`.
 **Depends on**: #8 (march unit, succession; done), #9 (cargo metrics; done), #12 (contact trigger and halt; done), #14 (crew, `manned_only` succession; done). Feeds #15 (the policy becomes a swept dimension).
 
 ---
@@ -117,3 +117,55 @@ The cargo metrics from #9 already carry the acceptance comparison; nothing new i
 ## 7. Out of scope
 
 Herringbone `disperse` (#12 Increment B); Red target priority (#18); a console per march unit (#19); route re-planning around the dead vehicle (#16).
+
+---
+
+## 8. As implemented (2026-10-29)
+
+**Done, as planned.** `convoy.leader_loss_policy`, `handoff_steps`, `halt_release`
+(`clear_steps`, `max_hold_steps`), the five policies, the `leader_policy` contact release rule, the four
+metrics (`leaderless_steps`, `ll_halt_steps`, `ll_handoffs`, `first_leader_loss_step`), one description of
+`LEADER_LOSS` in the code comment, `doc/blue_behavior_design.md` and `doc/scenario.md`, and
+`tests/test_convoy_leader_loss.py` (44 tests). Absent or `legacy` is byte-identical. The new code draws no
+random numbers.
+
+**Changed from the plan**
+- A declared policy (not `legacy`) defaults `blue_behavior` to `leader_follow`, as the autonomy arm does.
+- `absorb` is defined: nearest other unit in the same serial with a living head, by straight-line distance
+  from the first survivor. Under `succession="manned_only"` the receiving head must have crew; otherwise
+  `absorb` falls back to `continue`. It is documented as an experimental logical reassignment, not an ATV-S
+  capability. The abandoned unit is not counted leaderless once its survivors are re-attached.
+- `continue` and every fallback are permanent for the unit (it counts `leaderless_steps` until the run ends).
+- On `halt` release the earliest eligible survivor becomes head with no further delay. A unit that cannot
+  get a head then behaves as `continue`.
+- `halt_release` with both keys: either one ends the halt. `clear_steps` reads ground-truth Red positions.
+- `handoff_steps = 0` is an idealized baseline: the change takes effect on the tick the loss is seen.
+- `release.rule = "leader_policy"` is accepted only with policy `halt`; it keeps a contact halt on while any
+  unit is policy-halted.
+- The plan's section 6 step 6 (viewer scenario) was not done, as planned.
+
+**Tests.** Policy verification uses forced kills (`behavior.step` patched, Red removed at a chosen step), so
+it does not depend on Red's aim. It includes a cargo-truck kill (payload 5 lost exactly), a control-head
+kill (no cargo lost, balance closes), and `absorb` receiving-head eligibility.
+
+**Sweep.** `tools/make_leader_loss_arms.py`: 12 arms, seeds 0-19, a forced head kill and a real-engagement
+experiment, paired differences against `legacy` within each experiment, and how often a head was lost.
+Output `report/viz/leader_loss_arms.json` is generated and not committed.
+
+**Validation.** 147 convoy and counter-UAS tests passed on the final code. The full suite (excluding
+`tests/test_plugin_metric.py` and `tests/test_sobol.py`, whose dependencies are missing) had 554 passed and
+1 failed; the failure, `tests/test_no_bare_dict_equality.py` flagging `tests/test_convoy_street_graph.py:56`,
+is already on `convoy-dev`. `tests/test_search_bench.py` was not completed: its last test did not finish in
+over 45 minutes and was stopped.
+
+**Unresolved**
+1. `absorb` shows higher `delivered_frac` than `legacy` in both experiments. Cause untested; it may be an
+   artifact of the reassignment device.
+2. No source gives handoff times or a loss-of-leader procedure for autonomous followers, so all non-zero
+   `handoff_steps` and the `clear_steps`/`max_hold_steps` values are swept parameters.
+3. `clear_steps` assumes the column knows when contact has ended (ground truth, not Blue's detections).
+4. Crew exposure under each policy was not measured; the sweep declares no crew.
+5. Open questions 1 to 4 in section 4 are not answered by Vadim; the implementation used the stated
+   defaults (`absorb` as above, handoff 0, `promote` with no eligible survivor acts as `continue`, `halt`
+   holds one unit).
+6. 20 seeds, one scenario (UC-3), one convoy layout.

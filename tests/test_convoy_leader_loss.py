@@ -1,7 +1,12 @@
 """Convoy leader-loss policy and halt release (Issue #17).
 
-Opt-in via `convoy.leader_loss_policy`. Absent or `legacy`, every run is byte-identical. The head
-kills here are forced through a patched `behavior.step`, so the tests do not depend on Red's aim.
+Opt-in via `convoy.leader_loss_policy`. Absent or `legacy`, every run is byte-identical.
+
+These are POLICY VERIFICATION tests: each kill is forced at a chosen step through a patched
+`behavior.step`, and in the halt tests Red is removed at a chosen step, so the result does not depend on
+Red's aim or on a realistic engagement. They show that each policy does what it says. They are not
+evidence about which policy is better; the matched multi-seed comparison under real engagements is
+`tools/make_leader_loss_arms.py`.
 """
 from __future__ import annotations
 
@@ -23,6 +28,9 @@ UNIT = {"march_unit_size": 5, "march_units_per_serial": 3, "serials_per_column":
         "pace": 10.0, "time_gap": 4.0, "cargo_per_vehicle": 5.0}
 
 
+CREWED_HEADS = {"control": 2, "cargo": 0, "security": 0, "recovery": 0}   # crew is zero unless declared
+
+
 def _pol(policy, **kw):
     return {**UNIT, "leader_loss_policy": policy, **kw}
 
@@ -38,8 +46,9 @@ def _state(params):
 FULL = replace(SC, objective=replace(SC.objective, survive_fraction=1.0))
 
 
-def _run(params, kill_head_at=None, kill_red_at=None, seed=0, scn=SC):
-    """run_mission with the head of march unit 0 killed at a chosen step (and optionally all Red)."""
+def _run(params, kill_head_at=None, kill_red_at=None, seed=0, scn=SC, kill_cargo_at=None):
+    """run_mission with the head of march unit 0 (and/or its first cargo truck) killed at a chosen
+    step, and optionally all Red removed at another."""
     orig, seen = behavior.step, {}
 
     def patched(ent, bhv, op, comms, scn, k, rng, world=None):
@@ -47,6 +56,10 @@ def _run(params, kill_head_at=None, kill_red_at=None, seed=0, scn=SC):
         if k == kill_head_at:
             seen["head"] = int(np.nonzero(ent.march_unit == 0)[0][0])
             ent.alive[seen["head"]] = False
+        if k == kill_cargo_at:
+            idx = np.nonzero((ent.march_unit == 0) & (ent.convoy_role == 1))[0]
+            seen["cargo_truck"] = int(idx[0])
+            ent.alive[seen["cargo_truck"]] = False
         if k == kill_red_at:
             ent.alive[ent.side == RED] = False
         seen.setdefault("log", []).append((k, bhv.ll_halted.copy() if bhv.ll_halted is not None else None))
@@ -180,7 +193,42 @@ def test_absorb_joins_nearest_unit_in_serial():
     tgt = ent.leader[surv[0]]
     assert tgt in bhv.ll_head and tgt != u0[0] and ent.serial[tgt] == ent.serial[surv[0]]
     assert (ent.leader[surv] == tgt).all() and (ent.march_unit[surv] == ent.march_unit[tgt]).all()
-    assert bhv.ll_handoffs == 1
+    assert bhv.ll_handoffs == 1 and bhv.leaderless_steps == 0
+
+
+def test_absorb_manned_only_skips_uncrewed_receiving_head():
+    """Under manned_only the receiving head must be crewed. Unit 1's head is made unmanned; unit 2's
+    stays crewed, so unit 0's survivors go to unit 2 even though unit 1 is nearer."""
+    scn, ent, bhv = _state(_pol("absorb", succession="manned_only", crew=CREWED_HEADS))
+    h1, h2 = int(bhv.ll_head[1]), int(bhv.ll_head[2])
+    ent.crew[h1] = 0
+    u = _unit0(ent)
+    # make unit 1 strictly nearer than unit 2
+    ent.x[u[1]], ent.y[u[1]] = ent.x[h1] + 5.0, ent.y[h1]
+    ent.alive[u[0]] = False
+    _tick(scn, ent, bhv, 1)
+    assert (ent.leader[u[1:]] == h2).all() and bhv.ll_handoffs == 1
+
+
+def test_absorb_manned_only_no_crewed_receiver_falls_back():
+    scn, ent, bhv = _state(_pol("absorb", succession="manned_only", crew=CREWED_HEADS))
+    for mu in (1, 2):
+        ent.crew[int(bhv.ll_head[mu])] = 0
+    u = _unit0(ent)
+    ent.alive[u[0]] = False
+    _tick(scn, ent, bhv, 1)
+    assert (ent.role[u[1:]] == 0).all() and bhv.ll_done[0] and bhv.ll_handoffs == 0
+
+
+def test_absorb_succession_any_may_use_uncrewed_head():
+    scn, ent, bhv = _state(_pol("absorb", succession="any", crew=CREWED_HEADS))
+    h1 = int(bhv.ll_head[1])
+    ent.crew[h1] = 0
+    u = _unit0(ent)
+    ent.x[u[1]], ent.y[u[1]] = ent.x[h1] + 5.0, ent.y[h1]
+    ent.alive[u[0]] = False
+    _tick(scn, ent, bhv, 1)
+    assert (ent.leader[u[1:]] == h1).all()
 
 
 def test_absorb_without_neighbour_falls_back_to_continue():
@@ -273,3 +321,46 @@ def test_halt_release_resumes_delivery():
     # the halt is lifted within N steps of the last shooter dying
     released = [k for k, h in seen["log"] if k > 16 and h is not None and not h[0]]
     assert released and released[0] <= 16 + 5 + 2
+
+
+# ---- cargo accounting ---------------------------------------------------------
+
+def _balance(r, ent):
+    blue = ent.side == BLUE
+    loaded = float(ent.cargo[blue].sum())
+    delivered = float(ent.cargo_delivered[blue].sum())
+    assert loaded == pytest.approx(delivered + r["cargo_lost"] + r["cargo_in_transit"])
+
+
+@pytest.mark.parametrize("policy", ["legacy", "promote", "absorb", "halt", "continue"])
+def test_head_kill_does_not_mark_surviving_cargo_lost(policy):
+    """The head is the control vehicle (no payload): losing it loses no cargo under any policy, and
+    the survivors' payload stays in transit or is delivered."""
+    r, seen = _run(_pol(policy, blue_behavior="leader_follow"), kill_head_at=15, kill_red_at=16, scn=FULL)
+    ent = seen["ent"]
+    assert ent.cargo[seen["head"]] == 0.0
+    assert r["cargo_lost"] == 0.0
+    assert r["cargo_in_transit"] + r["delivered_frac"] * float(ent.cargo[ent.side == BLUE].sum()) > 0
+    _balance(r, ent)
+
+
+@pytest.mark.parametrize("policy", ["legacy", "promote", "absorb", "halt", "continue"])
+def test_cargo_truck_kill_loses_exactly_its_payload(policy):
+    """Killing a loaded cargo truck (not the head) loses that truck's undelivered payload only, and
+    is not a leader loss."""
+    r, seen = _run(_pol(policy, blue_behavior="leader_follow"), kill_cargo_at=15, kill_red_at=16, scn=FULL)
+    ent, i = seen["ent"], seen["cargo_truck"]
+    assert ent.cargo[i] == 5.0 and ent.cargo_delivered[i] == 0.0
+    assert r["cargo_lost"] == pytest.approx(5.0)
+    assert r.get("first_leader_loss_step", -1.0) == -1.0
+    _balance(r, ent)
+
+
+def test_cargo_balance_closes_after_head_and_cargo_kill():
+    r, seen = _run(_pol("continue"), kill_head_at=15, kill_cargo_at=16, kill_red_at=17, scn=FULL)
+    ent = seen["ent"]
+    blue = ent.side == BLUE
+    loaded = float(ent.cargo[blue].sum())
+    delivered = float(ent.cargo_delivered[blue].sum())
+    assert loaded == pytest.approx(delivered + r["cargo_lost"] + r["cargo_in_transit"])
+    assert r["cargo_lost"] == pytest.approx(5.0)

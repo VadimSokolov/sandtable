@@ -254,6 +254,8 @@ def _absorb(ent: Entities, bhv: Behavior, mu: int, living: np.ndarray) -> bool:
         h = int(bhv.ll_head[other])
         if other == mu or h < 0 or not ent.alive[h] or ent.serial[h] != ser:
             continue
+        if bhv.succession == "manned_only" and ent.crew[h] <= 0:
+            continue                # an unmanned head cannot take over another unit's followers
         d = float(np.hypot(ent.x[h] - ent.x[living[0]], ent.y[h] - ent.y[living[0]]))
         if d < best_d:
             best, best_d = h, d
@@ -264,6 +266,7 @@ def _absorb(ent: Entities, bhv: Behavior, mu: int, living: np.ndarray) -> bool:
     ent.role[living] = 1
     ent.leader[living] = best
     bhv.state[living] = LEADER_FOLLOW
+    bhv.ll_head[mu] = best          # the survivors are led again, so they are not counted leaderless
     bhv.ll_handoffs += 1
     return True
 
