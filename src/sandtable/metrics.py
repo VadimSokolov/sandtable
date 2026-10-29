@@ -223,6 +223,16 @@ def contact_metrics(bhv, dt: float) -> dict:
     }
 
 
+def leader_loss_metrics(bhv) -> dict:
+    """Leader-loss policy KPIs (Issue #17). Emitted only when a policy other than legacy is declared."""
+    return {
+        "leaderless_steps": float(bhv.leaderless_steps),
+        "ll_halt_steps": float(bhv.ll_halt_steps),
+        "ll_handoffs": float(bhv.ll_handoffs),
+        "first_leader_loss_step": float(bhv.first_leader_loss_step),
+    }
+
+
 def _convoy_doctrine_metrics(scn: Scenario, ent: Entities) -> dict:
     """Doctrinal movement-control metrics from ATP 4-16 (Issue #11).
 

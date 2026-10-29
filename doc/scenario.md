@@ -289,3 +289,29 @@ Opt-in under the `convoy` spec (or flat params); absent, runs are byte-identical
   matching column discipline without radio link dependence; the follower response after the control vehicle
   is lost is the existing waypoint fallback (Issue #17 owns the policy).
   Comparison arms: `tools/make_autonomy_arms.py`.
+
+## Leader-loss policy and halt release (Issue #17)
+
+What a march unit does after its head is destroyed. Opt-in through `convoy.leader_loss_policy`; absent
+or `legacy` builds no new state and every run is byte-identical. A declared policy defaults
+`blue_behavior` to `leader_follow`. The code, this section and `doc/blue_behavior_design.md` call the
+event `LEADER_LOSS`.
+
+| Policy | After the head dies |
+|---|---|
+| `legacy` | Pre-#17 path: instant promotion in `LEADER_FOLLOW`, waypoint fallback when nobody can lead. |
+| `promote` | Earliest eligible survivor becomes head after `handoff_steps`. Eligibility follows `succession` (`manned_only` skips uncrewed trucks). With nobody eligible the unit behaves as `continue`. |
+| `absorb` | After `handoff_steps`, survivors join the tail of the nearest living unit in the same serial. No such unit: `continue`. |
+| `halt` | The unit's survivors hold in place (sensing and engagement continue) until the release rule fires, then the earliest eligible survivor leads. Other units are not held. |
+| `continue` | Survivors drive the route independently at once (waypoint). |
+
+Keys: `handoff_steps` (int >= 0, `promote`/`absorb` only, default 0) and
+`halt_release: {"clear_steps": N, "max_hold_steps": T}` (`halt` only; no release rule holds
+indefinitely). `clear_steps` counts consecutive steps with no living Red shooter (weapon range and
+`pk_base` positive) within weapon range of any survivor of the unit. `contact_reaction.release.rule =
+"leader_policy"` keeps a contact halt on while any unit is policy-halted; it requires `halt`.
+
+Metrics (only with a policy): `leaderless_steps` (unit-steps with survivors and no head),
+`ll_halt_steps` (vehicle-steps held), `ll_handoffs`, `first_leader_loss_step` (-1 when none). No random
+numbers are drawn. A loss is seen one tick after the head dies. Handoff latencies have no public source
+and default to 0.
