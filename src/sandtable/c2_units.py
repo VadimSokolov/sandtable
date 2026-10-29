@@ -236,8 +236,10 @@ def metrics(u: UnitConsoles, dt: float = 1.0) -> dict:
 
     Aggregates are ratios of sums over the consoles that were ACTIVE (alive with at least one living supervised
     agent) on each step, so inactive or lost consoles do not dilute them. Times are in steps; multiply by `dt` for
-    seconds. `c2u_nt_margin_c<j>` = NT - (s - 1)(IT + WT) with s the mean supervised count; a negative value
-    means the unit is asking for attention faster than the console can supply it.
+    seconds. `c2u_c<j>_nt_margin` = NT - (s - 1)(IT + WT) with s the mean supervised count, computed from the
+    reported averages (NaN without samples). A negative value means the configured inequality is violated under
+    these estimates; it is not proof that measured demand exceeds what the console can supply, and a pooled or
+    average margin says nothing about individual consoles, vehicles or moments.
     """
     nc = u.host.size
     out = {"c2u_consoles_assigned": float(nc),
