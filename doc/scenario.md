@@ -354,3 +354,29 @@ it is exploration, not a ranking of policies. How to read its table:
 - `absorb` is above `legacy` on `delivered_frac` in both experiments. The cause is not established and
   has not been tested. It may come from the reassignment device itself (survivors are handed a living head)
   and not from anything a real convoy could do, so treat it as an open question.
+
+## One console per march unit (Issue #19)
+
+Opt-in dedicated consoles for convoy command and control. Absent, `c2.py` runs as before and every run is byte-identical. Definitions: a **march unit** is a group under one
+head; a **console** is a service station with its own queue and service rate, one per unit, hosted by the unit's control vehicle; the **operator** is the commander at it
+(dedicated, not shared); a **service slot** is one request at a time; a **supervised agent** is a living vehicle of the unit with no assigned crew other than the host.
+
+```json
+"control_mode": "direct", "autonomy_arm": "autonomous_march_unit",
+"console_per_march_unit": {"attention_basis": "assigned", "exceptions": true}
+```
+
+Requirements: `control_mode` `direct`, a convoy, declared crew (`autonomy_arm`, `crew` or `crew_metrics`), `n_operators` 1, `queue_model` `reserve`, `q_droop` 0, a control vehicle in every unit.
+The published term is `attention = min(1, span_capacity / n_span)` with `n_span` = every Blue entity, fixed at build, `n_operators` ignored. Per console it becomes
+`attention_c = min(1, span_capacity / n_c)` (1 when `n_c` = 0) with `n_c` the supervised agents assigned at build (`attention_basis="assigned"`, default) or living now (`"living"`), and
+`q_c = q_auto + (q_operator - q_auto) * attention_c`. Attention changes only that quality, never service time, latency or loss. Requests go to the agent's own console only. Crewed vehicles and
+vehicles outside any unit file no requests (neutral quality 1.0). When the host is destroyed the console's service rate is zero: its agents' requests wait out their patience and fall back to
+`q_fallback` (`abandon_console`), and their movement follows the Issue #17 policy. Assignments never change after `promote`, `absorb`, `halt` or `continue`; there is no reassignment delay.
+`exceptions: true` makes a new LEADER_FOLLOW intervention (track timeout) file a request at once to the agent's console.
+
+Metrics `c2u_c<j>_*` per console and pooled `c2u_*` (ratios of sums over alive consoles with a living agent): `requests`, `serviced`, `abandon_link`, `abandon_queue`, `abandon_console`,
+`exception_requests`, `supervised_mean`, `attention_mean`, `utilization` (a busy fraction, not measured workload), `it`, `wt`, `nt`, `comms_up`, `comms_down`, `quality_mean`, `nt_margin`
+= NT - (s - 1)(IT + WT), `lost_at`, `consoles_lost`. Times are in steps. See `doc/plans/issue_19_convoy_console_per_march_unit_implementation_plan.md` for the contract,
+sources and open decisions. Not implemented: `operator_home: remote` and an off-the-loop TOC comparator (neither exists in the code; a proposal is in the plan).
+
+Neutral quality and measurement notes (Issue #19). Vehicles that file no request keep `control_quality` 1.0, which is the best value on every consumer (`motion` tempo, `engagement` and `belief` shooter and target factors; sensing does not read it): they are not slowed, shoot at full probability and are the harder targets compared with a supervised vehicle, and equal to a scenario without C2. IT, WT and NT are in steps and count serviced requests only; NT is estimated from completed intervals, open or interrupted gaps are left out, the censoring may be informative and the direction of any bias is not established; `s` is the mean living supervised agents over active steps. The NT >= (s - 1)(IT + WT) condition is the issue's specification, a model extension, not a verified result; a margin computed from averages does not show that each console satisfies it. `control_quality` also scales speed and engagement, not only served decisions. Unresolved assumptions: console ownership is fixed after promote and absorb; vehicles that file no request keep quality 1.0; exception routing is unit-tested but was not exercised in a mission experiment.
