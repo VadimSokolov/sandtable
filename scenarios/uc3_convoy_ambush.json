@@ -1,0 +1,161 @@
+{
+  "name": "UC-3 Convoy: abstract ambush template",
+  "id": 31,
+  "size": [
+    6000,
+    3000
+  ],
+  "dt": 1.0,
+  "duration": 1800.0,
+  "platform_types": {
+    "ugv": {
+      "domain": 0,
+      "max_speed": 12.0,
+      "turn_rate": 0.6,
+      "sensor_range": 1500.0,
+      "weapon_range": 1200.0,
+      "pk_base": 0.002,
+      "hp": 1.0
+    },
+    "at_team": {
+      "domain": 0,
+      "max_speed": 0.0,
+      "turn_rate": 0.0,
+      "sensor_range": 2000.0,
+      "weapon_range": 1000.0,
+      "pk_base": 0.008,
+      "hp": 1.0
+    },
+    "at_ambush": {
+      "domain": 0,
+      "max_speed": 0.0,
+      "turn_rate": 0.0,
+      "sensor_range": 2000.0,
+      "weapon_range": 1000.0,
+      "pk_base": 0.008,
+      "hp": 1.0
+    },
+    "at_support": {
+      "domain": 0,
+      "max_speed": 0.0,
+      "turn_rate": 0.0,
+      "sensor_range": 2000.0,
+      "weapon_range": 1000.0,
+      "pk_base": 0.008,
+      "hp": 1.0
+    },
+    "at_security": {
+      "domain": 0,
+      "max_speed": 0.0,
+      "turn_rate": 0.0,
+      "sensor_range": 2000.0,
+      "weapon_range": 1000.0,
+      "pk_base": 0.008,
+      "hp": 1.0
+    }
+  },
+  "forces": [
+    {
+      "side": 0,
+      "ptype": "ugv",
+      "count": 15,
+      "spawn": [
+        250,
+        1500
+      ],
+      "spawn_spread": 40.0,
+      "formation": "column"
+    },
+    {
+      "side": 1,
+      "ptype": "at_ambush",
+      "count": 3,
+      "spawn": [
+        3000,
+        1800
+      ],
+      "spawn_spread": 60.0,
+      "formation": "column"
+    },
+    {
+      "side": 1,
+      "ptype": "at_support",
+      "count": 2,
+      "spawn": [
+        2850,
+        1800
+      ],
+      "spawn_spread": 60.0,
+      "formation": "column"
+    },
+    {
+      "side": 1,
+      "ptype": "at_security",
+      "count": 1,
+      "spawn": [
+        3150,
+        1800
+      ],
+      "spawn_spread": 60.0,
+      "formation": "column"
+    }
+  ],
+  "objective": {
+    "goal": [
+      5750,
+      1500
+    ],
+    "goal_radius": 150.0,
+    "survive_fraction": 0.5
+  },
+  "terrain": {
+    "cell": 25.0
+  },
+  "params": {
+    "route_bias": 0.0,
+    "formation_spread": 40.0,
+    "tempo": 1.0,
+    "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 3,
+      "serials_per_column": 1,
+      "pace": 10.0,
+      "time_gap": 4.0,
+      "roles": [
+        "control",
+        "cargo",
+        "cargo",
+        "security",
+        "recovery"
+      ]
+    },
+    "cargo_per_vehicle": 5.0,
+    "ambush": {
+      "roles": {
+        "ambush": [
+          "at_ambush"
+        ],
+        "support": [
+          "at_support"
+        ],
+        "security": [
+          "at_security"
+        ]
+      },
+      "trigger": {
+        "point": [
+          2400.0,
+          1500.0
+        ],
+        "radius": 250.0
+      },
+      "security_rule": "let_pass",
+      "withdraw": {
+        "after_s": 120.0,
+        "loss_fraction": 0.67,
+        "support_delay_s": 20.0
+      }
+    }
+  },
+  "description": "Abstract synthetic template, not a reconstruction of any event. Six static Red teams sit 300 m off the route (abeam) and hold fire until a seen non-security Blue vehicle reaches the trigger point. All Red types share the at_team numbers; roles differ in fire control only. Positions, trigger and withdrawal values are placeholders."
+}
