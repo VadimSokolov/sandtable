@@ -1,0 +1,80 @@
+{
+  "generated_from": "local saved files; no new simulation runs",
+  "sources": [
+    {
+      "source": "studies/convoy-study/baseline_09_14/replays.json",
+      "sha256": "88f9755f8a9616addc2ecd67e8470ac0e7a30b2cd423228fce7661c2311b68ce",
+      "count": 4,
+      "first_option": 1
+    },
+    {
+      "source": "studies/convoy-study/contact_09_12_14/replays.json",
+      "sha256": "0ac10e7805e6ca4a77eff09d7d19ea33f787bfbc3fb10dac3586b33f78aa365e",
+      "count": 4,
+      "first_option": 5
+    },
+    {
+      "source": "studies/convoy-study/leader_12_17/replays.json",
+      "sha256": "3045c7b07db516fe0651d758617f4c4df569537cc55372b9b5334eb854672309",
+      "count": 20,
+      "first_option": 9
+    },
+    {
+      "source": "studies/convoy-study/console_19/replays.json",
+      "sha256": "287d67c1653ba31a07caa4e6d7d5d8d30eed10321b8e7e727f5b59f2bd28cd32",
+      "count": 3,
+      "first_option": 29
+    },
+    {
+      "source": "studies/convoy-study/integrated/replays.json",
+      "sha256": "9fde89f95119f0cd01ff5a76776860eb4f344e905e6e99775f7df3801a4b1b97",
+      "count": 1,
+      "first_option": 32
+    },
+    {
+      "source": "studies/convoy-study/red_priority_18/replays.json",
+      "sha256": "6dc4599e286f091ba4897dc546a3c69f56343bada4e4c765bd930d244c23a16b",
+      "count": 2,
+      "first_option": 33
+    },
+    {
+      "source": "studies/convoy-study/route_13/replays.json",
+      "sha256": "15386beead60e7d69fa93ac91ca087c4a93aae9c0ae8549ee04b2be4d89f2b18",
+      "count": 2,
+      "first_option": 35
+    },
+    {
+      "source": "studies/convoy-study/urban_16/replays.json",
+      "sha256": "6b9e10e210c87bb919da72d928447bc5c1e2623a53f9eaa5b97055d1e5f799fa",
+      "count": 2,
+      "first_option": 37
+    },
+    {
+      "source": "studies/convoy-study/urban_maps/replays.json",
+      "sha256": "0f78ec650d97d9a770d8cbabd1fabc8636fdcfe019f111d1076e723b52505360",
+      "count": 6,
+      "first_option": 39
+    },
+    {
+      "source": "studies/convoy-study/sketch_map/replays.json",
+      "sha256": "7bea16bf6803e01cd97e05e884dd518aa58941f75c5834d53df08a32be38a8e2",
+      "count": 3,
+      "first_option": 45
+    },
+    {
+      "source": "studies/convoy-study/sweep_15/replays.json",
+      "sha256": "610c1c758aabf4f10fe37c22d519bc18d8c8f0d24264e3811a6b36d284bc2cfe",
+      "count": 9,
+      "first_option": 48
+    }
+  ],
+  "snapshot_revision": "775b811d44ae8d27c85ac9b495badb825f085ed1",
+  "distinctions": "unit tests verify rules; saved missions illustrate behavior; experiments estimate outcomes within the model",
+  "presentation_sources": {
+    "studies/convoy-study/urban_review/build.py": "307866b5ad8fcc502abe9399be78ffa6057e413464325e2d95bdcaa48cc0a186",
+    "studies/convoy-study/urban_review/page.html": "2758f65b5d48efa48dc28e8f9507c1dd850f0d306b91346a4f15a016e5d845d9",
+    "studies/convoy-study/urban_review/app.js": "44c59281ad192e84a85a96457760ba75851fa4e55474d8f71179a566facfb73d",
+    "studies/convoy-study/urban_review/original.html": "9a438d9d81379d67629ba09e276b70178ce185f53a0896666c65ef36571bb800",
+    "studies/convoy-study/INTEGRATED_SCENARIOS_MATH.md": "09465e26444d4995e5b895a8015bab56f58d5e38605f5561f7d77aa075e06d3b"
+  }
+}

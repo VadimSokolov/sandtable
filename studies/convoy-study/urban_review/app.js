@@ -1,0 +1,94 @@
+(async function(){
+'use strict';
+const $=id=>document.getElementById(id);
+async function unpack(id){const b=Uint8Array.from(atob($(id).textContent.trim()),c=>c.charCodeAt(0));return await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'))).text()}
+try{
+const D=JSON.parse(await unpack('embedded-data')),traces=D.traces;
+let chosen=46,T=traces[chosen],fi=0,cursor=0,playing=false,rate=10,selected=0,zoom=1,pan=[0,0],drag=null,last=performance.now(),panelKey='';
+const cv=$('city'),ctx=cv.getContext('2d');let width=800,height=400,dpr=1;
+const colors={ink:'#2e3a59',soft:'#5a6380',cargo:'#2f8a7e',escort:'#c86f26',red:'#b03a44',control:'#46557a'};
+const fmt=(v,n=1)=>Number.isFinite(v)?Number(v).toFixed(n):'not recorded';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const blue=()=>T.entities.map((e,i)=>i).filter(i=>T.entities[i].side===0);
+const role=e=>e.side===1?'Red':({0:'Control',1:'Cargo',2:'Escort',3:'Recovery'}[e.convoy_role]||'Blue');
+const frame=()=>T.frames[fi];
+function totals(f){let loaded=0,delivered=0,lost=0,transit=0,crew=0,alive=0;for(const i of blue()){const e=T.entities[i],c=e.cargo||0,d=f.cargo_delivered?.[i]||0;loaded+=c;delivered+=d;if(f.alive[i]){transit+=c-d;alive++;crew+=e.crew||0}else lost+=c-d}return {loaded,delivered,lost,transit,crew,alive}}
+function choose(index){chosen=Number(index);T=traces[chosen];fi=0;cursor=T.frames[0].t;playing=false;zoom=1;pan=[0,0];selected=blue().find(i=>T.entities[i].convoy_role===0)??0;
+ $('scenario').value=String(chosen);$('play').textContent='Play';$('timeline').max=T.frames.length-1;$('timeline').value='0';
+ $('scenarioTitle').textContent=T.label;$('scenarioDescription').textContent=T.desc;
+ $('source').textContent='Source: '+T.source_file+' · seed '+T.seed+' · '+T.frames.length+' recorded frames';
+ $('evidenceBadge').textContent=T.forced_diagnostic?'FORCED-LOSS DIAGNOSTIC · implementation check':'SAVED PYTHON MISSION · model output';
+ $('vehicle').innerHTML=T.entities.map((e,i)=>'<option value="'+i+'">'+(e.side===0?'V':'R')+(i+1)+' · '+role(e)+'</option>').join('');$('vehicle').value=selected;
+ $('params').textContent=JSON.stringify(T.params,null,2);
+ const o=T.outcome;const finalRows=[['Mission success',o.success?'yes':'no'],['Mission time',fmt(o.mission_time,0)+' s'],['Cargo delivered',fmt(o.cargo_delivered)+' t'],['Cargo lost',fmt(o.cargo_lost)+' t'],['Cargo in transit',fmt(o.cargo_in_transit)+' t'],['Crew lost',fmt(o.crew_lost,0)],['Crew exposure',fmt(o.crew_steps_at_risk,0)+' crew-steps']];
+ $('finalTotals').innerHTML=finalRows.map(([k,v])=>'<dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd>').join('');
+ document.querySelectorAll('[data-start]').forEach(b=>b.setAttribute('aria-pressed',Number(b.dataset.start)===chosen));panelKey='';update();draw()}
+const families=[...new Set(traces.map(t=>t.group))];$('family').innerHTML='<option value="all">All studies · 56 recordings</option>'+families.map((g,i)=>'<option value="'+i+'">'+esc(g)+'</option>').join('');
+function scenarioList(){const family=$('family').value;const ids=traces.map((t,i)=>i).filter(i=>family==='all'||traces[i].group===families[Number(family)]);$('scenario').innerHTML=ids.map(i=>'<option value="'+i+'">'+esc(traces[i].label)+'</option>').join('');return ids}
+$('family').onchange=()=>{const ids=scenarioList();choose(ids.includes(chosen)?chosen:ids[0])};$('scenario').onchange=e=>choose(e.target.value);
+function showIndex(i){$('family').value='all';scenarioList();choose(i)}
+document.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>showIndex(Number(b.dataset.start)));
+function seek(index){fi=Math.max(0,Math.min(T.frames.length-1,Number(index)));cursor=frame().t;panelKey='';update();draw()}
+$('timeline').oninput=e=>{playing=false;$('play').textContent='Play';seek(e.target.value)};
+$('play').onclick=()=>{if(fi===T.frames.length-1)seek(0);playing=!playing;$('play').textContent=playing?'Pause':'Play'};
+$('restart').onclick=()=>{playing=false;$('play').textContent='Play';seek(0)};$('end').onclick=()=>{playing=false;$('play').textContent='Play';seek(T.frames.length-1)};
+$('back').onclick=()=>{playing=false;$('play').textContent='Play';seek(fi-1)};$('forward').onclick=()=>{playing=false;$('play').textContent='Play';seek(fi+1)};$('speed').onchange=e=>rate=Number(e.target.value);
+$('vehicle').onchange=e=>{selected=Number(e.target.value);panelKey='';update();draw()};$('follow').onchange=()=>draw();$('labels').onchange=()=>draw();
+function setZoom(z){zoom=Math.max(1,Math.min(20,z));draw()};$('zoomIn').onclick=()=>setZoom(zoom*1.5);$('zoomOut').onclick=()=>setZoom(zoom/1.5);$('fit').onclick=()=>{zoom=1;pan=[0,0];$('follow').checked=false;draw()};
+function camera(){const scale=Math.min(width/(T.size[0]+800),height/(T.size[1]+400))*zoom;let cx=T.size[0]/2-150,cy=T.size[1]/2;if($('follow').checked&&zoom>1){cx=frame().x[selected];cy=frame().y[selected]}return {scale,cx:cx+pan[0],cy:cy+pan[1]}}
+function point(x,y){const c=camera();return [(x-c.cx)*c.scale+width/2,(y-c.cy)*c.scale+height/2]}
+function inverse(x,y){const c=camera();return [(x-width/2)/c.scale+c.cx,(y-height/2)/c.scale+c.cy]}
+cv.addEventListener('wheel',e=>{e.preventDefault();const b=cv.getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top,old=inverse(x,y);zoom=Math.max(1,Math.min(20,zoom*(e.deltaY<0?1.15:1/1.15)));if(!$('follow').checked){const now=inverse(x,y);pan[0]+=old[0]-now[0];pan[1]+=old[1]-now[1]}draw()},{passive:false});
+cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false}};
+cv.onpointermove=e=>{if(!drag)return;const dx=e.clientX-drag.lastX,dy=e.clientY-drag.lastY;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>4)drag.moved=true;if(drag.moved){const c=camera();pan[0]-=dx/c.scale;pan[1]-=dy/c.scale;draw()}drag.lastX=e.clientX;drag.lastY=e.clientY};
+cv.onpointerup=e=>{if(drag&&!drag.moved){const b=cv.getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top;let best=18,idx=null;T.entities.forEach((ent,i)=>{const p=point(frame().x[i],frame().y[i]),d=Math.hypot(p[0]-x,p[1]-y);if(d<best){best=d;idx=i}});if(idx!==null){selected=idx;$('vehicle').value=idx;panelKey='';update();draw()}}drag=null};cv.onpointercancel=()=>drag=null;
+cv.onkeydown=e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();playing=false;$('play').textContent='Play';seek(fi+(e.key==='ArrowRight'?1:-1))}};
+function resize(){const b=cv.getBoundingClientRect();width=b.width;height=b.height;dpr=Math.min(2,devicePixelRatio||1);cv.width=Math.round(width*dpr);cv.height=Math.round(height*dpr);draw()}
+function line(points,color,lw,dash=[]){if(!points||points.length<2)return;ctx.beginPath();points.forEach((p,i)=>{const q=point(p[0],p[1]);i?ctx.lineTo(...q):ctx.moveTo(...q)});ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([])}
+function draw(){if(!T)return;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);ctx.fillStyle='#f3f0e8';ctx.fillRect(0,0,width,height);
+ // Static deterministic paper texture: never feeds randomness back into the simulation.
+ ctx.fillStyle='rgba(120,100,65,.045)';for(let k=0;k<400;k++){const x=((k*137)%997)/997*width,y=((k*83)%499)/499*height;ctx.fillRect(x,y,1.5,1.5)}
+ const cam=camera();ctx.font='11px "Patrick Hand",cursive';ctx.fillStyle=colors.soft;ctx.strokeStyle='#ddd7ca';ctx.lineWidth=.7;
+ for(let x=0;x<=T.size[0];x+=1000){line([[x,0],[x,T.size[1]]],'#ddd7ca',.7,[2,5]);const p=point(x,0);if(p[0]>0&&p[0]<width)ctx.fillText(x+' m',p[0]+3,Math.max(12,p[1]-6))}
+ const graph=T.street_graph;if(graph?.nodes){const nodes=Object.fromEntries(graph.nodes.map(n=>[n.id,n]));for(const e of graph.edges){const a=nodes[e.u],b=nodes[e.v];if(a&&b)line([[a.x,a.y],[b.x,b.y]],'#d8cfbd',Math.max(4,Math.min(40,(e.width||60)*cam.scale)))}}
+ if(T.route?.length)line(T.route,'#cfc6b1',Math.max(5,Math.min(30,70*cam.scale)));else line([[0,T.objective.goal[1]],T.objective.goal],'#d8cfbd',8);
+ const boxes=T.building_boxes||[];for(const box of boxes){const p=point(box[0],box[1]),q=point(box[2],box[3]);ctx.fillStyle='rgba(148,122,77,.14)';ctx.fillRect(p[0]-2,p[1]-1,q[0]-p[0]+4,q[1]-p[1]+3);ctx.fillStyle='rgba(148,122,77,.16)';ctx.fillRect(p[0]+2,p[1]+2,q[0]-p[0]-4,q[1]-p[1]-4);ctx.strokeStyle='rgba(90,99,128,.45)';ctx.lineWidth=1;ctx.strokeRect(p[0],p[1],q[0]-p[0],q[1]-p[1])}
+ if(T.route?.length)line(T.route,'#5a6380',1,[6,5]);
+ const goal=point(...T.objective.goal);ctx.beginPath();ctx.arc(...goal,Math.max(6,T.objective.radius*cam.scale),0,Math.PI*2);ctx.fillStyle='rgba(85,128,63,.12)';ctx.fill();ctx.strokeStyle='#55803f';ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle='#55803f';ctx.fillText('Delivery area',goal[0]-33,goal[1]-12);
+ const f=frame();T.entities.forEach((e,i)=>{const p=point(f.x[i],f.y[i]);if(p[0]<-40||p[0]>width+40||p[1]<-40||p[1]>height+40)return;const alive=!!f.alive[i],color=e.side===1?colors.red:({0:colors.control,1:colors.cargo,2:colors.escort}[e.convoy_role]||colors.control);ctx.save();ctx.translate(...p);ctx.globalAlpha=alive?1:.45;
+ if(selected===i){ctx.beginPath();ctx.arc(0,0,12,0,7);ctx.strokeStyle=colors.ink;ctx.lineWidth=1.4;ctx.stroke()}
+ if(e.side===1){ctx.rotate(Math.PI/4);ctx.fillStyle=color;ctx.fillRect(-4,-4,8,8)}else{ctx.rotate(f.h?.[i]||0);ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=3;ctx.fillRect(-7,-3.5,14,7);ctx.shadowBlur=0;ctx.fillStyle='#f3f0e8';ctx.fillRect(3,-2,3,4);if(e.convoy_role===2){ctx.strokeStyle=colors.ink;ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-8);ctx.stroke()}}
+ ctx.restore();if(!alive){ctx.strokeStyle=colors.red;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(p[0]-6,p[1]-6);ctx.lineTo(p[0]+6,p[1]+6);ctx.moveTo(p[0]+6,p[1]-6);ctx.lineTo(p[0]-6,p[1]+6);ctx.stroke()}
+ if($('labels').checked){ctx.font='11px "Patrick Hand",cursive';ctx.fillStyle=colors.ink;ctx.fillText((e.side===0?'V':'R')+(i+1),p[0]-6,p[1]+20)}});
+ $('zoomLabel').textContent=zoom.toFixed(1)+'× · actual recorded positions';
+}
+function eventDetail(e){const out=[];if(e.entity!==undefined)out.push((e.side===1?'Red entity ':'Vehicle V')+(e.entity+1));if(e.console!==undefined)out.push('Console '+(e.console+1));if(e.host!==undefined)out.push('Host V'+(e.host+1));if(e.heads)out.push('Leaders: '+e.heads.map(i=>i>=0?'V'+(i+1):'none').join(', '));if(e.contact!==undefined)out.push('Contact '+(e.contact?'active':'clear'));if(e.held)out.push(e.held.length+' held');return out.join(' · ')}
+function update(){const key=chosen+':'+fi+':'+selected;if(key===panelKey)return;panelKey=key;const f=frame(),s=totals(f);$('timeline').value=fi;$('clock').textContent='T+'+fmt(f.t,0)+' s / '+fmt(T.frames.at(-1).t,0)+' s';
+ for(const [id,k] of [['delivered','delivered'],['lost','lost'],['transit','transit']])$(id).textContent=fmt(s[k]);
+ $('balance').textContent=fmt(s.loaded)+' loaded = '+fmt(s.delivered)+' delivered + '+fmt(s.lost)+' lost + '+fmt(s.transit)+' in transit';
+ $('alive').textContent=s.alive+' / '+blue().length;$('crew').textContent=s.crew;
+ $('exposure').textContent=Number.isFinite(f.exposure)?fmt(f.exposure,0)+' crew-steps':'Not recorded in this trace';
+ const state=[];state.push(f.in_contact===undefined?'Contact telemetry: not recorded':'Contact: '+(f.in_contact?'ACTIVE':'clear'));
+ if(f.herringbone_active!==undefined)state.push('Herringbone: '+(f.herringbone_active?'active':'inactive'));
+ if(f.hold_command)state.push('Hold commands: '+f.hold_command.reduce((a,b)=>a+b,0));
+ if(f.ll_head?.length)state.push('Unit leaders: '+f.ll_head.map(i=>i>=0?'V'+(i+1):'none').join(', '));
+ if(f.handoffs!==undefined)state.push('Leadership handoffs: '+f.handoffs);
+ if(f.console){const c=f.console;state.push('Console hosts: '+(c.hosts||[]).map(i=>'V'+(i+1)).join(', '));state.push('Hosts available: '+(c.available||[]).map(v=>v?'yes':'no').join(', '));state.push('Accepted requests: '+(c.serviced||[]).join(', '))}else state.push('Console telemetry: not recorded');
+ if(f.urban)state.push('Sensor-range pairs: '+f.urban.sensor_pairs+', blocked by buildings: '+f.urban.blocked_pairs+', Red detected: '+f.urban.red_detected);$('liveState').textContent=state.join(' · ');
+ const e=T.entities[selected],i=selected,blueIds=blue(),routeIndex=blueIds.indexOf(i),vehicleRows=[['Role',role(e)],['Alive',f.alive[i]?'yes':'no'],['Position',fmt(f.x[i])+', '+fmt(f.y[i])+' m'],['Heading',fmt((f.h?.[i]||0)*180/Math.PI)+'°'],['Control quality',fmt(f.cq?.[i],3)],['Crew at start',e.crew??'not recorded'],['Cargo loaded',fmt(e.cargo||0)+' t'],['Cargo delivered',fmt(f.cargo_delivered?.[i]||0)+' t'],['Follow leader',f.leader?.[i]>=0?'V'+(f.leader[i]+1):'none / not recorded'],['Route progress',routeIndex>=0&&f.route_s?fmt(f.route_s[routeIndex])+' m':'not recorded'],['Cross-track offset',routeIndex>=0&&f.route_cross?fmt(f.route_cross[routeIndex])+' m':'not recorded']];
+ $('inspector').innerHTML=vehicleRows.map(([k,v])=>'<b>'+esc(k)+'</b><span>'+esc(v)+'</span>').join('');
+ const events=(T.events||[]).filter(e=>e.t<=f.t).slice(-18).reverse();$('eventLog').innerHTML=events.length?events.map(e=>'<li><span class="t">T+'+fmt(e.t,0)+'s</span>'+esc(e.event.replaceAll('_',' '))+'<div class="src">'+esc(eventDetail(e))+'</div></li>').join(''):'<li class="info">No event records at this time. Earlier recordings may not include event telemetry.</li>';
+ if(fi<T.frames.length-1)$('endReason').textContent='Replay in progress. Final success is not inferred from the current frame.';else{const o=T.outcome,del=o.cargo_delivered,loaded=o.cargo_loaded; $('endReason').textContent=o.success?'Final result: SUCCESS — '+fmt(del)+' / '+fmt(loaded)+' t delivered.':'Final result: FAILURE — '+fmt(del)+' / '+fmt(loaded)+' t delivered ('+fmt(100*del/loaded)+'%). Full delivery was not achieved by mission end at '+fmt(o.mission_time,0)+' s; '+fmt(o.cargo_lost)+' t lost and '+fmt(o.cargo_in_transit)+' t in transit.'}
+}
+const metricLabels={cargo_delivered:'Cargo delivered (t)',cargo_lost:'Cargo lost (t)',cargo_in_transit:'Cargo in transit (t)',crew_lost:'Crew lost',crew_steps_at_risk:'Personnel exposure (crew-steps)',blue_losses:'Vehicles lost',success:'Success fraction',c2u_serviced_frac:'C2 accepted-service fraction',capped_completion_s:'Capped completion time (s)'};let selectedArm='baseline';
+$('metric').innerHTML=Object.entries(metricLabels).map(([k,v])=>'<option value="'+k+'">'+v+'</option>').join('');
+function comparison(){const k=$('metric').value;$('comparisonRows').innerHTML=D.sweep.arms.map(a=>{const p=a.scenario.params,s=D.sweep.summary[a.name][k],d=s.paired;return '<tr tabindex="0" role="button" aria-label="Select '+a.name+'" aria-pressed="'+(a.name===selectedArm)+'" data-arm="'+a.name+'" class="'+(a.name===selectedArm?'cur':'')+'"><td>'+esc(a.name)+'</td><td>'+p.convoy.pace+'</td><td>'+p.convoy.time_gap+'</td><td>'+p.formation_spread+'</td><td>C'+p.comms_level+'</td><td>'+fmt(s.mean,3)+' ± '+fmt(s.se,3)+'</td><td>'+fmt(d.mean,3)+' ['+fmt(d.low,3)+', '+fmt(d.high,3)+']</td></tr>'}).join('');document.querySelectorAll('[data-arm]').forEach(row=>{const select=()=>{selectedArm=row.dataset.arm;$('selectedArmText').textContent='Selected arm: '+selectedArm;comparison()};row.onclick=select;row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select()}}})}
+$('metric').onchange=comparison;$('replayArm').onclick=()=>{const idx=47+D.sweep.arms.findIndex(a=>a.name===selectedArm);showIndex(idx);$('sim').scrollIntoView({block:'start',behavior:'auto'})};comparison();
+$('provenance').textContent=JSON.stringify(D.provenance,null,2);
+$('openLegacy').onclick=async()=>{const button=$('openLegacy');button.disabled=true;button.textContent='Loading archived prototype…';try{const text=await unpack('legacy-data');const iframe=document.createElement('iframe');iframe.title='Archived original JavaScript urban resupply prototype';iframe.setAttribute('sandbox','allow-scripts');iframe.srcdoc=text;$('legacyHost').append(iframe);button.hidden=true}catch(e){button.disabled=false;button.textContent='Could not load archive: '+e.message}};
+let lastFrame=performance.now();function loop(now){const dt=Math.min(.2,(now-lastFrame)/1000);lastFrame=now;if(playing){cursor=Math.min(T.frames.at(-1).t,cursor+dt*rate);while(fi<T.frames.length-1&&T.frames[fi+1].t<=cursor)fi++;if(fi===T.frames.length-1){playing=false;$('play').textContent='Play'}update();draw()}requestAnimationFrame(loop)}
+scenarioList();choose(chosen);new ResizeObserver(resize).observe(cv);resize();requestAnimationFrame(loop);
+$('loadStatus').textContent='Ready · '+traces.length+' saved Python recordings · 90-run settings comparison · equations embedded for offline reading.';
+if(document.fonts?.ready)document.fonts.ready.then(draw);
+}catch(error){$('loadStatus').textContent='The recordings could not be loaded: '+error.message+'. Open this file in a modern browser with gzip DecompressionStream support.';console.error(error)}
+})();

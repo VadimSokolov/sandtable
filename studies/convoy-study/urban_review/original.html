@@ -1,0 +1,920 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Sandtable Urban Resupply</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+/* Layout: the sketchbook spread from the PJM and DC airspace pages. Mission first, then evidence cards, the feature map, the painted street network with field notes beside it, baselines, the validation ladder, and a one-page charter. One deliberate look: cotton watercolour paper. */
+:root{
+  --paper:#f3f0e8; --paper-2:#e9e4d7; --ink:#2e3a59; --ink-soft:#5a6380;
+  --blue:#2f5d8a; --orange:#c86f26; --red:#b03a44; --green:#55803f; --teal:#2f8a7e; --purple:#7a5ca8; --wash:#dfe7ee; --rule:#c9c3b4;
+  --display:'Kalam','Patrick Hand',cursive; --hand:'Patrick Hand','Kalam',cursive;
+  color-scheme:light;
+}
+body{background:var(--paper);color:var(--ink);font-family:var(--hand);font-size:17px;line-height:1.45}
+.wrap{max-width:1300px;margin:0 auto;padding-block:20px 48px;padding-inline:16px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,42px);margin:0;line-height:1.1;text-wrap:balance}
+h2{font-family:var(--display);font-size:24px;margin:0 0 4px;line-height:1.15;text-wrap:balance}
+h2.sec{font-size:clamp(24px,3vw,30px);margin:0 0 8px}
+h3{font-family:var(--display);font-size:20px;margin:0 0 4px;line-height:1.2}
+.sub-title{font-size:clamp(18px,2.2vw,22px);color:var(--blue);margin:2px 0 0}
+.kicker{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+.lead{font-size:19px;max-width:70ch;margin:8px 0 0}
+.body{margin:6px 0 0;max-width:68ch}
+section{margin:0 0 40px}
+.question{font-family:var(--display);font-size:clamp(22px,3vw,30px);line-height:1.25;margin:18px 0 6px;max-width:30ch;text-wrap:balance}
+.callout{border-left:4px solid var(--orange);padding:6px 0 6px 14px;max-width:76ch;margin-top:14px}
+.callout p{margin:0 0 6px}.callout p:last-child{margin:0}
+.callout.red{border-color:var(--red)}.callout.purple{border-color:var(--purple)}
+.callout b{font-family:var(--display)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px 20px;margin-top:10px}
+.fact{min-width:0}.fact b{display:block;font-family:var(--display);font-size:18px}
+.stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:8px}
+@media (max-width:820px){.stages{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:440px){.stages{grid-template-columns:1fr}}
+.stage-card{position:relative;padding:8px 4px 4px;min-width:0}
+.stage-card svg{width:80px;height:80px;display:block}
+.stage-card p{margin:0;font-size:16px}
+.stage-card .road{display:block;margin-top:8px;font-size:15px;color:var(--ink-soft);border-top:1px dashed var(--ink-soft);padding-top:6px}
+.stage-card:not(:last-child)::after{content:'→';position:absolute;right:-12px;top:36px;font-family:var(--display);font-size:24px;color:var(--orange)}
+@media (max-width:820px){.stage-card::after{display:none}}
+.card{background:color-mix(in srgb,var(--paper-2) 55%,transparent);border-radius:12px 18px 10px 16px;padding:14px 16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.chip{font-size:13.5px;border-radius:10px;padding:0 9px;border:1.5px solid;line-height:1.6;white-space:nowrap}
+.c-doc{color:var(--purple);border-color:var(--purple)}
+.c-obs{color:var(--blue);border-color:var(--blue)}
+.c-exp{color:var(--teal);border-color:var(--teal)}
+.c-rec{color:var(--orange);border-color:var(--orange)}
+.c-urb{color:var(--red);border-color:var(--red);border-style:dashed}
+.c-prj{color:var(--ink-soft);border-color:var(--ink-soft);border-style:dotted}
+.legend-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+details.pc{background:color-mix(in srgb,var(--paper-2) 55%,transparent);border-radius:12px 18px 10px 16px;padding:12px 14px;min-width:0}
+details.pc[open]{background:color-mix(in srgb,var(--paper-2) 85%,transparent)}
+details.pc summary{cursor:pointer;list-style:none}
+details.pc summary::-webkit-details-marker{display:none}
+details.pc summary h3::after{content:' +';color:var(--orange)}
+details.pc[open] summary h3::after{content:' −'}
+details.pc summary:focus-visible{outline:2px dashed var(--orange);outline-offset:3px}
+.flow{display:grid;gap:8px;margin-top:8px}
+.flow div{padding-left:10px;border-left:2px solid var(--rule);font-size:16px}
+.flow div b{font-family:var(--display);font-size:15px;display:block;color:var(--ink-soft);letter-spacing:.02em}
+.flow div.imp{border-color:var(--green)}
+.src{font-size:14.5px;color:var(--ink-soft);margin-top:8px}
+a{color:var(--blue)}
+.scroll{overflow-x:auto}
+table.map{width:100%;border-collapse:collapse;font-size:15.5px;min-width:820px}
+table.map th{font-family:var(--display);text-align:left;font-size:16px;padding:6px 8px;border-bottom:2px solid var(--rule);vertical-align:bottom}
+table.map td{padding:8px;border-bottom:1px dashed var(--rule);vertical-align:top}
+table.map tbody tr{cursor:pointer}
+table.map tbody tr:hover,table.map tbody tr.on{background:color-mix(in srgb,var(--orange) 10%,transparent)}
+table.map tbody tr:focus-visible{outline:2px dashed var(--orange);outline-offset:-2px}
+.tagfirst{font-size:13px;color:var(--green);border:1.5px solid var(--green);border-radius:9px;padding:0 7px;white-space:nowrap}
+.later{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 18px;margin-top:10px;font-size:16px}
+.later div{border-left:2px dotted var(--ink-soft);padding-left:10px}
+.later b{font-family:var(--display)}
+.controls-top{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:flex-end;margin:10px 0 10px}
+.ctlgroup{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ctlgroup>span{font-size:14px;color:var(--ink-soft)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.tab,.ctl,.seg button{font-family:var(--hand);font-size:16px;color:var(--ink);background:transparent;border:1.5px solid var(--ink);border-radius:14px 10px 16px 9px;padding:4px 12px;cursor:pointer}
+.tab:hover,.seg button:hover{background:var(--paper-2)}
+.tab[aria-pressed="true"],.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.ctl{background:var(--paper-2);border-width:1px;border-color:var(--ink-soft);border-radius:10px}
+select.ctl{padding:3px 8px}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px dashed var(--orange);outline-offset:3px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.main{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.stage{min-width:0}
+canvas#city{display:block;width:100%;height:auto;border-radius:6px}
+.under{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;color:var(--ink-soft);font-size:14.5px}
+.under .lg{display:flex;flex-wrap:wrap;gap:4px 14px;margin-left:auto}
+.under i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px}
+.notes{min-width:0;display:flex;flex-direction:column;gap:14px}
+.big{font-family:var(--display);font-size:34px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.illus{font-size:13px;color:var(--ink-soft);margin:6px 0 0}
+table.rt{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums;margin-top:8px}
+table.rt th,table.rt td{padding:3px 4px;text-align:right;border-bottom:1px dashed var(--rule)}
+table.rt th:first-child,table.rt td:first-child{text-align:left}
+table.rt th{font-weight:400;color:var(--ink-soft);font-size:13.5px}
+dl.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;margin:10px 0 0;font-size:15.5px}
+dl.kv dt{color:var(--ink-soft)}dl.kv dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.clock{color:var(--ink-soft);font-size:15px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tags a{font-size:14px;border:1px dashed var(--ink-soft);border-radius:10px;padding:1px 9px;color:var(--ink);text-decoration:none}
+.tags a:hover{background:var(--paper-2)}
+ol.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto}
+ol.log li{font-size:15px;border-left:3px solid var(--orange);padding-left:8px}
+ol.log li.info{border-color:var(--rule)}
+ol.log li .t{font-variant-numeric:tabular-nums;color:var(--ink-soft);margin-right:6px}
+.appr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:900px){.appr{grid-template-columns:1fr}}
+.appr .card h3 span{font-size:15px;color:var(--ink-soft);font-family:var(--hand);font-weight:400}
+.appr dl{margin:6px 0 0;font-size:15.5px}.appr dt{font-family:var(--display);font-size:15px;color:var(--ink-soft);margin-top:6px}.appr dd{margin:0}
+table.cmp{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums;min-width:860px}
+table.cmp th{font-family:var(--display);font-weight:700;font-size:15px;text-align:right;padding:6px;border-bottom:2px solid var(--rule);vertical-align:bottom}
+table.cmp td{text-align:right;padding:6px;border-bottom:1px dashed var(--rule)}
+table.cmp th:first-child,table.cmp td:first-child{text-align:left}
+table.cmp tr.cur td{background:color-mix(in srgb,var(--orange) 9%,transparent)}
+.checks{font-size:15px;margin-top:8px;color:var(--ink-soft)}
+.checks b{color:var(--green);font-weight:400}.checks b.bad{color:var(--red)}
+.ladder{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.ladder{grid-template-columns:1fr}}
+.rungs{display:flex;flex-direction:column-reverse;gap:6px}
+.rungs button{text-align:left;font-family:var(--hand);font-size:16px;color:var(--ink);background:transparent;border:1.5px solid var(--ink);border-radius:12px 9px 14px 8px;padding:6px 10px;cursor:pointer}
+.rungs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.rungs button span{color:var(--orange);font-family:var(--display);margin-right:6px}
+.rungs button[aria-pressed="true"] span{color:#f3c98d}
+.rungdetail dl{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr);gap:8px 14px;margin:8px 0 0}
+@media (max-width:520px){.rungdetail dl{grid-template-columns:1fr}}
+.rungdetail dt{font-family:var(--display);color:var(--ink-soft)}.rungdetail dd{margin:0}
+table.tests{width:100%;border-collapse:collapse;font-size:15.5px;min-width:700px}
+table.tests th{font-family:var(--display);text-align:left;padding:6px 8px;border-bottom:2px solid var(--rule)}
+table.tests td{padding:7px 8px;border-bottom:1px dashed var(--rule);vertical-align:top}
+.charter{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:0;border-top:2px solid var(--ink)}
+@media (max-width:640px){.charter{grid-template-columns:1fr}}
+.charter dt{font-family:var(--display);font-size:17px;padding:9px 12px 9px 0;border-bottom:1px dashed var(--rule)}
+.charter dd{margin:0;padding:9px 0;border-bottom:1px dashed var(--rule)}
+@media (max-width:640px){.charter dt{border-bottom:0;padding-bottom:0}}
+.charter ul,.charter ol{margin:0;padding-left:20px}
+.sources ul{margin:6px 0 0;padding-left:18px;font-size:15px}
+.sources li{margin:3px 0}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <span class="kicker">FP6111 · Sandtable · contested logistics</span>
+  <h1>Sandtable Urban Resupply</h1>
+  <p class="sub-title">A research planning page: what the Army does, what Sandtable must simulate, and how we would test it</p>
+  <p class="question">“Can essential supplies reach the right recipients, in the required quantities, before they are needed?”</p>
+  <p class="lead">Sandtable will evaluate how vehicle capabilities, logistics organization and human supervision affect the reliable delivery of essential supplies through disrupted urban networks. This page does not assume that autonomy or reinforcement learning is the answer. A useful result could show that autonomy helps, that a simpler planning method performs just as well, or that some other constraint dominates both.</p>
+</header>
+
+<!-- PART 1 -->
+<section id="mission" style="margin-top:30px">
+  <span class="kicker">Part 1</span>
+  <h2 class="sec">Define the mission</h2>
+  <div class="facts">
+    <div class="fact"><b>Who decides</b>Sustainment planners and distribution leaders: the staff who match supplies to requests, and the platoons that load, move and hand them over.</div>
+    <div class="fact"><b>Who depends on it</b>The receiving units. They consume water, fuel and other supplies continuously, and they run out if deliveries arrive late or short.</div>
+    <div class="fact"><b>What counts as a completed delivery</b>The right supply type, in the right quantity, handed over to and confirmed by the intended recipient before its deadline.</div>
+    <div class="fact"><b>Why arrival is not success</b>A vehicle can reach the right street while the recipient has moved, the unloading space is blocked, or the load is wrong. Sandtable's current convoy scenario carries no cargo at all, so today it measures movement, not resupply.</div>
+  </div>
+  <div class="callout"><p><b>The decision Sandtable should improve.</b> Given limited vehicles, personnel, energy and communications, which delivery concept meets demand most reliably, and which capabilities are actually necessary? The decision-maker is a sustainment planner or capability developer who wants to reduce uncertainty before expensive vehicle trials or investments.</p></div>
+
+  <div class="stages">
+    <div class="stage-card">
+      <svg viewBox="0 0 86 86" aria-hidden="true"><path d="M43 8c18-2 33 12 34 30s-10 37-31 39S8 66 9 45 25 10 43 8z" fill="#c99a3b" opacity=".24"/><g fill="none" stroke="#2e3a59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="24" y="18" width="38" height="48" rx="4"/><path d="M32 30h22M32 39h22M32 48h14"/><path d="M50 52l4 4 8-9"/></g></svg>
+      <h3>1. Identify demand and prepare supplies</h3>
+      <p>Recipients report stock and request what they need. Supplies are counted and loaded.</p>
+      <span class="road">Analogy: a store packs grocery orders</span>
+    </div>
+    <div class="stage-card">
+      <svg viewBox="0 0 86 86" aria-hidden="true"><path d="M43 8c18-2 33 12 34 30s-10 37-31 39S8 66 9 45 25 10 43 8z" fill="#3f72a6" opacity=".22"/><g fill="none" stroke="#2e3a59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 60h56M14 44h56M30 28v44M54 28v44"/><circle cx="30" cy="44" r="4" fill="#c86f26" stroke="none"/><path d="M30 44h24v16" stroke="#c86f26" stroke-dasharray="3 3"/></g></svg>
+      <h3>2. Allocate vehicles and plan movement</h3>
+      <p>Planners assign vehicles, loads and routes, and coordinate when each recipient can receive.</p>
+      <span class="road">Analogy: deciding which van takes which orders</span>
+    </div>
+    <div class="stage-card">
+      <svg viewBox="0 0 86 86" aria-hidden="true"><path d="M43 8c18-2 33 12 34 30s-10 37-31 39S8 66 9 45 25 10 43 8z" fill="#b03a44" opacity=".18"/><g fill="none" stroke="#2e3a59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="16" y="40" width="34" height="16" rx="2"/><path d="M50 46h10l6 6v4H50"/><circle cx="26" cy="58" r="4"/><circle cx="56" cy="58" r="4"/><path d="M60 22l10 10M70 22L60 32" stroke="#b03a44"/></g></svg>
+      <h3>3. Move through a disrupted network</h3>
+      <p>Streets close, radios drop, vehicles break and must be recovered. Plans must adapt.</p>
+      <span class="road">Analogy: road works and a dead phone battery</span>
+    </div>
+    <div class="stage-card">
+      <svg viewBox="0 0 86 86" aria-hidden="true"><path d="M43 8c18-2 33 12 34 30s-10 37-31 39S8 66 9 45 25 10 43 8z" fill="#55803f" opacity=".24"/><g fill="none" stroke="#2e3a59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="38" width="20" height="20"/><rect x="40" y="38" width="20" height="20"/><path d="M24 30l14-8 14 8"/><path d="M58 24l5 5 10-11" stroke="#55803f"/></g></svg>
+      <h3>4. Hand over, report, prepare again</h3>
+      <p>The recipient confirms receipt, stock is updated, and the vehicle returns for the next mission.</p>
+      <span class="road">Analogy: the customer signs for the delivery</span>
+    </div>
+  </div>
+  <div class="callout red"><p><b>Where military logistics gets harder than grocery delivery.</b> Streets can close without warning, communications fail exactly when they are needed, broken vehicles must be recovered under time pressure, recipients move, every crew member on the road is exposed, and running out of water or fuel is dangerous rather than inconvenient.</p></div>
+</section>
+
+<!-- PART 2 -->
+<section id="q1">
+  <span class="kicker">Part 2 · Q1</span>
+  <h2 class="sec">What does the Army actually do?</h2>
+  <p class="body">These cards come from public Army reports by training-center observers and exercise participants, published in 2025 and 2026. Open a card to follow the chain: documented practice, reported difficulty, implication for Sandtable. The labels show how strong the evidence is. An article can recommend a good idea without showing that the whole Army does it.</p>
+  <div class="legend-chips">
+    <span class="chip c-doc">Published doctrine</span>
+    <span class="chip c-obs">Observed exercise practice</span>
+    <span class="chip c-exp">Experimental demonstration</span>
+    <span class="chip c-rec">Professional recommendation</span>
+    <span class="chip c-urb">Proposed urban adaptation</span>
+    <span class="chip c-prj">Sandtable project proposal</span>
+  </div>
+  <div class="cards">
+    <details class="pc" id="card-logpac" open><summary><h3>Logistics packages and vehicle-based distribution</h3><div class="chips"><span class="chip c-obs">Observed exercise practice</span></div></summary>
+      <div class="flow">
+        <div><b>Documented practice</b>Distribution platoons move the logistics package (LOGPAC) convoy to, from and during logistics release point (LRP) and rearm/refuel/resupply point (R3P) operations. Palletized Load System trucks appear in the account.</div>
+        <div><b>Reported difficulty</b>Platoon leaders are often junior lieutenants with limited training. Ammunition delays push the convoy off schedule, and a missed turn on the main supply route follows.</div>
+        <div class="imp"><b>Implication for Sandtable</b>A trip is a package with contents and a destination, not just a vehicle reaching a node.</div>
+      </div>
+      <p class="src">Source: <a href="https://www.lineofdeparture.army.mil/Journals/Field-Artillery/Field-Artillery-Archive/Field-Artillery-2025-E-Edition/Stewards-of-Kings/">“Stewards of Kings: Preparing Distribution Platoon for the National Training Center”</a>, CPT John M. LeClair, NTC observer/coach-trainer, <i>Field Artillery</i>, June 2, 2025.</p>
+    </details>
+    <details class="pc" id="card-cargo"><summary><h3>Cargo accountability and recipient coordination</h3><div class="chips"><span class="chip c-obs">Observed exercise practice</span><span class="chip c-rec">Professional recommendation</span></div></summary>
+      <div class="flow">
+        <div><b>Documented practice</b>Soldiers must know which combat configured loads are on hand and where they are. The company commander and platoon leader coordinate with the battalion S-4 for updates, and an ammunition tracker is kept in the logistics operations center.</div>
+        <div><b>Reported difficulty</b>Without current updates, leaders cannot tell what has been delivered or what is still needed.</div>
+        <div class="imp"><b>Implication for Sandtable</b>Model supply type, quantity, requests and receipt confirmation. Count what the recipient received, not what left the depot.</div>
+      </div>
+      <p class="src">Source: <a href="https://www.lineofdeparture.army.mil/Journals/Field-Artillery/Field-Artillery-Archive/Field-Artillery-2025-E-Edition/Stewards-of-Kings/">Stewards of Kings</a>, June 2025.</p>
+    </details>
+    <details class="pc" id="card-sites"><summary><h3>Temporary resupply points and site changes</h3><div class="chips"><span class="chip c-obs">Observed exercise practice</span><span class="chip c-rec">Professional recommendation</span></div></summary>
+      <div class="flow">
+        <div><b>Documented practice</b>Ground units rehearse LRP and R3P execution crawl-walk-run, and the author recommends finishing bulk fuel and ammunition resupply within two hours. In an aviation exercise in Korea (Operation Saber Shield), a forward support troop set up temporary arming and refueling sites. By the final mission it could arrive, operate and leave in under 30 minutes. When one site was compromised, aircraft were redirected to an alternate site in real time.</div>
+        <div><b>Reported difficulty</b>Setup, service and departure time is exposure time. Moving loads was the main bottleneck. A load-handling system with a flat rack cut transport time about in half.</div>
+        <div class="imp"><b>Implication for Sandtable</b>Represent setup time, service time, teardown and relocation, plus the interruption a move causes. The aviation case is not an urban ground procedure.</div>
+      </div>
+      <p class="src">Sources: <a href="https://www.lineofdeparture.army.mil/Journals/Field-Artillery/Field-Artillery-Archive/Field-Artillery-2025-E-Edition/Stewards-of-Kings/">Stewards of Kings</a>, June 2025; <a href="https://www.lineofdeparture.army.mil/Journals/Aviation-Digest/Aviation-Digest-Archive/Winter-2026/Sustainment-Forces-and-Survivability-in/">“Sustainment Forces and Survivability in Large-Scale Combat Operations”</a>, CPT Peter P. Cho and CPT Reed T. Marshall, <i>Aviation Digest</i> Winter 2026, published March 10, 2026. Opening two sites at once is the authors' proposal for the future.</p>
+    </details>
+    <details class="pc" id="card-move"><summary><h3>Movement control and route planning</h3><div class="chips"><span class="chip c-obs">Observed exercise practice</span></div></summary>
+      <div class="flow">
+        <div><b>Documented practice</b>A 396-vehicle formation covered more than 1,400 km in four days. Convoy support centers every two hours handled driver swaps and vehicle checks. Movement control teams reported to the regimental operations cell and kept host-nation traffic agencies informed so leaders could adjust movement windows. Distribution platoons navigate main and alternate supply routes, including at night.</div>
+        <div><b>Reported difficulty</b>Navigation errors and missed turns. Equipment readiness fell from 88% to about 79% once the convoy started moving.</div>
+        <div class="imp"><b>Implication for Sandtable</b>A road graph with travel times, closures, alternate routes and movement windows. This was a road march across open country, not urban combat evidence.</div>
+      </div>
+      <p class="src">Sources: <a href="https://www.army.mil/article-amp/293621/going_the_distance_planning_sustaining_and_executing_a_multi_day_tactical_road_march">“Going the Distance: Planning, Sustaining, and Executing a Multi-Day Tactical Road March”</a>, MAJ Austin Faulkner and CPT Elijah Lapid, July 15, 2026; Stewards of Kings.</p>
+    </details>
+    <details class="pc" id="card-maint"><summary><h3>Maintenance, recovery and cargo transfer</h3><div class="chips"><span class="chip c-obs">Observed exercise practice</span><span class="chip c-rec">Professional recommendation</span></div></summary>
+      <div class="flow">
+        <div><b>Documented practice</b>Most breakdowns happened before the first support center. Recovery used organic assets where possible, and trailers following the convoy carried vehicles that could not move. A dashboard forecast which vehicles could be repaired within 24 to 48 hours. At the National Training Center, maintenance collection points must keep moving with the support area.</div>
+        <div><b>Reported difficulty</b>Units that forced maintenance points to move together with the trains command post suffered “significant maintenance shortfalls” and lower readiness.</div>
+        <div class="imp"><b>Implication for Sandtable</b>Breakdown, recovery and repair take time and resources. A relocation costs service time. Maintenance is never an instant reset.</div>
+      </div>
+      <p class="src">Sources: Going the Distance, July 2026; <a href="https://www.army.mil/article/286563/practice_makes_perfect_training_sustainment_in_the_era_of_contested_logistics">“Practice Makes Perfect: Training Sustainment in the Era of Contested Logistics”</a>, LTC Boyce J. Newton III, <i>Army Sustainment</i>, July 16, 2025.</p>
+    </details>
+    <details class="pc" id="card-comms"><summary><h3>Communications fallback and delayed reporting</h3><div class="chips"><span class="chip c-obs">Observed exercise practice</span><span class="chip c-rec">Professional recommendation</span></div></summary>
+      <div class="flow">
+        <div><b>Documented practice</b>During the road march, faults and work orders were recorded offline and synchronized once a unit reached a support center with connectivity. NTC observers recommend redundant digital and analog tracking because “digital-based products inevitably experience outages.” In the aviation exercise, SINCGARS radios were unreliable beyond line of sight, so the team used JBC-P and a mesh radio network.</div>
+        <div><b>Reported difficulty</b>Radios that are not fully mission capable mean orders may not reach the convoy. Poor beyond-line-of-sight proficiency leads to poor battle tracking.</div>
+        <div class="imp"><b>Implication for Sandtable</b>Delayed messages, stale inventory reports, information age and explicit fallback procedures, not just “connected” or “disconnected.”</div>
+      </div>
+      <p class="src">Sources: Going the Distance; Practice Makes Perfect; Stewards of Kings; Sustainment Forces and Survivability.</p>
+    </details>
+    <details class="pc" id="card-auto"><summary><h3>Experimental remote and autonomous delivery</h3><div class="chips"><span class="chip c-exp">Experimental demonstration</span><span class="chip c-prj">Sandtable project proposal</span></div></summary>
+      <div class="flow">
+        <div><b>Documented practice</b>At Project Convergence Capstone 5 (Pearl Harbor, April 2025), uncrewed surface vessels controlled from about 5,000 miles away carried a supply-laden ground robot toward a simulated contested port. Control passed to a local harbormaster. The robot, remotely operated from about 3,000 miles away, drove to a Humvee and delivered its payload.</div>
+        <div><b>Reported difficulty</b>The scenario was simulated, and the article reports no timing, payload or failure data. It is a public affairs account, and some claims look ahead to capabilities not shown.</div>
+        <div class="imp"><b>Implication for Sandtable</b>Remote operation, supervision and control handover are legitimate things to model. They do not establish that autonomous urban delivery fleets are routine. The Sandtable one-pager separately proposes an autonomous march unit: one crewed control vehicle leading four autonomous trucks.</div>
+      </div>
+      <p class="src">Sources: <a href="https://www.army.mil/article-amp/285029/redefining_logistics_army_demonstrates_breakthrough_in_autonomous_ship_to_shore_resupply">“Redefining logistics: Army demonstrates breakthrough in autonomous ship-to-shore resupply”</a>, army.mil, April 29, 2025; <a href="https://github.com/VadimSokolov/sandtable/blob/main/doc/contested_logistics_one_pager.md">Sandtable contested logistics one-pager</a>.</p>
+    </details>
+    <details class="pc" id="card-doctrine"><summary><h3>Motor transport doctrine</h3><div class="chips"><span class="chip c-doc">Published doctrine</span><span class="chip c-prj">Sandtable project proposal</span></div></summary>
+      <div class="flow">
+        <div><b>Documented practice</b>The Sandtable one-pager builds its reference convoy from ATP 4-11, Army Motor Transport Operations. A march unit has up to 25 vehicles, a serial has 2 to 5 march units, and a column has 2 to 5 serials, with head, main body and trail roles.</div>
+        <div><b>Reported difficulty</b>Doctrine describes how convoys are organized. It does not define one standard vehicle arrangement for every contested urban mission.</div>
+        <div class="imp"><b>Implication for Sandtable</b>The 15-vehicle reference convoy is a declared experimental configuration. Results should be read against it, not presented as the Army's standard urban convoy.</div>
+      </div>
+      <p class="src">Source: <a href="https://github.com/VadimSokolov/sandtable/blob/main/doc/contested_logistics_one_pager.md">Sandtable one-pager</a>. We have not independently reviewed the ATP 4-11 text for this page.</p>
+    </details>
+  </div>
+  <div class="callout red"><p><b>The urban evidence gap.</b> None of these reports studies urban resupply. Narrow streets, blocked access, limited unloading space, unreliable positioning and buildings that block radio signals change the operation in ways these reports do not settle. Every urban feature on this page is labelled <span class="chip c-urb">Proposed urban adaptation</span> and needs its own validation.</p></div>
+  <div class="callout purple"><p><b>Where Sandtable stands today.</b> According to the project one-pager, Sandtable already has formations, leader-follow behavior, a C0 to C5 communications ladder, detection and attrition, and replay traces. The existing convoy scenario carries and delivers nothing. Cargo and delivery are proposed (issue #9), along with a street graph, route stationing and an autonomous march unit. The current success measure is the fraction of vehicles that survive.</p></div>
+</section>
+
+<!-- PART 3 -->
+<section id="q2">
+  <span class="kicker">Part 3 · Q2</span>
+  <h2 class="sec">What must Sandtable simulate?</h2>
+  <p class="body">Sandtable needs only the mechanisms that can change the logistics decision. Click a row to highlight that mechanism in the live street network below.</p>
+  <div class="scroll" style="margin-top:10px">
+  <table class="map" id="maptable">
+    <thead><tr><th>Army practice</th><th>Simulation feature</th><th>Measurable outcome</th><th>Validation test</th><th></th></tr></thead>
+    <tbody>
+      <tr tabindex="0" data-hi="demand"><td>Requests and supply tracking (<a href="#card-cargo">card</a>)</td><td>Consumption, inventory, required minimum stock, requests with deadlines</td><td>Required supplies on time; time below required stock</td><td>Expert review of consumption assumptions against unit planning factors</td><td><span class="tagfirst">First study</span></td></tr>
+      <tr tabindex="0" data-hi="cargo"><td>Logistics packages (<a href="#card-logpac">card</a>)</td><td>Supply type and quantity, vehicle capacity, loading, unloading, receipt confirmation</td><td>On time by type and recipient; cargo conservation</td><td>Deliver labelled inert loads to designated recipients</td><td><span class="tagfirst">First study</span></td></tr>
+      <tr tabindex="0" data-hi="network"><td>Movement control (<a href="#card-move">card</a>) <span class="chip c-urb">urban</span></td><td>Intersections, wide streets for trucks, narrow streets for small vehicles, closures known or unknown</td><td>Route feasibility, delay, missed deadlines</td><td>Closed course with narrow passages and unannounced closures</td><td><span class="tagfirst">First study</span></td></tr>
+      <tr tabindex="0" data-hi="vehicles"><td>Maintenance and recovery (<a href="#card-maint">card</a>)</td><td>Breakdown, recovery travel, repair queue, energy use</td><td>Vehicle downtime, cargo returned, energy</td><td>Declare a vehicle unavailable mid-run and require recovery</td><td><span class="tagfirst">First study</span></td></tr>
+      <tr tabindex="0" data-hi="comms"><td>Communications fallback (<a href="#card-comms">card</a>)</td><td>Outage windows, delayed requests and reports, stale inventory, report delays</td><td>Information age, delivery errors, recovery time after outage</td><td>Software-injected connection outages on a schedule</td><td><span class="tagfirst">First study</span></td></tr>
+      <tr tabindex="0" data-hi="supervision"><td>Remote and autonomous delivery (<a href="#card-auto">card</a>)</td><td>Intervention requests, one shared operator queue, response delay, handover confirmation</td><td>Interventions per delivery, operator busy time, waiting time</td><td>Human-in-the-loop runs comparing control modes on the same platform</td><td><span class="tagfirst">First study</span></td></tr>
+      <tr tabindex="0" data-hi="sites"><td>Temporary resupply points (<a href="#card-sites">card</a>)</td><td>Site setup time, relocation, temporary unavailability, service point</td><td>Service interruption, resulting backlog</td><td>Move a delivery or service point during the exercise</td><td><span class="tagfirst">First study</span></td></tr>
+      <tr tabindex="0" data-hi="organization"><td>Delivery organization (<a href="#card-logpac">card</a>)</td><td>Scheduled packages, periodic replanning, smaller and more frequent batches</td><td>Trips, backlog, personnel effort</td><td>Same workload run under each procedure, in counterbalanced order</td><td><span class="tagfirst">First study</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <h3 style="margin-top:18px">Later extensions that need a justification first</h3>
+  <p class="body">Add these only after showing that leaving them out changes the logistics decision.</p>
+  <div class="later">
+    <div><b>Radio propagation.</b> A building that blocks line of sight does not necessarily block radio. Model RF separately from optical visibility if outage windows prove too crude.</div>
+    <div><b>Adaptive adversary.</b> The literature note warns that static adversaries can invert recommendations. Introduce an ensemble of doctrinal templates, not one fixed red.</div>
+    <div><b>Combat mechanics and attrition.</b> Detailed engagement models add weight that resupply questions may not need.</div>
+    <div><b>Building interiors and detailed terrain.</b> Useful for access questions only once street-level access is validated.</div>
+    <div><b>Learned (RL) dispatch policies.</b> Only if rolling-horizon optimization leaves a material, repeatable gap.</div>
+    <div><b>Deep surrogates.</b> The literature note warns of surrogate bias. Report policy-equivalence tests, not fit statistics.</div>
+  </div>
+</section>
+
+<!-- PART 4 -->
+<section id="sim">
+  <span class="kicker">Part 4</span>
+  <h2 class="sec">Watch the logistics operation run</h2>
+  <p class="body">A fictional city, not a real place. One supply point serves four recipients that consume water and fuel. Inventory falls with consumption and rises only after a completed handover. These scenarios are illustrative experiments, not reconstructions of historical events.</p>
+
+  <div class="tabs" role="group" aria-label="Scenario">
+    <button class="tab" data-sc="routine" aria-pressed="true">1 · Routine deliveries</button>
+    <button class="tab" data-sc="closure" aria-pressed="false">2 · A road becomes unavailable</button>
+    <button class="tab" data-sc="comms" aria-pressed="false">3 · Communications interrupted</button>
+    <button class="tab" data-sc="breakdown" aria-pressed="false">4 · A vehicle breaks down</button>
+    <button class="tab" data-sc="relocate" aria-pressed="false">5 · A delivery point relocates</button>
+  </div>
+  <div class="controls-top">
+    <div class="ctlgroup"><span>Planning approach</span><div class="seg" id="segAppr" role="group" aria-label="Planning approach"><button data-v="A" aria-pressed="false">A · Conventional</button><button data-v="B" aria-pressed="true">B · Optimization</button><button data-v="C" aria-pressed="false">C · Adaptive candidate</button></div></div>
+    <div class="ctlgroup"><span>Truck control mode (same truck capability)</span><div class="seg" id="segMode" role="group" aria-label="Control mode"><button data-v="crewed" aria-pressed="true">Crewed</button><button data-v="auto" aria-pressed="false">Supervised autonomous</button></div></div>
+    <div class="ctlgroup"><span>Small UGV</span><div class="seg" id="segUgv" role="group" aria-label="Small UGV"><button data-v="0" aria-pressed="true">Not included</button><button data-v="1" aria-pressed="false">Include one</button></div></div>
+    <div class="ctlgroup"><span>Run</span><div class="seg"><button class="ctl" id="play">Pause</button><button class="ctl" id="reset">Reset</button><label style="display:flex;align-items:center;gap:6px"><select class="ctl" id="speed" aria-label="Speed"><option value="2">0.5×</option><option value="4" selected>1×</option><option value="8">2×</option><option value="16">4×</option></select></label></div></div>
+  </div>
+
+  <div class="main">
+    <div class="stage">
+      <canvas id="city" aria-label="Animated watercolour street network with a supply point, a service point, four recipients with inventory bars, cargo vehicles and a dispatcher"></canvas>
+      <div class="under">
+        <span id="hiNote">Click a row in the Q2 table to highlight a mechanism.</span>
+        <div class="lg"><span><i style="background:#3f72a6"></i>water</span><span><i style="background:#c86f26"></i>fuel</span><span><i style="background:#b03a44;height:3px"></i>minimum stock</span><span><i style="background:#d8cfbd;height:6px"></i>wide street</span><span><i style="border:1px dashed #5a6380;height:4px;background:none"></i>narrow street</span></div>
+      </div>
+    </div>
+    <aside class="notes">
+      <div class="card">
+        <div class="clock" id="clock">06:00</div>
+        <div class="big" id="onTime">100%</div>
+        <div style="font-size:15px">required supplies received by the required time</div>
+        <table class="rt" aria-label="On time by recipient and supply type"><thead><tr><th>Recipient</th><th>Water stock</th><th>Fuel stock</th><th>On time</th></tr></thead><tbody id="rtBody"></tbody></table>
+        <dl class="kv">
+          <dt>Time below required stock</dt><dd id="kBelow">0.0 h</dd>
+          <dt>Backlog (open requests)</dt><dd id="kBack">0 pallets</dd>
+          <dt>Vehicle downtime</dt><dd id="kDown">0.0 h</dd>
+          <dt>Crew hours outside the depot</dt><dd id="kCrew">0.0 h</dd>
+          <dt>Operator busy time</dt><dd id="kOp">0.0 h</dd>
+          <dt>Interventions · mean wait</dt><dd id="kInt">0 · –</dd>
+          <dt>Energy used</dt><dd id="kEn">0 units</dd>
+          <dt>Dispatcher's information age</dt><dd id="kAge">0 min</dd>
+        </dl>
+        <p class="illus">Illustrative simulation output, not measured Army performance.</p>
+      </div>
+      <div class="card">
+        <h2 id="scTitle">Routine deliveries</h2>
+        <p class="body" id="scText"></p>
+        <div class="tags" id="scLinks"></div>
+      </div>
+      <div class="card">
+        <h2>Event log</h2>
+        <ol class="log" id="log"></ol>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- PART 5 -->
+<section id="baselines">
+  <span class="kicker">Part 5</span>
+  <h2 class="sec">Compare baselines before adding AI</h2>
+  <p class="body">All three approaches see the same scenario, the same demand, the same vehicles and the same information. None of them is learned. Approach A is not called optimization because it does not optimize. Approach B is a real optimizer. Approach C is a clearly specified candidate, not reinforcement learning. Any of them is allowed to win.</p>
+  <div class="appr" style="margin-top:12px">
+    <div class="card"><h3>A · Conventional dispatch <span>declared procedure</span></h3>
+      <dl><dt>Rule</dt><dd>Every 2 hours, trucks leave in a fixed rotation of recipients, each carrying a package sized from that recipient's last report. Between runs, urgent requests are served first-come, first-served by any idle vehicle.</dd>
+      <dt>Information</dt><dd>Last stock reports and requests the dispatcher has received.</dd>
+      <dt>Resources</dt><dd>3 trucks (6 pallets each), optional UGV for urgent requests, 1 dispatcher.</dd></dl></div>
+    <div class="card"><h3>B · Optimization with periodic replanning <span>traditional OR</span></h3>
+      <dl><dt>Rule</dt><dd>Every 30 minutes, solve the next-trip assignment for all idle vehicles exactly, by enumerating every combination. The objective is predicted pallet-minutes below required stock over the next 4 hours, plus a small cost per trip.</dd>
+      <dt>Information</dt><dd>Same reports and requests as A, plus nominal consumption rates and estimated arrival times of loads already on the road.</dd>
+      <dt>Resources</dt><dd>Same as A.</dd></dl></div>
+    <div class="card"><h3>C · Candidate adaptive approach <span>hypothesis, not RL</span></h3>
+      <dl><dt>Rule</dt><dd>The same optimizer as B, but re-solved immediately whenever new information arrives (a request, a closure report, a breakdown report, a returning vehicle, restored communications) and at least every 15 minutes. Loads are capped at half capacity, giving smaller, more frequent deliveries.</dd>
+      <dt>Information</dt><dd>Same as B, used sooner.</dd>
+      <dt>Resources</dt><dd>Same as A.</dd></dl></div>
+  </div>
+  <div class="callout"><p><b>Control mode is a separate factor with equal vehicle capability.</b> Crewed trucks carry two soldiers each and reroute themselves. Supervised autonomous trucks have no one on board, but they ask the single operator for help when they meet an unexpected closure, when their perception is uncertain, and to confirm each handover. Requests wait in a queue, and they cannot reach the operator during a communications outage. Speed, capacity and street access are the same in both modes. The small UGV carries 2 pallets, is slower, can use narrow streets, and is always supervised.</p></div>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px">
+    <button class="ctl" id="runCmp">Run all six combinations on the current scenario</button>
+    <span class="illus" id="cmpNote" style="margin:0">Same scenario, same demand stream, 06:00 to 14:00.</span>
+  </div>
+  <div class="scroll" style="margin-top:10px"><table class="cmp" id="cmp"><thead><tr><th>Approach · control mode</th><th>On time</th><th>Below required stock</th><th>Backlog at end</th><th>Vehicle downtime</th><th>Crew hours</th><th>Operator busy</th><th>Interventions</th><th>Energy</th><th>Trips</th></tr></thead><tbody><tr><td colspan="10" style="text-align:left;color:var(--ink-soft)">Press the button to run the comparison.</td></tr></tbody></table></div>
+  <p class="checks" id="checks"></p>
+  <p class="illus">Illustrative simulation output, not measured Army performance. These parameters are placeholders chosen to make the mechanisms visible. They are not calibrated, so the ranking can change when real values replace them.</p>
+</section>
+
+<!-- PART 6 -->
+<section id="q3">
+  <span class="kicker">Part 6 · Q3</span>
+  <h2 class="sec">How would we test this in reality?</h2>
+  <p class="body">Each rung earns the right to make a stronger claim. Click a rung.</p>
+  <div class="ladder" style="margin-top:10px">
+    <div class="rungs" id="rungs"></div>
+    <div class="card rungdetail" id="rungDetail" aria-live="polite"></div>
+  </div>
+  <h3 style="margin-top:22px">Practical tests for the first physical trial</h3>
+  <div class="scroll"><table class="tests">
+    <thead><tr><th>Feature</th><th>Test</th><th>Evidence collected</th></tr></thead>
+    <tbody>
+      <tr><td>Delivery handover</td><td>Deliver labelled inert loads to designated recipients who must confirm receipt</td><td>Quantity received, errors, loading and unloading times</td></tr>
+      <tr><td>Restricted access</td><td>Closed course with turns, narrow passages, limited unloading space and unannounced closures</td><td>Feasible routes, travel time, wrong turns, interventions</td></tr>
+      <tr><td>Communications loss</td><td>Software-injected connection outages on a declared schedule</td><td>Missed updates, information age, task completion, recovery time</td></tr>
+      <tr><td>Vehicle unavailability</td><td>Declare a vehicle unavailable mid-run and require recovery or cargo transfer</td><td>Recovery delay, resources used, unfinished deliveries</td></tr>
+      <tr><td>Operator workload</td><td>Same workload under crewed and supervised modes, in counterbalanced order</td><td>Interventions, response time, operator busy time, delivery performance</td></tr>
+    </tbody></table></div>
+  <div class="callout"><p><b>Keep calibration and validation apart.</b> Use some runs to estimate parameters such as loading time, travel speed and intervention rate. Then test predictions on different runs, with different layouts, demand and disruption sequences. Agree on acceptable prediction error before testing. Agreement with ProjectGL is useful evidence that two models agree. It is not validation against reality, and an operator queue model cannot by itself establish real trust or workload.</p></div>
+</section>
+
+<!-- PART 7 -->
+<section id="charter">
+  <span class="kicker">Part 7</span>
+  <h2 class="sec">The research decision: a one-page charter</h2>
+  <dl class="charter">
+    <dt>Problem</dt><dd>Supply continuity in an urban network with uncertain access, information and transport capacity. Today Sandtable measures movement and survival, not whether supplies arrive.</dd>
+    <dt>Decision-maker</dt><dd>A sustainment planner or capability developer choosing a delivery concept and the capabilities to invest in.</dd>
+    <dt>Research question</dt><dd>Under uncertain demand, intermittent communications and temporary road closures, when does supervised autonomous transport improve on-time delivery or reduce personnel requirements, compared with a strong conventional planning baseline?</dd>
+    <dt>Conventional baseline</dt><dd>An expert-reviewed, doctrine-informed logistics-package procedure (approach A), plus rolling-horizon vehicle-routing optimization (approach B) as the strong traditional competitor.</dd>
+    <dt>Candidate improvement</dt><dd>Supervised autonomous control with the same vehicle capability. Separately, event-triggered replanning with smaller batches (approach C).</dd>
+    <dt>Primary outcome</dt><dd>The proportion of required supplies received by the required time, reported by supply type and recipient. Supporting outcomes are time below required stock, backlog, vehicle downtime, crew and operator hours, interventions and energy, kept separate rather than merged into one score.</dd>
+    <dt>Registered hypotheses</dt><dd><ol><li>Better conventional replanning captures much of the benefit attributed to autonomy.</li><li>Autonomy reduces onboard staffing while increasing intervention or recovery demands elsewhere.</li><li>Smaller batches improve some resilience measures while increasing total transport effort.</li></ol>Each is allowed to fail.</dd>
+    <dt>Assumptions and evidence gaps</dt><dd><ul><li>No public Army report studies urban resupply directly.</li><li>Consumption, loading, intervention and repair parameters are placeholders until measured.</li><li>Communications are modelled as outage windows, not radio propagation.</li><li>The adversary is abstract (closures, outages, breakdowns), not adaptive.</li></ul></dd>
+    <dt>Physical validation plan</dt><dd>A closed-course trial with inert cargo, scripted closures, software-injected outages and a declared breakdown. Calibrate on some runs and test predictions on held-out runs with a new layout and disruption sequence.</dd>
+    <dt>When the improvement is not worthwhile</dt><dd><ul><li>Approach A or B comes within a pre-agreed margin on the primary outcome.</li><li>Intervention demand exceeds one operator's capacity, or gains vanish during communications loss.</li><li>Crew savings are offset by recovery and operator effort.</li><li>Vehicle availability or loading capacity, not control mode, turns out to be the binding constraint.</li></ul></dd>
+    <dt>Questions for the professor</dt><dd><ol><li>Who will use the result, and what decision will it change?</li><li>Which supply mission and operating horizon are we studying?</li><li>Which conventional procedure would an experienced sustainer accept as credible?</li><li>What improvement would justify more autonomy or equipment?</li><li>What people, vehicle data and test access can we realistically obtain?</li></ol></dd>
+  </dl>
+</section>
+
+<section class="sources">
+  <span class="kicker">Sources</span>
+  <ul>
+    <li><a href="https://www.lineofdeparture.army.mil/Journals/Field-Artillery/Field-Artillery-Archive/Field-Artillery-2025-E-Edition/Stewards-of-Kings/">Stewards of Kings: Preparing Distribution Platoon for the National Training Center</a>, <i>Field Artillery</i>, June 2, 2025</li>
+    <li><a href="https://www.army.mil/article/286563/practice_makes_perfect_training_sustainment_in_the_era_of_contested_logistics">Practice Makes Perfect: Training Sustainment in the Era of Contested Logistics</a>, <i>Army Sustainment</i>, July 16, 2025</li>
+    <li><a href="https://www.army.mil/article-amp/293621/going_the_distance_planning_sustaining_and_executing_a_multi_day_tactical_road_march">Going the Distance: Planning, Sustaining, and Executing a Multi-Day Tactical Road March</a>, July 15, 2026</li>
+    <li><a href="https://www.lineofdeparture.army.mil/Journals/Aviation-Digest/Aviation-Digest-Archive/Winter-2026/Sustainment-Forces-and-Survivability-in/">Sustainment Forces and Survivability in Large-Scale Combat Operations</a>, <i>Aviation Digest</i> Winter 2026 (March 10, 2026)</li>
+    <li><a href="https://www.army.mil/article-amp/285029/redefining_logistics_army_demonstrates_breakthrough_in_autonomous_ship_to_shore_resupply">Redefining logistics: Army demonstrates breakthrough in autonomous ship-to-shore resupply</a>, April 29, 2025</li>
+    <li><a href="https://github.com/VadimSokolov/sandtable/blob/main/doc/contested_logistics_one_pager.md">Sandtable contested logistics one-pager</a> and <a href="https://github.com/VadimSokolov/sandtable/blob/main/doc/lit-ideas.md">FP6111 literature note</a> (project background, not findings)</li>
+  </ul>
+</section>
+</div>
+
+<script>
+// ================= model =================
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const COLS=6,ROWS=4,PX_KM=1.2/164;
+const NODES=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const j=mulberry(r*13+c*7+3);NODES.push({id:r*COLS+c,r,c,x:92+c*164+(j()-.5)*14,y:92+r*148+(j()-.5)*12})}
+const nid=(r,c)=>r*COLS+c;
+const REMOVED=new Set(['7-13','15-16']);
+const EDGES=[],EK={};
+function addE(a,b,wide){const k=Math.min(a,b)+'-'+Math.max(a,b);if(REMOVED.has(k))return;const A=NODES[a],B=NODES[b];const e={k,a,b,wide,len:Math.hypot(A.x-B.x,A.y-B.y)*PX_KM};EK[k]=e;EDGES.push(e)}
+for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+  if(c<COLS-1)addE(nid(r,c),nid(r,c+1),r===1||r===3||(r===0&&c===4));
+  if(r<ROWS-1)addE(nid(r,c),nid(r+1,c),c===0||c===2||c===4);
+}
+const ADJ=NODES.map(()=>[]);EDGES.forEach(e=>{ADJ[e.a].push(e);ADJ[e.b].push(e)});
+const other=(e,n)=>e.a===n?e.b:e.a;
+const ekey=(a,b)=>Math.min(a,b)+'-'+Math.max(a,b);
+const DEPOT=18,SERVICE=12,CLOSURE='20-21',RELOC_TO=16;
+const TRUCK={name:'truck',speed:18,cap:6,narrowOK:false,energy:1};
+const UGV={name:'ugv',speed:11,cap:2,narrowOK:true,energy:.25};
+const TOW={name:'tow',speed:12,cap:0,narrowOK:false,energy:0};
+const TYPES=['W','F'];
+const RECIP_DEF=[{id:'R1',node:2,rate:{W:.9,F:.8}},{id:'R2',node:10,rate:{W:1.3,F:1.1}},{id:'R3',node:23,rate:{W:1.0,F:1.2}},{id:'R4',node:5,rate:{W:.8,F:.7}}];
+const MIN=1.5,ROP=3.5,TARGET=7,HORIZON=480;
+
+function sp(from,to,veh,blocked){
+  if(from===to)return{path:[from],time:0};
+  const n=NODES.length,dist=new Array(n).fill(Infinity),prev=new Array(n).fill(-1),done=new Array(n).fill(false);dist[from]=0;
+  for(;;){let u=-1,b=Infinity;for(let i=0;i<n;i++)if(!done[i]&&dist[i]<b){b=dist[i];u=i}
+    if(u<0||u===to)break;done[u]=true;
+    for(const e of ADJ[u]){if(!e.wide&&!veh.narrowOK)continue;if(blocked&&blocked.has(e.k))continue;const v=other(e,u),w=dist[u]+e.len/veh.speed*60;if(w<dist[v]){dist[v]=w;prev[v]=u}}}
+  if(dist[to]===Infinity)return null;const path=[to];while(path[0]!==from)path.unshift(prev[path[0]]);return{path,time:dist[to]};
+}
+
+const SCEN={
+  routine:{title:'Routine deliveries',text:'An ordinary shift from 06:00 to 14:00. Recipients consume water and fuel at slightly varying rates and send requests when their stock is projected to fall below the reorder point. The dispatcher assigns trucks, which load at the supply point, drive along wide streets, hand over the cargo and return.',
+    links:[['Q1 · Logistics packages','#card-logpac'],['Q2 · Demand and cargo','#q2'],['Q3 · Delivery handover test','#q3']],ev:[]},
+  closure:{title:'A road becomes unavailable',text:'At 07:30 a street on the main east–west route closes. Nobody knows yet. The first vehicle to reach it discovers the closure. A crewed truck reroutes itself after a short delay, while an autonomous truck asks the operator for help. A recipient unit reports the closure 20 minutes later, if communications allow, and the dispatcher plans around it from then on.',
+    links:[['Q1 · Movement control','#card-move'],['Q2 · Urban network','#q2'],['Q3 · Unannounced closure test','#q3']],
+    ev:[[90,s=>{s.closed.add(CLOSURE);say(s,'A street on the main east–west route closes. Nobody has reported it yet.','alert')}],[110,s=>reportClosure(s,CLOSURE,'A recipient unit reports the closure.')]]},
+  comms:{title:'Communications are interrupted',text:'From 08:00 to 10:00 the network is down. Requests and stock reports stop reaching the dispatcher, who keeps planning with stale information. Crewed trucks carry on with their last orders. Autonomous trucks that need help must wait, because their requests cannot reach the operator. When the link returns, the backlog of information arrives at once.',
+    links:[['Q1 · Communications fallback','#card-comms'],['Q2 · Communications and information','#q2'],['Q3 · Software-injected outage test','#q3']],
+    ev:[[120,s=>{s.commsUp=false;s.outageStart=s.t;say(s,'Communications are interrupted. Requests, reports and calls for help stop reaching the dispatcher.','alert')}],[240,s=>restoreComms(s)]]},
+  breakdown:{title:'A vehicle breaks down',text:'At 08:30 a loaded truck breaks down on its way to a recipient. The breakdown must be reported before recovery can start from the service point. The truck is towed back, its cargo returns to stock, and repair takes two hours. The recipient’s request stays open, and the remaining vehicles must cover the gap.',
+    links:[['Q1 · Maintenance and recovery','#card-maint'],['Q2 · Vehicle availability','#q2'],['Q3 · Declared breakdown test','#q3']],
+    ev:[[150,s=>breakdown(s)]]},
+  relocate:{title:'A delivery point relocates',text:'At 08:30 recipient R3 moves to a new location and needs 45 minutes to set up before it can receive supplies. The move was planned, so the dispatcher learns of it at once if communications are up. Vehicles already heading to R3 are redirected, and any that arrive early wait until the site is ready.',
+    links:[['Q1 · Temporary resupply points','#card-sites'],['Q2 · Sites and relocation','#q2'],['Q3 · Relocation during exercise','#q3']],
+    ev:[[150,s=>relocate(s,2,RELOC_TO,45)]]}
+};
+
+function say(s,msg,kind){s.log.push({t:s.t,msg,kind:kind||'info'})}
+function hhmm(t){const m=Math.round(360+t);return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}
+
+function makeSim(cfg){
+  const s={cfg,t:0,log:[],commsUp:true,closed:new Set(),known:new Set(),pendingKnown:[],pendingBreak:null,extra:[],evIdx:0,
+    rD:mulberry(cfg.seed*7+1),reqs:[],reqId:1,nextPlan:0,nextSched:0,rot:0,dirty:true,lastTick10:-1,lastTick30:-1,
+    op:{queue:[],cur:null,busy:0},
+    m:{energy:0,crew:0,down:0,ints:0,intWait:0,trips:0,returned:0,issued:0,delivered:0,capViol:0,routeViol:0}};
+  s.recips=RECIP_DEF.map(d=>({id:d.id,node:d.node,knownNode:d.node,rate:{...d.rate},mult:{W:1,F:1},inv:{W:5,F:5},rep:{W:5,F:5,t:0},open:{W:null,F:null},below:{W:0,F:0},readyAt:0,relocating:false}));
+  const vs=[];for(let i=0;i<3;i++)vs.push(mkVeh('T'+(i+1),TRUCK,cfg.mode==='auto',cfg.seed*31+i));
+  if(cfg.ugv)vs.push(mkVeh('U1',UGV,true,cfg.seed*31+9));
+  s.vehicles=vs;s.sc=SCEN[cfg.scenario];
+  return s;
+}
+function mkVeh(id,type,auto,seed){return{id,type,auto,rng:mulberry(seed),node:DEPOT,state:'idle',task:null,load:{W:0,F:0},path:null,i:0,edge:null,prog:0,edgeT:0,until:0,hold:0,needReroute:false,leg:null,int:null,x:0,y:0,brokenAt:0,okStart:false}}
+
+// ----- dispatcher knowledge -----
+function believed(s,ri,ty){const r=s.recips[ri];return Math.max(0,r.rep[ty]-r.rate[ty]*(s.t-r.rep.t)/60)}
+function blockedFor(s,v){if(!v.known2)v.known2=new Set();const b=new Set(s.known);v.known2.forEach(k=>b.add(k));return b}
+function destOf(s,v){if(v.leg==='out'){const r=s.recips[v.task.r];return s.commsUp?r.node:v.task.dest}if(v.leg==='tow')return SERVICE;return DEPOT}
+function reportClosure(s,k,msg){if(s.known.has(k))return;if(s.commsUp){s.known.add(k);s.dirty=true;say(s,msg+' The dispatcher now plans around it.')}else s.pendingKnown.push(k)}
+function restoreComms(s){
+  s.commsUp=true;let n=0;s.reqs.forEach(q=>{if(q.received==null){q.received=s.t;n++}});
+  s.recips.forEach(r=>{r.rep={W:r.inv.W,F:r.inv.F,t:s.t};r.knownNode=r.node});
+  s.pendingKnown.forEach(k=>s.known.add(k));s.pendingKnown=[];
+  if(s.pendingBreak){dispatchRecovery(s,s.pendingBreak);s.pendingBreak=null}
+  s.op.queue.forEach(q=>{if(q.recv==null)q.recv=s.t});
+  s.dirty=true;say(s,'Communications restored. '+n+' delayed request'+(n===1?'':'s')+' and fresh stock reports arrive at once.','alert');
+}
+function breakdown(s){
+  const cand=s.vehicles.filter(v=>v.type===TRUCK&&v.state==='moving'&&v.leg==='out');
+  const v=cand.find(v=>v.id==='T2')||cand[0];
+  if(!v){s.extra.push([s.t+5,breakdown]);return}
+  const p=posOf(v);v.x=p.x;v.y=p.y;
+  v.nearest=v.edge?(v.prog<v.edgeT/2?v.from:v.to):v.node;
+  v.state='broken';v.brokenAt=s.t;v.edge=null;v.int=null;
+  say(s,v.id+' breaks down carrying '+fmtLoad(v.load)+' for '+s.recips[v.task.r].id+'.','alert');
+  if(s.commsUp)dispatchRecovery(s,v);else{s.pendingBreak=v;say(s,'The breakdown cannot be reported until communications return.')}
+}
+function dispatchRecovery(s,v){
+  const p=sp(SERVICE,v.nearest,TOW,s.known)||sp(SERVICE,v.nearest,TOW,null);
+  const tt=(p?p.time:30)+15;v.recoverAt=s.t+tt;say(s,'Recovery leaves the service point for '+v.id+' (about '+Math.round(tt)+' min to reach and hook up).');
+}
+function relocate(s,ri,node,setup){
+  const r=s.recips[ri];r.node=node;r.readyAt=s.t+setup;r.relocating=true;if(s.commsUp)r.knownNode=node;
+  s.dirty=true;say(s,r.id+' relocates to a new site and needs '+setup+' minutes to set up.','alert');
+}
+const fmtLoad=l=>(l.W?l.W+' water':'')+(l.W&&l.F?' + ':'')+(l.F?l.F+' fuel':'')||'nothing';
+
+// ----- planning -----
+function idleVeh(s){return s.vehicles.filter(v=>v.state==='idle')}
+function etaOf(s,v){
+  let t=0;
+  if(v.state==='loading'){t=v.until-s.t;const p=sp(DEPOT,s.recips[v.task.r].knownNode,v.type,s.known);t+=p?p.time:60;t+=12}
+  else if(v.state==='moving'&&v.leg==='out'){t=remPath(v)+12}
+  else if(v.state==='handover')t=Math.max(0,v.until-s.t);
+  else t=20;
+  return s.t+t;
+}
+function remPath(v){if(!v.path)return 0;let t=0;if(v.edge)t+=v.edgeT-v.prog;for(let i=v.i+(v.edge?1:0);i<v.path.length-1;i++){const e=EK[ekey(v.path[i],v.path[i+1])];t+=e.len/v.type.speed*60}return t}
+function inbound(s){return s.vehicles.filter(v=>v.task&&v.leg==='out'&&!v.task.delivered&&['loading','moving','handover','waitInt','stuck'].includes(v.state)).map(v=>({r:v.task.r,W:v.load.W,F:v.load.F,eta:etaOf(s,v)}))}
+function needOf(s,ri,ty,inb,extra){let x=believed(s,ri,ty);inb.forEach(a=>{if(a.r===ri)x+=a[ty]});extra.forEach(a=>{if(a.r===ri)x+=a[ty]});return Math.max(0,TARGET-x)}
+function allocate(nW,nF,cap){const tot=nW+nF;if(tot<=0)return{W:0,F:0};const c=Math.min(cap,Math.ceil(tot-1e-9));let W=Math.round(c*nW/tot);W=Math.min(W,Math.ceil(nW));let F=Math.min(c-W,Math.ceil(nF));if(W+F<c)W=Math.min(c-F,Math.ceil(nW));return{W:Math.max(0,W),F:Math.max(0,F)}}
+function shortfall(s,arrivals){
+  let cost=0;const H=240,ST=10;
+  for(let ri=0;ri<s.recips.length;ri++)for(const ty of TYPES){
+    let inv=believed(s,ri,ty);const rate=s.recips[ri].rate[ty];const arr=arrivals.filter(a=>a.r===ri&&a[ty]>0).sort((a,b)=>a.eta-b.eta);let k=0;
+    for(let t=ST;t<=H;t+=ST){while(k<arr.length&&arr[k].eta<=s.t+t){inv+=arr[k][ty];k++}inv-=rate*ST/60;if(inv<MIN)cost+=ST*(MIN-inv)}
+  }
+  return cost;
+}
+function optimize(s,capFrac){
+  const idle=idleVeh(s);if(!idle.length)return[];
+  const inb=inbound(s);
+  const opts=idle.map(v=>{const o=[null];s.recips.forEach((r,ri)=>{const p=sp(DEPOT,r.knownNode,v.type,s.known);if(p){const capL=Math.max(1,Math.round(v.type.cap*capFrac));o.push({ri,travel:p.time,capL})}});return o});
+  let best=null,bestCost=Infinity;const choice=new Array(idle.length);
+  const base=shortfall(s,inb);
+  (function rec(i){
+    if(i===idle.length){
+      const extra=[];let trips=0;
+      for(let j=0;j<idle.length;j++){const c=choice[j];if(!c)continue;const nW=needOf(s,c.ri,'W',inb,extra),nF=needOf(s,c.ri,'F',inb,extra);const L=allocate(nW,nF,c.capL);if(L.W+L.F===0)return;
+        const r=s.recips[c.ri];const ready=Math.max(0,r.readyAt-s.t);extra.push({r:c.ri,W:L.W,F:L.F,eta:s.t+Math.max(3+1.5*(L.W+L.F)+c.travel,ready)+8+1.5*(L.W+L.F),v:idle[j]});trips++}
+      const cost=(trips?shortfall(s,inb.concat(extra)):base)+4*trips;
+      if(cost<bestCost-1e-9){bestCost=cost;best=extra.map(e=>({v:e.v,ri:e.r,load:{W:e.W,F:e.F}}))}
+      return}
+    for(const o of opts[i]){choice[i]=o;rec(i+1)}
+  })(0);
+  return best||[];
+}
+function conventional(s){
+  const out=[];const idle=idleVeh(s);const inb=inbound(s);const extra=[];
+  if(s.t>=s.nextSched){s.nextSched+=120;
+    for(const v of idle.filter(v=>v.type===TRUCK)){
+      let tries=0,done=false;
+      while(tries<4&&!done){const ri=s.rot%4;s.rot++;tries++;
+        const r=s.recips[ri];if(!sp(DEPOT,r.knownNode,v.type,s.known))continue;
+        const L=allocate(needOf(s,ri,'W',inb,extra),needOf(s,ri,'F',inb,extra),v.type.cap);if(L.W+L.F===0)continue;
+        out.push({v,ri,load:L});extra.push({r:ri,W:L.W,F:L.F});done=true}
+    }
+  }
+  const reqs=s.reqs.filter(q=>q.received!=null&&q.rem>1e-6).sort((a,b)=>a.received-b.received);
+  const free=idle.filter(v=>!out.some(o=>o.v===v)).sort((a,b)=>(b.type===UGV)-(a.type===UGV));
+  for(const q of reqs){
+    if(inb.some(a=>a.r===q.r)||out.some(o=>o.ri===q.r))continue;
+    const r=s.recips[q.r];const v=free.find(v=>sp(DEPOT,r.knownNode,v.type,s.known));if(!v)continue;
+    const L=allocate(needOf(s,q.r,'W',inb,extra),needOf(s,q.r,'F',inb,extra),v.type.cap);if(L.W+L.F===0)continue;
+    out.push({v,ri:q.r,load:L});extra.push({r:q.r,W:L.W,F:L.F});free.splice(free.indexOf(v),1);
+  }
+  return out;
+}
+function assign(s,a){
+  const v=a.v;if(a.load.W+a.load.F>v.type.cap)s.m.capViol++;
+  v.task={r:a.ri,dest:s.recips[a.ri].knownNode,announced:s.commsUp,delivered:false};v.load={...a.load};v.leg='out';
+  v.state='loading';v.until=s.t+3+1.5*(a.load.W+a.load.F);s.m.issued+=a.load.W+a.load.F;s.m.trips++;
+  say(s,v.id+' loads '+fmtLoad(a.load)+' for '+s.recips[a.ri].id+'.');
+}
+
+// ----- operator -----
+function requestHelp(s,v,kind,service,label){
+  v.int={kind,service};v.prevState=v.state;v.state='waitInt';
+  s.op.queue.push({v,kind,service,t:s.t,recv:s.commsUp?s.t:null});
+  if(kind!=='handover')say(s,v.id+' asks the operator for help: '+label+'.');
+}
+function opTick(s,dt){
+  const op=s.op;if(!s.commsUp)return;
+  if(!op.cur){const i=op.queue.findIndex(q=>q.recv!=null);if(i>=0){op.cur=op.queue.splice(i,1)[0];op.cur.left=op.cur.service}}
+  if(op.cur){op.busy+=dt;op.cur.left-=dt;if(op.cur.left<=0){const q=op.cur;op.cur=null;s.m.ints++;s.m.intWait+=s.t-q.t;resolveHelp(s,q.v,q.kind)}}
+}
+function resolveHelp(s,v,kind){
+  v.int=null;
+  if(kind==='handover'){v.state='handover';v.needConfirm=false;return}
+  v.state='moving';
+  if(kind==='reroute'){reroute(s,v)}
+  if(kind==='perception'){v.okStart=true}
+}
+function reroute(s,v){const p=sp(v.node,destOf(s,v),v.type,blockedFor(s,v));if(p){v.path=p.path;v.i=0}else{v.hold=10;v.needReroute=true}}
+
+// ----- recipients -----
+function recipTick(s,dt){
+  const t10=Math.floor(s.t/10),t30=Math.floor(s.t/30);
+  if(t30!==s.lastTick30){s.lastTick30=t30;s.recips.forEach(r=>TYPES.forEach(ty=>{r.mult[ty]=0.8+0.45*s.rD()}));
+    if(s.commsUp)s.recips.forEach(r=>{r.rep={W:r.inv.W,F:r.inv.F,t:s.t}})}
+  s.recips.forEach(r=>TYPES.forEach(ty=>{r.inv[ty]=Math.max(0,r.inv[ty]-r.rate[ty]*r.mult[ty]*dt/60);if(r.inv[ty]<MIN)r.below[ty]+=dt}));
+  if(t10!==s.lastTick10){s.lastTick10=t10;
+    s.recips.forEach((r,ri)=>TYPES.forEach(ty=>{
+      if(r.open[ty])return;
+      let proj=r.inv[ty];s.vehicles.forEach(v=>{if(v.task&&v.task.r===ri&&v.task.announced&&!v.task.delivered&&v.leg==='out'&&v.state!=='broken')proj+=v.load[ty]});
+      if(proj<ROP){const qty=Math.max(1,Math.ceil(ROP+1-proj));const rr=r.rate[ty]*r.mult[ty];
+        const q={id:s.reqId++,r:ri,type:ty,qty,rem:qty,t:s.t,deadline:s.t+Math.max(15,(r.inv[ty]-MIN)/rr*60),received:s.commsUp?s.t:null,del:[]};
+        s.reqs.push(q);r.open[ty]=q;if(s.commsUp)s.dirty=true;}
+    }));
+  }
+}
+
+// ----- vehicles -----
+function startEdge(s,v){
+  const a=v.path[v.i],b=v.path[v.i+1],e=EK[ekey(a,b)];
+  if(!e.wide&&!v.type.narrowOK)s.m.routeViol++;
+  if(s.closed.has(e.k)&&!v.known2.has(e.k)&&!s.known.has(e.k)){
+    v.known2.add(e.k);reportClosure(s,e.k,v.id+' finds the street closed.');
+    if(v.auto)requestHelp(s,v,'reroute',4,'unexpected closure');else{v.hold=3;v.needReroute=true;say(s,v.id+' finds the street closed. The crew reroutes.')}
+    return false}
+  if(s.closed.has(e.k)||blockedFor(s,v).has(e.k)){reroute(s,v);return false}
+  if(v.auto&&!v.okStart&&v.rng()<1-Math.exp(-.07*e.len)){requestHelp(s,v,'perception',3,'uncertain position or obstacle');return false}
+  v.okStart=false;v.edge=e;v.from=a;v.to=b;v.prog=0;v.edgeT=e.len/v.type.speed*60;return true;
+}
+function vehTick(s,v,dt){
+  if(!v.known2)v.known2=new Set();
+  const out=v.state!=='idle'&&v.state!=='loading'&&v.state!=='repair';
+  if(!v.auto&&out&&v.state!=='towed')s.m.crew+=2*dt/60;
+  if(['broken','towed','repair'].includes(v.state))s.m.down+=dt/60;
+  switch(v.state){
+    case 'loading':
+      if(s.t>=v.until){const p=sp(DEPOT,destOf(s,v),v.type,blockedFor(s,v));
+        if(!p){s.m.issued-=v.load.W+v.load.F;v.load={W:0,F:0};v.task=null;v.state='idle';say(s,v.id+' cannot find a usable route and unloads.');s.dirty=true;break}
+        v.path=p.path;v.i=0;v.node=DEPOT;v.state='moving';}
+      break;
+    case 'moving':{
+      if(v.hold>0){v.hold-=dt;break}
+      if(v.needReroute){v.needReroute=false;reroute(s,v);break}
+      if(!v.edge){
+        const dest=destOf(s,v);
+        if(v.path[v.path.length-1]!==dest){reroute(s,v);break}
+        if(v.i>=v.path.length-1){arrive(s,v);break}
+        if(!startEdge(s,v))break;
+      }
+      v.prog+=dt;const f=Math.min(1,dt/v.edgeT);const km=v.edge.len*f;s.m.energy+=km*(v.type.energy||0);
+      if(v.prog>=v.edgeT){v.node=v.to;v.i++;v.edge=null}
+      break}
+    case 'handover':
+      if(s.t>=v.until&&!v.needConfirm)deliver(s,v);
+      break;
+    case 'stuck':
+      if(s.commsUp){v.state='moving';reroute(s,v)}
+      break;
+    case 'broken':
+      if(v.recoverAt!=null&&s.t>=v.recoverAt){
+        s.m.returned+=v.load.W+v.load.F;v.load={W:0,F:0};v.task=null;v.node=v.nearest;
+        const p=sp(v.node,SERVICE,TOW,s.known)||sp(v.node,SERVICE,TOW,null);v.path=p.path;v.i=0;v.leg='tow';v.realType=v.type;v.type=TOW;v.state='towed';v.recoverAt=null;
+        say(s,v.id+' is towed to the service point. Its cargo returns to stock.');}
+      break;
+    case 'towed':
+      if(!v.edge){if(v.i>=v.path.length-1){v.state='repair';v.until=s.t+120;v.type=v.realType;say(s,v.id+' is under repair for about 2 hours.');break}
+        const a=v.path[v.i],b=v.path[v.i+1],e=EK[ekey(a,b)];v.edge=e;v.from=a;v.to=b;v.prog=0;v.edgeT=e.len/TOW.speed*60}
+      v.prog+=dt;if(v.prog>=v.edgeT){v.node=v.to;v.i++;v.edge=null}
+      break;
+    case 'repair':
+      if(s.t>=v.until){v.leg='back';const p=sp(SERVICE,DEPOT,v.type,s.known);v.path=p.path;v.i=0;v.node=SERVICE;v.state='moving';say(s,v.id+' is repaired and returns to the supply point.')}
+      break;
+  }
+}
+function arrive(s,v){
+  if(v.leg==='back'){v.state='idle';v.task=null;v.leg=null;v.node=DEPOT;s.dirty=true;return}
+  const r=s.recips[v.task.r];
+  if(r.node!==v.node){if(!s.commsUp){v.state='stuck';say(s,v.id+' finds '+r.id+' gone and cannot call for the new location.');return}reroute(s,v);return}
+  const n=v.load.W+v.load.F;v.state='handover';v.until=Math.max(s.t,r.readyAt)+8+1.5*n;v.needConfirm=false;
+  if(r.readyAt>s.t)say(s,v.id+' waits for '+r.id+' to finish setting up.');
+  if(v.auto){v.needConfirm=true;requestHelp(s,v,'handover',2,'confirm handover');v.state='handover';}
+}
+function deliver(s,v){
+  const ri=v.task.r,r=s.recips[ri];let tot=0;
+  TYPES.forEach(ty=>{const q=v.load[ty];if(!q)return;r.inv[ty]+=q;tot+=q;
+    const o=r.open[ty];if(o){const d=Math.min(q,o.rem);o.rem-=d;o.del.push({q:d,t:s.t});if(o.rem<=1e-6)r.open[ty]=null}});
+  s.m.delivered+=tot;if(s.commsUp)r.rep={W:r.inv.W,F:r.inv.F,t:s.t};
+  say(s,v.id+' hands over '+fmtLoad(v.load)+' to '+r.id+'. Receipt confirmed.');
+  v.load={W:0,F:0};v.task.delivered=true;v.leg='back';reroute(s,v);v.state='moving';s.dirty=true;
+}
+
+// ----- step -----
+function step(s,dt){
+  const sc=s.sc;
+  while(s.evIdx<sc.ev.length&&s.t>=sc.ev[s.evIdx][0]){sc.ev[s.evIdx][1](s);s.evIdx++}
+  s.extra=s.extra.filter(e=>{if(s.t>=e[0]){e[1](s);return false}return true});
+  recipTick(s,dt);
+  if(s.commsUp)s.recips.forEach(r=>{r.knownNode=r.node;if(r.relocating&&s.t>=r.readyAt){r.relocating=false;say(s,r.id+' is set up at its new site.')}});
+  const A=s.cfg.approach;let plan=null;
+  if(A==='A'){if(s.t>=s.nextPlan){plan=conventional(s);s.nextPlan=s.t+10}}
+  else if(A==='B'){if(s.t>=s.nextPlan){plan=optimize(s,1);s.nextPlan+=30}}
+  else{if(s.dirty||s.t>=s.nextPlan){plan=optimize(s,.5);s.nextPlan=s.t+15;s.dirty=false}}
+  if(plan)plan.forEach(a=>assign(s,a));
+  s.vehicles.forEach(v=>vehTick(s,v,dt));
+  opTick(s,dt);
+  s.t+=dt;
+}
+function metrics(s){
+  let due=0,ok=0;const per={};s.recips.forEach((r,ri)=>TYPES.forEach(ty=>per[ri+ty]={due:0,ok:0}));
+  for(const q of s.reqs){const isDue=q.deadline<=s.t||q.rem<=1e-6;if(!isDue)continue;const o=Math.min(q.qty,q.del.filter(d=>d.t<=q.deadline).reduce((a,d)=>a+d.q,0));due+=q.qty;ok+=o;per[q.r+q.type].due+=q.qty;per[q.r+q.type].ok+=o}
+  const onboard=s.vehicles.reduce((a,v)=>a+v.load.W+v.load.F,0);
+  const age=s.recips.reduce((a,r)=>a+(s.t-r.rep.t),0)/s.recips.length;
+  return{onTime:due?ok/due:1,per,below:s.recips.reduce((a,r)=>a+r.below.W+r.below.F,0)/60,backlog:s.reqs.reduce((a,q)=>a+(q.rem>1e-6?q.rem:0),0),
+    down:s.m.down,crew:s.m.crew,op:s.op.busy/60,ints:s.m.ints,intWait:s.m.ints?s.m.intWait/s.m.ints:null,energy:s.m.energy,trips:s.m.trips,age,
+    conserve:Math.abs(s.m.issued-(s.m.delivered+onboard+s.m.returned))<1e-6,capViol:s.m.capViol,routeViol:s.m.routeViol};
+}
+
+// ================= live view =================
+const W=1000,H=620;
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cfg={scenario:'routine',approach:'B',mode:'crewed',ugv:false,seed:11};
+let sim,playing=!reduced,speed=4,hi=null,hiT=0,logShown=0;
+const $=id=>document.getElementById(id);
+const cv=$('city'),ctx=cv.getContext('2d');let scale=1,bg=null,blobs={};
+function rng(a){return mulberry(a)}
+function makeBlob(color,r,seed){const key=color+'|'+r+'|'+seed;if(blobs[key])return blobs[key];const sz=r*2.9,c=document.createElement('canvas');c.width=c.height=Math.ceil(sz*scale);const x=c.getContext('2d');x.scale(scale,scale);const R=rng(seed),cx=sz/2;
+  for(let l=0;l<9;l++){x.beginPath();const P=28,rr=r*(.78+R()*.32),ph=R()*6;for(let i=0;i<=P;i++){const a=i/P*Math.PI*2,dd=rr*(.86+.14*Math.sin(a*3+ph)+R()*.12);const px=cx+Math.cos(a)*dd,py=cx+Math.sin(a)*dd;i?x.lineTo(px,py):x.moveTo(px,py)}x.closePath();x.globalAlpha=.085;x.fillStyle=color;x.fill()}
+  x.globalAlpha=.28;x.lineWidth=1.1;x.strokeStyle=color;x.stroke();blobs[key]={c,s:sz};return blobs[key]}
+function blob(color,x,y,r,seed=1,a=1){const b=makeBlob(color,r,seed);ctx.globalAlpha=a;ctx.drawImage(b.c,x-b.s/2,y-b.s/2,b.s,b.s);ctx.globalAlpha=1}
+const INK='#2e3a59',SOFT='#5a6380',WC='#3f72a6',FC='#c86f26',RED='#b03a44';
+function buildBg(){
+  bg=document.createElement('canvas');bg.width=cv.width;bg.height=cv.height;const c=bg.getContext('2d');c.scale(scale,scale);
+  c.fillStyle='#f3f0e8';c.fillRect(0,0,W,H);const R=rng(3);for(let i=0;i<4500;i++){c.globalAlpha=R()*.07;c.fillStyle=R()<.5?'#c9bfa8':'#fff';c.fillRect(R()*W,R()*H,R()*1.8+.4,R()*1.8+.4)}c.globalAlpha=1;
+  // city blocks
+  for(let r=0;r<ROWS-1;r++)for(let col=0;col<COLS-1;col++){const a=NODES[nid(r,col)],b=NODES[nid(r+1,col+1)];const R2=rng(r*9+col+40);
+    for(let l=0;l<4;l++){c.globalAlpha=.06;c.fillStyle=(r+col)%3===0?'#55803f':'#b9a27a';const pad=18+R2()*6;c.beginPath();c.roundRect?c.roundRect(a.x+pad,a.y+pad,b.x-a.x-2*pad,b.y-a.y-2*pad,10):c.rect(a.x+pad,a.y+pad,b.x-a.x-2*pad,b.y-a.y-2*pad);c.fill()}}
+  c.globalAlpha=1;
+  EDGES.forEach(e=>{const A=NODES[e.a],B=NODES[e.b];c.beginPath();c.moveTo(A.x,A.y);c.lineTo(B.x,B.y);
+    if(e.wide){c.lineWidth=13;c.strokeStyle='#d8cfbd';c.globalAlpha=.85;c.lineCap='round';c.stroke();c.lineWidth=1;c.strokeStyle=INK;c.globalAlpha=.25;c.stroke()}
+    else{c.setLineDash([5,5]);c.lineWidth=1.6;c.strokeStyle=SOFT;c.globalAlpha=.6;c.stroke();c.setLineDash([])}});
+  c.globalAlpha=1;
+  c.font='13px "Patrick Hand", Kalam, cursive';c.fillStyle=SOFT;c.textAlign='left';c.fillText('Fictional city · not a real place',W-200,H-8);
+}
+function resize(){const w=cv.parentElement.clientWidth,dpr=Math.min(2,devicePixelRatio||1);cv.style.width=w+'px';cv.style.height=(w*H/W)+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(w*H/W*dpr);scale=cv.width/W;blobs={};buildBg()}
+function label(x,y,t,sz=14,col=INK,al='center',f='"Patrick Hand"'){ctx.font=sz+'px '+f+', Kalam, cursive';ctx.fillStyle=col;ctx.textAlign=al;ctx.fillText(t,x,y)}
+function posOf(v){
+  if(v.state==='broken')return{x:v.x,y:v.y,ang:0};
+  if(v.edge){const A=NODES[v.from],B=NODES[v.to],f=Math.min(1,v.prog/v.edgeT);return{x:A.x+(B.x-A.x)*f,y:A.y+(B.y-A.y)*f,ang:Math.atan2(B.y-A.y,B.x-A.x)}}
+  const N=NODES[v.node];return{x:N.x,y:N.y,ang:0};
+}
+const OPX=200,OPY=592;
+function halo(x,y,r){const p=.5+.5*Math.sin(performance.now()/180);ctx.strokeStyle='#c86f26';ctx.lineWidth=2.5;ctx.globalAlpha=.4+.5*p;ctx.beginPath();ctx.arc(x,y,r+p*6,0,7);ctx.stroke();ctx.globalAlpha=1}
+function draw(){
+  const s=sim;ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(bg,0,0);ctx.setTransform(scale,0,0,scale,0,0);
+  const H_=hi&&performance.now()<hiT?hi:null;
+  // closures
+  s.closed.forEach(k=>{const e=EK[k],A=NODES[e.a],B=NODES[e.b],mx=(A.x+B.x)/2,my=(A.y+B.y)/2;ctx.strokeStyle=RED;ctx.lineWidth=3;ctx.globalAlpha=.9;ctx.beginPath();ctx.moveTo(mx-9,my-9);ctx.lineTo(mx+9,my+9);ctx.moveTo(mx+9,my-9);ctx.lineTo(mx-9,my+9);ctx.stroke();ctx.globalAlpha=1;
+    label(mx,my-16,s.known.has(k)?'closed (known)':'closed (not yet known)',12.5,RED)});
+  if(H_==='network'){EDGES.filter(e=>!e.wide).forEach(e=>{const A=NODES[e.a],B=NODES[e.b];ctx.strokeStyle='#c86f26';ctx.lineWidth=3;ctx.globalAlpha=.55;ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke()});ctx.globalAlpha=1;const e=EK[CLOSURE];halo((NODES[e.a].x+NODES[e.b].x)/2,(NODES[e.a].y+NODES[e.b].y)/2,14)}
+  // comms links
+  s.recips.forEach(r=>{const N=NODES[r.node];ctx.setLineDash([2,6]);ctx.strokeStyle=s.commsUp?'#7a5ca8':RED;ctx.lineWidth=H_==='comms'?2:1;ctx.globalAlpha=s.commsUp?.35:.5;ctx.beginPath();ctx.moveTo(OPX,OPY);ctx.lineTo(N.x,N.y);ctx.stroke();ctx.setLineDash([])});ctx.globalAlpha=1;
+  // depot, service
+  const D=NODES[DEPOT],SV=NODES[SERVICE];
+  blob('#a07a2c',D.x,D.y,30,5);label(D.x+34,D.y+26,'Supply point',14,INK,'left');
+  ctx.strokeStyle=INK;ctx.lineWidth=1.4;[[-10,-6],[0,-6],[-5,-14]].forEach(([dx,dy])=>ctx.strokeRect(D.x+dx-5,D.y+dy,10,8));
+  blob('#7a5ca8',SV.x,SV.y,22,6);label(SV.x+28,SV.y-14,'Service point',14,INK,'left');label(SV.x+28,SV.y+1,'maintenance and recovery',12,SOFT,'left');
+  ctx.strokeStyle=INK;ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(SV.x,SV.y,6,0,7);ctx.stroke();for(let i=0;i<6;i++){const a=i*Math.PI/3;ctx.beginPath();ctx.moveTo(SV.x+Math.cos(a)*6,SV.y+Math.sin(a)*6);ctx.lineTo(SV.x+Math.cos(a)*9,SV.y+Math.sin(a)*9);ctx.stroke()}
+  if(H_==='vehicles'||H_==='sites')halo(SV.x,SV.y,24);if(H_==='cargo'||H_==='organization'||H_==='sites')halo(D.x,D.y,30);
+  // operator
+  blob(s.commsUp?'#7a5ca8':'#9a9ca2',OPX,OPY,18,9);ctx.strokeStyle=INK;ctx.lineWidth=1.5;ctx.strokeRect(OPX-8,OPY-8,16,10);ctx.beginPath();ctx.arc(OPX,OPY-14,3.5,0,7);ctx.stroke();
+  label(OPX+26,OPY-4,'Dispatcher and operator',14,INK,'left');
+  const q=s.op.queue.length+(s.op.cur?1:0);label(OPX+26,OPY+12,(s.commsUp?'link up':'no link')+' · help queue: '+q,12.5,s.commsUp?SOFT:RED,'left');
+  for(let i=0;i<Math.min(q,8);i++){ctx.fillStyle='#c86f26';ctx.globalAlpha=.85;ctx.beginPath();ctx.arc(OPX-24-i*8,OPY,3,0,7);ctx.fill()}ctx.globalAlpha=1;
+  if(H_==='comms'||H_==='supervision')halo(OPX,OPY,22);
+  // recipients
+  s.recips.forEach((r,ri)=>{const N=NODES[r.node];blob('#55803f',N.x,N.y,24,ri*11+3);
+    const left=N.x>820,bx=left?N.x-58:N.x+30,by=N.y-34;
+    TYPES.forEach((ty,k)=>{const x=bx+k*14,hgt=44,val=Math.min(1,r.inv[ty]/TARGET);ctx.globalAlpha=.25;ctx.fillStyle=SOFT;ctx.fillRect(x,by,10,hgt);ctx.globalAlpha=.85;ctx.fillStyle=ty==='W'?WC:FC;ctx.fillRect(x,by+hgt*(1-val),10,hgt*val);ctx.globalAlpha=1;
+      const my=by+hgt*(1-MIN/TARGET);ctx.strokeStyle=RED;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x-2,my);ctx.lineTo(x+12,my);ctx.stroke();
+      if(r.open[ty]){label(x+5,by-4,'!',14,RED)}});
+    label(N.x,N.y+5,r.id,16,INK,'center','Kalam');
+    const st=r.readyAt>s.t?'setting up':(r.inv.W<MIN||r.inv.F<MIN?'below required stock':'');if(st)label(N.x,N.y+40,st,12.5,RED);
+    if(H_==='demand')halo(N.x,N.y,26);if(H_==='sites'&&ri===2)halo(N.x,N.y,26);
+  });
+  if(s.cfg.scenario==='relocate'&&s.t<150){const N=NODES[RELOC_TO];ctx.setLineDash([4,4]);ctx.strokeStyle=SOFT;ctx.globalAlpha=.6;ctx.beginPath();ctx.arc(N.x,N.y,16,0,7);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;label(N.x,N.y+32,'R3 new site',12,SOFT)}
+  // vehicles
+  let slot=0;
+  s.vehicles.forEach(v=>{
+    let p=posOf(v);
+    if((v.state==='idle'||v.state==='loading')){p={x:D.x+46+slot*26,y:D.y-30,ang:0};slot++}
+    if(v.state==='repair'){p={x:SV.x+40,y:SV.y+18,ang:0}}
+    if(v.state==='handover'||v.state==='stuck'||v.state==='waitInt'){p.x+=v.id==='U1'?-14:8;p.y+=-10+(+v.id.slice(1)%3)*6}
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.abs(p.ang)>Math.PI/2?p.ang+Math.PI:p.ang);
+    const ug=v.type===UGV||v.realType===UGV;const w=ug?12:22,h=ug?9:11;
+    ctx.globalAlpha=.25;ctx.fillStyle=ug?'#2f8a7e':'#2e3a59';ctx.beginPath();ctx.ellipse(0,0,w*.75,h,0,0,7);ctx.fill();ctx.globalAlpha=1;
+    ctx.fillStyle=ug?'#2f8a7e':(v.state==='broken'||v.state==='towed'||v.state==='repair'?'#9a9ca2':'#46557a');
+    ctx.fillRect(-w/2,-h/2,w,h);if(!ug){ctx.fillStyle='#2e3a59';ctx.fillRect(w/2-6,-h/2,6,h)}
+    if(v.auto){ctx.setLineDash([2,2]);ctx.strokeStyle='#c86f26';ctx.lineWidth=1.3;ctx.strokeRect(-w/2-2,-h/2-2,w+4,h+4);ctx.setLineDash([])}
+    let k=0;TYPES.forEach(ty=>{for(let i=0;i<v.load[ty];i++){ctx.fillStyle=ty==='W'?WC:FC;ctx.fillRect(-w/2+1+(k%(ug?2:4))*4,-h/2+1+Math.floor(k/(ug?2:4))*4,3.2,3.2);k++}});
+    ctx.restore();
+    label(p.x,p.y+(ug?16:20),v.id,11.5,SOFT);
+    if(v.state==='waitInt'){ctx.fillStyle='#c86f26';ctx.beginPath();ctx.arc(p.x+12,p.y-14,7,0,7);ctx.fill();label(p.x+12,p.y-10,'?',12,'#fff')}
+    if(v.state==='broken'){ctx.strokeStyle=RED;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(p.x-8,p.y-8);ctx.lineTo(p.x+8,p.y+8);ctx.moveTo(p.x+8,p.y-8);ctx.lineTo(p.x-8,p.y+8);ctx.stroke()}
+    if(v.state==='handover'){ctx.strokeStyle='#55803f';ctx.lineWidth=2;ctx.globalAlpha=.6+.4*Math.sin(performance.now()/200);ctx.beginPath();ctx.arc(p.x,p.y,15,0,7);ctx.stroke();ctx.globalAlpha=1}
+    if(v.state==='loading')label(p.x,p.y-12,'loading',11,SOFT);
+    if(v.state==='repair')label(p.x,p.y-12,'repair',11,RED);
+    if(H_==='cargo'||H_==='vehicles'||H_==='organization'||(H_==='supervision'&&v.auto))halo(p.x,p.y,14);
+  });
+  if(!s.commsUp){ctx.fillStyle='rgba(120,124,140,.10)';ctx.fillRect(0,0,W,H);label(W/2,30,'Communications down',20,RED,'center','Kalam')}
+}
+function fmtH(x){return x.toFixed(1)+' h'}
+function panel(){
+  const s=sim,m=metrics(s);
+  $('clock').textContent='Simulation clock '+hhmm(s.t)+' · '+({A:'A · Conventional',B:'B · Optimization',C:'C · Adaptive candidate'})[cfg.approach]+' · '+(cfg.mode==='auto'?'supervised autonomous':'crewed')+(cfg.ugv?' + UGV':'');
+  const pct=Math.round(m.onTime*100);$('onTime').textContent=pct+'%';$('onTime').style.color=pct>=90?'#55803f':(pct>=75?'#c86f26':RED);
+  $('rtBody').innerHTML=s.recips.map((r,ri)=>{const a=m.per[ri+'W'],b=m.per[ri+'F'];const d=a.due+b.due;return'<tr><td>'+r.id+'</td><td>'+r.inv.W.toFixed(1)+'</td><td>'+r.inv.F.toFixed(1)+'</td><td>'+(d?Math.round(100*(a.ok+b.ok)/d)+'%':'–')+'</td></tr>'}).join('');
+  $('kBelow').textContent=fmtH(m.below);$('kBack').textContent=m.backlog.toFixed(1)+' pallets';$('kDown').textContent=fmtH(m.down);$('kCrew').textContent=fmtH(m.crew);$('kOp').textContent=fmtH(m.op);
+  $('kInt').textContent=m.ints+' · '+(m.intWait==null?'–':m.intWait.toFixed(1)+' min');$('kEn').textContent=Math.round(m.energy)+' units';$('kAge').textContent=Math.round(m.age)+' min';
+  while(logShown<s.log.length){const e=s.log[logShown++];const li=document.createElement('li');if(e.kind==='info')li.className='info';li.innerHTML='<span class="t">'+hhmm(e.t)+'</span>';li.appendChild(document.createTextNode(e.msg));$('log').prepend(li)}
+  while($('log').children.length>60)$('log').lastChild.remove();
+}
+function reset(){
+  sim=makeSim({...cfg});logShown=0;$('log').innerHTML='';
+  const sc=SCEN[cfg.scenario];$('scTitle').textContent=sc.title;$('scText').textContent=sc.text;
+  $('scLinks').innerHTML=sc.links.map(([t,h])=>'<a href="'+h+'">'+t+'</a>').join('');
+  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-pressed',b.dataset.sc===cfg.scenario));
+  panel();
+}
+function segBind(id,key,conv){document.querySelectorAll('#'+id+' button').forEach(b=>b.addEventListener('click',()=>{cfg[key]=conv(b.dataset.v);document.querySelectorAll('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',x===b));reset();markCmp()}))}
+segBind('segAppr','approach',x=>x);segBind('segMode','mode',x=>x);segBind('segUgv','ugv',x=>x==='1');
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{cfg.scenario=b.dataset.sc;reset();clearCmp()}));
+$('play').addEventListener('click',()=>{playing=!playing;$('play').textContent=playing?'Pause':'Play'});
+$('play').textContent=playing?'Pause':'Play';
+$('reset').addEventListener('click',reset);
+$('speed').addEventListener('change',e=>{speed=+e.target.value});
+document.querySelectorAll('#maptable tbody tr').forEach(tr=>{const go=()=>{document.querySelectorAll('#maptable tbody tr').forEach(x=>x.classList.toggle('on',x===tr));hi=tr.dataset.hi;hiT=performance.now()+9000;$('hiNote').textContent='Highlighted: '+tr.children[1].textContent;
+  const r=cv.getBoundingClientRect();if(r.top<0||r.bottom>innerHeight)cv.scrollIntoView({behavior:reduced?'auto':'smooth',block:'center'})};tr.addEventListener('click',e=>{if(e.target.tagName==='A')return;go()});tr.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})});
+
+// comparison
+function runFull(c){const s=makeSim(c);while(s.t<HORIZON)step(s,.5);return metrics(s)}
+function clearCmp(){$('cmp').tBodies[0].innerHTML='<tr><td colspan="10" style="text-align:left;color:var(--ink-soft)">Press the button to run the comparison.</td></tr>';$('checks').textContent=''}
+function markCmp(){document.querySelectorAll('#cmp tbody tr').forEach(tr=>tr.classList.toggle('cur',tr.dataset.k===cfg.approach+cfg.mode))}
+$('runCmp').addEventListener('click',()=>{
+  $('cmpNote').textContent='Running…';
+  setTimeout(()=>{
+    const rows=[];let allOk=true,capV=0,routeV=0;
+    for(const ap of ['A','B','C'])for(const md of ['crewed','auto']){const m=runFull({...cfg,approach:ap,mode:md});rows.push([ap,md,m]);allOk=allOk&&m.conserve;capV+=m.capViol;routeV+=m.routeViol}
+    $('cmp').tBodies[0].innerHTML=rows.map(([ap,md,m])=>'<tr data-k="'+ap+md+'"><td>'+({A:'A · Conventional',B:'B · Optimization',C:'C · Adaptive candidate'})[ap]+' · '+(md==='auto'?'supervised autonomous':'crewed')+'</td><td>'+Math.round(m.onTime*100)+'%</td><td>'+fmtH(m.below)+'</td><td>'+m.backlog.toFixed(1)+'</td><td>'+fmtH(m.down)+'</td><td>'+fmtH(m.crew)+'</td><td>'+fmtH(m.op)+'</td><td>'+m.ints+(m.intWait!=null?' ('+m.intWait.toFixed(1)+' min wait)':'')+'</td><td>'+Math.round(m.energy)+'</td><td>'+m.trips+'</td></tr>').join('');
+    markCmp();
+    $('checks').innerHTML='Software checks on these runs: cargo conservation (issued = delivered + on board + returned) <b class="'+(allOk?'':'bad')+'">'+(allOk?'passed':'failed')+'</b> · capacity limits <b class="'+(capV?'bad':'')+'">'+(capV?capV+' violations':'passed')+'</b> · trucks stayed on wide streets <b class="'+(routeV?'bad':'')+'">'+(routeV?routeV+' violations':'passed')+'</b>';
+    $('cmpNote').textContent='Scenario: '+SCEN[cfg.scenario].title+(cfg.ugv?' · with one UGV':'')+' · same demand stream, 06:00 to 14:00.';
+  },30);
+});
+
+// validation ladder
+const RUNGS=[
+  ['Sustainment expert review','Scenarios, demand rates, procedures and the conventional baseline','Expert ratings, corrections, the agreed baseline procedure','The scenarios and baseline are operationally credible','Whether the model behaves like reality'],
+  ['Software verification','Cargo conservation, capacity limits, route feasibility, timing and event order','Automated checks on every run, like the ones under the comparison table','The code implements the stated model','Whether the stated model is right'],
+  ['Controlled simulation comparisons','Approaches and control modes on identical scenarios and demand streams','Primary and supporting outcomes across many seeds','Effects within the model, with uncertainty','Whether the effects exist outside the model'],
+  ['Comparison with ProjectGL','Overlapping cases run in both tiers, with separate calibration and validation sets','Correlation and differences between tiers','The two models agree where they overlap','Agreement between models is not agreement with reality'],
+  ['Human-in-the-loop experiments','Operators handling standardized delivery and intervention tasks','Response times, interventions, workload, errors','Real operator interaction and workload','Vehicle physics and field conditions'],
+  ['Closed-course trial with inert cargo','Real vehicles delivering labelled loads with scripted closures, outages and a declared breakdown','Travel, loading, unloading, energy, interventions, failures','Physical performance under the tested conditions','Combat survivability and conditions not tested'],
+  ['Held-out trial with unfamiliar conditions','A new layout, demand pattern and disruption sequence, predicted before the run','Prediction error against agreed tolerances','The model generalizes within the tested envelope','Performance far outside the tested envelope']];
+$('rungs').innerHTML=RUNGS.map((r,i)=>'<button data-i="'+i+'" aria-pressed="'+(i===0)+'"><span>'+(i+1)+'</span>'+r[0]+'</button>').join('');
+function showRung(i){const r=RUNGS[i];$('rungDetail').innerHTML='<h3>'+(i+1)+'. '+r[0]+'</h3><dl><dt>What is tested</dt><dd>'+r[1]+'</dd><dt>Data collected</dt><dd>'+r[2]+'</dd><dt>Claim it supports</dt><dd>'+r[3]+'</dd><dt>Still unproven</dt><dd>'+r[4]+'</dd></dl>';document.querySelectorAll('#rungs button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.i===i))}
+document.querySelectorAll('#rungs button').forEach(b=>b.addEventListener('click',()=>showRung(+b.dataset.i)));showRung(0);
+
+// loop
+let last=performance.now();
+function frame(now){const dt=Math.min(.1,(now-last)/1000);last=now;
+  if(playing&&sim.t<HORIZON){let adv=dt*speed;while(adv>0&&sim.t<HORIZON){const d=Math.min(.5,adv);step(sim,d);adv-=d}}
+  if(sim.t>=HORIZON&&playing){playing=false;$('play').textContent='Play';say(sim,'End of shift (14:00). Press Reset or pick another scenario.')}
+  draw();panel();requestAnimationFrame(frame)}
+addEventListener('resize',resize);
+resize();reset();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(buildBg);
+requestAnimationFrame(frame);
+</script>
+
+</body></html>
