@@ -228,6 +228,21 @@ def build_viewer(traces):
         return x
     payload=json.dumps(clean(traces),separators=(',',':'),allow_nan=False)
     template=m.TEMPLATE.replace('/*__TRACES__*/',payload)
+    template=template.replace('// 2. 1km Military Grid Lines', '''
+    // Draw the entire street network, including the unused branch, below routes/buildings.
+    if(T.street_graph){
+      const nodes=new Map(T.street_graph.nodes.map(n=>[n.id,n]));
+      T.street_graph.edges.forEach(e=>{
+        const u=nodes.get(e.u),v=nodes.get(e.v);if(!u||!v)return;
+        ctx.strokeStyle='#425264';ctx.lineWidth=Math.max(2,(e.width||8)*sc);
+        ctx.beginPath();ctx.moveTo(X(u.x),Y(u.y));
+        (e.geometry||[]).forEach(p=>ctx.lineTo(X(p[0]),Y(p[1])));
+        ctx.lineTo(X(v.x),Y(v.y));ctx.stroke();
+      });
+      ctx.font='bold 11px sans-serif';
+      nodes.forEach(n=>{ctx.fillStyle='#b9d5ed';ctx.beginPath();ctx.arc(X(n.x),Y(n.y),3,0,Math.PI*2);ctx.fill();ctx.fillText(String(n.id),X(n.x)+5,Y(n.y)-6);});
+    }
+    // 2. 1km Military Grid Lines''')
     template=template.replace('<button class="tp" id="labels"',
         '<button class="tp" id="zoom_in" title="Zoom in">Zoom +</button><button class="tp" id="zoom_out" title="Zoom out">Zoom −</button><button class="tp" id="zoom_reset" title="Fit whole map">Reset zoom</button><span id="zoom_level">1×</span><label>Follow vehicle <select id="follow_vehicle" aria-label="Follow vehicle" style="min-width:140px;max-width:250px"></select></label><span id="follow_state"></span><button class="tp" id="labels"')
     template=template.replace('let DW=1200, DH=520, PAD=24, sc=1, offX=0, offY=0;',
