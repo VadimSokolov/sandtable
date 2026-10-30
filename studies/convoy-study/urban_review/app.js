@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id);
 async function unpack(id){const b=Uint8Array.from(atob($(id).textContent.trim()),c=>c.charCodeAt(0));return await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'))).text()}
 try{
 const D=JSON.parse(await unpack('embedded-data')),traces=D.traces;
-let chosen=46,T=traces[chosen],fi=0,cursor=0,playing=false,rate=10,selected=0,zoom=1,pan=[0,0],drag=null,last=performance.now(),panelKey='';
+let chosen=0,T=traces[chosen],fi=0,cursor=0,playing=false,rate=10,selected=0,zoom=1,pan=[0,0],drag=null,last=performance.now(),panelKey='';
 const cv=$('city'),ctx=cv.getContext('2d');let width=800,height=400,dpr=1;
 const colors={ink:'#2e3a59',soft:'#5a6380',cargo:'#2f8a7e',escort:'#c86f26',red:'#b03a44',control:'#46557a'};
 const fmt=(v,n=1)=>Number.isFinite(v)?Number(v).toFixed(n):'not recorded';
@@ -28,6 +28,22 @@ function scenarioList(){const family=$('family').value;const ids=traces.map((t,i
 $('family').onchange=()=>{const ids=scenarioList();choose(ids.includes(chosen)?chosen:ids[0])};$('scenario').onchange=e=>choose(e.target.value);
 function showIndex(i){$('family').value='all';scenarioList();choose(i)}
 document.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>showIndex(Number(b.dataset.start)));
+const SIMPLE={
+ routine:{label:'Delivery condition',help:'Start without an enemy. Compare cargo and onboard personnel under the two crew assignments.',variants:[['routine','No enemy',{crewed:0,auto:1}]]},
+ contact:{label:'Reaction on contact',help:'Armed escorts are included in both modes. Only the selected reaction and crew configuration determine the recording.',variants:[['continue','Continue moving',{crewed:8,auto:9}],['halt','Halt',{crewed:10,auto:11}],['herringbone','Halt + Herringbone',{crewed:26,auto:27}]]},
+ leader:{label:'After leader loss',help:'No-enemy diagnostic with a deliberately forced leader loss, except the no-loss control. These are mechanism checks, not tactical comparisons.',variants:[['control','No loss (control)',{crewed:12,auto:19}],['continue','Continue without leader',{crewed:13,auto:20}],['promote','Promote successor (5 s)',{crewed:15,auto:22}],['absorb','Absorb into another unit (5 s)',{crewed:16,auto:23}],['halt','Halt indefinitely',{crewed:17,auto:24}],['release','Halt, then release (30 steps)',{crewed:18,auto:25}]]},
+ console:{label:'Console recovery',help:'Autonomous-cargo recordings only. Forced-loss diagnostics separate recovery of leadership from recovery of console service.',variants:[['control','No loss (control)',{auto:28}],['fixed','Keep original console host',{auto:29}],['transfer','Transfer console to successor',{auto:30}]]},
+ urban:{label:'Route',help:'Same user-sketch map, four declared enemy sites and seed 0. Autonomous-cargo recordings only. Compare routes without assuming one seed proves a best route.',variants:[['direct','Direct road',{auto:44}],['upper','Upper loop',{auto:45}],['lower','Lower loop',{auto:46}]]},
+ comms:{label:'Communications level',help:'Same direct route and convoy; fixed communications degradation, not a timed outage. Autonomous-cargo recordings only. See Compare settings for ten-seed results.',variants:[['C0','C0 · clear link',{auto:47}],['C2','C2 · degraded link',{auto:54}],['C5','C5 · severely degraded link',{auto:55}]]}
+};
+let simple='routine';
+function simpleOptions(){const spec=SIMPLE[simple];$('simpleVariantLabel').textContent=spec.label;$('simpleVariant').innerHTML=spec.variants.map(v=>'<option value="'+v[0]+'">'+v[1]+'</option>').join('');if(simple==='urban')$('simpleVariant').value='lower';if(simple==='leader')$('simpleVariant').value='promote';if(simple==='console')$('simpleVariant').value='transfer';const crewed=spec.variants.some(v=>v[2].crewed!==undefined);$('simpleCrew').querySelector('[value="crewed"]').disabled=!crewed;if(!crewed)$('simpleCrew').value='auto';$('simpleHelp').textContent=spec.help;document.querySelectorAll('[data-simple]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.simple===simple))}
+document.querySelectorAll('[data-simple]').forEach(b=>b.onclick=()=>{simple=b.dataset.simple;simpleOptions()});
+$('runSimple').onclick=()=>{const v=SIMPLE[simple].variants.find(v=>v[0]===$('simpleVariant').value),idx=v[2][$('simpleCrew').value];if(idx===undefined)return;showIndex(idx);playing=true;$('play').textContent='Pause';$('simpleHelp').textContent=SIMPLE[simple].help+' Playing: '+T.label;};simpleOptions();
+async function makeLegacy(host,compact){const text=await unpack('legacy-data');const iframe=document.createElement('iframe');iframe.title='Original logistics prototype controls';iframe.setAttribute('sandbox','allow-scripts');const style='<style>.wrap>header,.wrap>section:not(#sim):not(#baselines){display:none!important}#sim{margin-top:0!important}.wrap{padding-top:8px}</style>';iframe.srcdoc=compact?text.replace('</head>',style+'</head>'):text;host.replaceChildren(iframe)}
+$('convoyMode').onclick=()=>{$('convoyViewer').hidden=false;$('simpleLegacyHost').replaceChildren();$('convoyMode').setAttribute('aria-pressed','true');$('logisticsMode').setAttribute('aria-pressed','false');$('modeNote').textContent='Convoy study: saved Python missions. Choose a situation and options, then press Run.';resize()};
+$('logisticsMode').onclick=async()=>{playing=false;$('play').textContent='Play';$('convoyViewer').hidden=true;$('convoyMode').setAttribute('aria-pressed','false');$('logisticsMode').setAttribute('aria-pressed','true');$('modeNote').textContent='Logistics prototype: independent JavaScript simulation with the five original disruptions, planning A/B/C, crewed/supervised trucks and optional small UGV. Switching away resets this prototype.';if(!$('simpleLegacyHost').firstChild)await makeLegacy($('simpleLegacyHost'),true)};
+
 function seek(index){fi=Math.max(0,Math.min(T.frames.length-1,Number(index)));cursor=frame().t;panelKey='';update();draw()}
 $('timeline').oninput=e=>{playing=false;$('play').textContent='Play';seek(e.target.value)};
 $('play').onclick=()=>{if(fi===T.frames.length-1)seek(0);playing=!playing;$('play').textContent=playing?'Pause':'Play'};

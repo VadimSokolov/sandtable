@@ -44,3 +44,11 @@ For this page, static/data verification checked: all 56 final-frame cargo balanc
 Adding presentation Python files changes the broad study-source collection used by the older sweep's frozen source digest. Preserve those historical manifests; this HTML build does not alter or re-register the experiments. Re-running a frozen sweep after source drift requires an explicitly documented new experiment snapshot.
 
 No changes to core simulation mechanics are needed for this presentation. Generated HTML is local output; rebuild it after updating the saved traces or guide.
+
+## Simplified two-mode interface
+
+The default view now starts with Routine delivery and Crewed. Six situation buttons drive a constrained recording selector: Routine delivery; Enemy contact; Leader lost; Console unavailable; Urban route choices; Degraded communications. Choose truck control and the context-specific option, then Run selected recording. Run starts playback, not a new Python simulation. Crewed variants are offered only where a corresponding saved run exists. All 56 original recordings remain inside Advanced.
+
+Logistics prototype is a separate top-level mode. It embeds the original JavaScript simulator with only its operation and comparison sections shown. It retains all five disruption scenarios, A/B/C planning, Crewed/Supervised autonomous and the optional small UGV. Switching away removes the embedded instance; returning starts it again. The unmodified full archive remains available below.
+
+Browser verification checked a crewed Herringbone selection maps to recording 27, and that road closure + Conventional + Supervised autonomous + UGV changes the independent prototype's controls and clock label correctly. No AI training or new mission experiments were run for this interface change. Additional matched urban/crew and recovery experiments are proposed explicitly, not presented as completed.
