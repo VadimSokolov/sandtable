@@ -25,3 +25,7 @@ python studies/convoy-study/route_13/check_route.py
 ```
 
 The sibling working checkout's uncommitted edits, deleted documents and generated outputs were not included or modified during this import. The original study folder is also retained.
+
+## Settings comparison (#15)
+
+`studies/convoy-study/sweep_15/run.py` adds nine one-factor configurations on the user sketch's direct route, each over seeds 0–9. Open `/convoy_sweep.html` for means, standard errors and exploratory paired intervals; replay options 48–56 show seed 0. Existing 47 replay options are retained. See `sweep_15/START_HERE.md` for the exact settings, metric definitions and limitations. This is a study sweep, not completion of a Bayesian optimization workflow.

@@ -1,0 +1,3725 @@
+{
+  "hash": "d31705c810901d61085dffbacd3cf6cd18fc1c8f38b76c8decc7ce16847fbfc8",
+  "design": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "display_seed": 0,
+    "arms": [
+      {
+        "name": "baseline",
+        "changed_parameter": null,
+        "value": null,
+        "scenario": {
+          "name": "UC-3 Route vs Defilade (Convoy)",
+          "id": 30,
+          "size": [
+            6000,
+            3000
+          ],
+          "dt": 1.0,
+          "duration": 1800.0,
+          "platform_types": {
+            "ugv": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.002,
+              "hp": 1.0
+            },
+            "at_team": {
+              "domain": 0,
+              "max_speed": 0.0,
+              "turn_rate": 0.0,
+              "sensor_range": 2000.0,
+              "weapon_range": 1000.0,
+              "pk_base": 0.008,
+              "hp": 1.0
+            },
+            "study_gun_truck": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.01,
+              "hp": 1.0
+            }
+          },
+          "forces": [
+            {
+              "side": 0,
+              "ptype": "ugv",
+              "count": 15,
+              "spawn": [
+                250,
+                1500
+              ],
+              "spawn_spread": 40.0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3050,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3550,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                2500,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                4100,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            }
+          ],
+          "objective": {
+            "goal": [
+              5750,
+              1500
+            ],
+            "goal_radius": 150.0,
+            "survive_fraction": 0.5,
+            "delivery_fraction": 1.0
+          },
+          "terrain": {
+            "cell": 25.0
+          },
+          "params": {
+            "route_bias": 0.0,
+            "formation_spread": 40.0,
+            "tempo": 1.0,
+            "comms_level": 0,
+            "follow_mode": "behavior",
+            "follow_topology": "chain",
+            "convoy": {
+              "march_unit_size": 5,
+              "march_units_per_serial": 3,
+              "serials_per_column": 1,
+              "pace": 10.0,
+              "time_gap": 4.0,
+              "cargo_per_vehicle": 5.0,
+              "roles": [
+                "control",
+                "cargo",
+                "cargo",
+                "cargo",
+                "cargo"
+              ],
+              "succession": "manned_only",
+              "escort_vehicles": 3,
+              "security_ptype": "study_gun_truck",
+              "autonomy_arm": "autonomous_march_unit",
+              "leader_loss_policy": "promote",
+              "handoff_steps": 5,
+              "contact_reaction": {
+                "action": "halt",
+                "triggers": [
+                  "receive_fire"
+                ],
+                "halt_scope": "all",
+                "release": {
+                  "rule": "timeout",
+                  "clear_s": 15.0
+                }
+              }
+            },
+            "control_mode": "direct",
+            "console_per_march_unit": {
+              "attention_basis": "assigned",
+              "exceptions": false
+            },
+            "queue_model": "reserve",
+            "n_operators": 1,
+            "span_capacity": 4,
+            "service_rate": 0.5,
+            "decision_interval": 30,
+            "patience": 20,
+            "q_operator": 0.95,
+            "q_auto": 0.7,
+            "q_fallback": 0.5,
+            "q_stall": 0.3,
+            "study_console_transfer": {
+              "rule": "transfer_all_successors",
+              "delay_s": 20,
+              "forced_loss": false
+            },
+            "study_herringbone": {
+              "experimental": true,
+              "offset_m": 20.0,
+              "road": "street polyline with building-safe parking / movement guard"
+            },
+            "target_priority": {
+              "order": [
+                "control"
+              ]
+            },
+            "route": [
+              [
+                0.0,
+                1500.0
+              ],
+              [
+                1800.0,
+                1500.0
+              ],
+              [
+                4800.0,
+                1500.0
+              ],
+              [
+                5750.0,
+                1500.0
+              ]
+            ],
+            "lookahead": 30.0,
+            "study_route_length_m": 5750.0,
+            "study_urban": true,
+            "street_graph": {
+              "nodes": [
+                {
+                  "id": "START",
+                  "x": 0.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JUNCTION",
+                  "x": 1800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JOIN",
+                  "x": 4800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "GOAL",
+                  "x": 5750.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "UPPER_W",
+                  "x": 2100.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "UPPER_E",
+                  "x": 4500.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "LOWER_W",
+                  "x": 1800.0,
+                  "y": 2400.0
+                },
+                {
+                  "id": "LOWER_E",
+                  "x": 4500.0,
+                  "y": 2400.0
+                }
+              ],
+              "edges": [
+                {
+                  "u": "START",
+                  "v": "JUNCTION",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 1800.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JOIN",
+                  "v": "GOAL",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 950.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.7,
+                  "length": 3000.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "UPPER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_W",
+                  "v": "UPPER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 2400.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "LOWER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 900.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_W",
+                  "v": "LOWER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 2700.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 948.6832980505138,
+                  "bidirectional": true,
+                  "geometry": []
+                }
+              ]
+            },
+            "study_street_path": [
+              "START",
+              "JUNCTION",
+              "JOIN",
+              "GOAL"
+            ],
+            "buildings": [
+              [
+                700,
+                900,
+                1600,
+                1350
+              ],
+              [
+                700,
+                1700,
+                1600,
+                2200
+              ],
+              [
+                2300,
+                950,
+                2850,
+                1300
+              ],
+              [
+                3900,
+                950,
+                4500,
+                1300
+              ],
+              [
+                3100,
+                1700,
+                3650,
+                2200
+              ]
+            ],
+            "study_map": "user_sketch",
+            "study_route_choice": "direct",
+            "study_candidate_paths": {
+              "direct": [
+                "START",
+                "JUNCTION",
+                "JOIN",
+                "GOAL"
+              ],
+              "upper_loop": [
+                "START",
+                "JUNCTION",
+                "UPPER_W",
+                "UPPER_E",
+                "JOIN",
+                "GOAL"
+              ],
+              "lower_loop": [
+                "START",
+                "JUNCTION",
+                "LOWER_W",
+                "LOWER_E",
+                "JOIN",
+                "GOAL"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "name": "speed_8",
+        "changed_parameter": "pace",
+        "value": 8.0,
+        "scenario": {
+          "name": "UC-3 Route vs Defilade (Convoy)",
+          "id": 30,
+          "size": [
+            6000,
+            3000
+          ],
+          "dt": 1.0,
+          "duration": 1800.0,
+          "platform_types": {
+            "ugv": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.002,
+              "hp": 1.0
+            },
+            "at_team": {
+              "domain": 0,
+              "max_speed": 0.0,
+              "turn_rate": 0.0,
+              "sensor_range": 2000.0,
+              "weapon_range": 1000.0,
+              "pk_base": 0.008,
+              "hp": 1.0
+            },
+            "study_gun_truck": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.01,
+              "hp": 1.0
+            }
+          },
+          "forces": [
+            {
+              "side": 0,
+              "ptype": "ugv",
+              "count": 15,
+              "spawn": [
+                250,
+                1500
+              ],
+              "spawn_spread": 40.0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3050,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3550,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                2500,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                4100,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            }
+          ],
+          "objective": {
+            "goal": [
+              5750,
+              1500
+            ],
+            "goal_radius": 150.0,
+            "survive_fraction": 0.5,
+            "delivery_fraction": 1.0
+          },
+          "terrain": {
+            "cell": 25.0
+          },
+          "params": {
+            "route_bias": 0.0,
+            "formation_spread": 40.0,
+            "tempo": 1.0,
+            "comms_level": 0,
+            "follow_mode": "behavior",
+            "follow_topology": "chain",
+            "convoy": {
+              "march_unit_size": 5,
+              "march_units_per_serial": 3,
+              "serials_per_column": 1,
+              "pace": 8.0,
+              "time_gap": 4.0,
+              "cargo_per_vehicle": 5.0,
+              "roles": [
+                "control",
+                "cargo",
+                "cargo",
+                "cargo",
+                "cargo"
+              ],
+              "succession": "manned_only",
+              "escort_vehicles": 3,
+              "security_ptype": "study_gun_truck",
+              "autonomy_arm": "autonomous_march_unit",
+              "leader_loss_policy": "promote",
+              "handoff_steps": 5,
+              "contact_reaction": {
+                "action": "halt",
+                "triggers": [
+                  "receive_fire"
+                ],
+                "halt_scope": "all",
+                "release": {
+                  "rule": "timeout",
+                  "clear_s": 15.0
+                }
+              }
+            },
+            "control_mode": "direct",
+            "console_per_march_unit": {
+              "attention_basis": "assigned",
+              "exceptions": false
+            },
+            "queue_model": "reserve",
+            "n_operators": 1,
+            "span_capacity": 4,
+            "service_rate": 0.5,
+            "decision_interval": 30,
+            "patience": 20,
+            "q_operator": 0.95,
+            "q_auto": 0.7,
+            "q_fallback": 0.5,
+            "q_stall": 0.3,
+            "study_console_transfer": {
+              "rule": "transfer_all_successors",
+              "delay_s": 20,
+              "forced_loss": false
+            },
+            "study_herringbone": {
+              "experimental": true,
+              "offset_m": 20.0,
+              "road": "street polyline with building-safe parking / movement guard"
+            },
+            "target_priority": {
+              "order": [
+                "control"
+              ]
+            },
+            "route": [
+              [
+                0.0,
+                1500.0
+              ],
+              [
+                1800.0,
+                1500.0
+              ],
+              [
+                4800.0,
+                1500.0
+              ],
+              [
+                5750.0,
+                1500.0
+              ]
+            ],
+            "lookahead": 30.0,
+            "study_route_length_m": 5750.0,
+            "study_urban": true,
+            "street_graph": {
+              "nodes": [
+                {
+                  "id": "START",
+                  "x": 0.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JUNCTION",
+                  "x": 1800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JOIN",
+                  "x": 4800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "GOAL",
+                  "x": 5750.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "UPPER_W",
+                  "x": 2100.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "UPPER_E",
+                  "x": 4500.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "LOWER_W",
+                  "x": 1800.0,
+                  "y": 2400.0
+                },
+                {
+                  "id": "LOWER_E",
+                  "x": 4500.0,
+                  "y": 2400.0
+                }
+              ],
+              "edges": [
+                {
+                  "u": "START",
+                  "v": "JUNCTION",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 1800.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JOIN",
+                  "v": "GOAL",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 950.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.7,
+                  "length": 3000.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "UPPER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_W",
+                  "v": "UPPER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 2400.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "LOWER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 900.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_W",
+                  "v": "LOWER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 2700.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 948.6832980505138,
+                  "bidirectional": true,
+                  "geometry": []
+                }
+              ]
+            },
+            "study_street_path": [
+              "START",
+              "JUNCTION",
+              "JOIN",
+              "GOAL"
+            ],
+            "buildings": [
+              [
+                700,
+                900,
+                1600,
+                1350
+              ],
+              [
+                700,
+                1700,
+                1600,
+                2200
+              ],
+              [
+                2300,
+                950,
+                2850,
+                1300
+              ],
+              [
+                3900,
+                950,
+                4500,
+                1300
+              ],
+              [
+                3100,
+                1700,
+                3650,
+                2200
+              ]
+            ],
+            "study_map": "user_sketch",
+            "study_route_choice": "direct",
+            "study_candidate_paths": {
+              "direct": [
+                "START",
+                "JUNCTION",
+                "JOIN",
+                "GOAL"
+              ],
+              "upper_loop": [
+                "START",
+                "JUNCTION",
+                "UPPER_W",
+                "UPPER_E",
+                "JOIN",
+                "GOAL"
+              ],
+              "lower_loop": [
+                "START",
+                "JUNCTION",
+                "LOWER_W",
+                "LOWER_E",
+                "JOIN",
+                "GOAL"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "name": "speed_12",
+        "changed_parameter": "pace",
+        "value": 12.0,
+        "scenario": {
+          "name": "UC-3 Route vs Defilade (Convoy)",
+          "id": 30,
+          "size": [
+            6000,
+            3000
+          ],
+          "dt": 1.0,
+          "duration": 1800.0,
+          "platform_types": {
+            "ugv": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.002,
+              "hp": 1.0
+            },
+            "at_team": {
+              "domain": 0,
+              "max_speed": 0.0,
+              "turn_rate": 0.0,
+              "sensor_range": 2000.0,
+              "weapon_range": 1000.0,
+              "pk_base": 0.008,
+              "hp": 1.0
+            },
+            "study_gun_truck": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.01,
+              "hp": 1.0
+            }
+          },
+          "forces": [
+            {
+              "side": 0,
+              "ptype": "ugv",
+              "count": 15,
+              "spawn": [
+                250,
+                1500
+              ],
+              "spawn_spread": 40.0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3050,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3550,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                2500,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                4100,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            }
+          ],
+          "objective": {
+            "goal": [
+              5750,
+              1500
+            ],
+            "goal_radius": 150.0,
+            "survive_fraction": 0.5,
+            "delivery_fraction": 1.0
+          },
+          "terrain": {
+            "cell": 25.0
+          },
+          "params": {
+            "route_bias": 0.0,
+            "formation_spread": 40.0,
+            "tempo": 1.0,
+            "comms_level": 0,
+            "follow_mode": "behavior",
+            "follow_topology": "chain",
+            "convoy": {
+              "march_unit_size": 5,
+              "march_units_per_serial": 3,
+              "serials_per_column": 1,
+              "pace": 12.0,
+              "time_gap": 4.0,
+              "cargo_per_vehicle": 5.0,
+              "roles": [
+                "control",
+                "cargo",
+                "cargo",
+                "cargo",
+                "cargo"
+              ],
+              "succession": "manned_only",
+              "escort_vehicles": 3,
+              "security_ptype": "study_gun_truck",
+              "autonomy_arm": "autonomous_march_unit",
+              "leader_loss_policy": "promote",
+              "handoff_steps": 5,
+              "contact_reaction": {
+                "action": "halt",
+                "triggers": [
+                  "receive_fire"
+                ],
+                "halt_scope": "all",
+                "release": {
+                  "rule": "timeout",
+                  "clear_s": 15.0
+                }
+              }
+            },
+            "control_mode": "direct",
+            "console_per_march_unit": {
+              "attention_basis": "assigned",
+              "exceptions": false
+            },
+            "queue_model": "reserve",
+            "n_operators": 1,
+            "span_capacity": 4,
+            "service_rate": 0.5,
+            "decision_interval": 30,
+            "patience": 20,
+            "q_operator": 0.95,
+            "q_auto": 0.7,
+            "q_fallback": 0.5,
+            "q_stall": 0.3,
+            "study_console_transfer": {
+              "rule": "transfer_all_successors",
+              "delay_s": 20,
+              "forced_loss": false
+            },
+            "study_herringbone": {
+              "experimental": true,
+              "offset_m": 20.0,
+              "road": "street polyline with building-safe parking / movement guard"
+            },
+            "target_priority": {
+              "order": [
+                "control"
+              ]
+            },
+            "route": [
+              [
+                0.0,
+                1500.0
+              ],
+              [
+                1800.0,
+                1500.0
+              ],
+              [
+                4800.0,
+                1500.0
+              ],
+              [
+                5750.0,
+                1500.0
+              ]
+            ],
+            "lookahead": 30.0,
+            "study_route_length_m": 5750.0,
+            "study_urban": true,
+            "street_graph": {
+              "nodes": [
+                {
+                  "id": "START",
+                  "x": 0.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JUNCTION",
+                  "x": 1800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JOIN",
+                  "x": 4800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "GOAL",
+                  "x": 5750.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "UPPER_W",
+                  "x": 2100.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "UPPER_E",
+                  "x": 4500.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "LOWER_W",
+                  "x": 1800.0,
+                  "y": 2400.0
+                },
+                {
+                  "id": "LOWER_E",
+                  "x": 4500.0,
+                  "y": 2400.0
+                }
+              ],
+              "edges": [
+                {
+                  "u": "START",
+                  "v": "JUNCTION",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 1800.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JOIN",
+                  "v": "GOAL",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 950.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.7,
+                  "length": 3000.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "UPPER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_W",
+                  "v": "UPPER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 2400.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "LOWER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 900.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_W",
+                  "v": "LOWER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 2700.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 948.6832980505138,
+                  "bidirectional": true,
+                  "geometry": []
+                }
+              ]
+            },
+            "study_street_path": [
+              "START",
+              "JUNCTION",
+              "JOIN",
+              "GOAL"
+            ],
+            "buildings": [
+              [
+                700,
+                900,
+                1600,
+                1350
+              ],
+              [
+                700,
+                1700,
+                1600,
+                2200
+              ],
+              [
+                2300,
+                950,
+                2850,
+                1300
+              ],
+              [
+                3900,
+                950,
+                4500,
+                1300
+              ],
+              [
+                3100,
+                1700,
+                3650,
+                2200
+              ]
+            ],
+            "study_map": "user_sketch",
+            "study_route_choice": "direct",
+            "study_candidate_paths": {
+              "direct": [
+                "START",
+                "JUNCTION",
+                "JOIN",
+                "GOAL"
+              ],
+              "upper_loop": [
+                "START",
+                "JUNCTION",
+                "UPPER_W",
+                "UPPER_E",
+                "JOIN",
+                "GOAL"
+              ],
+              "lower_loop": [
+                "START",
+                "JUNCTION",
+                "LOWER_W",
+                "LOWER_E",
+                "JOIN",
+                "GOAL"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "name": "gap_6",
+        "changed_parameter": "time_gap",
+        "value": 6.0,
+        "scenario": {
+          "name": "UC-3 Route vs Defilade (Convoy)",
+          "id": 30,
+          "size": [
+            6000,
+            3000
+          ],
+          "dt": 1.0,
+          "duration": 1800.0,
+          "platform_types": {
+            "ugv": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.002,
+              "hp": 1.0
+            },
+            "at_team": {
+              "domain": 0,
+              "max_speed": 0.0,
+              "turn_rate": 0.0,
+              "sensor_range": 2000.0,
+              "weapon_range": 1000.0,
+              "pk_base": 0.008,
+              "hp": 1.0
+            },
+            "study_gun_truck": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.01,
+              "hp": 1.0
+            }
+          },
+          "forces": [
+            {
+              "side": 0,
+              "ptype": "ugv",
+              "count": 15,
+              "spawn": [
+                250,
+                1500
+              ],
+              "spawn_spread": 40.0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3050,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3550,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                2500,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                4100,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            }
+          ],
+          "objective": {
+            "goal": [
+              5750,
+              1500
+            ],
+            "goal_radius": 150.0,
+            "survive_fraction": 0.5,
+            "delivery_fraction": 1.0
+          },
+          "terrain": {
+            "cell": 25.0
+          },
+          "params": {
+            "route_bias": 0.0,
+            "formation_spread": 40.0,
+            "tempo": 1.0,
+            "comms_level": 0,
+            "follow_mode": "behavior",
+            "follow_topology": "chain",
+            "convoy": {
+              "march_unit_size": 5,
+              "march_units_per_serial": 3,
+              "serials_per_column": 1,
+              "pace": 10.0,
+              "time_gap": 6.0,
+              "cargo_per_vehicle": 5.0,
+              "roles": [
+                "control",
+                "cargo",
+                "cargo",
+                "cargo",
+                "cargo"
+              ],
+              "succession": "manned_only",
+              "escort_vehicles": 3,
+              "security_ptype": "study_gun_truck",
+              "autonomy_arm": "autonomous_march_unit",
+              "leader_loss_policy": "promote",
+              "handoff_steps": 5,
+              "contact_reaction": {
+                "action": "halt",
+                "triggers": [
+                  "receive_fire"
+                ],
+                "halt_scope": "all",
+                "release": {
+                  "rule": "timeout",
+                  "clear_s": 15.0
+                }
+              }
+            },
+            "control_mode": "direct",
+            "console_per_march_unit": {
+              "attention_basis": "assigned",
+              "exceptions": false
+            },
+            "queue_model": "reserve",
+            "n_operators": 1,
+            "span_capacity": 4,
+            "service_rate": 0.5,
+            "decision_interval": 30,
+            "patience": 20,
+            "q_operator": 0.95,
+            "q_auto": 0.7,
+            "q_fallback": 0.5,
+            "q_stall": 0.3,
+            "study_console_transfer": {
+              "rule": "transfer_all_successors",
+              "delay_s": 20,
+              "forced_loss": false
+            },
+            "study_herringbone": {
+              "experimental": true,
+              "offset_m": 20.0,
+              "road": "street polyline with building-safe parking / movement guard"
+            },
+            "target_priority": {
+              "order": [
+                "control"
+              ]
+            },
+            "route": [
+              [
+                0.0,
+                1500.0
+              ],
+              [
+                1800.0,
+                1500.0
+              ],
+              [
+                4800.0,
+                1500.0
+              ],
+              [
+                5750.0,
+                1500.0
+              ]
+            ],
+            "lookahead": 30.0,
+            "study_route_length_m": 5750.0,
+            "study_urban": true,
+            "street_graph": {
+              "nodes": [
+                {
+                  "id": "START",
+                  "x": 0.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JUNCTION",
+                  "x": 1800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JOIN",
+                  "x": 4800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "GOAL",
+                  "x": 5750.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "UPPER_W",
+                  "x": 2100.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "UPPER_E",
+                  "x": 4500.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "LOWER_W",
+                  "x": 1800.0,
+                  "y": 2400.0
+                },
+                {
+                  "id": "LOWER_E",
+                  "x": 4500.0,
+                  "y": 2400.0
+                }
+              ],
+              "edges": [
+                {
+                  "u": "START",
+                  "v": "JUNCTION",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 1800.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JOIN",
+                  "v": "GOAL",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 950.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.7,
+                  "length": 3000.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "UPPER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_W",
+                  "v": "UPPER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 2400.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "LOWER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 900.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_W",
+                  "v": "LOWER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 2700.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 948.6832980505138,
+                  "bidirectional": true,
+                  "geometry": []
+                }
+              ]
+            },
+            "study_street_path": [
+              "START",
+              "JUNCTION",
+              "JOIN",
+              "GOAL"
+            ],
+            "buildings": [
+              [
+                700,
+                900,
+                1600,
+                1350
+              ],
+              [
+                700,
+                1700,
+                1600,
+                2200
+              ],
+              [
+                2300,
+                950,
+                2850,
+                1300
+              ],
+              [
+                3900,
+                950,
+                4500,
+                1300
+              ],
+              [
+                3100,
+                1700,
+                3650,
+                2200
+              ]
+            ],
+            "study_map": "user_sketch",
+            "study_route_choice": "direct",
+            "study_candidate_paths": {
+              "direct": [
+                "START",
+                "JUNCTION",
+                "JOIN",
+                "GOAL"
+              ],
+              "upper_loop": [
+                "START",
+                "JUNCTION",
+                "UPPER_W",
+                "UPPER_E",
+                "JOIN",
+                "GOAL"
+              ],
+              "lower_loop": [
+                "START",
+                "JUNCTION",
+                "LOWER_W",
+                "LOWER_E",
+                "JOIN",
+                "GOAL"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "name": "gap_8",
+        "changed_parameter": "time_gap",
+        "value": 8.0,
+        "scenario": {
+          "name": "UC-3 Route vs Defilade (Convoy)",
+          "id": 30,
+          "size": [
+            6000,
+            3000
+          ],
+          "dt": 1.0,
+          "duration": 1800.0,
+          "platform_types": {
+            "ugv": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.002,
+              "hp": 1.0
+            },
+            "at_team": {
+              "domain": 0,
+              "max_speed": 0.0,
+              "turn_rate": 0.0,
+              "sensor_range": 2000.0,
+              "weapon_range": 1000.0,
+              "pk_base": 0.008,
+              "hp": 1.0
+            },
+            "study_gun_truck": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.01,
+              "hp": 1.0
+            }
+          },
+          "forces": [
+            {
+              "side": 0,
+              "ptype": "ugv",
+              "count": 15,
+              "spawn": [
+                250,
+                1500
+              ],
+              "spawn_spread": 40.0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3050,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3550,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                2500,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                4100,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            }
+          ],
+          "objective": {
+            "goal": [
+              5750,
+              1500
+            ],
+            "goal_radius": 150.0,
+            "survive_fraction": 0.5,
+            "delivery_fraction": 1.0
+          },
+          "terrain": {
+            "cell": 25.0
+          },
+          "params": {
+            "route_bias": 0.0,
+            "formation_spread": 40.0,
+            "tempo": 1.0,
+            "comms_level": 0,
+            "follow_mode": "behavior",
+            "follow_topology": "chain",
+            "convoy": {
+              "march_unit_size": 5,
+              "march_units_per_serial": 3,
+              "serials_per_column": 1,
+              "pace": 10.0,
+              "time_gap": 8.0,
+              "cargo_per_vehicle": 5.0,
+              "roles": [
+                "control",
+                "cargo",
+                "cargo",
+                "cargo",
+                "cargo"
+              ],
+              "succession": "manned_only",
+              "escort_vehicles": 3,
+              "security_ptype": "study_gun_truck",
+              "autonomy_arm": "autonomous_march_unit",
+              "leader_loss_policy": "promote",
+              "handoff_steps": 5,
+              "contact_reaction": {
+                "action": "halt",
+                "triggers": [
+                  "receive_fire"
+                ],
+                "halt_scope": "all",
+                "release": {
+                  "rule": "timeout",
+                  "clear_s": 15.0
+                }
+              }
+            },
+            "control_mode": "direct",
+            "console_per_march_unit": {
+              "attention_basis": "assigned",
+              "exceptions": false
+            },
+            "queue_model": "reserve",
+            "n_operators": 1,
+            "span_capacity": 4,
+            "service_rate": 0.5,
+            "decision_interval": 30,
+            "patience": 20,
+            "q_operator": 0.95,
+            "q_auto": 0.7,
+            "q_fallback": 0.5,
+            "q_stall": 0.3,
+            "study_console_transfer": {
+              "rule": "transfer_all_successors",
+              "delay_s": 20,
+              "forced_loss": false
+            },
+            "study_herringbone": {
+              "experimental": true,
+              "offset_m": 20.0,
+              "road": "street polyline with building-safe parking / movement guard"
+            },
+            "target_priority": {
+              "order": [
+                "control"
+              ]
+            },
+            "route": [
+              [
+                0.0,
+                1500.0
+              ],
+              [
+                1800.0,
+                1500.0
+              ],
+              [
+                4800.0,
+                1500.0
+              ],
+              [
+                5750.0,
+                1500.0
+              ]
+            ],
+            "lookahead": 30.0,
+            "study_route_length_m": 5750.0,
+            "study_urban": true,
+            "street_graph": {
+              "nodes": [
+                {
+                  "id": "START",
+                  "x": 0.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JUNCTION",
+                  "x": 1800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JOIN",
+                  "x": 4800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "GOAL",
+                  "x": 5750.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "UPPER_W",
+                  "x": 2100.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "UPPER_E",
+                  "x": 4500.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "LOWER_W",
+                  "x": 1800.0,
+                  "y": 2400.0
+                },
+                {
+                  "id": "LOWER_E",
+                  "x": 4500.0,
+                  "y": 2400.0
+                }
+              ],
+              "edges": [
+                {
+                  "u": "START",
+                  "v": "JUNCTION",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 1800.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JOIN",
+                  "v": "GOAL",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 950.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.7,
+                  "length": 3000.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "UPPER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_W",
+                  "v": "UPPER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 2400.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "LOWER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 900.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_W",
+                  "v": "LOWER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 2700.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 948.6832980505138,
+                  "bidirectional": true,
+                  "geometry": []
+                }
+              ]
+            },
+            "study_street_path": [
+              "START",
+              "JUNCTION",
+              "JOIN",
+              "GOAL"
+            ],
+            "buildings": [
+              [
+                700,
+                900,
+                1600,
+                1350
+              ],
+              [
+                700,
+                1700,
+                1600,
+                2200
+              ],
+              [
+                2300,
+                950,
+                2850,
+                1300
+              ],
+              [
+                3900,
+                950,
+                4500,
+                1300
+              ],
+              [
+                3100,
+                1700,
+                3650,
+                2200
+              ]
+            ],
+            "study_map": "user_sketch",
+            "study_route_choice": "direct",
+            "study_candidate_paths": {
+              "direct": [
+                "START",
+                "JUNCTION",
+                "JOIN",
+                "GOAL"
+              ],
+              "upper_loop": [
+                "START",
+                "JUNCTION",
+                "UPPER_W",
+                "UPPER_E",
+                "JOIN",
+                "GOAL"
+              ],
+              "lower_loop": [
+                "START",
+                "JUNCTION",
+                "LOWER_W",
+                "LOWER_E",
+                "JOIN",
+                "GOAL"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "name": "spacing_20",
+        "changed_parameter": "formation_spread",
+        "value": 20.0,
+        "scenario": {
+          "name": "UC-3 Route vs Defilade (Convoy)",
+          "id": 30,
+          "size": [
+            6000,
+            3000
+          ],
+          "dt": 1.0,
+          "duration": 1800.0,
+          "platform_types": {
+            "ugv": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.002,
+              "hp": 1.0
+            },
+            "at_team": {
+              "domain": 0,
+              "max_speed": 0.0,
+              "turn_rate": 0.0,
+              "sensor_range": 2000.0,
+              "weapon_range": 1000.0,
+              "pk_base": 0.008,
+              "hp": 1.0
+            },
+            "study_gun_truck": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.01,
+              "hp": 1.0
+            }
+          },
+          "forces": [
+            {
+              "side": 0,
+              "ptype": "ugv",
+              "count": 15,
+              "spawn": [
+                250,
+                1500
+              ],
+              "spawn_spread": 40.0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3050,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3550,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                2500,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                4100,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            }
+          ],
+          "objective": {
+            "goal": [
+              5750,
+              1500
+            ],
+            "goal_radius": 150.0,
+            "survive_fraction": 0.5,
+            "delivery_fraction": 1.0
+          },
+          "terrain": {
+            "cell": 25.0
+          },
+          "params": {
+            "route_bias": 0.0,
+            "formation_spread": 20.0,
+            "tempo": 1.0,
+            "comms_level": 0,
+            "follow_mode": "behavior",
+            "follow_topology": "chain",
+            "convoy": {
+              "march_unit_size": 5,
+              "march_units_per_serial": 3,
+              "serials_per_column": 1,
+              "pace": 10.0,
+              "time_gap": 4.0,
+              "cargo_per_vehicle": 5.0,
+              "roles": [
+                "control",
+                "cargo",
+                "cargo",
+                "cargo",
+                "cargo"
+              ],
+              "succession": "manned_only",
+              "escort_vehicles": 3,
+              "security_ptype": "study_gun_truck",
+              "autonomy_arm": "autonomous_march_unit",
+              "leader_loss_policy": "promote",
+              "handoff_steps": 5,
+              "contact_reaction": {
+                "action": "halt",
+                "triggers": [
+                  "receive_fire"
+                ],
+                "halt_scope": "all",
+                "release": {
+                  "rule": "timeout",
+                  "clear_s": 15.0
+                }
+              }
+            },
+            "control_mode": "direct",
+            "console_per_march_unit": {
+              "attention_basis": "assigned",
+              "exceptions": false
+            },
+            "queue_model": "reserve",
+            "n_operators": 1,
+            "span_capacity": 4,
+            "service_rate": 0.5,
+            "decision_interval": 30,
+            "patience": 20,
+            "q_operator": 0.95,
+            "q_auto": 0.7,
+            "q_fallback": 0.5,
+            "q_stall": 0.3,
+            "study_console_transfer": {
+              "rule": "transfer_all_successors",
+              "delay_s": 20,
+              "forced_loss": false
+            },
+            "study_herringbone": {
+              "experimental": true,
+              "offset_m": 20.0,
+              "road": "street polyline with building-safe parking / movement guard"
+            },
+            "target_priority": {
+              "order": [
+                "control"
+              ]
+            },
+            "route": [
+              [
+                0.0,
+                1500.0
+              ],
+              [
+                1800.0,
+                1500.0
+              ],
+              [
+                4800.0,
+                1500.0
+              ],
+              [
+                5750.0,
+                1500.0
+              ]
+            ],
+            "lookahead": 30.0,
+            "study_route_length_m": 5750.0,
+            "study_urban": true,
+            "street_graph": {
+              "nodes": [
+                {
+                  "id": "START",
+                  "x": 0.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JUNCTION",
+                  "x": 1800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JOIN",
+                  "x": 4800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "GOAL",
+                  "x": 5750.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "UPPER_W",
+                  "x": 2100.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "UPPER_E",
+                  "x": 4500.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "LOWER_W",
+                  "x": 1800.0,
+                  "y": 2400.0
+                },
+                {
+                  "id": "LOWER_E",
+                  "x": 4500.0,
+                  "y": 2400.0
+                }
+              ],
+              "edges": [
+                {
+                  "u": "START",
+                  "v": "JUNCTION",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 1800.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JOIN",
+                  "v": "GOAL",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 950.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.7,
+                  "length": 3000.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "UPPER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_W",
+                  "v": "UPPER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 2400.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "LOWER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 900.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_W",
+                  "v": "LOWER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 2700.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 948.6832980505138,
+                  "bidirectional": true,
+                  "geometry": []
+                }
+              ]
+            },
+            "study_street_path": [
+              "START",
+              "JUNCTION",
+              "JOIN",
+              "GOAL"
+            ],
+            "buildings": [
+              [
+                700,
+                900,
+                1600,
+                1350
+              ],
+              [
+                700,
+                1700,
+                1600,
+                2200
+              ],
+              [
+                2300,
+                950,
+                2850,
+                1300
+              ],
+              [
+                3900,
+                950,
+                4500,
+                1300
+              ],
+              [
+                3100,
+                1700,
+                3650,
+                2200
+              ]
+            ],
+            "study_map": "user_sketch",
+            "study_route_choice": "direct",
+            "study_candidate_paths": {
+              "direct": [
+                "START",
+                "JUNCTION",
+                "JOIN",
+                "GOAL"
+              ],
+              "upper_loop": [
+                "START",
+                "JUNCTION",
+                "UPPER_W",
+                "UPPER_E",
+                "JOIN",
+                "GOAL"
+              ],
+              "lower_loop": [
+                "START",
+                "JUNCTION",
+                "LOWER_W",
+                "LOWER_E",
+                "JOIN",
+                "GOAL"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "name": "spacing_60",
+        "changed_parameter": "formation_spread",
+        "value": 60.0,
+        "scenario": {
+          "name": "UC-3 Route vs Defilade (Convoy)",
+          "id": 30,
+          "size": [
+            6000,
+            3000
+          ],
+          "dt": 1.0,
+          "duration": 1800.0,
+          "platform_types": {
+            "ugv": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.002,
+              "hp": 1.0
+            },
+            "at_team": {
+              "domain": 0,
+              "max_speed": 0.0,
+              "turn_rate": 0.0,
+              "sensor_range": 2000.0,
+              "weapon_range": 1000.0,
+              "pk_base": 0.008,
+              "hp": 1.0
+            },
+            "study_gun_truck": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.01,
+              "hp": 1.0
+            }
+          },
+          "forces": [
+            {
+              "side": 0,
+              "ptype": "ugv",
+              "count": 15,
+              "spawn": [
+                250,
+                1500
+              ],
+              "spawn_spread": 40.0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3050,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3550,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                2500,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                4100,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            }
+          ],
+          "objective": {
+            "goal": [
+              5750,
+              1500
+            ],
+            "goal_radius": 150.0,
+            "survive_fraction": 0.5,
+            "delivery_fraction": 1.0
+          },
+          "terrain": {
+            "cell": 25.0
+          },
+          "params": {
+            "route_bias": 0.0,
+            "formation_spread": 60.0,
+            "tempo": 1.0,
+            "comms_level": 0,
+            "follow_mode": "behavior",
+            "follow_topology": "chain",
+            "convoy": {
+              "march_unit_size": 5,
+              "march_units_per_serial": 3,
+              "serials_per_column": 1,
+              "pace": 10.0,
+              "time_gap": 4.0,
+              "cargo_per_vehicle": 5.0,
+              "roles": [
+                "control",
+                "cargo",
+                "cargo",
+                "cargo",
+                "cargo"
+              ],
+              "succession": "manned_only",
+              "escort_vehicles": 3,
+              "security_ptype": "study_gun_truck",
+              "autonomy_arm": "autonomous_march_unit",
+              "leader_loss_policy": "promote",
+              "handoff_steps": 5,
+              "contact_reaction": {
+                "action": "halt",
+                "triggers": [
+                  "receive_fire"
+                ],
+                "halt_scope": "all",
+                "release": {
+                  "rule": "timeout",
+                  "clear_s": 15.0
+                }
+              }
+            },
+            "control_mode": "direct",
+            "console_per_march_unit": {
+              "attention_basis": "assigned",
+              "exceptions": false
+            },
+            "queue_model": "reserve",
+            "n_operators": 1,
+            "span_capacity": 4,
+            "service_rate": 0.5,
+            "decision_interval": 30,
+            "patience": 20,
+            "q_operator": 0.95,
+            "q_auto": 0.7,
+            "q_fallback": 0.5,
+            "q_stall": 0.3,
+            "study_console_transfer": {
+              "rule": "transfer_all_successors",
+              "delay_s": 20,
+              "forced_loss": false
+            },
+            "study_herringbone": {
+              "experimental": true,
+              "offset_m": 20.0,
+              "road": "street polyline with building-safe parking / movement guard"
+            },
+            "target_priority": {
+              "order": [
+                "control"
+              ]
+            },
+            "route": [
+              [
+                0.0,
+                1500.0
+              ],
+              [
+                1800.0,
+                1500.0
+              ],
+              [
+                4800.0,
+                1500.0
+              ],
+              [
+                5750.0,
+                1500.0
+              ]
+            ],
+            "lookahead": 30.0,
+            "study_route_length_m": 5750.0,
+            "study_urban": true,
+            "street_graph": {
+              "nodes": [
+                {
+                  "id": "START",
+                  "x": 0.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JUNCTION",
+                  "x": 1800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JOIN",
+                  "x": 4800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "GOAL",
+                  "x": 5750.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "UPPER_W",
+                  "x": 2100.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "UPPER_E",
+                  "x": 4500.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "LOWER_W",
+                  "x": 1800.0,
+                  "y": 2400.0
+                },
+                {
+                  "id": "LOWER_E",
+                  "x": 4500.0,
+                  "y": 2400.0
+                }
+              ],
+              "edges": [
+                {
+                  "u": "START",
+                  "v": "JUNCTION",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 1800.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JOIN",
+                  "v": "GOAL",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 950.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.7,
+                  "length": 3000.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "UPPER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_W",
+                  "v": "UPPER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 2400.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "LOWER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 900.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_W",
+                  "v": "LOWER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 2700.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 948.6832980505138,
+                  "bidirectional": true,
+                  "geometry": []
+                }
+              ]
+            },
+            "study_street_path": [
+              "START",
+              "JUNCTION",
+              "JOIN",
+              "GOAL"
+            ],
+            "buildings": [
+              [
+                700,
+                900,
+                1600,
+                1350
+              ],
+              [
+                700,
+                1700,
+                1600,
+                2200
+              ],
+              [
+                2300,
+                950,
+                2850,
+                1300
+              ],
+              [
+                3900,
+                950,
+                4500,
+                1300
+              ],
+              [
+                3100,
+                1700,
+                3650,
+                2200
+              ]
+            ],
+            "study_map": "user_sketch",
+            "study_route_choice": "direct",
+            "study_candidate_paths": {
+              "direct": [
+                "START",
+                "JUNCTION",
+                "JOIN",
+                "GOAL"
+              ],
+              "upper_loop": [
+                "START",
+                "JUNCTION",
+                "UPPER_W",
+                "UPPER_E",
+                "JOIN",
+                "GOAL"
+              ],
+              "lower_loop": [
+                "START",
+                "JUNCTION",
+                "LOWER_W",
+                "LOWER_E",
+                "JOIN",
+                "GOAL"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "name": "comms_C2",
+        "changed_parameter": "comms_level",
+        "value": 2,
+        "scenario": {
+          "name": "UC-3 Route vs Defilade (Convoy)",
+          "id": 30,
+          "size": [
+            6000,
+            3000
+          ],
+          "dt": 1.0,
+          "duration": 1800.0,
+          "platform_types": {
+            "ugv": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.002,
+              "hp": 1.0
+            },
+            "at_team": {
+              "domain": 0,
+              "max_speed": 0.0,
+              "turn_rate": 0.0,
+              "sensor_range": 2000.0,
+              "weapon_range": 1000.0,
+              "pk_base": 0.008,
+              "hp": 1.0
+            },
+            "study_gun_truck": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.01,
+              "hp": 1.0
+            }
+          },
+          "forces": [
+            {
+              "side": 0,
+              "ptype": "ugv",
+              "count": 15,
+              "spawn": [
+                250,
+                1500
+              ],
+              "spawn_spread": 40.0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3050,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3550,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                2500,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                4100,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            }
+          ],
+          "objective": {
+            "goal": [
+              5750,
+              1500
+            ],
+            "goal_radius": 150.0,
+            "survive_fraction": 0.5,
+            "delivery_fraction": 1.0
+          },
+          "terrain": {
+            "cell": 25.0
+          },
+          "params": {
+            "route_bias": 0.0,
+            "formation_spread": 40.0,
+            "tempo": 1.0,
+            "comms_level": 2,
+            "follow_mode": "behavior",
+            "follow_topology": "chain",
+            "convoy": {
+              "march_unit_size": 5,
+              "march_units_per_serial": 3,
+              "serials_per_column": 1,
+              "pace": 10.0,
+              "time_gap": 4.0,
+              "cargo_per_vehicle": 5.0,
+              "roles": [
+                "control",
+                "cargo",
+                "cargo",
+                "cargo",
+                "cargo"
+              ],
+              "succession": "manned_only",
+              "escort_vehicles": 3,
+              "security_ptype": "study_gun_truck",
+              "autonomy_arm": "autonomous_march_unit",
+              "leader_loss_policy": "promote",
+              "handoff_steps": 5,
+              "contact_reaction": {
+                "action": "halt",
+                "triggers": [
+                  "receive_fire"
+                ],
+                "halt_scope": "all",
+                "release": {
+                  "rule": "timeout",
+                  "clear_s": 15.0
+                }
+              }
+            },
+            "control_mode": "direct",
+            "console_per_march_unit": {
+              "attention_basis": "assigned",
+              "exceptions": false
+            },
+            "queue_model": "reserve",
+            "n_operators": 1,
+            "span_capacity": 4,
+            "service_rate": 0.5,
+            "decision_interval": 30,
+            "patience": 20,
+            "q_operator": 0.95,
+            "q_auto": 0.7,
+            "q_fallback": 0.5,
+            "q_stall": 0.3,
+            "study_console_transfer": {
+              "rule": "transfer_all_successors",
+              "delay_s": 20,
+              "forced_loss": false
+            },
+            "study_herringbone": {
+              "experimental": true,
+              "offset_m": 20.0,
+              "road": "street polyline with building-safe parking / movement guard"
+            },
+            "target_priority": {
+              "order": [
+                "control"
+              ]
+            },
+            "route": [
+              [
+                0.0,
+                1500.0
+              ],
+              [
+                1800.0,
+                1500.0
+              ],
+              [
+                4800.0,
+                1500.0
+              ],
+              [
+                5750.0,
+                1500.0
+              ]
+            ],
+            "lookahead": 30.0,
+            "study_route_length_m": 5750.0,
+            "study_urban": true,
+            "street_graph": {
+              "nodes": [
+                {
+                  "id": "START",
+                  "x": 0.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JUNCTION",
+                  "x": 1800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JOIN",
+                  "x": 4800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "GOAL",
+                  "x": 5750.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "UPPER_W",
+                  "x": 2100.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "UPPER_E",
+                  "x": 4500.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "LOWER_W",
+                  "x": 1800.0,
+                  "y": 2400.0
+                },
+                {
+                  "id": "LOWER_E",
+                  "x": 4500.0,
+                  "y": 2400.0
+                }
+              ],
+              "edges": [
+                {
+                  "u": "START",
+                  "v": "JUNCTION",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 1800.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JOIN",
+                  "v": "GOAL",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 950.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.7,
+                  "length": 3000.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "UPPER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_W",
+                  "v": "UPPER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 2400.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "LOWER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 900.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_W",
+                  "v": "LOWER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 2700.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 948.6832980505138,
+                  "bidirectional": true,
+                  "geometry": []
+                }
+              ]
+            },
+            "study_street_path": [
+              "START",
+              "JUNCTION",
+              "JOIN",
+              "GOAL"
+            ],
+            "buildings": [
+              [
+                700,
+                900,
+                1600,
+                1350
+              ],
+              [
+                700,
+                1700,
+                1600,
+                2200
+              ],
+              [
+                2300,
+                950,
+                2850,
+                1300
+              ],
+              [
+                3900,
+                950,
+                4500,
+                1300
+              ],
+              [
+                3100,
+                1700,
+                3650,
+                2200
+              ]
+            ],
+            "study_map": "user_sketch",
+            "study_route_choice": "direct",
+            "study_candidate_paths": {
+              "direct": [
+                "START",
+                "JUNCTION",
+                "JOIN",
+                "GOAL"
+              ],
+              "upper_loop": [
+                "START",
+                "JUNCTION",
+                "UPPER_W",
+                "UPPER_E",
+                "JOIN",
+                "GOAL"
+              ],
+              "lower_loop": [
+                "START",
+                "JUNCTION",
+                "LOWER_W",
+                "LOWER_E",
+                "JOIN",
+                "GOAL"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "name": "comms_C5",
+        "changed_parameter": "comms_level",
+        "value": 5,
+        "scenario": {
+          "name": "UC-3 Route vs Defilade (Convoy)",
+          "id": 30,
+          "size": [
+            6000,
+            3000
+          ],
+          "dt": 1.0,
+          "duration": 1800.0,
+          "platform_types": {
+            "ugv": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.002,
+              "hp": 1.0
+            },
+            "at_team": {
+              "domain": 0,
+              "max_speed": 0.0,
+              "turn_rate": 0.0,
+              "sensor_range": 2000.0,
+              "weapon_range": 1000.0,
+              "pk_base": 0.008,
+              "hp": 1.0
+            },
+            "study_gun_truck": {
+              "domain": 0,
+              "max_speed": 12.0,
+              "turn_rate": 0.6,
+              "sensor_range": 1500.0,
+              "weapon_range": 1200.0,
+              "pk_base": 0.01,
+              "hp": 1.0
+            }
+          },
+          "forces": [
+            {
+              "side": 0,
+              "ptype": "ugv",
+              "count": 15,
+              "spawn": [
+                250,
+                1500
+              ],
+              "spawn_spread": 40.0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3050,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                3550,
+                1100
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                2500,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            },
+            {
+              "side": 1,
+              "ptype": "at_team",
+              "count": 1,
+              "spawn": [
+                4100,
+                1900
+              ],
+              "spawn_spread": 0,
+              "formation": "column"
+            }
+          ],
+          "objective": {
+            "goal": [
+              5750,
+              1500
+            ],
+            "goal_radius": 150.0,
+            "survive_fraction": 0.5,
+            "delivery_fraction": 1.0
+          },
+          "terrain": {
+            "cell": 25.0
+          },
+          "params": {
+            "route_bias": 0.0,
+            "formation_spread": 40.0,
+            "tempo": 1.0,
+            "comms_level": 5,
+            "follow_mode": "behavior",
+            "follow_topology": "chain",
+            "convoy": {
+              "march_unit_size": 5,
+              "march_units_per_serial": 3,
+              "serials_per_column": 1,
+              "pace": 10.0,
+              "time_gap": 4.0,
+              "cargo_per_vehicle": 5.0,
+              "roles": [
+                "control",
+                "cargo",
+                "cargo",
+                "cargo",
+                "cargo"
+              ],
+              "succession": "manned_only",
+              "escort_vehicles": 3,
+              "security_ptype": "study_gun_truck",
+              "autonomy_arm": "autonomous_march_unit",
+              "leader_loss_policy": "promote",
+              "handoff_steps": 5,
+              "contact_reaction": {
+                "action": "halt",
+                "triggers": [
+                  "receive_fire"
+                ],
+                "halt_scope": "all",
+                "release": {
+                  "rule": "timeout",
+                  "clear_s": 15.0
+                }
+              }
+            },
+            "control_mode": "direct",
+            "console_per_march_unit": {
+              "attention_basis": "assigned",
+              "exceptions": false
+            },
+            "queue_model": "reserve",
+            "n_operators": 1,
+            "span_capacity": 4,
+            "service_rate": 0.5,
+            "decision_interval": 30,
+            "patience": 20,
+            "q_operator": 0.95,
+            "q_auto": 0.7,
+            "q_fallback": 0.5,
+            "q_stall": 0.3,
+            "study_console_transfer": {
+              "rule": "transfer_all_successors",
+              "delay_s": 20,
+              "forced_loss": false
+            },
+            "study_herringbone": {
+              "experimental": true,
+              "offset_m": 20.0,
+              "road": "street polyline with building-safe parking / movement guard"
+            },
+            "target_priority": {
+              "order": [
+                "control"
+              ]
+            },
+            "route": [
+              [
+                0.0,
+                1500.0
+              ],
+              [
+                1800.0,
+                1500.0
+              ],
+              [
+                4800.0,
+                1500.0
+              ],
+              [
+                5750.0,
+                1500.0
+              ]
+            ],
+            "lookahead": 30.0,
+            "study_route_length_m": 5750.0,
+            "study_urban": true,
+            "street_graph": {
+              "nodes": [
+                {
+                  "id": "START",
+                  "x": 0.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JUNCTION",
+                  "x": 1800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "JOIN",
+                  "x": 4800.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "GOAL",
+                  "x": 5750.0,
+                  "y": 1500.0
+                },
+                {
+                  "id": "UPPER_W",
+                  "x": 2100.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "UPPER_E",
+                  "x": 4500.0,
+                  "y": 700.0
+                },
+                {
+                  "id": "LOWER_W",
+                  "x": 1800.0,
+                  "y": 2400.0
+                },
+                {
+                  "id": "LOWER_E",
+                  "x": 4500.0,
+                  "y": 2400.0
+                }
+              ],
+              "edges": [
+                {
+                  "u": "START",
+                  "v": "JUNCTION",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 1800.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JOIN",
+                  "v": "GOAL",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 950.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.7,
+                  "length": 3000.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "UPPER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_W",
+                  "v": "UPPER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 2400.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "UPPER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.25,
+                  "length": 854.4003745317531,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "JUNCTION",
+                  "v": "LOWER_W",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 900.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_W",
+                  "v": "LOWER_E",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 2700.0,
+                  "bidirectional": true,
+                  "geometry": []
+                },
+                {
+                  "u": "LOWER_E",
+                  "v": "JOIN",
+                  "width": 100.0,
+                  "speed_mult": 1.0,
+                  "exposure": 0.2,
+                  "length": 948.6832980505138,
+                  "bidirectional": true,
+                  "geometry": []
+                }
+              ]
+            },
+            "study_street_path": [
+              "START",
+              "JUNCTION",
+              "JOIN",
+              "GOAL"
+            ],
+            "buildings": [
+              [
+                700,
+                900,
+                1600,
+                1350
+              ],
+              [
+                700,
+                1700,
+                1600,
+                2200
+              ],
+              [
+                2300,
+                950,
+                2850,
+                1300
+              ],
+              [
+                3900,
+                950,
+                4500,
+                1300
+              ],
+              [
+                3100,
+                1700,
+                3650,
+                2200
+              ]
+            ],
+            "study_map": "user_sketch",
+            "study_route_choice": "direct",
+            "study_candidate_paths": {
+              "direct": [
+                "START",
+                "JUNCTION",
+                "JOIN",
+                "GOAL"
+              ],
+              "upper_loop": [
+                "START",
+                "JUNCTION",
+                "UPPER_W",
+                "UPPER_E",
+                "JOIN",
+                "GOAL"
+              ],
+              "lower_loop": [
+                "START",
+                "JUNCTION",
+                "LOWER_W",
+                "LOWER_E",
+                "JOIN",
+                "GOAL"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "sources": {
+      "src/sandtable/__init__.py": "87f309349a7f7901fca94c4e1fe577eb7408904ec98de9b6d82d1692abf5b01e",
+      "src/sandtable/bayes_te.py": "559c97e2a96daa335db60895f087dedf475b1dc80a880da9c8252f9f5573e755",
+      "src/sandtable/behavior.py": "c64963d532a636d57a047bdb0e1f67e0daf3fb9c243ed327689831e8d73fece0",
+      "src/sandtable/belief.py": "9ab13698287be786ef7d42392f5b24e16db7590792025cd4a97a805310d56590",
+      "src/sandtable/c2.py": "8811025c4bad48d114e6e3d08e25293c92dfa1eaa063e8279aa3974d89b1da47",
+      "src/sandtable/c2_units.py": "114ab06d0f9b03f0bd1290965c2b1a688853c2e87a4cb3c3d7fd80ac9b588733",
+      "src/sandtable/comms_ew.py": "0816368d246adae185521b4e5282fe880658db166f62451ebf7405446d716a0f",
+      "src/sandtable/convoy.py": "c97dda1453c726fe81083f05c2f1e1198e9a21737677fed9d6f82a5450fc9620",
+      "src/sandtable/convoy_metrics.py": "04b1ba1665ecd04fec02c0478f54289aa498d156c93b87ab93a438ae6d33f62a",
+      "src/sandtable/counter_uas.py": "d57e850523e27ae2f743f2dca9ad0640bbe9e9e7d64a264fcde95bbbe30d8520",
+      "src/sandtable/engagement.py": "ec5fa4ab2cf777023f0fe716fe2c0ec865692a0d51bfcbef9de9f0a2bb5517fa",
+      "src/sandtable/entities.py": "48ccd62cb44c3b048e8940335414f3f4de54828537cd1be241b77d9119b121b9",
+      "src/sandtable/formation_metrics.py": "f8120ad2940458a90bb19e8f1d37c9a0ccd7b74cc5d752de2752e0904a5dfc6a",
+      "src/sandtable/mechanics.py": "d7863d457955e11aef228c58c2d33a2e9af4ef4ff31053121abd92d733714a38",
+      "src/sandtable/metrics.py": "183b80d3e4ca489ca48b4d9c6133dc7f7dad7def1af3831712ccb57556fb47d9",
+      "src/sandtable/motion.py": "4351d89925dd2878f16bf5e9fc88dbb9c1ffa1f516a2ddc447850584f8cebd52",
+      "src/sandtable/opt_metrics.py": "c41f9b0ee4fafa2bc683c4ae7f6e16ea3bf3c8aab2d9d800f3446f4899a651b9",
+      "src/sandtable/personality.py": "e7505b029b999e1a1075ca744458b1dd1ad01474f36460c6a7c799192bade3d6",
+      "src/sandtable/planning.py": "bb942bf1fd55039b889e76a53899687f1ee65c87bbd707a406f76390f4d7444c",
+      "src/sandtable/plugin.py": "b56a789935d60f6200df4c8bff892e98caa381c99a7e39db0016d0f03548dc14",
+      "src/sandtable/replay.py": "792ff3bb3fefb8d46c1c35fc7bf84049e791b4f001817891137f14479099e999",
+      "src/sandtable/route.py": "98795bff5d4075155d825cf1d02aae75d293a695e8879f240c6a01b16c2e48c3",
+      "src/sandtable/runner.py": "4510a29cdf8f9411d0356b331cac72563d4e7498e8d233e687e930a91a9a5524",
+      "src/sandtable/scenario.py": "7db1342980037433a6e7e2880202cc98e0b19e1ee1606e399212e3164cf2ff34",
+      "src/sandtable/seeding.py": "67b150cf80d33a40965729a3edb401d51f54d73b7ab42ff38954eb62a559a7b7",
+      "src/sandtable/sensing.py": "4f9571d01a04bfc19fda2b486a78e136599a55b02e38687ed6d760c909d5ef5b",
+      "src/sandtable/sim.py": "0f0f511d9d0777181667aaf3d089951e25131711cd61eebf8489b298bf0efd91",
+      "src/sandtable/street_graph.py": "fb89424d1910a7a4d7565611bb3fc35918e0786e44b93a880b64ff27e16f8a5a",
+      "src/sandtable/world.py": "2d7f4cab927653815734189b8a2de3721fdf2854187c292a62062d1596759f8d",
+      "studies/convoy-study/baseline_09_14/run.py": "36b1076ffcdaa9450703ce8cb2d8561777befaf7e4f8dbf79698310aa57f0933",
+      "studies/convoy-study/build_visuals.py": "58326dffe74bbc808cb9ef138f409e1543f5328675d230e28bb30b3c184a76c7",
+      "studies/convoy-study/console_19/run.py": "1c5e34d4f0798475ec5cae77e0d1d492c836279e8c6aa5f397f331c6e3c24d14",
+      "studies/convoy-study/contact_09_12_14/run.py": "1518f76bb31b456dec9e23867d05c36cc5b890c7b54bc2f7d18ae111b754c826",
+      "studies/convoy-study/integrated/run.py": "c8c75c6a92dfc9e3dd33a34a4be8747113f2af35c7d70dbcaef634321d873b0f",
+      "studies/convoy-study/leader_12_17/check_motion.py": "7972d67e8f7f3f7f938097aa0a118818e813d392ecc10f3b393787bcfa7b016f",
+      "studies/convoy-study/leader_12_17/herringbone.py": "11a2177c00180c3fdbf61492d2b48b1fa0f930f4a092b58d56fb9a4d3bb85bd1",
+      "studies/convoy-study/leader_12_17/run.py": "4f62f959c697115ed065acfc97b851a54f80d60d3bca4ff27b29ce14196fc607",
+      "studies/convoy-study/red_priority_18/branch_sources/engagement.py": "ac46b85fe7519b3356425c04a6c89132d25ca6c1fb4ae16a43d46ede55467e4b",
+      "studies/convoy-study/red_priority_18/branch_sources/target_priority.py": "c9289b887fbd49073a3d6cc5ce6c264cea27fda3528edcc3309f29e23ed5723e",
+      "studies/convoy-study/red_priority_18/run.py": "c71aaed65c6df22ddc949fdaed7a4b1b0bf95734f952d2b10bf523c1edaa0ed6",
+      "studies/convoy-study/route_13/check_route.py": "07264ce1ca9c1d554f1208800e9a910dddcaef8f405afdd9220c2e3d72985297",
+      "studies/convoy-study/route_13/run.py": "788c19394780e45400d61554fa8c8972fe5b2652e1036a81337f8e8a4a5e7b80",
+      "studies/convoy-study/sketch_map/check_sketch.py": "72b6f1df74135c4baa3cc542d7ca79f050cb8469e726b2faf69c1264e4e624b9",
+      "studies/convoy-study/sketch_map/run.py": "4a4e0cf8c9274d539055e0d78066d753a875205ce5bf6e4c842ed35774ace8ca",
+      "studies/convoy-study/sweep_15/run.py": "da1e568e258fac07222b674d346cf858e97bbfb475e4115653fccda89fae8ec2",
+      "studies/convoy-study/urban_16/check_urban.py": "3f49de7d622345a736bb9fb49b8a47d74b25bb020caadef62ff4db3192ad108c",
+      "studies/convoy-study/urban_16/run.py": "bf6227905e7fdcde9291603f9b3d22213ee0d30480c8bceb935845766bf014e7",
+      "studies/convoy-study/urban_16/telemetry.py": "369e08478764e8669538fa66ed40d1df8689fd74a98011d818e8383f7c73a058",
+      "studies/convoy-study/urban_maps/check_maps.py": "0251dbd43ca273655f9b408714d7c36c40d986db8b315bc151081e2def751a53",
+      "studies/convoy-study/urban_maps/run.py": "ff21d7472a67f8ed9a1962bbd2ba1108a6352460e8a18d6bd288171a21a90459"
+    },
+    "analysis": {
+      "metrics": [
+        "cargo_delivered",
+        "cargo_lost",
+        "cargo_in_transit",
+        "crew_lost",
+        "crew_steps_at_risk",
+        "blue_losses",
+        "success",
+        "c2u_serviced_frac",
+        "capped_completion_s"
+      ],
+      "interval": "paired t, 95%, unadjusted exploratory",
+      "capped_completion_s": "mission_time if success else scenario duration",
+      "scope": "OFAT, not interactions; matched seeds do not ensure matched request streams after divergence"
+    },
+    "chronology": "Frozen before this sweep; chosen after earlier exploratory scenario studies, not a blinded preregistration."
+  }
+}

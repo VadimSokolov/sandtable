@@ -103,15 +103,15 @@ class Priority:
         self.patch=patch.object(engagement,'step',step);self.patch.__enter__();return self
     def __exit__(self,*args):return self.patch.__exit__(*args)
 
-def mission(cfg,seed,priority=True):
+def mission(cfg,seed,priority=True,capture=True):
     recovery=NaturalRecovery()
     if priority:
         p=Priority(cfg)
-        with p:trace,result=m.record(cfg,seed=seed,herringbone=True,c2_bridge=recovery)
+        with p:trace,result=m.record(cfg,seed=seed,herringbone=True,c2_bridge=recovery,capture=capture)
         assert result['blue_losses']==len(p.deaths), 'A Blue death was not recorded in combat'
         result.update(tp.metrics(p.prio))
         trace['events']+=p.events
-    else:trace,result=m.record(cfg,seed=seed,herringbone=True,c2_bridge=recovery)
+    else:trace,result=m.record(cfg,seed=seed,herringbone=True,c2_bridge=recovery,capture=capture)
     trace['events']=sorted(trace['events']+recovery.events,key=lambda e:e['t'])
     assert not any('FORCED' in e['event'] or 'DIAGNOSTIC_LOSS' in e['event'] for e in trace['events'])
     assert result['cargo_loaded']==60 and result['crew_total']==15

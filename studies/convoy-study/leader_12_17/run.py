@@ -23,10 +23,11 @@ from sandtable.sim import run_mission
 from sandtable.scenario import Scenario
 from herringbone import Herringbone
 
-def record(config, seed=0, kill_at=None, herringbone=False, c2_bridge=None):
+def record(config, seed=0, kill_at=None, herringbone=False, c2_bridge=None, capture=True):
     state, frames, events = {}, [], []
     original_step, original_risk = behavior.step, metrics.accumulate_crew_at_risk
     def snap(ent, t):
+        if not capture:return
         bhv = state['bhv']
         frames.append(dict(t=t, x=ent.x.round(2).tolist(), y=ent.y.round(2).tolist(),
             h=ent.heading.round(3).tolist(), alive=ent.alive.astype(int).tolist(),
@@ -56,7 +57,7 @@ def record(config, seed=0, kill_at=None, herringbone=False, c2_bridge=None):
     def step(ent, bhv, *args, **kwargs):
         k = args[3]
         state.update(bhv=bhv, ent=ent, world=kwargs.get('world'),t=(k+1)*config['dt'])
-        if not frames:
+        if 'entities' not in state:
             state['entities'] = [dict(side=int(ent.side[i]), domain=int(ent.domain[i]),
                 crew=int(ent.crew[i]), sensor_range=float(ent.sensor_range[i]),
                 weapon_range=float(ent.weapon_range[i]), convoy_role=int(ent.convoy_role[i]),
@@ -205,6 +206,9 @@ def main():
     print('Viewer updated:',len(old)+len(traces),'options')
 
 def build_viewer(traces):
+    sweep_data=STUDY/'sweep_15/replays.json'
+    if sweep_data.exists() and not any(t.get('group','').startswith('#15 — settings') for t in traces):
+        traces=list(traces)+json.loads(sweep_data.read_text())
     sketch_data=STUDY/'sketch_map/replays.json'
     if sketch_data.exists() and not any(t.get('group','').startswith('#16 — user sketch') for t in traces):
         traces=list(traces)+json.loads(sketch_data.read_text())
@@ -238,6 +242,8 @@ def build_viewer(traces):
     packed=base64.b64encode(gzip.compress(payload.encode('utf-8'),mtime=0)).decode('ascii')
     decoder='JSON.parse(await new Response(new Blob([Uint8Array.from(atob('+json.dumps(packed)+'),c=>c.charCodeAt(0))]).stream().pipeThrough(new DecompressionStream("gzip"))).text())'
     template=m.TEMPLATE.replace('(function(){','(async function(){',1).replace('/*__TRACES__*/',decoder)
+    template=template.replace('<a href="convoy_results.html"',
+        '<a href="convoy_sweep.html" style="color:var(--air);padding:8px">#15 Settings comparison →</a><a href="convoy_results.html"')
     template=template.replace('// 2. 1km Military Grid Lines', '''
     // Draw the entire street network, including the unused branch, below routes/buildings.
     if(T.street_graph){

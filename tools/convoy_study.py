@@ -14,7 +14,7 @@ import sys
 ROOT=Path(__file__).resolve().parents[1]
 STUDY=ROOT/'studies/convoy-study'
 ORDER=('baseline_09_14','contact_09_12_14','leader_12_17','console_19',
-       'integrated','red_priority_18','route_13','urban_16','urban_maps','sketch_map')
+       'integrated','red_priority_18','route_13','urban_16','urban_maps','sketch_map','sweep_15')
 
 def build():
     missing=[name for name in ORDER if not (STUDY/name/'replays.json').exists()]
@@ -30,6 +30,9 @@ def build():
     out=ROOT/'report/viz/convoy_study.html'
     out.parent.mkdir(parents=True,exist_ok=True)
     out.write_bytes((STUDY/'baseline_09_14/viewer.html').read_bytes())
+    sweep_spec=importlib.util.spec_from_file_location('sweep_dashboard',STUDY/'sweep_15/run.py')
+    sweep=importlib.util.module_from_spec(sweep_spec);sweep_spec.loader.exec_module(sweep)
+    sweep.dashboard(json.loads((STUDY/'sweep_15/results.json').read_text()))
     print(f'Built {out} ({len(traces)} options)')
 
 def main():
