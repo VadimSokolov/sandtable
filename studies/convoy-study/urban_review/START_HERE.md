@@ -6,7 +6,7 @@ The updated page keeps the original paper colors, handwritten typography, rounde
 
 - Local server: `http://127.0.0.1:8766/urban_resupply.html`.
 - Generated artifact: `report/viz/urban_resupply.html`.
-- The generated HTML is a single-file deliverable containing 56 complete replay traces, the 90-run settings study, 44 native MathML equations and an embedded archived original prototype.
+- The generated HTML is a single-file deliverable containing 58 complete replay traces, the 90-run settings study, rendered mathematical lessons and an embedded archived original prototype.
 - It can be opened as a local file in a modern browser with gzip `DecompressionStream` support. Google Fonts is optional; offline fonts fall back locally. No server or CDN is needed for data, playback or equations.
 
 The original downloaded HTML is preserved byte-for-byte in `original.html` and embedded in a sandboxed, independently running archive. Its inventory, dispatch and repair mechanisms differ from the Python convoy. Its historical text is explicitly labeled as such.
@@ -55,25 +55,29 @@ Browser verification checked a crewed Herringbone selection maps to recording 27
 
 Scene-selection correction: every simple option change now loads its recording immediately. A visible loaded-scene line reports the actual recording, route (where available), comms level, vehicle count and crew count. Same-layout scenarios may change only behavior or scheduled events; the recorded route is highlighted in orange.
 
-## Worked-test tabs
+## Learn each issue — full calculations and real runs
 
-The new Worked tests section has one English example for each of #9 and #12–#19 (nine tabs). Each tab includes setup, a rendered equation, four calculation steps, a separately controlled animated storyboard, the exact test function (including parameterization decorators), its source hash and its selected-test result. #8/#10/#11 remain covered by the existing model cards; this lab intentionally does not cover every test.
+The former schematic worked-test panel has been replaced with an English lesson for each of #9 and #12–#19. Each lesson asks a concrete question, defines its symbols, substitutes numerical values step by step, explains the meaning and then embeds the actual Python mission player underneath. Tests are supporting evidence in a collapsed panel; there is no separate toy-animation clock.
 
-Regenerate verification and examples with the repository test environment:
+The #14 lesson is the detailed reference: distance calculation, range gate, a × n × z per vehicle, a per-step sum, accumulation over time, units, crewed/autonomous staffing, and the difference between exposure and casualties. It explicitly states that this exposure metric does not require detection or LOS and counts a crew only once per step.
+
+Two new real 100-step diagnostic runs isolate exposure arithmetic using an intentionally huge positive Red range and almost-zero positive lethality. Manned: 39 × 100 = 3900 crew-steps. Autonomous cargo: 15 × 100 = 1500. Their exact per-vehicle contributions were checked against the real engine increment on every step, with no extra random draws. They are constructed diagnostics, not realistic combat conditions. The short horizon is for exposure accounting, not completion of cargo delivery.
+
+The page now retains the original 56 recordings and adds diagnostic recordings 57–58. Every lesson includes a related-scenario selector and the real playback controls, timeline, inspector and event log. At 1, 10 or 100 seconds, the #14 audit displays exact arithmetic and all 18 per-vehicle contributions. Older traces lacking the detailed ledger show recorded totals only. Actual run inputs may differ from the small teaching example; this is stated rather than conflating them.
+
+Regenerate the two diagnostic recordings and the page with:
 
 ```sh
-PYTHONPATH=src python studies/convoy-study/urban_review/worked/export.py
+PYTHONPATH=src python studies/convoy-study/urban_review/exposure_lesson/run.py
 python studies/convoy-study/urban_review/build.py
 ```
 
-The export command executes nine selected test functions, totaling 12 cases because the #19 test is parameterized over four capacities. It publishes examples.json and verification.xml. The #18 selector diagnostic is newly added here and invokes the preserved branch implementation; other examples reference existing repository tests. This is not a full-suite run.
+`lessons.py` supplies the lesson content. The earlier `worked/export.py` and its 12-case verification artifact remain as supporting test evidence for the small examples. Two additional existing exposure tests were run successfully: `test_full_range_equals_crew_times_steps_alive` and `test_crew_counted_once_per_step_with_many_shooters`. No full-suite run or machine-learning training is claimed.
 
-All storyboard movements and glyph placements are explanatory. They are not new mission traces or claims that a unit test simulated travel. The #12 example verifies a halt timer, not Herringbone; #14 verifies crew assignment, not risk reduction; #15 verifies a score penalty, not an optimized policy; #18 supplies an eligibility mask, not a sensing or weapon model; #19 verifies an equation, not calibrated workload.
-
-The page embeds nine additional worked equations alongside the 44 existing equations. Only the selected lab tab is rendered at a time. All 56 mission recordings and both main model modes remain available.
+The player is moved between Simulation and Learn each issue, not duplicated. Both contexts retain their own paused playback bookmarks when switching panels.
 
 ## Main page tabs
 
-The review now shows one main panel at a time: Overview, Simulation, Worked tests, Issue models, Combined model, Results, Evidence and Archive. Existing fragment URLs (such as `#sim` and `#worked-tests`) select the matching panel. The tabs support arrow keys, Home/End and browser back/forward navigation. Selecting a different panel pauses the Python replay and worked-test walkthrough; selections and calculation steps are retained. The independent logistics prototype retains its own runtime within its iframe.
+The review now shows one main panel at a time: Overview, Simulation, Learn each issue, Issue models, Combined model, Results, Evidence and Archive. Existing fragment URLs (such as `#sim` and `#worked-tests`) select the matching panel. The tabs support arrow keys, Home/End and browser back/forward navigation. Selecting a different panel pauses the Python replay and worked-test walkthrough; selections and calculation steps are retained. The independent logistics prototype retains its own runtime within its iframe.
 
 The Results replay button opens the Simulation panel automatically. Canvas sizes are refreshed when their panel becomes visible. Introductory content was moved into Overview rather than removed. Browser checks confirmed exactly one visible main panel for every tab, Results-to-Simulation navigation and retention of the #19 worked result after leaving and returning.

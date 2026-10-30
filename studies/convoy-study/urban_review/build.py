@@ -8,6 +8,7 @@ import base64
 import gzip
 import hashlib
 import html
+import importlib.util
 import json
 import re
 import subprocess
@@ -32,7 +33,9 @@ def equation(tex):
     return '<div class="equation">'+convert(tex,display='block')+'</div>'
 
 def guide(source):
-    text=source.read_text()
+    return render_lesson(source.read_text())
+
+def render_lesson(text):
     text=re.sub(r'\$\$(.*?)\$\$',lambda m:'\n\n'+equation(m[1].strip())+'\n\n',text,flags=re.S)
     return markdown.markdown(text,extensions=['tables','fenced_code','sane_lists'])
 
@@ -62,6 +65,11 @@ def build():
         traces+=data
         inventory.append(dict(source=str(path.relative_to(ROOT)),sha256=hashlib.sha256(path.read_bytes()).hexdigest(),count=len(data),first_option=start+1))
     assert len(traces)==56
+    exposure_path=HERE/'exposure_lesson/replays.json'
+    exposure_traces=json.loads(exposure_path.read_text())
+    assert len(exposure_traces)==2
+    traces+=exposure_traces
+    inventory.append(dict(source=str(exposure_path.relative_to(ROOT)),sha256=hashlib.sha256(exposure_path.read_bytes()).hexdigest(),count=2,first_option=57))
     original=(HERE/'original.html').read_text()
     styles=''.join(re.findall(r'<style>(.*?)</style>',original,flags=re.S))
     cards=''.join('<details class="pc" id="issue-'+n+'"><summary><h3>#'+n+' · '+title+'</h3></summary><p>'+desc+'</p>'+equation(tex)+'<p>'+note+'</p><p class="src">Verification source: <code>tests/'+test+'</code></p></details>' for n,title,desc,tex,test,note in CARDS)
@@ -69,12 +77,17 @@ def build():
     source_links=''.join('<li><code>'+row['source']+'</code> — '+str(row['count'])+' recorded missions</li>' for row in inventory)
     sweeps=clean(json.loads((STUDY/'sweep_15/results.json').read_text()))
     worked=json.loads((HERE/'worked/examples.json').read_text())
-    for example in worked['examples']:example['formula_html']=equation(example['formula'])
+    lesson_spec=importlib.util.spec_from_file_location('review_lessons',HERE/'lessons.py')
+    lesson_module=importlib.util.module_from_spec(lesson_spec);lesson_spec.loader.exec_module(lesson_module)
+    lesson_module.configure(worked['examples'],traces,sweeps)
+    for example in worked['examples']:
+        example['formula_html']=equation(example['formula'])
+        example['lesson_html']=render_lesson(example['lesson_markdown'])
     legacy=base64.b64encode(gzip.compress(original.encode(),mtime=0)).decode()
-    provenance=dict(generated_from='local saved files; no new simulation runs',sources=inventory,
+    provenance=dict(generated_from='Builder reads saved files; exposure diagnostics were generated separately by exposure_lesson/run.py',sources=inventory,
         snapshot_revision=subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip(),
         distinctions='unit tests verify rules; saved missions illustrate behavior; experiments estimate outcomes within the model',
-        presentation_sources={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [HERE/'build.py',HERE/'page.html',HERE/'app.js',HERE/'original.html',STUDY/'INTEGRATED_SCENARIOS_MATH.md',HERE/'worked/examples.json',HERE/'worked/export.py',HERE/'worked/test_priority_example.py']})
+        presentation_sources={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [HERE/'build.py',HERE/'page.html',HERE/'app.js',HERE/'original.html',STUDY/'INTEGRATED_SCENARIOS_MATH.md',HERE/'worked/examples.json',HERE/'worked/export.py',HERE/'worked/test_priority_example.py',HERE/'lessons.py',HERE/'exposure_lesson/run.py']})
     payload=pack(clean(dict(traces=traces,sweep=sweeps,worked=worked,provenance=provenance)))
     template=(HERE/'page.html').read_text()
     out=ROOT/'report/viz/urban_resupply.html';out.parent.mkdir(parents=True,exist_ok=True)

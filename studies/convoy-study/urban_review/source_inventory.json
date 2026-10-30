@@ -1,5 +1,5 @@
 {
-  "generated_from": "local saved files; no new simulation runs",
+  "generated_from": "Builder reads saved files; exposure diagnostics were generated separately by exposure_lesson/run.py",
   "sources": [
     {
       "source": "studies/convoy-study/baseline_09_14/replays.json",
@@ -66,18 +66,26 @@
       "sha256": "610c1c758aabf4f10fe37c22d519bc18d8c8f0d24264e3811a6b36d284bc2cfe",
       "count": 9,
       "first_option": 48
+    },
+    {
+      "source": "studies/convoy-study/urban_review/exposure_lesson/replays.json",
+      "sha256": "990c88821af2cfa1857fc350e2f3248959c2873f9839089187c2affb8b95fd6a",
+      "count": 2,
+      "first_option": 57
     }
   ],
   "snapshot_revision": "775b811d44ae8d27c85ac9b495badb825f085ed1",
   "distinctions": "unit tests verify rules; saved missions illustrate behavior; experiments estimate outcomes within the model",
   "presentation_sources": {
-    "studies/convoy-study/urban_review/build.py": "9e8f3c0541efc86ca47672d825308342e0e1fa47e1689a119f34faf8aa03f087",
-    "studies/convoy-study/urban_review/page.html": "b6d6b843d5908b9e4c2b631600673b0a2c0108cf875b1f11927d87f0a1ed344b",
-    "studies/convoy-study/urban_review/app.js": "12dc0e1df3d621e9ffe940f0f78afb1da8f6e667ec6314c468e16ec82da14ffb",
+    "studies/convoy-study/urban_review/build.py": "2ad30ad18ba2e50ff1f588866a60714f39d3f4df0f743d62acd6620934ced3d5",
+    "studies/convoy-study/urban_review/page.html": "725af8c02dc26d97333bb6e570b852e4487bdeed33c58c0391770e27f0d0115f",
+    "studies/convoy-study/urban_review/app.js": "24a6299e22ddb70b8bd07b4d37d92f48800f26ad5d71a2c2769a89ee1da6561a",
     "studies/convoy-study/urban_review/original.html": "9a438d9d81379d67629ba09e276b70178ce185f53a0896666c65ef36571bb800",
     "studies/convoy-study/INTEGRATED_SCENARIOS_MATH.md": "09465e26444d4995e5b895a8015bab56f58d5e38605f5561f7d77aa075e06d3b",
     "studies/convoy-study/urban_review/worked/examples.json": "3df30059dd482a4de5a1fe4f8728b572f7a566ec1877aafd5b7ac5a3aef3d0b2",
     "studies/convoy-study/urban_review/worked/export.py": "5061cd0119d60a036343572741777dfca51248bfbfa526e98c307a4749c2ab57",
-    "studies/convoy-study/urban_review/worked/test_priority_example.py": "fbba81dc04161ec9ac51e87b0e5d73f59906a523d5854aae75bcb3161d8d8818"
+    "studies/convoy-study/urban_review/worked/test_priority_example.py": "fbba81dc04161ec9ac51e87b0e5d73f59906a523d5854aae75bcb3161d8d8818",
+    "studies/convoy-study/urban_review/lessons.py": "9e3fa911597b093a815897cfcc0c4a1245357d1920fed334e8888e9f932fcf64",
+    "studies/convoy-study/urban_review/exposure_lesson/run.py": "7f542afc6ae60d243a0ec83c1a89277f7cab4aefa1b67327c84fe41173b83719"
   }
 }
