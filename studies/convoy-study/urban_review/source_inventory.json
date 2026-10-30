@@ -72,8 +72,8 @@
   "distinctions": "unit tests verify rules; saved missions illustrate behavior; experiments estimate outcomes within the model",
   "presentation_sources": {
     "studies/convoy-study/urban_review/build.py": "307866b5ad8fcc502abe9399be78ffa6057e413464325e2d95bdcaa48cc0a186",
-    "studies/convoy-study/urban_review/page.html": "8d40d1aae9a5d00343b77d661dd467ac7f0b9a34c88768c6ef6a2b23bc577a46",
-    "studies/convoy-study/urban_review/app.js": "8a9709c7fed4daf0cb047615bfa85c5274c679444ba3811f4f28877beb8fd0d0",
+    "studies/convoy-study/urban_review/page.html": "466440fc0e081b1845855b588aeba3ef6b6f8dd9be79db63e92802b542b3bc82",
+    "studies/convoy-study/urban_review/app.js": "80ec6bdcd7fff21101875c008cc78b941dec527633906612b8deab3cc9e1d981",
     "studies/convoy-study/urban_review/original.html": "9a438d9d81379d67629ba09e276b70178ce185f53a0896666c65ef36571bb800",
     "studies/convoy-study/INTEGRATED_SCENARIOS_MATH.md": "09465e26444d4995e5b895a8015bab56f58d5e38605f5561f7d77aa075e06d3b"
   }

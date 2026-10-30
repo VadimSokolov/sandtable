@@ -47,8 +47,10 @@ No changes to core simulation mechanics are needed for this presentation. Genera
 
 ## Simplified two-mode interface
 
-The default view now starts with Routine delivery and Crewed. Six situation buttons drive a constrained recording selector: Routine delivery; Enemy contact; Leader lost; Console unavailable; Urban route choices; Degraded communications. Choose truck control and the context-specific option, then Run selected recording. Run starts playback, not a new Python simulation. Crewed variants are offered only where a corresponding saved run exists. All 56 original recordings remain inside Advanced.
+The default view now starts with Routine delivery and Crewed. Six situation buttons drive a constrained recording selector: Routine delivery; Enemy contact; Leader lost; Console unavailable; Urban route choices; Degraded communications. Selecting a situation, truck control or context-specific option immediately loads the matching scene at its initial frame. Run selected recording starts playback, not a new Python simulation. Crewed variants are offered only where a corresponding saved run exists. All 56 original recordings remain inside Advanced.
 
 Logistics prototype is a separate top-level mode. It embeds the original JavaScript simulator with only its operation and comparison sections shown. It retains all five disruption scenarios, A/B/C planning, Crewed/Supervised autonomous and the optional small UGV. Switching away removes the embedded instance; returning starts it again. The unmodified full archive remains available below.
 
 Browser verification checked a crewed Herringbone selection maps to recording 27, and that road closure + Conventional + Supervised autonomous + UGV changes the independent prototype's controls and clock label correctly. No AI training or new mission experiments were run for this interface change. Additional matched urban/crew and recovery experiments are proposed explicitly, not presented as completed.
+
+Scene-selection correction: every simple option change now loads its recording immediately. A visible loaded-scene line reports the actual recording, route (where available), comms level, vehicle count and crew count. Same-layout scenarios may change only behavior or scheduled events; the recorded route is highlighted in orange.
