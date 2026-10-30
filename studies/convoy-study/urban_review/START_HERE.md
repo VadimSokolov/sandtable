@@ -54,3 +54,20 @@ Logistics prototype is a separate top-level mode. It embeds the original JavaScr
 Browser verification checked a crewed Herringbone selection maps to recording 27, and that road closure + Conventional + Supervised autonomous + UGV changes the independent prototype's controls and clock label correctly. No AI training or new mission experiments were run for this interface change. Additional matched urban/crew and recovery experiments are proposed explicitly, not presented as completed.
 
 Scene-selection correction: every simple option change now loads its recording immediately. A visible loaded-scene line reports the actual recording, route (where available), comms level, vehicle count and crew count. Same-layout scenarios may change only behavior or scheduled events; the recorded route is highlighted in orange.
+
+## Worked-test tabs
+
+The new Worked tests section has one English example for each of #9 and #12–#19 (nine tabs). Each tab includes setup, a rendered equation, four calculation steps, a separately controlled animated storyboard, the exact test function (including parameterization decorators), its source hash and its selected-test result. #8/#10/#11 remain covered by the existing model cards; this lab intentionally does not cover every test.
+
+Regenerate verification and examples with the repository test environment:
+
+```sh
+PYTHONPATH=src python studies/convoy-study/urban_review/worked/export.py
+python studies/convoy-study/urban_review/build.py
+```
+
+The export command executes nine selected test functions, totaling 12 cases because the #19 test is parameterized over four capacities. It publishes examples.json and verification.xml. The #18 selector diagnostic is newly added here and invokes the preserved branch implementation; other examples reference existing repository tests. This is not a full-suite run.
+
+All storyboard movements and glyph placements are explanatory. They are not new mission traces or claims that a unit test simulated travel. The #12 example verifies a halt timer, not Herringbone; #14 verifies crew assignment, not risk reduction; #15 verifies a score penalty, not an optimized policy; #18 supplies an eligibility mask, not a sensing or weapon model; #19 verifies an equation, not calibrated workload.
+
+The page embeds nine additional worked equations alongside the 44 existing equations. Only the selected lab tab is rendered at a time. All 56 mission recordings and both main model modes remain available.

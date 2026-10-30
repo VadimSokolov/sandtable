@@ -68,12 +68,14 @@ def build():
     guide_html=guide(STUDY/'INTEGRATED_SCENARIOS_MATH.md')
     source_links=''.join('<li><code>'+row['source']+'</code> — '+str(row['count'])+' recorded missions</li>' for row in inventory)
     sweeps=clean(json.loads((STUDY/'sweep_15/results.json').read_text()))
+    worked=json.loads((HERE/'worked/examples.json').read_text())
+    for example in worked['examples']:example['formula_html']=equation(example['formula'])
     legacy=base64.b64encode(gzip.compress(original.encode(),mtime=0)).decode()
     provenance=dict(generated_from='local saved files; no new simulation runs',sources=inventory,
         snapshot_revision=subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip(),
         distinctions='unit tests verify rules; saved missions illustrate behavior; experiments estimate outcomes within the model',
-        presentation_sources={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [HERE/'build.py',HERE/'page.html',HERE/'app.js',HERE/'original.html',STUDY/'INTEGRATED_SCENARIOS_MATH.md']})
-    payload=pack(clean(dict(traces=traces,sweep=sweeps,provenance=provenance)))
+        presentation_sources={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [HERE/'build.py',HERE/'page.html',HERE/'app.js',HERE/'original.html',STUDY/'INTEGRATED_SCENARIOS_MATH.md',HERE/'worked/examples.json',HERE/'worked/export.py',HERE/'worked/test_priority_example.py']})
+    payload=pack(clean(dict(traces=traces,sweep=sweeps,worked=worked,provenance=provenance)))
     template=(HERE/'page.html').read_text()
     out=ROOT/'report/viz/urban_resupply.html';out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(template.replace('__ORIGINAL_STYLES__',styles).replace('__ISSUE_CARDS__',cards)
