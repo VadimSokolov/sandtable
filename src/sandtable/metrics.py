@@ -443,6 +443,9 @@ def _teaming_metrics(scn: Scenario, ent: Entities, bhv, op, t_elapsed: float) ->
             out["neglect_steps"] = (live - held) / out["interventions"]
             out["fan_out"] = 1.0 + out["neglect_steps"] / out["interaction_steps"]
 
+    if op is not None and getattr(op, "units", None) is not None:
+        from sandtable import c2_units
+        out.update(c2_units.metrics(op.units, scn.dt))
     if op is not None and op.total_steps > 0:
         out["operator_utilization"] = op.busy_steps / op.total_steps
         if op.n_request > 0:

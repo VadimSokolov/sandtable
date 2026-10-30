@@ -1,0 +1,1457 @@
+{
+ "note": "Frozen before the first run of this tool.",
+ "provenance": {
+  "source_hashes": {
+   "analysis": {
+    "digest": "a0639c0000729b02cd29b0b3759605acf5043cedafb3bbd8cddf0ebb00f67b8d",
+    "files": {
+     "tools/make_console_arms.py": "0b745469e670f828f44028573c3c29c3eacaa15800b710508fd454cbe981b6f6"
+    }
+   },
+   "environment": {
+    "numpy": "2.3.5",
+    "python": "3.13.9"
+   },
+   "git_branch": "issue-19-convoy-console-per-unit",
+   "git_commit": "6bd11f21f1fcb141d9059b4d2422c7db2f95ddb1",
+   "simulation": {
+    "digest": "b829f5951efaecfe0388579cece14502fe63aa238611a20fa26a8ec171440161",
+    "files": {
+     "src/sandtable/__init__.py": "87f309349a7f7901fca94c4e1fe577eb7408904ec98de9b6d82d1692abf5b01e",
+     "src/sandtable/bayes_te.py": "559c97e2a96daa335db60895f087dedf475b1dc80a880da9c8252f9f5573e755",
+     "src/sandtable/behavior.py": "c64963d532a636d57a047bdb0e1f67e0daf3fb9c243ed327689831e8d73fece0",
+     "src/sandtable/belief.py": "9ab13698287be786ef7d42392f5b24e16db7590792025cd4a97a805310d56590",
+     "src/sandtable/c2.py": "8811025c4bad48d114e6e3d08e25293c92dfa1eaa063e8279aa3974d89b1da47",
+     "src/sandtable/c2_units.py": "9b29f3dd398e1975f54515b86e54dd748b5e1d5e73e34c04ec6e8962b5a00e9f",
+     "src/sandtable/comms_ew.py": "0816368d246adae185521b4e5282fe880658db166f62451ebf7405446d716a0f",
+     "src/sandtable/convoy.py": "c97dda1453c726fe81083f05c2f1e1198e9a21737677fed9d6f82a5450fc9620",
+     "src/sandtable/convoy_metrics.py": "04b1ba1665ecd04fec02c0478f54289aa498d156c93b87ab93a438ae6d33f62a",
+     "src/sandtable/counter_uas.py": "d57e850523e27ae2f743f2dca9ad0640bbe9e9e7d64a264fcde95bbbe30d8520",
+     "src/sandtable/engagement.py": "ec5fa4ab2cf777023f0fe716fe2c0ec865692a0d51bfcbef9de9f0a2bb5517fa",
+     "src/sandtable/entities.py": "48ccd62cb44c3b048e8940335414f3f4de54828537cd1be241b77d9119b121b9",
+     "src/sandtable/formation_metrics.py": "f8120ad2940458a90bb19e8f1d37c9a0ccd7b74cc5d752de2752e0904a5dfc6a",
+     "src/sandtable/mechanics.py": "d7863d457955e11aef228c58c2d33a2e9af4ef4ff31053121abd92d733714a38",
+     "src/sandtable/metrics.py": "183b80d3e4ca489ca48b4d9c6133dc7f7dad7def1af3831712ccb57556fb47d9",
+     "src/sandtable/motion.py": "4351d89925dd2878f16bf5e9fc88dbb9c1ffa1f516a2ddc447850584f8cebd52",
+     "src/sandtable/opt_metrics.py": "c41f9b0ee4fafa2bc683c4ae7f6e16ea3bf3c8aab2d9d800f3446f4899a651b9",
+     "src/sandtable/personality.py": "e7505b029b999e1a1075ca744458b1dd1ad01474f36460c6a7c799192bade3d6",
+     "src/sandtable/planning.py": "bb942bf1fd55039b889e76a53899687f1ee65c87bbd707a406f76390f4d7444c",
+     "src/sandtable/plugin.py": "b56a789935d60f6200df4c8bff892e98caa381c99a7e39db0016d0f03548dc14",
+     "src/sandtable/replay.py": "792ff3bb3fefb8d46c1c35fc7bf84049e791b4f001817891137f14479099e999",
+     "src/sandtable/route.py": "98795bff5d4075155d825cf1d02aae75d293a695e8879f240c6a01b16c2e48c3",
+     "src/sandtable/runner.py": "4510a29cdf8f9411d0356b331cac72563d4e7498e8d233e687e930a91a9a5524",
+     "src/sandtable/scenario.py": "7db1342980037433a6e7e2880202cc98e0b19e1ee1606e399212e3164cf2ff34",
+     "src/sandtable/search/__init__.py": "1e2dc666772e9541bd1e8f5eb99c4755ddcf15dad2642a446edf8cb2d9fca65c",
+     "src/sandtable/search/methods.py": "0e7bac30c4689269f6a390cde4c7b59e6a7996760d3e73979b3a6fec7188dc8d",
+     "src/sandtable/search/oracle.py": "89797eee80536f69904e6fbe24ee51e98958ef3c3c2c9d90e094455a02bfe2cf",
+     "src/sandtable/search/problems.py": "0ad6a04e0c57009e6b557646b76ed34940478fdce8cd3a9df0a2b53fba42c8ce",
+     "src/sandtable/search/runner.py": "3808b25ec42a7dfd0a35a2f4e1050806b9143bc2f902eef597f4216367280a5a",
+     "src/sandtable/seeding.py": "67b150cf80d33a40965729a3edb401d51f54d73b7ab42ff38954eb62a559a7b7",
+     "src/sandtable/sensing.py": "4f9571d01a04bfc19fda2b486a78e136599a55b02e38687ed6d760c909d5ef5b",
+     "src/sandtable/sim.py": "0f0f511d9d0777181667aaf3d089951e25131711cd61eebf8489b298bf0efd91",
+     "src/sandtable/street_graph.py": "fb89424d1910a7a4d7565611bb3fc35918e0786e44b93a880b64ff27e16f8a5a",
+     "src/sandtable/world.py": "2d7f4cab927653815734189b8a2de3721fdf2854187c292a62062d1596759f8d"
+    }
+   }
+  }
+ },
+ "registration": {
+  "analysis": {
+   "confounds": "E1 changes convoy length and total personnel with the number of units; arms are compared only within a size. per_unit also changes who files requests and the attention equation.",
+   "equivalence_claims": "none",
+   "estimate": "mean of paired differences against the family reference",
+   "interval": "95% t interval",
+   "later_analyses": "exploratory",
+   "missing_metrics": "c2u_* keys exist only for per_unit arms; a comparison on such a key between arms that lack it is reported as unavailable, not as zero",
+   "p_values": "two-sided paired t, Holm-adjusted within (family, group, metric)",
+   "primary_metrics": [
+    "delivered_frac",
+    "blue_losses",
+    "c2u_serviced_frac",
+    "operator_goodput"
+   ],
+   "ranking": "none",
+   "secondary_metrics": [
+    "success",
+    "crew_steps_at_risk",
+    "c2u_quality_mean",
+    "c2u_wt"
+   ]
+  },
+  "arms": {
+   "E1|2|legacy_single": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 2,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": null
+    }
+   },
+   "E1|2|per_unit": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "console_per_march_unit": {
+      "exceptions": true
+     },
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 2,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": {
+      "attention_basis": "assigned",
+      "exceptions": true
+     }
+    }
+   },
+   "E1|2|shared_crew": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 2,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue",
+     "n_operators": 2
+    },
+    "resolved": {
+     "console_per_march_unit": null
+    }
+   },
+   "E1|3|legacy_single": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 3,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": null
+    }
+   },
+   "E1|3|per_unit": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "console_per_march_unit": {
+      "exceptions": true
+     },
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 3,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": {
+      "attention_basis": "assigned",
+      "exceptions": true
+     }
+    }
+   },
+   "E1|3|shared_crew": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 3,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue",
+     "n_operators": 3
+    },
+    "resolved": {
+     "console_per_march_unit": null
+    }
+   },
+   "E1|4|legacy_single": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 4,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": null
+    }
+   },
+   "E1|4|per_unit": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "console_per_march_unit": {
+      "exceptions": true
+     },
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 4,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": {
+      "attention_basis": "assigned",
+      "exceptions": true
+     }
+    }
+   },
+   "E1|4|shared_crew": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 4,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue",
+     "n_operators": 4
+    },
+    "resolved": {
+     "console_per_march_unit": null
+    }
+   },
+   "E2|15": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "console_per_march_unit": {
+      "exceptions": true
+     },
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 3,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "decision_interval": 15,
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": {
+      "attention_basis": "assigned",
+      "exceptions": true
+     }
+    }
+   },
+   "E2|30": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "console_per_march_unit": {
+      "exceptions": true
+     },
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 3,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "decision_interval": 30,
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": {
+      "attention_basis": "assigned",
+      "exceptions": true
+     }
+    }
+   },
+   "E2|60": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "console_per_march_unit": {
+      "exceptions": true
+     },
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 3,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "decision_interval": 60,
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": {
+      "attention_basis": "assigned",
+      "exceptions": true
+     }
+    }
+   },
+   "E3|0": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "comms_level": 0,
+     "console_per_march_unit": {
+      "exceptions": true
+     },
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 3,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": {
+      "attention_basis": "assigned",
+      "exceptions": true
+     }
+    }
+   },
+   "E3|1": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "comms_level": 1,
+     "console_per_march_unit": {
+      "exceptions": true
+     },
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 3,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": {
+      "attention_basis": "assigned",
+      "exceptions": true
+     }
+    }
+   },
+   "E3|2": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "comms_level": 2,
+     "console_per_march_unit": {
+      "exceptions": true
+     },
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 3,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": {
+      "attention_basis": "assigned",
+      "exceptions": true
+     }
+    }
+   },
+   "E3|3": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "comms_level": 3,
+     "console_per_march_unit": {
+      "exceptions": true
+     },
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 3,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": {
+      "attention_basis": "assigned",
+      "exceptions": true
+     }
+    }
+   },
+   "E3|4": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "comms_level": 4,
+     "console_per_march_unit": {
+      "exceptions": true
+     },
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 3,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": {
+      "attention_basis": "assigned",
+      "exceptions": true
+     }
+    }
+   },
+   "E3|5": {
+    "params": {
+     "autonomy_arm": "autonomous_march_unit",
+     "cargo_per_vehicle": 5.0,
+     "comms_level": 5,
+     "console_per_march_unit": {
+      "exceptions": true
+     },
+     "control_mode": "direct",
+     "convoy": {
+      "march_unit_size": 5,
+      "march_units_per_serial": 3,
+      "pace": 10.0,
+      "serials_per_column": 1,
+      "time_gap": 4.0
+     },
+     "leader_loss_policy": "continue"
+    },
+    "resolved": {
+     "console_per_march_unit": {
+      "attention_basis": "assigned",
+      "exceptions": true
+     }
+    }
+   }
+  },
+  "comparisons": [
+   {
+    "arm": "E1|2|shared_crew",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|shared_crew",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|shared_crew",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "c2u_serviced_frac",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|shared_crew",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "operator_goodput",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|shared_crew",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "success",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|shared_crew",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|shared_crew",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "c2u_quality_mean",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|shared_crew",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "c2u_wt",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|per_unit",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|per_unit",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|per_unit",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "c2u_serviced_frac",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|per_unit",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "operator_goodput",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|per_unit",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "success",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|per_unit",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|per_unit",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "c2u_quality_mean",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|2|per_unit",
+    "family": "E1",
+    "group": "units=2",
+    "metric": "c2u_wt",
+    "pairing": "seed",
+    "reference": "E1|2|legacy_single"
+   },
+   {
+    "arm": "E1|3|shared_crew",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|shared_crew",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|shared_crew",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "c2u_serviced_frac",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|shared_crew",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "operator_goodput",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|shared_crew",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "success",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|shared_crew",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|shared_crew",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "c2u_quality_mean",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|shared_crew",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "c2u_wt",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|per_unit",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|per_unit",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|per_unit",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "c2u_serviced_frac",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|per_unit",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "operator_goodput",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|per_unit",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "success",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|per_unit",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|per_unit",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "c2u_quality_mean",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|3|per_unit",
+    "family": "E1",
+    "group": "units=3",
+    "metric": "c2u_wt",
+    "pairing": "seed",
+    "reference": "E1|3|legacy_single"
+   },
+   {
+    "arm": "E1|4|shared_crew",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|shared_crew",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|shared_crew",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "c2u_serviced_frac",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|shared_crew",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "operator_goodput",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|shared_crew",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "success",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|shared_crew",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|shared_crew",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "c2u_quality_mean",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|shared_crew",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "c2u_wt",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|per_unit",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|per_unit",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|per_unit",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "c2u_serviced_frac",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|per_unit",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "operator_goodput",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|per_unit",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "success",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|per_unit",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|per_unit",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "c2u_quality_mean",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E1|4|per_unit",
+    "family": "E1",
+    "group": "units=4",
+    "metric": "c2u_wt",
+    "pairing": "seed",
+    "reference": "E1|4|legacy_single"
+   },
+   {
+    "arm": "E2|15",
+    "family": "E2",
+    "group": "interval",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|15",
+    "family": "E2",
+    "group": "interval",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|15",
+    "family": "E2",
+    "group": "interval",
+    "metric": "c2u_serviced_frac",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|15",
+    "family": "E2",
+    "group": "interval",
+    "metric": "operator_goodput",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|15",
+    "family": "E2",
+    "group": "interval",
+    "metric": "success",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|15",
+    "family": "E2",
+    "group": "interval",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|15",
+    "family": "E2",
+    "group": "interval",
+    "metric": "c2u_quality_mean",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|15",
+    "family": "E2",
+    "group": "interval",
+    "metric": "c2u_wt",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|60",
+    "family": "E2",
+    "group": "interval",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|60",
+    "family": "E2",
+    "group": "interval",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|60",
+    "family": "E2",
+    "group": "interval",
+    "metric": "c2u_serviced_frac",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|60",
+    "family": "E2",
+    "group": "interval",
+    "metric": "operator_goodput",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|60",
+    "family": "E2",
+    "group": "interval",
+    "metric": "success",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|60",
+    "family": "E2",
+    "group": "interval",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|60",
+    "family": "E2",
+    "group": "interval",
+    "metric": "c2u_quality_mean",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E2|60",
+    "family": "E2",
+    "group": "interval",
+    "metric": "c2u_wt",
+    "pairing": "seed",
+    "reference": "E2|30"
+   },
+   {
+    "arm": "E3|1",
+    "family": "E3",
+    "group": "level",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|1",
+    "family": "E3",
+    "group": "level",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|1",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_serviced_frac",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|1",
+    "family": "E3",
+    "group": "level",
+    "metric": "operator_goodput",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|1",
+    "family": "E3",
+    "group": "level",
+    "metric": "success",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|1",
+    "family": "E3",
+    "group": "level",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|1",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_quality_mean",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|1",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_wt",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|2",
+    "family": "E3",
+    "group": "level",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|2",
+    "family": "E3",
+    "group": "level",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|2",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_serviced_frac",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|2",
+    "family": "E3",
+    "group": "level",
+    "metric": "operator_goodput",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|2",
+    "family": "E3",
+    "group": "level",
+    "metric": "success",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|2",
+    "family": "E3",
+    "group": "level",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|2",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_quality_mean",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|2",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_wt",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|3",
+    "family": "E3",
+    "group": "level",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|3",
+    "family": "E3",
+    "group": "level",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|3",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_serviced_frac",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|3",
+    "family": "E3",
+    "group": "level",
+    "metric": "operator_goodput",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|3",
+    "family": "E3",
+    "group": "level",
+    "metric": "success",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|3",
+    "family": "E3",
+    "group": "level",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|3",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_quality_mean",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|3",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_wt",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|4",
+    "family": "E3",
+    "group": "level",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|4",
+    "family": "E3",
+    "group": "level",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|4",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_serviced_frac",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|4",
+    "family": "E3",
+    "group": "level",
+    "metric": "operator_goodput",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|4",
+    "family": "E3",
+    "group": "level",
+    "metric": "success",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|4",
+    "family": "E3",
+    "group": "level",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|4",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_quality_mean",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|4",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_wt",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|5",
+    "family": "E3",
+    "group": "level",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|5",
+    "family": "E3",
+    "group": "level",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|5",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_serviced_frac",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|5",
+    "family": "E3",
+    "group": "level",
+    "metric": "operator_goodput",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|5",
+    "family": "E3",
+    "group": "level",
+    "metric": "success",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|5",
+    "family": "E3",
+    "group": "level",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|5",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_quality_mean",
+    "pairing": "seed",
+    "reference": "E3|0"
+   },
+   {
+    "arm": "E3|5",
+    "family": "E3",
+    "group": "level",
+    "metric": "c2u_wt",
+    "pairing": "seed",
+    "reference": "E3|0"
+   }
+  ],
+  "fixed": {
+   "autonomy_arm": "autonomous_march_unit",
+   "cargo_per_vehicle": 5.0,
+   "control_mode": "direct",
+   "leader_loss_policy": "continue"
+  },
+  "name": "consoles",
+  "scenarios": {
+   "convoy": {
+    "content": {
+     "dt": 1.0,
+     "duration": 1800.0,
+     "forces": [
+      {
+       "count": 15,
+       "formation": "column",
+       "ptype": "ugv",
+       "side": 0,
+       "spawn": [
+        250,
+        1500
+       ],
+       "spawn_spread": 40.0
+      },
+      {
+       "count": 6,
+       "formation": "column",
+       "ptype": "at_team",
+       "side": 1,
+       "spawn": [
+        3000,
+        1500
+       ],
+       "spawn_spread": 60.0
+      }
+     ],
+     "id": 30,
+     "name": "UC-3 Route vs Defilade (Convoy)",
+     "objective": {
+      "goal": [
+       5750,
+       1500
+      ],
+      "goal_radius": 150.0,
+      "survive_fraction": 0.5
+     },
+     "params": {
+      "convoy": {
+       "march_unit_size": 5,
+       "march_units_per_serial": 3,
+       "pace": 10.0,
+       "roles": [
+        "control",
+        "cargo",
+        "cargo",
+        "security",
+        "recovery"
+       ],
+       "serials_per_column": 1,
+       "time_gap": 4.0
+      },
+      "formation_spread": 40.0,
+      "route_bias": 0.0,
+      "tempo": 1.0
+     },
+     "platform_types": {
+      "at_team": {
+       "domain": 0,
+       "hp": 1.0,
+       "max_speed": 0.0,
+       "pk_base": 0.008,
+       "sensor_range": 2000.0,
+       "turn_rate": 0.0,
+       "weapon_range": 1000.0
+      },
+      "ugv": {
+       "domain": 0,
+       "hp": 1.0,
+       "max_speed": 12.0,
+       "pk_base": 0.002,
+       "sensor_range": 1500.0,
+       "turn_rate": 0.6,
+       "weapon_range": 1200.0
+      }
+     },
+     "size": [
+      6000,
+      3000
+     ],
+     "terrain": {
+      "cell": 25.0
+     }
+    },
+    "path": "scenarios/uc3_convoy.json"
+   }
+  },
+  "schema": 1,
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   27,
+   28,
+   29
+  ]
+ },
+ "registration_hash": "dbc2385fba754701bbad90d05fc73b275e6eb1ce5d2858698a090093f3300670",
+ "status": "frozen_before_run"
+}

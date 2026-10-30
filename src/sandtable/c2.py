@@ -41,6 +41,10 @@ and what it does about it, is the ``queue_policy`` knob documented in `step`.
 every requester carries the same patience, order can change which vehicle is helped but never how
 many are, so the priority arms key on terrain rather than on the request itself.
 
+Per-unit consoles (Issue #19, opt-in `console_per_march_unit`; see `sandtable.c2_units`): one dedicated console
+per march unit, hosted by its control vehicle, serving only that unit's crewless followers, with its own queue and
+a per-console attention term. Absent, none of this runs and the single-operator model above is unchanged.
+
 Deterministic given (rng, state); no globals. Only living blue agents are managed;
 red and air agents keep the neutral control_quality 1.0.
 """
@@ -53,6 +57,7 @@ from scipy.special import ndtri as _ndtri
 
 import numpy as np
 
+from sandtable import c2_units
 from sandtable.comms_ew import Comms
 from sandtable.entities import BLUE, Entities
 from sandtable.scenario import Scenario
@@ -358,6 +363,7 @@ class Operator:
     _fano_sum: float = 0.0
     _fano_sumsq: float = 0.0
     waits: list = field(default_factory=list)   # per-serviced-request wait, in steps
+    units: object = None          # c2_units.UnitConsoles when console_per_march_unit is declared (Issue #19)
 
 
 def build_c2(scn: Scenario, ent: Entities,
@@ -381,6 +387,9 @@ def build_c2(scn: Scenario, ent: Entities,
     n_span = max(int((ent.side == BLUE).sum()), 1)
     attention = min(1.0, span_capacity / n_span)
     q_operator_eff = q_auto + (q_operator - q_auto) * attention
+    unit_cfg = c2_units.resolve_unit_consoles(scn.params)   # Issue #19; None = the published single-operator model
+    if unit_cfg is not None:
+        q_operator_eff = q_operator       # per-console attention is applied per console, not once here
     op = Operator(
         mode=mode,
         service_rate=float(scn.params.get("service_rate", 0.5)),
@@ -498,7 +507,10 @@ def build_c2(scn: Scenario, ent: Entities,
     n_operators = int(scn.params.get("n_operators", 1))
     if n_operators < 1:
         raise ValueError(f"n_operators must be at least 1, got {n_operators}")
-    if n_operators > 1:
+    if unit_cfg is not None:
+        op.units = c2_units.build_unit_consoles(scn, ent, unit_cfg, q_operator, q_auto, span_capacity)
+        op.crew_free_at = np.zeros(op.units.host.size)
+    elif n_operators > 1:
         # A crew of `c` consoles, each serving at `service_rate`. One console reproduces the
         # published single server exactly, which is why the array is only allocated above one.
         op.crew_free_at = np.zeros(n_operators)
@@ -1048,7 +1060,7 @@ def service_order(op: Operator, blue: np.ndarray, difficulty: dict,
 
 
 def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
-         rng: np.random.Generator, world=None) -> None:
+         rng: np.random.Generator, world=None, bhv=None) -> None:
     """Advance the C2 queue/latency model one tick and write ent.control_quality in place.
 
     `world` is read only when the scenario opts into `terrain_demand` or into a terrain-keyed
@@ -1056,6 +1068,12 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
     had and the service order is arrival order.
     """
     blue = np.nonzero((ent.side == BLUE) & ent.alive)[0]
+    unit_busy = None
+    if op.units is not None:
+        # Issue #19: only supervised agents (crewless vehicles of a march unit) file requests; each is
+        # bound to its own unit's console. `bhv` is read, never written, to route LEADER_FOLLOW exceptions.
+        unit_busy = c2_units.begin_step(ent, op.units, op.crew_free_at, k, bhv)
+        blue = c2_units.assigned_living(ent, op.units, blue)
 
     # Terrain difficulty, when demand is terrain-driven or the service order keys on it. `speed`
     # is a trafficability multiplier in [0, 1], so 1 - speed is how hard the ground is under each
@@ -1077,7 +1095,8 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
             op.busy_steps += 1
     else:
         # Fraction of consoles still clearing work, so utilization stays comparable across crews.
-        op.busy_steps += float((op.crew_free_at > k).mean())
+        # Per-unit consoles: the pooled fraction over ACTIVE consoles (alive, with a living agent).
+        op.busy_steps += unit_busy if unit_busy is not None else float((op.crew_free_at > k).mean())
     op.queue_depth_sum += float((ent.await_until[blue] >= 0).sum()) if blue.size else 0.0
     op.supervised_sum += float(blue.size)
     if op.mult_window > 0:                    # same bookkeeping, on the service-time window
@@ -1184,7 +1203,24 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 _give_up(op, ent, int(i), k, int(op.patience_v[i]), rng)
             ent.control_quality[i] = op.q_stall
             continue
-        if op.crew_free_at is None:
+        if op.units is not None:
+            console = int(op.units.console_of[i])             # dedicated console of this agent's march unit
+            c2_units.note_request(op.units, console, int(i), k)
+            if not op.units.host_alive[console]:
+                # The hosting control vehicle is gone: service rate zero. The request is never worked, the
+                # agent waits out its patience and falls back (Issue #17's policy governs its movement).
+                op.n_request += 1
+                op.n_ask_v[int(i)] += 1
+                if k >= op.late_from:
+                    op.n_request_late += 1
+                op.units.abandon_console[console] += 1
+                ent.await_until[i] = k + int(op.patience_v[i])
+                op.resolved_quality[i] = op.q_fallback
+                _arm_retry(op, rng, i)
+                ent.control_quality[i] = op.q_stall
+                continue
+            start = max(op.crew_free_at[console], recv)
+        elif op.crew_free_at is None:
             console = -1
             start = max(op.operator_free_at, recv)            # single shared server
         else:
@@ -1222,6 +1258,8 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 # utilization-performance relation and not the full inverted U. Zero is exactly
                 # the published value, so the sweep nests the shipped model at its own baseline.
                 q = op.q_operator
+                if op.units is not None:
+                    q = float(op.units.q_eff[console])         # per-console attention (Issue #19)
                 if op.q_droop > 0.0:
                     util = op.busy_steps / max(op.total_steps, 1)
                     q = op.q_operator - op.q_droop * util * (op.q_operator - op.q_auto)
@@ -1236,6 +1274,8 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                     # that cannot foresee its own service. The slot was claimed above, which is
                     # the point: it is spent either way. Unreachable at `service_cv = 0`.
                     op.n_abandon_queue += 1
+                    if op.units is not None:
+                        op.units.abandon_queue[console] += 1
                     op.n_worked_late += 1
                     op.t_worked_late += svc
                     _give_up(op, ent, int(i), k, int(op.patience_v[i]), rng)
@@ -1244,6 +1284,9 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 op.waits.append(float(wait))          # attention-switching wait, serviced only
                 op.n_serviced += 1
                 op.t_serviced += svc
+                if op.units is not None:
+                    c2_units.note_serviced(op.units, console, int(i), svc, float(start - recv), float(lat),
+                                           float(reply - done), float(op.resolved_quality[i]), reply)
                 op.n_ans_v[int(i)] += 1
                 op.retry_streak[i] = 0        # answered, so the doubling rule resets
                 if op.admit_response == "aimd":   # additive increase on a good answer (CR-26)
@@ -1282,11 +1325,15 @@ def step(ent: Entities, op: Operator, comms: Comms, scn: Scenario, k: int,
                 ent.await_until[i] = k + hold                 # gives up waiting -> poor autonomy
                 op.resolved_quality[i] = op.q_fallback
                 op.n_abandon_queue += 1
+                if op.units is not None:
+                    op.units.abandon_queue[console] += 1
                 _arm_retry(op, rng, i)
         else:
             ent.await_until[i] = k + int(op.patience_v[i])    # message dropped -> poor autonomy
             op.resolved_quality[i] = op.q_fallback
             op.n_abandon_link += 1
+            if op.units is not None:
+                op.units.abandon_link[console] += 1
             _arm_retry(op, rng, i)
 
         ent.control_quality[i] = op.q_stall                   # now awaiting
