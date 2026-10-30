@@ -309,3 +309,7 @@ Three traps, all of which have cost a session already:
   on platoon formation, Bayesian optimization, and deep RL for urban transport.
 - **Authoritative internal sources:** the funded proposal and the Testbed Design Document (TDD v0.3),
   both in `doc/`.
+
+## Convoy learning environment
+
+The issue-by-issue and combined convoy experiments, Arabic study guides, and interactive replay viewer are in [studies/convoy-study/INTEGRATION.md](studies/convoy-study/INTEGRATION.md). Run `python tools/convoy_study.py run-all`, then `python tools/convoy_study.py serve --port 8766`. Herringbone and console-transfer policies in this environment are explicitly experimental study adapters, not claims that all production issue requirements are complete.

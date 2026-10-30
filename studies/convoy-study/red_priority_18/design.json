@@ -1,0 +1,170 @@
+{
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "scenario": {
+    "name": "UC-3 Route vs Defilade (Convoy)",
+    "id": 30,
+    "size": [
+      6000,
+      3000
+    ],
+    "dt": 1.0,
+    "duration": 1800.0,
+    "platform_types": {
+      "ugv": {
+        "domain": 0,
+        "max_speed": 12.0,
+        "turn_rate": 0.6,
+        "sensor_range": 1500.0,
+        "weapon_range": 1200.0,
+        "pk_base": 0.002,
+        "hp": 1.0
+      },
+      "at_team": {
+        "domain": 0,
+        "max_speed": 0.0,
+        "turn_rate": 0.0,
+        "sensor_range": 2000.0,
+        "weapon_range": 1000.0,
+        "pk_base": 0.008,
+        "hp": 1.0
+      },
+      "study_gun_truck": {
+        "domain": 0,
+        "max_speed": 12.0,
+        "turn_rate": 0.6,
+        "sensor_range": 1500.0,
+        "weapon_range": 1200.0,
+        "pk_base": 0.01,
+        "hp": 1.0
+      }
+    },
+    "forces": [
+      {
+        "side": 0,
+        "ptype": "ugv",
+        "count": 15,
+        "spawn": [
+          250,
+          1500
+        ],
+        "spawn_spread": 40.0,
+        "formation": "column"
+      },
+      {
+        "side": 1,
+        "ptype": "at_team",
+        "count": 6,
+        "spawn": [
+          3000,
+          1500
+        ],
+        "spawn_spread": 60.0,
+        "formation": "column"
+      }
+    ],
+    "objective": {
+      "goal": [
+        5750,
+        1500
+      ],
+      "goal_radius": 150.0,
+      "survive_fraction": 0.5,
+      "delivery_fraction": 1.0
+    },
+    "terrain": {
+      "cell": 25.0
+    },
+    "params": {
+      "route_bias": 0.0,
+      "formation_spread": 40.0,
+      "tempo": 1.0,
+      "comms_level": 0,
+      "follow_mode": "behavior",
+      "follow_topology": "chain",
+      "convoy": {
+        "march_unit_size": 5,
+        "march_units_per_serial": 3,
+        "serials_per_column": 1,
+        "pace": 10.0,
+        "time_gap": 4.0,
+        "cargo_per_vehicle": 5.0,
+        "roles": [
+          "control",
+          "cargo",
+          "cargo",
+          "cargo",
+          "cargo"
+        ],
+        "succession": "manned_only",
+        "escort_vehicles": 3,
+        "security_ptype": "study_gun_truck",
+        "autonomy_arm": "autonomous_march_unit",
+        "leader_loss_policy": "promote",
+        "handoff_steps": 5,
+        "contact_reaction": {
+          "action": "halt",
+          "triggers": [
+            "receive_fire"
+          ],
+          "halt_scope": "all",
+          "release": {
+            "rule": "timeout",
+            "clear_s": 15.0
+          }
+        }
+      },
+      "control_mode": "direct",
+      "console_per_march_unit": {
+        "attention_basis": "assigned",
+        "exceptions": false
+      },
+      "queue_model": "reserve",
+      "n_operators": 1,
+      "span_capacity": 4,
+      "service_rate": 0.5,
+      "decision_interval": 30,
+      "patience": 20,
+      "q_operator": 0.95,
+      "q_auto": 0.7,
+      "q_fallback": 0.5,
+      "q_stall": 0.3,
+      "study_console_transfer": {
+        "rule": "transfer_all_successors",
+        "delay_s": 20,
+        "forced_loss": false
+      },
+      "study_herringbone": {
+        "experimental": true,
+        "offset_m": 20.0,
+        "road": "straight clear only"
+      }
+    }
+  },
+  "arms": [
+    "nearest",
+    "control_first"
+  ],
+  "display_seed": 0,
+  "scope": "priority only; no ambush fire-control template or lane blocking"
+}
