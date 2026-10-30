@@ -1,0 +1,248 @@
+{
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "display_seed": 0,
+  "nodes": [
+    {
+      "id": "START",
+      "x": 0,
+      "y": 1500
+    },
+    {
+      "id": "JUNCTION",
+      "x": 1800,
+      "y": 1500
+    },
+    {
+      "id": "JOIN",
+      "x": 4800,
+      "y": 1500
+    },
+    {
+      "id": "GOAL",
+      "x": 5750,
+      "y": 1500
+    },
+    {
+      "id": "UPPER_W",
+      "x": 2100,
+      "y": 700
+    },
+    {
+      "id": "UPPER_E",
+      "x": 4500,
+      "y": 700
+    },
+    {
+      "id": "LOWER_W",
+      "x": 1800,
+      "y": 2400
+    },
+    {
+      "id": "LOWER_E",
+      "x": 4500,
+      "y": 2400
+    }
+  ],
+  "edges": [
+    {
+      "u": "START",
+      "v": "JUNCTION",
+      "width": 100,
+      "speed_mult": 1.0,
+      "exposure": 0.2
+    },
+    {
+      "u": "JOIN",
+      "v": "GOAL",
+      "width": 100,
+      "speed_mult": 1.0,
+      "exposure": 0.2
+    },
+    {
+      "u": "JUNCTION",
+      "v": "JOIN",
+      "width": 100,
+      "speed_mult": 1.0,
+      "exposure": 0.7
+    },
+    {
+      "u": "JUNCTION",
+      "v": "UPPER_W",
+      "width": 100,
+      "speed_mult": 1.0,
+      "exposure": 0.25
+    },
+    {
+      "u": "UPPER_W",
+      "v": "UPPER_E",
+      "width": 100,
+      "speed_mult": 1.0,
+      "exposure": 0.25
+    },
+    {
+      "u": "UPPER_E",
+      "v": "JOIN",
+      "width": 100,
+      "speed_mult": 1.0,
+      "exposure": 0.25
+    },
+    {
+      "u": "JUNCTION",
+      "v": "LOWER_W",
+      "width": 100,
+      "speed_mult": 1.0,
+      "exposure": 0.2
+    },
+    {
+      "u": "LOWER_W",
+      "v": "LOWER_E",
+      "width": 100,
+      "speed_mult": 1.0,
+      "exposure": 0.2
+    },
+    {
+      "u": "LOWER_E",
+      "v": "JOIN",
+      "width": 100,
+      "speed_mult": 1.0,
+      "exposure": 0.2
+    }
+  ],
+  "buildings": [
+    [
+      700,
+      900,
+      1600,
+      1350
+    ],
+    [
+      700,
+      1700,
+      1600,
+      2200
+    ],
+    [
+      2300,
+      950,
+      2850,
+      1300
+    ],
+    [
+      3900,
+      950,
+      4500,
+      1300
+    ],
+    [
+      3100,
+      1700,
+      3650,
+      2200
+    ]
+  ],
+  "enemy_locations": [
+    [
+      3050,
+      1100
+    ],
+    [
+      3550,
+      1100
+    ],
+    [
+      2500,
+      1900
+    ],
+    [
+      4100,
+      1900
+    ]
+  ],
+  "paths": {
+    "direct": [
+      "START",
+      "JUNCTION",
+      "JOIN",
+      "GOAL"
+    ],
+    "upper_loop": [
+      "START",
+      "JUNCTION",
+      "UPPER_W",
+      "UPPER_E",
+      "JOIN",
+      "GOAL"
+    ],
+    "lower_loop": [
+      "START",
+      "JUNCTION",
+      "LOWER_W",
+      "LOWER_E",
+      "JOIN",
+      "GOAL"
+    ]
+  },
+  "planning_scores": {
+    "direct": {
+      "0.0": 5750.0,
+      "0.75": 3425.0,
+      "1.0": 2650.0
+    },
+    "upper_loop": {
+      "0.0": 6858.800749063506,
+      "0.75": 2897.600327715284,
+      "1.0": 1577.2001872658766
+    },
+    "lower_loop": {
+      "0.0": 7298.683298050514,
+      "0.75": 2919.4733192202057,
+      "1.0": 1459.7366596101028
+    }
+  },
+  "planning_choices": {
+    "0.0": [
+      "START",
+      "JUNCTION",
+      "JOIN",
+      "GOAL"
+    ],
+    "0.75": [
+      "START",
+      "JUNCTION",
+      "UPPER_W",
+      "UPPER_E",
+      "JOIN",
+      "GOAL"
+    ],
+    "1.0": [
+      "START",
+      "JUNCTION",
+      "LOWER_W",
+      "LOWER_E",
+      "JOIN",
+      "GOAL"
+    ]
+  },
+  "assumptions": "Dimensions and edge exposure values are illustrative, not calibrated or inferred from combat."
+}

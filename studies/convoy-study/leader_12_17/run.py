@@ -3,6 +3,8 @@
 No source edits in sandtable. Forced loss is a diagnostic intervention only.
 """
 import copy
+import base64
+import gzip
 import hashlib
 import importlib.util
 import json
@@ -203,6 +205,9 @@ def main():
     print('Viewer updated:',len(old)+len(traces),'options')
 
 def build_viewer(traces):
+    sketch_data=STUDY/'sketch_map/replays.json'
+    if sketch_data.exists() and not any(t.get('group','').startswith('#16 — user sketch') for t in traces):
+        traces=list(traces)+json.loads(sketch_data.read_text())
     maps_data=STUDY/'urban_maps/replays.json'
     if maps_data.exists() and not any(t.get('group','').startswith('#16 — map collection') for t in traces):
         traces=list(traces)+json.loads(maps_data.read_text())
@@ -230,7 +235,9 @@ def build_viewer(traces):
         if isinstance(x,list):return [clean(v) for v in x]
         return x
     payload=json.dumps(clean(traces),separators=(',',':'),allow_nan=False)
-    template=m.TEMPLATE.replace('/*__TRACES__*/',payload)
+    packed=base64.b64encode(gzip.compress(payload.encode('utf-8'),mtime=0)).decode('ascii')
+    decoder='JSON.parse(await new Response(new Blob([Uint8Array.from(atob('+json.dumps(packed)+'),c=>c.charCodeAt(0))]).stream().pipeThrough(new DecompressionStream("gzip"))).text())'
+    template=m.TEMPLATE.replace('(function(){','(async function(){',1).replace('/*__TRACES__*/',decoder)
     template=template.replace('// 2. 1km Military Grid Lines', '''
     // Draw the entire street network, including the unused branch, below routes/buildings.
     if(T.street_graph){
@@ -280,6 +287,7 @@ def build_viewer(traces):
       cameraX=wx-(px-DW/2)/nextScale;cameraY=wy-(py-DH/2)/nextScale;
       zoom=next;resize();
     }
+    document.getElementById('planning_bias').oninput=()=>draw();
     document.getElementById('zoom_in').onclick=()=>changeZoom(1.5);
     document.getElementById('zoom_out').onclick=()=>changeZoom(1/1.5);
     document.getElementById('zoom_reset').onclick=()=>{zoom=1;cameraX=null;cameraY=null;resize();};
@@ -308,11 +316,25 @@ def build_viewer(traces):
     template=template.replace('Phases 1-5 Integrated','Learning environment: #9 + #12 + #14 + #17 + #19')
     template=template.replace('<h3>Personnel & Autonomy (Issue #14)</h3>','<h3>Personnel — final run totals (#14)</h3>')
     template=template.replace('<div class="card" id="crew_card">',
-        '<div class="card"><h3>Street visibility (#16) — live</h3><div id="live_urban"></div></div><div class="card"><h3>Route stationing (#13) — live</h3><div id="live_route"></div></div><div class="card"><h3>Live contact &amp; leadership (#12 / #17)</h3><div id="live_policy"></div></div><div class="card"><h3>Console service (#19) — live</h3><div id="live_console"></div></div><div class="card" id="crew_card">')
+        '<div class="card" id="planning_card" style="display:none"><h3>Route planning — illustrative costs</h3><label>Exposure weight b <input id="planning_bias" aria-label="Planning exposure weight" type="range" min="0" max="100" value="75"></label><div id="planning_result"></div><small>Changes planning suggestion only; replay stays on its recorded route. Edge scores are assumptions, not casualty probabilities.</small></div><div class="card"><h3>Street visibility (#16) — live</h3><div id="live_urban"></div></div><div class="card"><h3>Route stationing (#13) — live</h3><div id="live_route"></div></div><div class="card"><h3>Live contact &amp; leadership (#12 / #17)</h3><div id="live_policy"></div></div><div class="card"><h3>Console service (#19) — live</h3><div id="live_console"></div></div><div class="card" id="crew_card">')
     # Let the existing animation publish its current frame to the new panel.
     template=template.replace('const s=series[fi], d=T._den, f=T.frames[fi];',
         '''const s=series[fi], d=T._den, f=T.frames[fi];
         const cv=T.params.convoy||{};
+        const candidates=T.params.study_candidate_paths;
+        document.getElementById('planning_card').style.display=candidates?'block':'none';
+        if(candidates){
+          const b=Number(document.getElementById('planning_bias').value)/100;
+          const scores=Object.entries(candidates).map(([name,path])=>{
+            let cost=0;
+            for(let j=0;j<path.length-1;j++){
+              const edge=T.street_graph.edges.find(e=>(e.u===path[j]&&e.v===path[j+1])||(e.bidirectional!==false&&e.v===path[j]&&e.u===path[j+1]));
+              cost+=(1-b)*edge.length/Math.max(.0001,edge.speed_mult)+b*edge.length*edge.exposure;
+            }
+            return {name,cost};
+          }).sort((a,b)=>a.cost-b.cost);
+          document.getElementById('planning_result').textContent=`b=${b.toFixed(2)} | Suggestion: ${scores[0].name} | Recorded route: ${T.params.study_route_choice} | `+scores.map(s=>`${s.name}: ${s.cost.toFixed(1)}`).join(' | ');
+        }
         document.getElementById('live_urban').textContent=f.urban ?
           `In-range sensor pairs: ${f.urban.sensor_pairs} | blocked by buildings: ${f.urban.blocked_pairs} | Red detected: ${f.urban.red_detected} | first Red detection: ${f.urban.first_red_detection===null?'none':f.urban.first_red_detection+'s'} | road path: ${(T.params.study_street_path||[]).join(' → ')}` : 'Not enabled in this replay';
         const ri=followId>=0?followId:0;
