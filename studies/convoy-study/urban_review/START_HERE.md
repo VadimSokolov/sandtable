@@ -71,3 +71,9 @@ The export command executes nine selected test functions, totaling 12 cases beca
 All storyboard movements and glyph placements are explanatory. They are not new mission traces or claims that a unit test simulated travel. The #12 example verifies a halt timer, not Herringbone; #14 verifies crew assignment, not risk reduction; #15 verifies a score penalty, not an optimized policy; #18 supplies an eligibility mask, not a sensing or weapon model; #19 verifies an equation, not calibrated workload.
 
 The page embeds nine additional worked equations alongside the 44 existing equations. Only the selected lab tab is rendered at a time. All 56 mission recordings and both main model modes remain available.
+
+## Main page tabs
+
+The review now shows one main panel at a time: Overview, Simulation, Worked tests, Issue models, Combined model, Results, Evidence and Archive. Existing fragment URLs (such as `#sim` and `#worked-tests`) select the matching panel. The tabs support arrow keys, Home/End and browser back/forward navigation. Selecting a different panel pauses the Python replay and worked-test walkthrough; selections and calculation steps are retained. The independent logistics prototype retains its own runtime within its iframe.
+
+The Results replay button opens the Simulation panel automatically. Canvas sizes are refreshed when their panel becomes visible. Introductory content was moved into Overview rather than removed. Browser checks confirmed exactly one visible main panel for every tab, Results-to-Simulation navigation and retention of the #19 worked result after leaving and returning.

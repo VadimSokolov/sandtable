@@ -101,7 +101,7 @@ function update(){const key=chosen+':'+fi+':'+selected;if(key===panelKey)return;
 const metricLabels={cargo_delivered:'Cargo delivered (t)',cargo_lost:'Cargo lost (t)',cargo_in_transit:'Cargo in transit (t)',crew_lost:'Crew lost',crew_steps_at_risk:'Personnel exposure (crew-steps)',blue_losses:'Vehicles lost',success:'Success fraction',c2u_serviced_frac:'C2 accepted-service fraction',capped_completion_s:'Capped completion time (s)'};let selectedArm='baseline';
 $('metric').innerHTML=Object.entries(metricLabels).map(([k,v])=>'<option value="'+k+'">'+v+'</option>').join('');
 function comparison(){const k=$('metric').value;$('comparisonRows').innerHTML=D.sweep.arms.map(a=>{const p=a.scenario.params,s=D.sweep.summary[a.name][k],d=s.paired;return '<tr tabindex="0" role="button" aria-label="Select '+a.name+'" aria-pressed="'+(a.name===selectedArm)+'" data-arm="'+a.name+'" class="'+(a.name===selectedArm?'cur':'')+'"><td>'+esc(a.name)+'</td><td>'+p.convoy.pace+'</td><td>'+p.convoy.time_gap+'</td><td>'+p.formation_spread+'</td><td>C'+p.comms_level+'</td><td>'+fmt(s.mean,3)+' ± '+fmt(s.se,3)+'</td><td>'+fmt(d.mean,3)+' ['+fmt(d.low,3)+', '+fmt(d.high,3)+']</td></tr>'}).join('');document.querySelectorAll('[data-arm]').forEach(row=>{const select=()=>{selectedArm=row.dataset.arm;$('selectedArmText').textContent='Selected arm: '+selectedArm;comparison()};row.onclick=select;row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select()}}})}
-$('metric').onchange=comparison;$('replayArm').onclick=()=>{const idx=47+D.sweep.arms.findIndex(a=>a.name===selectedArm);showIndex(idx);$('sim').scrollIntoView({block:'start',behavior:'auto'})};comparison();
+$('metric').onchange=comparison;$('replayArm').onclick=()=>{const idx=47+D.sweep.arms.findIndex(a=>a.name===selectedArm);showIndex(idx);openReviewPanel('sim');};comparison();
 $('provenance').textContent=JSON.stringify(D.provenance,null,2);
 $('openLegacy').onclick=async()=>{const button=$('openLegacy');button.disabled=true;button.textContent='Loading archived prototype…';try{const text=await unpack('legacy-data');const iframe=document.createElement('iframe');iframe.title='Archived original JavaScript urban resupply prototype';iframe.setAttribute('sandbox','allow-scripts');iframe.srcdoc=text;$('legacyHost').append(iframe);button.hidden=true}catch(e){button.disabled=false;button.textContent='Could not load archive: '+e.message}};
 
@@ -128,6 +128,23 @@ selectExample(0);new ResizeObserver(resizeExample).observe(wc);resizeExample();l
 let lastFrame=performance.now();function loop(now){const dt=Math.min(.2,(now-lastFrame)/1000);lastFrame=now;if(playing){cursor=Math.min(T.frames.at(-1).t,cursor+dt*rate);while(fi<T.frames.length-1&&T.frames[fi+1].t<=cursor)fi++;if(fi===T.frames.length-1){playing=false;$('play').textContent='Play'}update();draw()}requestAnimationFrame(loop)}
 scenarioList();choose(chosen);new ResizeObserver(resize).observe(cv);resize();requestAnimationFrame(loop);
 $('loadStatus').textContent='Ready · '+traces.length+' saved Python recordings · 90-run settings comparison · equations embedded for offline reading.';
+
+// Main navigation shows one panel at a time; hidden panels keep their selections.
+const reviewPanels=[...document.querySelectorAll('main.wrap > section[role="tabpanel"]')];
+const reviewTabs=[...document.querySelectorAll('.review-nav [role="tab"]')];
+function panelForHash(hash){const id=decodeURIComponent(hash.replace(/^#/,''));const el=document.getElementById(id);if(!el)return null;return reviewPanels.find(p=>p===el||p.contains(el))?.id||null}
+function openReviewPanel(id,writeHistory=true,moveFocus=false){if(!reviewPanels.some(p=>p.id===id))return;
+ if(id!=='sim'){playing=false;$('play').textContent='Play'}
+ if(id!=='worked-tests'){examplePlaying=false;$('workedPlay').textContent='Play walkthrough'}
+ reviewPanels.forEach(p=>p.hidden=p.id!==id);reviewTabs.forEach(t=>{const active=t.getAttribute('aria-controls')===id;t.setAttribute('aria-selected',String(active));t.tabIndex=active?0:-1});
+ if(writeHistory&&location.hash!=='#'+id)history.pushState(null,'','#'+id);
+ const tab=document.getElementById('nav-'+id);if(moveFocus)tab.focus();
+ requestAnimationFrame(()=>{if(id==='sim')resize();if(id==='worked-tests')resizeExample();document.querySelector('.review-nav').scrollIntoView({block:'start',behavior:'auto'})});
+}
+reviewTabs.forEach((tab,i)=>{tab.addEventListener('click',ev=>{ev.preventDefault();openReviewPanel(tab.getAttribute('aria-controls'))});tab.addEventListener('keydown',ev=>{let next=null;if(ev.key==='ArrowRight')next=(i+1)%reviewTabs.length;if(ev.key==='ArrowLeft')next=(i-1+reviewTabs.length)%reviewTabs.length;if(ev.key==='Home')next=0;if(ev.key==='End')next=reviewTabs.length-1;if(next!==null){ev.preventDefault();openReviewPanel(reviewTabs[next].getAttribute('aria-controls'),true,true)}})});
+addEventListener('hashchange',()=>openReviewPanel(panelForHash(location.hash)||'mission',false));
+addEventListener('popstate',()=>openReviewPanel(panelForHash(location.hash)||'mission',false));
+openReviewPanel(panelForHash(location.hash)||'mission',false);
 if(document.fonts?.ready)document.fonts.ready.then(draw);
 }catch(error){$('loadStatus').textContent='The recordings could not be loaded: '+error.message+'. Open this file in a modern browser with gzip DecompressionStream support.';console.error(error)}
 })();
