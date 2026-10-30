@@ -1,0 +1,5 @@
+{
+  "branch": "issue-18-convoy-red-target-priority",
+  "revision": "cbcfc4bbdc87429cd2ce6e1d6ef05a03f5f75cf4",
+  "note": "Exact sources copied from the local branch; engagement import is shimmed by the runner."
+}

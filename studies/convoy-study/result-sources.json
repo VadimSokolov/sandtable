@@ -1,0 +1,26 @@
+{
+  "contact_arms": {
+    "path": "/Users/markfahim/Work/GRA GM/sandtable/report/viz/contact_arms.json",
+    "sha256": "99ee6b5b1bd986b35fa0d30bdd540715d37cbd083161ccd0eec683a9d81b5da8"
+  },
+  "autonomy_arms": {
+    "path": "/Users/markfahim/Work/GRA GM/sandtable/report/viz/autonomy_arms.json",
+    "sha256": "a71e25ca28b7a3ebd686c3d3f9a8e5cc2106852c358265c92931aa5cfbc3f126"
+  },
+  "leader_loss_arms": {
+    "path": "/Users/markfahim/Work/GRA GM/sandtable/report/viz/leader_loss_arms.json",
+    "sha256": "a073a26a7244227765f5d6e916759773308c424ae229dc643f22edca6c2c061e"
+  },
+  "red_priority_arms": {
+    "path": "/Users/markfahim/Work/GRA GM/sandtable/report/viz/red_priority_arms.json",
+    "sha256": "4c1405199498062aa40647dea8d86c78bfd27bf4286aaa3403dc3e9f4580f951"
+  },
+  "attention_diagnostic_short": {
+    "path": "/Users/markfahim/Work/GRA GM/sandtable/report/viz/attention_diagnostic_short.json",
+    "sha256": "1253f71829587bbbe8d6b8461f1aa150d23416b5a7fc6fb10526a57b5ba8242b"
+  },
+  "convoy_sweep_data": {
+    "path": "/Users/markfahim/Work/GRA GM/sandtable/report/viz/convoy_sweep_data.json",
+    "sha256": "cd343b3479b52345d6ae11cd17ffe3c58dbfb79fa45006208e91e075010a884f"
+  }
+}
