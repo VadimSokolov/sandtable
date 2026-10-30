@@ -14,7 +14,7 @@ import sys
 ROOT=Path(__file__).resolve().parents[1]
 STUDY=ROOT/'studies/convoy-study'
 ORDER=('baseline_09_14','contact_09_12_14','leader_12_17','console_19',
-       'integrated','red_priority_18','route_13')
+       'integrated','red_priority_18','route_13','urban_16')
 
 def build():
     missing=[name for name in ORDER if not (STUDY/name/'replays.json').exists()]

@@ -42,6 +42,9 @@ def record(config, seed=0, kill_at=None, herringbone=False, c2_bridge=None):
             herringbone_parked=getattr(bhv,'study_herringbone_parked',np.zeros(ent.n,dtype=int)).astype(int).tolist()))
         if c2_bridge is not None:
             frames[-1]['console']=c2_bridge.snapshot(ent)
+        urban=getattr(bhv,'study_urban_telemetry',None)
+        if urban is not None:
+            frames[-1]['urban']=dict(urban)
         route=getattr(state.get('world'),'route',None)
         if route is not None:
             ids=np.flatnonzero((ent.side==0)&(ent.domain==0))
@@ -85,6 +88,9 @@ def record(config, seed=0, kill_at=None, herringbone=False, c2_bridge=None):
         outcome.update(study_herringbone_episodes=adapter.episodes,
             study_parked_vehicle_steps=adapter.parked_vehicle_steps,
             study_maneuver_vehicle_steps=adapter.maneuver_vehicle_steps)
+        if config['params'].get('study_urban'):
+            outcome.update(study_building_blocked_moves=adapter.blocked_moves,
+                           study_rejected_parking_stations=adapter.rejected_stations)
     snap(state['ent'],state['t'])
     assert abs(outcome['cargo_loaded']-sum(outcome[k] for k in
         ('cargo_delivered','cargo_lost','cargo_in_transit'))) < 1e-6
@@ -94,6 +100,15 @@ def record(config, seed=0, kill_at=None, herringbone=False, c2_bridge=None):
                  outcome={**outcome,'cargo_total':60},total_cargo=60,events=events)
     if config['params'].get('route'):
         trace['route']=config['params']['route']
+    world=state.get('world')
+    if world is not None and config['params'].get('study_urban'):
+        trace['street_graph']=world.street_graph.to_dict() if world.street_graph is not None else None
+        trace['building_boxes']=world.building_boxes.tolist() if world.building_boxes is not None else []
+        def downsample(a):
+            return a[::max(1,a.shape[0]//40),::max(1,a.shape[1]//80)].tolist()
+        trace['terrain']['cover']=downsample(world.cover)
+        trace['terrain']['conceal']=downsample(world.conceal)
+        trace['terrain']['buildings']=downsample(world.buildings.astype(int)) if world.buildings is not None else []
     return trace,outcome
 
 def main():
@@ -188,6 +203,9 @@ def main():
     print('Viewer updated:',len(old)+len(traces),'options')
 
 def build_viewer(traces):
+    urban_data=STUDY/'urban_16/replays.json'
+    if urban_data.exists() and not any(t.get('group','').startswith('#16 — streets') for t in traces):
+        traces=list(traces)+json.loads(urban_data.read_text())
     route_data=STUDY/'route_13/replays.json'
     if route_data.exists() and not any(t.get('group','').startswith('#13 — curved') for t in traces):
         traces=list(traces)+json.loads(route_data.read_text())
@@ -272,11 +290,13 @@ def build_viewer(traces):
     template=template.replace('Phases 1-5 Integrated','Learning environment: #9 + #12 + #14 + #17 + #19')
     template=template.replace('<h3>Personnel & Autonomy (Issue #14)</h3>','<h3>Personnel — final run totals (#14)</h3>')
     template=template.replace('<div class="card" id="crew_card">',
-        '<div class="card"><h3>Route stationing (#13) — live</h3><div id="live_route"></div></div><div class="card"><h3>Live contact &amp; leadership (#12 / #17)</h3><div id="live_policy"></div></div><div class="card"><h3>Console service (#19) — live</h3><div id="live_console"></div></div><div class="card" id="crew_card">')
+        '<div class="card"><h3>Street visibility (#16) — live</h3><div id="live_urban"></div></div><div class="card"><h3>Route stationing (#13) — live</h3><div id="live_route"></div></div><div class="card"><h3>Live contact &amp; leadership (#12 / #17)</h3><div id="live_policy"></div></div><div class="card"><h3>Console service (#19) — live</h3><div id="live_console"></div></div><div class="card" id="crew_card">')
     # Let the existing animation publish its current frame to the new panel.
     template=template.replace('const s=series[fi], d=T._den, f=T.frames[fi];',
         '''const s=series[fi], d=T._den, f=T.frames[fi];
         const cv=T.params.convoy||{};
+        document.getElementById('live_urban').textContent=f.urban ?
+          `In-range sensor pairs: ${f.urban.sensor_pairs} | blocked by buildings: ${f.urban.blocked_pairs} | Red detected: ${f.urban.red_detected} | first Red detection: ${f.urban.first_red_detection===null?'none':f.urban.first_red_detection+'s'} | road path: ${(T.params.study_street_path||[]).join(' → ')}` : 'Not enabled in this replay';
         const ri=followId>=0?followId:0;
         document.getElementById('live_route').textContent=f.route_s ?
           `V${ri+1}: s = ${Number(f.route_s[ri]).toFixed(1)} m along route | cross-track = ${Number(f.route_cross[ri]).toFixed(2)} m | ${f.herringbone_active?'Herringbone: off-route parking intentional':'Cruise / rejoin'} | route length = ${T.params.study_route_length_m.toFixed(1)} m` : 'No route-stationing telemetry in this replay';

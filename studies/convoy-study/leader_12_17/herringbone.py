@@ -27,13 +27,17 @@ class Herringbone:
         self.park_checks = 0
         self.route = None
         self.park_heading = None
+        self.building_guard=False
+        self.blocked_moves=0
+        self.rejected_stations=0
 
     def __enter__(self):
         self.stack = ExitStack()
         original_plan, original_motion = planning.step, motion.step
         def plan(ent, world, scn, *args, **kwargs):
             boxes=getattr(world,'building_boxes',None)
-            if boxes is not None and np.size(boxes):
+            self.building_guard=bool(scn.params.get('study_urban',False))
+            if boxes is not None and np.size(boxes) and not self.building_guard:
                 raise ValueError('Teaching Herringbone does not support building obstacles')
             self.route=getattr(world,'route',None)
             original_plan(ent, world, scn, *args, **kwargs)
@@ -57,6 +61,13 @@ class Herringbone:
                     self.anchors[self.ids,0]=rx-self.sign[self.ids]*self.offset*np.sin(rh)
                     self.anchors[self.ids,1]=ry+self.sign[self.ids]*self.offset*np.cos(rh)
                     self.park_heading[self.ids]=rh+self.sign[self.ids]*np.pi/4
+                if self.building_guard and world.buildings is not None:
+                    clear=world.los(ent.x[self.ids],ent.y[self.ids],self.anchors[self.ids,0],self.anchors[self.ids,1])
+                    iy,ix=world._idx(self.anchors[self.ids,0],self.anchors[self.ids,1])
+                    clear=clear & ~world.buildings[iy,ix]
+                    rejected=self.ids[~clear]
+                    self.anchors[rejected]=self.entry[rejected]
+                    self.rejected_stations+=len(rejected)
                 assert (self.anchors[self.ids,0] < world.size[0]).all()
                 assert (self.anchors[self.ids,1] > 0).all() and (self.anchors[self.ids,1] < world.size[1]).all()
                 self.episodes+=1
@@ -91,6 +102,7 @@ class Herringbone:
             bhv.study_herringbone_active=self.active
         def move(ent,*args,**kwargs):
             previous_heading=ent.heading.copy()
+            previous_x,previous_y=ent.x.copy(),ent.y.copy()
             # The base unicycle advances at cruise speed even when facing away
             # from a nearby station. That produces orbits during approach/rejoin.
             # Apply steering-aware arrival throughout this experimental arm,
@@ -118,6 +130,15 @@ class Herringbone:
                 original_motion(ent,*args,**kwargs)
             finally:
                 ent.speed_cap[:]=saved_cap
+            world=args[0]
+            if self.building_guard and world.buildings is not None:
+                ids=self.ids[ent.alive[self.ids]]
+                clear=world.los(previous_x[ids],previous_y[ids],ent.x[ids],ent.y[ids])
+                iy,ix=world._idx(ent.x[ids],ent.y[ids])
+                blocked=ids[~clear | world.buildings[iy,ix]]
+                ent.x[blocked]=previous_x[blocked];ent.y[blocked]=previous_y[blocked]
+                ent.speed[blocked]=0
+                self.blocked_moves+=len(blocked)
             parked=np.zeros(ent.n,dtype=bool)
             if self.active:
                 ids=self.ids[ent.alive[self.ids]]
