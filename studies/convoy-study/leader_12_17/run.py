@@ -203,6 +203,9 @@ def main():
     print('Viewer updated:',len(old)+len(traces),'options')
 
 def build_viewer(traces):
+    maps_data=STUDY/'urban_maps/replays.json'
+    if maps_data.exists() and not any(t.get('group','').startswith('#16 — map collection') for t in traces):
+        traces=list(traces)+json.loads(maps_data.read_text())
     urban_data=STUDY/'urban_16/replays.json'
     if urban_data.exists() and not any(t.get('group','').startswith('#16 — streets') for t in traces):
         traces=list(traces)+json.loads(urban_data.read_text())
