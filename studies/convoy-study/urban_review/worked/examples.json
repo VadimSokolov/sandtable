@@ -1,0 +1,596 @@
+{
+  "examples": [
+    {
+      "issue": "9",
+      "title": "Cargo conservation",
+      "setup": "Two units \u00d7 five vehicles. Each unit has control, three cargo trucks and recovery. Only the six cargo trucks carry 5 tonnes each.",
+      "formula": "L=\\sum c_i,\\quad D=\\sum D_i,\\quad X=\\sum(1-a_i)(c_i-D_i),\\quad I=\\sum a_i(c_i-D_i)",
+      "steps": [
+        "Load: 6 cargo trucks \u00d7 5 t = 30 t; control/recovery carry zero.",
+        "Deliver: 2 trucks \u00d7 5 t = 10 t. Remaining undelivered cargo is 20 t.",
+        "Force destruction of 2 different loaded trucks: X = 2 \u00d7 5 = 10 t.",
+        "Two living undelivered trucks remain: I = 2 \u00d7 5 = 10 t. Check 30 = 10 + 10 + 10; delivered fraction = 10/30 = 1/3."
+      ],
+      "states": [
+        {
+          "label": "Loaded",
+          "values": "L=30, D=0, X=0, I=30",
+          "vehicles": [
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo"
+          ]
+        },
+        {
+          "label": "Two delivered",
+          "values": "L=30, D=10, X=0, I=20",
+          "vehicles": [
+            "delivered",
+            "delivered",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo"
+          ]
+        },
+        {
+          "label": "Two destroyed",
+          "values": "L=30, D=10, X=10, I=10",
+          "vehicles": [
+            "delivered",
+            "delivered",
+            "dead",
+            "dead",
+            "cargo",
+            "cargo"
+          ]
+        },
+        {
+          "label": "Conservation confirmed",
+          "values": "30 = 10 + 10 + 10",
+          "vehicles": [
+            "delivered",
+            "delivered",
+            "dead",
+            "dead",
+            "cargo",
+            "cargo"
+          ]
+        }
+      ],
+      "limit": "The test assigns delivery/destruction states directly. The six glyphs represent cargo trucks only; their drawn positions and transitions are explanatory, not simulated travel.",
+      "kind": "state",
+      "source": "tests/test_convoy_cargo_delivery.py",
+      "node": "test_cargo_conservation_invariant",
+      "source_code": "def test_cargo_conservation_invariant():\n    \"\"\"At every point, C_loaded = C_delivered + C_lost + C_in_transit.\"\"\"\n    # 2 march units of 5 vehicles = 10 vehicles total\n    # Roles per unit: 1 control, 3 cargo, 1 recovery => 6 cargo trucks total\n    roles = [\"control\", \"cargo\", \"cargo\", \"cargo\", \"recovery\"]\n    scn = _make_convoy_scenario(\n        march_unit_size=5,\n        march_units_per_serial=2,\n        cargo_per_vehicle=5.0,\n        roles=roles,\n    )\n    rng = np.random.default_rng(123)\n    ent = build_entities(scn, rng)\n\n    assert ent.n == 10\n    assert int((ent.convoy_role == ROLE_CARGO).sum()) == 6\n    assert float(ent.cargo[ent.convoy_role == ROLE_CARGO].sum()) == 30.0\n    assert float(ent.cargo[ent.convoy_role == ROLE_CONTROL].sum()) == 0.0\n    assert float(ent.cargo[ent.convoy_role == ROLE_RECOVERY].sum()) == 0.0\n\n    c_loaded = float(ent.cargo[ent.side == BLUE].sum())\n    assert c_loaded == 30.0\n\n    # Simulate intermediate state:\n    # 2 cargo trucks delivered (10 tons)\n    # 2 cargo trucks destroyed (10 tons)\n    # 2 cargo trucks in transit (10 tons)\n    cargo_indices = np.where(ent.convoy_role == ROLE_CARGO)[0]\n    delivered_idx = cargo_indices[:2]\n    dead_idx = cargo_indices[2:4]\n    transit_idx = cargo_indices[4:]\n    assert len(transit_idx) == 2\n\n    for idx in delivered_idx:\n        ent.cargo_delivered[idx] = ent.cargo[idx]\n    for idx in dead_idx:\n        ent.alive[idx] = 0\n\n    init_counts = {BLUE: 10, 1: 0}\n    res = metrics.compute(scn, init_counts, ent, t_reached=100.0, t_elapsed=100.0)\n\n    assert res[\"cargo_loaded\"] == 30.0\n    assert res[\"cargo_delivered\"] == 10.0\n    assert res[\"cargo_lost\"] == 10.0\n    assert res[\"cargo_in_transit\"] == 10.0\n    assert abs(res[\"cargo_loaded\"] - (res[\"cargo_delivered\"] + res[\"cargo_lost\"] + res[\"cargo_in_transit\"])) < 1e-6\n    assert pytest.approx(res[\"delivered_frac\"], 1e-6) == 10.0 / 30.0",
+      "source_sha256": "99013225e3923ff3781681cd17cf66b0568cc25b58588531cd37826404346364",
+      "verified_cases": 1,
+      "status": "passed"
+    },
+    {
+      "issue": "12",
+      "title": "Halt and timed release",
+      "setup": "A receive-fire signal is supplied at step 0. clear_s=5 and dt=1 s. Signals are cleared for steps 1\u20135, then supplied again at step 6.",
+      "formula": "hold(k)=1[k-k_{last}<5],\\qquad t=k\\Delta t",
+      "steps": [
+        "k=0: receive_fire=true, so k_last=0 and 0\u22120=0<5. Hold activates.",
+        "k=1,2,3,4: no new trigger; elapsed values 1,2,3,4 are all less than 5. Hold remains active.",
+        "k=5: elapsed=5; 5<5 is false. Hold clears and contact ends.",
+        "k=6: a new receive-fire trigger starts a second contact episode; contact_count=2."
+      ],
+      "states": [
+        {
+          "label": "k=0 \u00b7 incoming-fire signal",
+          "values": "elapsed=0; HOLD",
+          "vehicles": [
+            "hold",
+            "hold",
+            "hold",
+            "hold",
+            "hold"
+          ]
+        },
+        {
+          "label": "k=4 \u00b7 no fresh signal",
+          "values": "4 < 5; HOLD",
+          "vehicles": [
+            "hold",
+            "hold",
+            "hold",
+            "hold",
+            "hold"
+          ]
+        },
+        {
+          "label": "k=5 \u00b7 timeout",
+          "values": "5 < 5 is false; RELEASE",
+          "vehicles": [
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo"
+          ]
+        },
+        {
+          "label": "k=6 \u00b7 new signal",
+          "values": "contact_count=2; HOLD",
+          "vehicles": [
+            "hold",
+            "hold",
+            "hold",
+            "hold",
+            "hold"
+          ]
+        }
+      ],
+      "limit": "This is a behavior-state test, not a full movement or Herringbone test. Five representative glyphs stand for the held column; the test does not assert their travel distances.",
+      "kind": "state",
+      "source": "tests/test_convoy_contact_reaction.py",
+      "node": "test_halt_holds_column_then_times_out",
+      "source_code": "def test_halt_holds_column_then_times_out():\n    scn, ent, bhv = _convoy_state([\"receive_fire\"], release={\"rule\": \"timeout\", \"clear_s\": 5.0})\n    bhv.fired_at[3] = True\n    assert _step(scn, ent, bhv, 0).any()\n    bhv.fired_at[:] = False\n    for k in range(1, 5):\n        assert _step(scn, ent, bhv, k).any()        # still inside the 5 s window\n    assert not _step(scn, ent, bhv, 5).any() and not bhv.in_contact\n    bhv.fired_at[3] = True                          # a fresh trigger is a second contact\n    _step(scn, ent, bhv, 6)\n    assert bhv.contact_count == 2",
+      "source_sha256": "2bde650ba24cec779a8cf2ccbd7855f928f53b072fb94714c49190b84232f395",
+      "verified_cases": 1,
+      "status": "passed"
+    },
+    {
+      "issue": "13",
+      "title": "Arc length on an L-shaped road",
+      "setup": "Route: (0,0) \u2192 (1000,0) \u2192 (1000,1000). Both segments are 1000 m.",
+      "formula": "L=1000+1000=2000,\\quad r(1500)=(1000,500)",
+      "steps": [
+        "First segment length: sqrt((1000\u22120)\u00b2+0\u00b2)=1000 m. Second segment length: 1000 m. Total=2000 m.",
+        "At s=500 m, remain on the first segment: r(500)=(500,0), heading=0.",
+        "At s=1500 m, pass the first 1000 m and travel 500 m along the second: r(1500)=(1000,500), heading=\u03c0/2.",
+        "Project (1050,600) onto x=1000: foot=(1000,600), s=1000+600=1600 m, cross-track distance=50 m."
+      ],
+      "states": [
+        {
+          "label": "Two connected segments",
+          "values": "L=2000 m",
+          "point": [
+            0,
+            0
+          ]
+        },
+        {
+          "label": "First segment",
+          "values": "s=500 \u2192 (500,0)",
+          "point": [
+            500,
+            0
+          ]
+        },
+        {
+          "label": "Second segment",
+          "values": "s=1500 \u2192 (1000,500)",
+          "point": [
+            1000,
+            500
+          ]
+        },
+        {
+          "label": "Orthogonal projection",
+          "values": "(1050,600) \u2192 s=1600, offset=50 m",
+          "point": [
+            1050,
+            600
+          ]
+        }
+      ],
+      "limit": "The marker visits query positions from the geometry test. Interpolation is a teaching animation, not execution of vehicle motion.",
+      "kind": "route",
+      "source": "tests/test_convoy_route_stationing.py",
+      "node": "test_route_polyline_geometry_and_projection",
+      "source_code": "def test_route_polyline_geometry_and_projection():\n    \"\"\"Verify cumulative distance, point_at, and orthogonal projection on an L-dogleg.\"\"\"\n    # L-dogleg: (0, 0) -> (1000, 0) -> (1000, 1000)\n    pts = [(0.0, 0.0), (1000.0, 0.0), (1000.0, 1000.0)]\n    r = RoutePolyline.from_waypoints(pts)\n\n    assert r.total_length == pytest.approx(2000.0)\n    assert np.allclose(r.cum_dist, [0.0, 1000.0, 2000.0])\n\n    # Midpoint of first segment\n    x, y, th = r.point_at(500.0)\n    assert (x, y) == pytest.approx((500.0, 0.0))\n    assert th == pytest.approx(0.0)\n\n    # Midpoint of second segment (heading North = pi/2)\n    x, y, th = r.point_at(1500.0)\n    assert (x, y) == pytest.approx((1000.0, 500.0))\n    assert th == pytest.approx(np.pi / 2)\n\n    # Invertibility: project(point_at(s)) == s for any s in [0, L]\n    for s_test in [0.0, 250.0, 999.0, 1000.0, 1001.0, 1750.0, 2000.0]:\n        px, py, _ = r.point_at(s_test)\n        s_proj, d_perp = r.project(px, py)\n        assert s_proj == pytest.approx(s_test, abs=1e-6)\n        assert d_perp == pytest.approx(0.0, abs=1e-6)\n\n    # Off-route point orthogonal projection\n    # Point at (500, 25): 25m lateral offset from first segment\n    s_proj, d_perp = r.project(500.0, 25.0)\n    assert s_proj == pytest.approx(500.0)\n    assert d_perp == pytest.approx(25.0)\n\n    # Point at (1050, 600): 50m lateral offset from second segment\n    s_proj, d_perp = r.project(1050.0, 600.0)\n    assert s_proj == pytest.approx(1600.0)\n    assert d_perp == pytest.approx(50.0)",
+      "source_sha256": "26390bbc3d950405b837348f0f3d5130decfe3ec9e3e3204ac6007b3362fb4b6",
+      "verified_cases": 1,
+      "status": "passed"
+    },
+    {
+      "issue": "14",
+      "title": "Crew counts with escorts",
+      "setup": "Three units of five core vehicles, plus three armed escorts. Manned control/cargo crew=2; escort crew=3. Autonomous cargo crew=0.",
+      "formula": "N_{manned}=15(2)+3(3)=39,\\quad N_{auto}=3(2)+12(0)+3(3)=15",
+      "steps": [
+        "Core organization: 3 units \u00d7 5 vehicles = 15 vehicles, comprising 3 control vehicles and 12 cargo trucks.",
+        "Manned case: 15 \u00d7 2 + 3 \u00d7 3 = 30 + 9 = 39 people.",
+        "Autonomous-cargo case: 3 \u00d7 2 + 12 \u00d7 0 + 3 \u00d7 3 = 6 + 0 + 9 = 15 people.",
+        "Ratio: 39/15=2.6. Difference: 39\u221215=24 fewer onboard people. This is crew assignment, not evidence of fewer casualties."
+      ],
+      "states": [
+        {
+          "label": "15 core vehicles + 3 escorts",
+          "values": "18 vehicles in each configuration",
+          "vehicles": [
+            "control",
+            "control",
+            "control",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "escort",
+            "escort",
+            "escort"
+          ]
+        },
+        {
+          "label": "Manned",
+          "values": "39 onboard people",
+          "vehicles": [
+            "control",
+            "control",
+            "control",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo",
+            "escort",
+            "escort",
+            "escort"
+          ]
+        },
+        {
+          "label": "Autonomous cargo",
+          "values": "15 onboard people",
+          "vehicles": [
+            "control",
+            "control",
+            "control",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "escort",
+            "escort",
+            "escort"
+          ]
+        },
+        {
+          "label": "Same vehicle count",
+          "values": "39 / 15 = 2.6",
+          "vehicles": [
+            "control",
+            "control",
+            "control",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "empty",
+            "escort",
+            "escort",
+            "escort"
+          ]
+        }
+      ],
+      "limit": "This test also checks five escorts (45 versus 21 crew); this worked example covers only the three-escort subcase. It does not calculate exposure or casualty probability.",
+      "kind": "state",
+      "source": "tests/test_convoy_autonomous_unit.py",
+      "node": "test_reference_convoy_with_escorts",
+      "source_code": "def test_reference_convoy_with_escorts():\n    \"\"\"Reference convoy with 3 and 5 escorts (ATP 4-11 G-8 equal cargo):\n    3 escorts: manned 39, autonomous 15 (ratio 2.6).\n    5 escorts: manned 45, autonomous 21 (ratio 2.14).\n    \"\"\"\n    unit = {\"march_unit_size\": 5, \"march_units_per_serial\": 3, \"serials_per_column\": 1}\n    # 3 escorts\n    spec_m3 = {**unit, \"autonomy_arm\": \"manned\", \"escort_vehicles\": 3}\n    spec_a3 = {**unit, \"autonomy_arm\": \"autonomous_march_unit\", \"escort_vehicles\": 3}\n    ent_m3 = build_entities(SC.with_params({\"convoy\": spec_m3}), make_rng(0, SC.id))\n    ent_a3 = build_entities(SC.with_params({\"convoy\": spec_a3}), make_rng(0, SC.id))\n    m3 = int(ent_m3.crew[ent_m3.side == BLUE].sum())\n    a3 = int(ent_a3.crew[ent_a3.side == BLUE].sum())\n    assert m3 == 39\n    assert a3 == 15\n    assert m3 / a3 == 2.6\n\n    # 5 escorts\n    spec_m5 = {**unit, \"autonomy_arm\": \"manned\", \"escort_vehicles\": 5}\n    spec_a5 = {**unit, \"autonomy_arm\": \"autonomous_march_unit\", \"escort_vehicles\": 5}\n    ent_m5 = build_entities(SC.with_params({\"convoy\": spec_m5}), make_rng(0, SC.id))\n    ent_a5 = build_entities(SC.with_params({\"convoy\": spec_a5}), make_rng(0, SC.id))\n    m5 = int(ent_m5.crew[ent_m5.side == BLUE].sum())\n    a5 = int(ent_a5.crew[ent_a5.side == BLUE].sum())\n    assert m5 == 45\n    assert a5 == 21\n    assert round(m5 / a5, 2) == 2.14",
+      "source_sha256": "4ed022107b88f3e315581ac7db14ea4eee1024869b75ceb0961c9ad8b32ccee2",
+      "verified_cases": 1,
+      "status": "passed"
+    },
+    {
+      "issue": "15",
+      "title": "An explicit road-space penalty",
+      "setup": "The test uses success=1, time=500 s, Blue loss fraction=0.1 and road space=1000 m. Defaults: w_fail=1, w_time=0.3, w_loss=0.5, time_scale=1800 s.",
+      "formula": "J=1(1-success)+0.3(T/1800)+0.5f_{loss}+w_{road}(RS/1000)",
+      "steps": [
+        "Without the road penalty: J=1\u00d70+0.3\u00d7(500/1800)+0.5\u00d70.1=0.133333\u2026",
+        "Enable w_road=0.2: added penalty=0.2\u00d7(1000/1000)=0.2.",
+        "New score: 0.133333\u2026+0.2=0.333333\u2026; the asserted score increase is exactly 0.2.",
+        "At RS=2000 m, penalty=0.2\u00d72=0.4, giving J=0.533333\u2026; higher is worse for this minimization score."
+      ],
+      "states": [
+        {
+          "label": "Road penalty off",
+          "values": "J=0.133333",
+          "vehicles": [
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo"
+          ]
+        },
+        {
+          "label": "Road penalty on",
+          "values": "\u0394J=+0.2",
+          "vehicles": [
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo"
+          ]
+        },
+        {
+          "label": "RS=1000 m",
+          "values": "J=0.333333",
+          "vehicles": [
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo"
+          ]
+        },
+        {
+          "label": "RS=2000 m",
+          "values": "J=0.533333",
+          "vehicles": [
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo"
+          ]
+        }
+      ],
+      "limit": "This verifies a configurable objective term, not optimization or a best policy. Drawn spacing is schematic; the test supplies road-space summary values directly.",
+      "kind": "state",
+      "source": "tests/test_convoy_separation_search.py",
+      "node": "test_mission_score_road_space_penalty",
+      "source_code": "def test_mission_score_road_space_penalty():\n    \"\"\"MissionScoreMetric penalizes road space when w_road > 0.\"\"\"\n    base_output = {\n        \"success_rate\": 1.0,\n        \"time_to_objective\": 500.0,\n        \"blue_loss_frac\": 0.1,\n        \"convoy_road_space\": 1000.0,\n    }\n\n    # Baseline with w_road = 0.0 (unchanged)\n    m_default = MissionScoreMetric()\n    score_default = float(m_default.compute(base_output)[0])\n\n    # With road space penalty w_road = 0.2, road_scale = 1000.0\n    m_road = MissionScoreMetric(w_road=0.2, road_scale=1000.0)\n    score_road = float(m_road.compute(base_output)[0])\n\n    # Expected addition: 0.2 * (1000.0 / 1000.0) = 0.2\n    assert score_road == pytest.approx(score_default + 0.2)\n\n    # Larger road space yields worse (higher) score\n    score_larger = float(m_road.compute({**base_output, \"convoy_road_space\": 2000.0})[0])\n    assert score_larger > score_road",
+      "source_sha256": "801be24298669a921bfa86b3b1028bfb916baea7fee802a9b201826486298b3a",
+      "verified_cases": 1,
+      "status": "passed"
+    },
+    {
+      "issue": "16",
+      "title": "A building blocks one ray",
+      "setup": "World: 1000\u00d71000 m, 25 m raster cells. Building cells [16:24,16:24] occupy the central 400\u2013600 m block.",
+      "formula": "LOS=1[\\text{no sampled ray point intersects a building}]",
+      "steps": [
+        "Raster bounds: 16\u00d725=400 m and 24\u00d725=600 m; cells 16 through 23 are occupied.",
+        "Ray (200,500)\u2192(800,500) crosses the building at y=500. Expected LOS=false.",
+        "Ray (200,200)\u2192(800,200) stays below the building. Expected LOS=true.",
+        "Ray (100,100)\u2192(200,100) also avoids the building. Assert [false,true,true]."
+      ],
+      "states": [
+        {
+          "label": "Building footprint",
+          "values": "400\u2013600 m central block",
+          "ray": 0
+        },
+        {
+          "label": "Ray through building",
+          "values": "LOS=false",
+          "ray": 0
+        },
+        {
+          "label": "Parallel ray outside",
+          "values": "LOS=true",
+          "ray": 1
+        },
+        {
+          "label": "Short street ray",
+          "values": "LOS=true",
+          "ray": 2
+        }
+      ],
+      "limit": "The ray is animated for explanation. LOS is calculated by the raster model; this test does not validate radio propagation or probability of detection.",
+      "kind": "los",
+      "source": "tests/test_convoy_street_graph.py",
+      "node": "test_building_los_blocking",
+      "source_code": "def test_building_los_blocking():\n    \"\"\"Verify vectorized World.los ray-marching accurately detects building occlusions.\"\"\"\n    ny, nx = 40, 40\n    cell = 25.0\n    world = World(\n        size=(1000.0, 1000.0),\n        cell=cell,\n        speed=np.ones((ny, nx)),\n        cover=np.zeros((ny, nx)),\n        conceal=np.zeros((ny, nx)),\n        buildings=np.zeros((ny, nx), dtype=bool),\n    )\n\n    # Place a building block from x in [400, 600], y in [400, 600]\n    # In raster indices: ix in [16, 24], iy in [16, 24]\n    world.buildings[16:24, 16:24] = True\n\n    # Ray 1: Passes straight through building center from (200, 500) to (800, 500) -> BLOCKED\n    # Ray 2: Runs parallel outside building from (200, 200) to (800, 200) -> CLEAR\n    # Ray 3: Short ray inside street from (100, 100) to (200, 100) -> CLEAR\n    x0 = np.array([200.0, 200.0, 100.0])\n    y0 = np.array([500.0, 200.0, 100.0])\n    x1 = np.array([800.0, 800.0, 200.0])\n    y1 = np.array([500.0, 200.0, 100.0])\n\n    clear = world.los(x0, y0, x1, y1)\n    assert clear.shape == (3,)\n    assert bool(clear[0]) is False\n    assert bool(clear[1]) is True\n    assert bool(clear[2]) is True\n\n    # Test 2D broadcast (2, 2)\n    b_clear = world.los(x0[:2, None], y0[:2, None], x1[None, :2], y1[None, :2])\n    assert b_clear.shape == (2, 2)",
+      "source_sha256": "76b428745f764882d8b41557b3f0030b73979070744473f1d84331cb41918968",
+      "verified_cases": 1,
+      "status": "passed"
+    },
+    {
+      "issue": "17",
+      "title": "Promotion after three steps",
+      "setup": "The first unit head is deliberately marked dead. leader_loss_policy=promote and handoff_steps=3.",
+      "formula": "k_{handoff}=k_{observed\\ loss}+3=0+3",
+      "steps": [
+        "Before tick 0, mark the unit head dead. This is a forced state change, not an enemy kill.",
+        "Ticks 0,1,2: no handoff yet. The first survivor still references the dead head; leaderless_steps accumulates to 3.",
+        "Tick 3: the configured delay is reached. Promote the first eligible survivor.",
+        "Assert: the new head has leader=\u22121, the unit head points to that survivor, and ll_handoffs=1."
+      ],
+      "states": [
+        {
+          "label": "Head marked dead",
+          "values": "loss observed at k=0",
+          "vehicles": [
+            "dead",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo"
+          ]
+        },
+        {
+          "label": "Ticks 0\u20132",
+          "values": "leaderless_steps=3; no handoff",
+          "vehicles": [
+            "dead",
+            "hold",
+            "hold",
+            "hold",
+            "hold"
+          ]
+        },
+        {
+          "label": "Tick 3",
+          "values": "handoff occurs",
+          "vehicles": [
+            "dead",
+            "control",
+            "cargo",
+            "cargo",
+            "cargo"
+          ]
+        },
+        {
+          "label": "New head assigned",
+          "values": "leader=\u22121; ll_handoffs=1",
+          "vehicles": [
+            "dead",
+            "control",
+            "cargo",
+            "cargo",
+            "cargo"
+          ]
+        }
+      ],
+      "limit": "Glyph colors show leadership status, not physical halt commands. This unit test does not prove the superiority of promotion or transfer any console.",
+      "kind": "state",
+      "source": "tests/test_convoy_leader_loss.py",
+      "node": "test_promote_latency",
+      "source_code": "def test_promote_latency():\n    scn, ent, bhv = _state(_pol(\"promote\", handoff_steps=3))\n    u = _unit0(ent)\n    ent.alive[u[0]] = False\n    for k in range(3):\n        _tick(scn, ent, bhv, k)\n        assert ent.leader[u[1]] == u[0]          # still pointing at the dead head\n    assert bhv.leaderless_steps == 3\n    _tick(scn, ent, bhv, 3)\n    assert ent.leader[u[1]] == -1 and bhv.ll_handoffs == 1 and bhv.ll_head[0] == u[1]",
+      "source_sha256": "4aa625300c3bda73c4907a6c317a5c0666046867e299bbcaa1ebff78bfd5ad0a",
+      "verified_cases": 1,
+      "status": "passed"
+    },
+    {
+      "issue": "18",
+      "title": "Priority respects eligibility",
+      "setup": "New dedicated selector diagnostic: Red at x=0, cargo at x=40, control at x=100. The fixture initially declares both Blue targets eligible.",
+      "formula": "t^*=\\arg\\min_{i\\in E\\cap Control}d_i;\\quad\\text{if empty, use nearest eligible}",
+      "steps": [
+        "Distances: d_cargo=|40\u22120|=40 m; d_control=|100\u22120|=100 m. Nearest eligible is cargo.",
+        "With order=[control] and both eligible, the control set is nonempty. Select the control at 100 m.",
+        "Change the supplied eligibility mask: control becomes ineligible.",
+        "The control set is now empty. Fall back to cargo at 40 m; priority cannot restore an ineligible target."
+      ],
+      "states": [
+        {
+          "label": "Nearest rule",
+          "values": "cargo at 40 m",
+          "target": "cargo"
+        },
+        {
+          "label": "Control-first",
+          "values": "control at 100 m",
+          "target": "control"
+        },
+        {
+          "label": "Control ineligible",
+          "values": "control removed from E",
+          "target": "none"
+        },
+        {
+          "label": "Fallback",
+          "values": "cargo at 40 m",
+          "target": "cargo"
+        }
+      ],
+      "limit": "This new test calls the preserved branch selector used by the study. It supplies eligibility directly; it does not simulate sensing, LOS, firing or kill draws.",
+      "kind": "priority",
+      "source": "studies/convoy-study/urban_review/worked/test_priority_example.py",
+      "node": "test_control_priority_and_ineligible_fallback",
+      "source_code": "def test_control_priority_and_ineligible_fallback():\n    path=Path(__file__).resolve().parents[2]/'red_priority_18/branch_sources/target_priority.py'\n    spec=importlib.util.spec_from_file_location('worked_target_priority',path)\n    module=importlib.util.module_from_spec(spec);sys.modules[spec.name]=module;spec.loader.exec_module(module)\n    ent=Entities.allocate(3)\n    ent.side[:]=[BLUE,BLUE,RED];ent.convoy_role[:]=[0,1,-1]\n    ent.x[:]=[100,40,0];ent.y[:]=0\n    scn=SimpleNamespace(params={'target_priority':{'order':['control']}},objective=SimpleNamespace(goal=(200,0)))\n    prio=module.build_target_priority(scn,ent)\n    distance=np.abs(ent.x[:,None]-ent.x[None,:])\n    eligible=np.zeros((3,3),bool);eligible[2,:2]=True\n    target,_=module.select(ent,prio,eligible,distance,np.array([2]),np.array([1]))\n    assert target.tolist()==[0]  # control at 100 m, despite cargo being nearer at 40 m\n    eligible[2,0]=False\n    target,_=module.select(ent,prio,eligible,distance,np.array([2]),np.array([1]))\n    assert target.tolist()==[1]  # priority never restores an ineligible target",
+      "source_sha256": "fbba81dc04161ec9ac51e87b0e5d73f59906a523d5854aae75bcb3161d8d8818",
+      "verified_cases": 1,
+      "status": "passed"
+    },
+    {
+      "issue": "19",
+      "title": "Attention and served quality",
+      "setup": "Use one parameterized test case: four assigned crewless followers per console, span_capacity=2, q_auto=0.70 and q_operator=0.95.",
+      "formula": "A=\\min(1,2/4)=0.5,\\quad q=0.70+(0.95-0.70)A",
+      "steps": [
+        "Count N=4 assigned followers per console. The selected test case sets capacity C=2.",
+        "Attention A=min(1,C/N)=min(1,2/4)=0.5.",
+        "Quality gain q_operator\u2212q_auto=0.95\u22120.70=0.25; diluted gain=0.25\u00d70.5=0.125.",
+        "Served quality q=0.70+0.125=0.825 for each of the three consoles. Other tested capacities 8,4,1 give attention 1,1,0.25."
+      ],
+      "states": [
+        {
+          "label": "Assigned followers",
+          "values": "N=4; C=2",
+          "vehicles": [
+            "control",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo"
+          ]
+        },
+        {
+          "label": "Attention",
+          "values": "A=0.5",
+          "vehicles": [
+            "control",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo"
+          ]
+        },
+        {
+          "label": "Diluted gain",
+          "values": "0.25 \u00d7 0.5 = 0.125",
+          "vehicles": [
+            "control",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo"
+          ]
+        },
+        {
+          "label": "Served quality",
+          "values": "q=0.825",
+          "vehicles": [
+            "control",
+            "cargo",
+            "cargo",
+            "cargo",
+            "cargo"
+          ]
+        }
+      ],
+      "limit": "This verifies the attention equation, not human workload calibration. The animation depicts one console; the assertion covers all three. Attention does not by itself change service time.",
+      "kind": "state",
+      "source": "tests/test_c2_units.py",
+      "node": "test_attention_below_at_and_above_capacity",
+      "source_code": "@pytest.mark.parametrize(\"span, expected\", [(8.0, 1.0), (4.0, 1.0), (2.0, 0.5), (1.0, 0.25)])\ndef test_attention_below_at_and_above_capacity(span, expected):\n    scn, ent, op, comms = build(span_capacity=span)\n    drive(scn, ent, op, comms, 1)\n    assert op.units.attention.tolist() == pytest.approx([expected] * 3)\n    assert op.units.q_eff.tolist() == pytest.approx([0.70 + 0.25 * expected] * 3)",
+      "source_sha256": "8a80c7be0e1c9e36257a8eaebcfa447634ddf90a2253b5633b337ced05570397",
+      "verified_cases": 4,
+      "status": "passed"
+    }
+  ],
+  "verification": {
+    "selected_tests": 12,
+    "passed": 12,
+    "command": "/Users/markfahim/Work/GRA GM/sandtable/.venv/bin/python -B -m pytest -q tests/test_convoy_cargo_delivery.py::test_cargo_conservation_invariant tests/test_convoy_contact_reaction.py::test_halt_holds_column_then_times_out tests/test_convoy_route_stationing.py::test_route_polyline_geometry_and_projection tests/test_convoy_autonomous_unit.py::test_reference_convoy_with_escorts tests/test_convoy_separation_search.py::test_mission_score_road_space_penalty tests/test_convoy_street_graph.py::test_building_los_blocking tests/test_convoy_leader_loss.py::test_promote_latency studies/convoy-study/urban_review/worked/test_priority_example.py::test_control_priority_and_ineligible_fallback tests/test_c2_units.py::test_attention_below_at_and_above_capacity --junitxml=/Users/markfahim/Documents/ChatGPT/mutli-agent RL/sandtable-integration/studies/convoy-study/urban_review/worked/verification.xml",
+    "kind": "Selected unit tests only; not the full suite"
+  }
+}

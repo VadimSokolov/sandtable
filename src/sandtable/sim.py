@@ -144,7 +144,10 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     for k in range(n_steps):
         comms.set_step(k)                       # no-op unless the scenario declares a jam window
         if op is not None:
-            c2.step(ent, op, comms, scn, k, rng, world)
+            if op.units is None:
+                c2.step(ent, op, comms, scn, k, rng, world)
+            else:                                   # per-unit consoles read the behavior layer (Issue #19)
+                c2.step(ent, op, comms, scn, k, rng, world, bhv=bhv)
         if bhv is not None:
             behavior.step(ent, bhv, op, comms, scn, k, rng, world=world)
         planning.step(ent, world, scn, spawn_x, pers=pers, bhv=bhv)
