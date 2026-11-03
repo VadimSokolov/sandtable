@@ -113,7 +113,7 @@ The code maps to the layers as follows.
 | Layer | sandtable modules |
 | --- | --- |
 | Simulation core: fixed-step loop, time, terrain | `sim`, `world`, `scenario`, `seeding` |
-| Agent-based modeling: SoA platforms, movement, routing, command | `entities`, `motion`, `planning`, `c2`; optional personality-field movement (`personality`) |
+| Agent-based modeling: SoA platforms, movement, routing, command | `entities`, `motion`, `planning`, `c2`; optional personality-field movement (`personality`); convoy hierarchy, crew and contact reaction (`convoy`); route polylines (`route`) and street graphs (`street_graph`) |
 | Sensing and engagement: shared-picture detection, aimed-fire attrition | `sensing`, `engagement`; kill-web state, believed tracks and decoys (`belief`), suppression and finite munitions (`mechanics`), counter-UAS / SHORAD attrition of the recon swarm (`counter_uas`) |
 | Cyber / EW: comms degradation, dropped tasking, thinned picture | `comms_ew`; EW-immune command link (fiber / autonomous terminal guidance) via the `ew_immune_link` gate in `c2` |
 | Learning, surrogate and analytics: DOE, Bayesian optimization and test-and-evaluation | `runner`, `plugin`, `opt_metrics` (+ polarisopt), Bayesian T&E (`bayes_te`) |
@@ -138,6 +138,19 @@ limit and every prior result is unchanged (proven by an additive-only diff of th
   comms-degradation crossover; the second turns the UC-5 swarm response from monotone-in-size into an
   interior optimum, as a mechanism demonstration rather than a modeled air-defense system.
 
+- **Convoy baseline** (`convoy`, `route`, `street_graph`, plus hooks in `planning`, `world`, `sensing`, `engagement`, `sim`, `metrics`): a doctrinal Army ground-vehicle convoy (GVSC sponsor), tracked in issues #7 to #19 and built on the `convoy-dev` branch. Each piece is opt-in, absent means byte-identical output, and each has a `test_*_off_is_byte_identical` test in `tests/test_convoy_*.py`. Values come from public doctrine (ATP 4-11, ATP 4-16, FM 4-0) and are logged in `doc/lit-ideas.md`.
+  - **Hierarchy** (#8): march units, serials and columns with sizes bounded by doctrine, per-vehicle section (head, main, trail) and role (control, cargo, security, recovery), and head succession when a march unit's head is lost.
+  - **Pace and time gap** (#10): regulated march pace and a dynamic time gap that expands under load, with the pace inherited on succession.
+  - **Doctrine arithmetic** (#11): ATP 4-16 column length, road space, pass time and road clearance time as KPIs (`convoy_column_length`, `convoy_road_space`, `convoy_pass_time`, `convoy_road_clearance_time`), checked against the doctrine identities and the worked example.
+  - **Cargo and delivery** (#9): a cargo conservation invariant, cargo lost in proportion to truck attrition, a delivery threshold that ends the mission, and a delivery term in the mission score.
+  - **Route stationing** (#13, `route`): arc-length stationing along a polyline route, so gaps hold around corners and along-track and cross-track station errors are separate.
+  - **Street graph** (#16, `street_graph`, `world`): intersections and street edges with width, speed multiplier and exposure, Dijkstra routing under `route_bias`, a bridge from a graph path to a route polyline, and building line-of-sight blocking for sensing, engagement and follower dead-reckoning.
+  - **Security vehicles and contact reaction** (#12): a security platform type, a `security_ratio` rule, and a declared reaction (triggers: receive fire, lead lost, detect range; actions: `continue` as the control arm, or `halt` with a timeout). Mark's own label for this work is "Increment A", so treat it as partial.
+  - **Autonomous march unit and personnel exposure** (#14): arms `manned`, `autonomous_link` (one manned control vehicle, four unmanned trucks, leader pose over the link) and `autonomous_behavior` (followers dead-reckon on their own sensors), per-role crew counts, and crew-at-risk and `crew_lost` metrics. Succession can be limited to manned vehicles so an unmanned truck is never promoted.
+  - **Separation parameters as search dimensions** (#15): `pace`, `time_gap`, `element_time_gap`, `march_unit_size` and `security_ratio` as polarisopt dimensions (`studies/uc3_convoy_sweep.yaml`, a 32-point Latin hypercube plus the baseline, and `studies/uc3_convoy_bo.yaml`).
+
+  Open work on this line is #17 (behavior after the head is lost and a halt release rule), #18 (Red target priority and an ambush template) and #19 (one console per march unit and the `c2.py` attention term).
+
 An **analysis layer** reads the mission outcomes without changing them:
 
 - **Bayesian test and evaluation** (`bayes_te`): turns mission success/failure draws into
@@ -161,15 +174,22 @@ the aggregate-attrition anchor (still a current benchmark in the combat-modeling
 4. **Contested belief (UC-7)** - a formation advances against a denser, spoofable, jammed defense
    with the full kill web (suppression, finite munitions, believed tracks, decoys), so deception and
    sustainment become first-order effects rather than assumptions.
+5. **Convoy (`scenarios/uc3_convoy.json`)** - a 15-vehicle UC-3 convoy (three march units of five, roles
+   control, cargo, cargo, security, recovery) crosses to a goal against six anti-tank teams. It is the
+   base for the convoy capabilities above and for the manned versus autonomous arm comparison.
 
 ## Layout
 
 ```
 src/sandtable/  simulator package: world, entities, motion, planning, sensing, engagement, c2,
-                comms_ew, belief, mechanics, personality, counter_uas, metrics, replay, sim;
+                comms_ew, belief, mechanics, personality, counter_uas, convoy, route, street_graph,
+                metrics, replay, sim;
                 analysis: bayes_te; plus polarisopt runner.py / plugin.py / opt_metrics.py
 tools/          make_*_numbers.py produce report/data/*.csv; make_numbers.py / make_figures.py /
-                make_diagrams.py turn that CSV into report/gen/*.tex and report/figures/*.pdf
+                make_diagrams.py turn that CSV into report/gen/*.tex and report/figures/*.pdf;
+                convoy: make_convoy_sweep.py, make_autonomy_arms.py, make_contact_arms.py,
+                make_cargo_dashboard.py, make_route_dashboard.py, make_mission_viewer_v2.py
+                (HTML dashboards and the replay console, written to report/viz/)
 scenarios/      declarative scenario specs (JSON)
 studies/        polarisopt study YAMLs (LHS/Morris sweeps + GP/qEI Bayesian optimization)
 experiments/    empirical.md lab notebook + results/
