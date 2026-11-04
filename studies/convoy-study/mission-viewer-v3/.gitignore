@@ -1,0 +1,4 @@
+data/
+archive-import.json
+*.png
+__pycache__/

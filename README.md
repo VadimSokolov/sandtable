@@ -190,6 +190,17 @@ pip install 'polarisopt @ git+https://github.com/VadimSokolov/polarisopt.git'
 
 ## Run
 
+### Editable convoy map and Mission Viewer V3
+
+```bash
+PYTHONPATH=src python -m sandtable.mission_viewer --port 8767
+```
+
+Open <http://127.0.0.1:8767/> to build a map, configure a convoy, run Python and inspect
+recorded results. Routing, automatic exposure and the viewer backend are part of
+this repository. See the [viewer guide](studies/convoy-study/mission-viewer-v3/README.md)
+and [architecture](studies/convoy-study/mission-viewer-v3/ARCHITECTURE.md).
+
 ```bash
 # single mission, deterministic given the seed
 python -m sandtable.runner scenarios/uc3_route_defilade.json /tmp/out.json   # slave CLI (polarisopt contract)

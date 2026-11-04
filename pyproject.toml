@@ -17,6 +17,9 @@ dependencies = [
   "scipy>=1.10",
 ]
 
+[project.scripts]
+sandtable-viewer = "sandtable.mission_viewer.__main__:main"
+
 [project.optional-dependencies]
 # Performance path (optional; core runs on pure NumPy)
 fast = ["numba>=0.59"]

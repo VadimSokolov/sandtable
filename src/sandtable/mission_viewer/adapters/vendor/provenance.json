@@ -1,0 +1,19 @@
+{
+  "checkpoint_revision": "cbcfc4bbdc87429cd2ce6e1d6ef05a03f5f75cf4",
+  "checkpoint_status": "Incomplete Issue #18 checkpoint; no claim of issue completion.",
+  "changes": "Source formatting and an ordinary package-relative target_priority import replace the standalone dynamic loading shim; simulation logic retained.",
+  "files": [
+    {
+      "file": "target_priority.py",
+      "original_sha256": "c9289b887fbd49073a3d6cc5ce6c264cea27fda3528edcc3309f29e23ed5723e",
+      "matches_checkpoint": true,
+      "packaged_sha256": "886eb2a0774747d460c636193df1be13f3ee6619bd654bbb7731a55d4c8b0e13"
+    },
+    {
+      "file": "engagement.py",
+      "original_sha256": "ac46b85fe7519b3356425c04a6c89132d25ca6c1fb4ae16a43d46ede55467e4b",
+      "matches_checkpoint": true,
+      "packaged_sha256": "d02ad679217892e10e8984ebc09d73a84e2607475379cc487b8489ab4cd0ffe5"
+    }
+  ]
+}

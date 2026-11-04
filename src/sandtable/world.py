@@ -280,6 +280,16 @@ def build_world(scn: Scenario, rng: np.random.Generator) -> World:
             exposure=0.5,
         )
 
+    # Optional known-map exposure. Defaults leave historical scenarios untouched.
+    exposure_spec = scn.params.get("route_exposure")
+    if street_graph_obj is not None and exposure_spec is not None:
+        from sandtable.routing import RangeExposureModel, ThreatSite
+        threats = [ThreatSite(**site) for site in exposure_spec.get("threat_sites", [])]
+        model = RangeExposureModel(threats, building_boxes or (), cell,
+                                   exposure_spec.get("sample_spacing", 50.0))
+        street_graph_obj = model.apply(street_graph_obj,
+                                       exposure_spec.get("manual_edge_indices", ()))
+
     route_data = scn.params.get("route")
     start_pt = None
     if route_data is None:
@@ -308,9 +318,16 @@ def build_world(scn: Scenario, rng: np.random.Generator) -> World:
         u_start = street_graph_obj.find_nearest_node(sx, sy)
         u_goal = street_graph_obj.find_nearest_node(gx, gy)
         route_bias = float(scn.params.get("route_bias", 0.0))
-        path_nodes = street_graph_obj.find_path(u_start, u_goal, route_bias=route_bias)
-        if len(path_nodes) >= 2:
-            route_obj = street_graph_obj.to_route_polyline(path_nodes)
+        from sandtable.routing import ExposurePenaltyCost
+        cost_name = scn.params.get("route_cost_model", "legacy")
+        if cost_name not in ("legacy", "exposure_penalty"):
+            raise ValueError("route_cost_model must be legacy or exposure_penalty")
+        policy = ExposurePenaltyCost(route_bias) if cost_name == "exposure_penalty" else None
+        result = street_graph_obj.plan_path(u_start, u_goal, route_bias=route_bias,
+                    algorithm=scn.params.get("route_algorithm", "dijkstra"), cost_policy=policy)
+        if len(result.nodes) >= 2:
+            route_obj = street_graph_obj.to_route_polyline(result.nodes,
+                                                           edge_indices=result.edge_indices)
 
     return World(
         size=(w, h),

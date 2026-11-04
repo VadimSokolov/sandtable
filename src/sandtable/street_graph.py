@@ -9,7 +9,6 @@ Provides discrete 2D graph representations of urban roadway networks:
 from __future__ import annotations
 
 from dataclasses import dataclass
-import heapq
 import math
 from typing import Any, Sequence
 
@@ -99,68 +98,22 @@ class StreetGraph:
         return best_id
 
     def edge_cost(self, edge: StreetEdge, route_bias: float = 0.0) -> float:
-        """Compute traversal cost for an edge under route_bias in [0, 1].
+        """Original blend policy; retained as the default for existing scenarios."""
+        from sandtable.routing import LegacyBlendCost
+        return LegacyBlendCost(route_bias)(edge)
 
-        cost(e) = (1.0 - route_bias) * (length / speed_mult) + route_bias * (length * exposure)
-        - route_bias = 0.0: Pure speed-optimal routing (arterials, highest speed).
-        - route_bias = 1.0: Pure cover/safety-optimal routing (covered backstreets, minimum exposure).
-        """
-        bias = max(0.0, min(1.0, float(route_bias)))
-        speed = max(1e-4, edge.speed_mult)
-        travel_time = edge.length / speed
-        exposure_cost = edge.length * edge.exposure
-        return (1.0 - bias) * travel_time + bias * exposure_cost
+    def plan_path(self, start_node, goal_node, route_bias=0.0, *,
+                  algorithm="dijkstra", cost_policy=None):
+        """Return selected edge indices, cost and search diagnostics."""
+        from sandtable.routing import LegacyBlendCost, RoutePlanner
+        return RoutePlanner.for_algorithm(algorithm, cost_policy if cost_policy is not None else LegacyBlendCost(route_bias)).plan(
+            self, start_node, goal_node)
 
-    def find_path(
-        self,
-        start_node: str | int,
-        goal_node: str | int,
-        route_bias: float = 0.0,
-    ) -> list[str | int]:
-        """Find the lowest-cost path from start_node to goal_node using Dijkstra search.
-
-        Returns list of node IDs [start_node, ..., goal_node].
-        Returns [] if goal_node is unreachable.
-        """
-        if start_node not in self.nodes or goal_node not in self.nodes:
-            return []
-
-        if start_node == goal_node:
-            return [start_node]
-
-        dist: dict[str | int, float] = {start_node: 0.0}
-        prev: dict[str | int, str | int] = {}
-        # Priority queue stores (cost, counter, node_id)
-        pq: list[tuple[float, int, str | int]] = [(0.0, 0, start_node)]
-        counter = 0
-
-        while pq:
-            d, _, u = heapq.heappop(pq)
-            if d > dist.get(u, float("inf")):
-                continue
-
-            if u == goal_node:
-                break
-
-            for v, edge in self._adj.get(u, []):
-                cost = self.edge_cost(edge, route_bias=route_bias)
-                alt = d + cost
-                if alt < dist.get(v, float("inf")):
-                    dist[v] = alt
-                    prev[v] = u
-                    counter += 1
-                    heapq.heappush(pq, (alt, counter, v))
-
-        if goal_node not in prev:
-            return []
-
-        path = []
-        curr: str | int | None = goal_node
-        while curr is not None:
-            path.append(curr)
-            curr = prev.get(curr)
-        path.reverse()
-        return path
+    def find_path(self, start_node, goal_node, route_bias=0.0, *,
+                  algorithm="dijkstra", cost_policy=None) -> list[str | int]:
+        """Compatible node-list API; A* and alternative cost policies are opt-in."""
+        return list(self.plan_path(start_node, goal_node, route_bias,
+                                  algorithm=algorithm, cost_policy=cost_policy).nodes)
 
     def _get_edge_between(self, u: str | int, v: str | int) -> StreetEdge | None:
         """Find edge directly connecting u and v."""
@@ -169,7 +122,7 @@ class StreetGraph:
                 return edge
         return None
 
-    def to_route_polyline(self, path_nodes: Sequence[str | int]) -> RoutePolyline:
+    def to_route_polyline(self, path_nodes: Sequence[str | int], *, edge_indices=None) -> RoutePolyline:
         """Convert a sequence of connected node IDs into a RoutePolyline.
 
         Includes intermediate geometry from connecting edges if defined.
@@ -192,7 +145,15 @@ class StreetGraph:
             if i == 0:
                 pts.append((u_node.x, u_node.y))
 
-            edge = self._get_edge_between(u_id, v_id)
+            if edge_indices is not None:
+                if len(edge_indices) != len(path_nodes) - 1:
+                    raise ValueError("One selected edge index is required per path segment")
+                edge = self.edges[edge_indices[i]]
+                if not ((edge.u == u_id and edge.v == v_id) or
+                        (edge.bidirectional and edge.v == u_id and edge.u == v_id)):
+                    raise ValueError("Selected edge does not connect the directed path segment")
+            else:
+                edge = self._get_edge_between(u_id, v_id)
             if edge is not None and edge.geometry:
                 if edge.u == u_id:
                     # Traversed in forward direction

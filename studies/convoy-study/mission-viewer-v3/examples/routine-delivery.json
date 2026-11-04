@@ -1,0 +1,233 @@
+{
+  "schema_version": 1,
+  "name": "Routine delivery \u2014 no Red",
+  "map": {
+    "width": 6000,
+    "height": 3000,
+    "cell": 25,
+    "nodes": [
+      {
+        "id": "START",
+        "x": 100,
+        "y": 1500
+      },
+      {
+        "id": "JUNCTION",
+        "x": 1800,
+        "y": 1500
+      },
+      {
+        "id": "JOIN",
+        "x": 4800,
+        "y": 1500
+      },
+      {
+        "id": "GOAL",
+        "x": 5750,
+        "y": 1500
+      },
+      {
+        "id": "UPPER_W",
+        "x": 1800,
+        "y": 2400
+      },
+      {
+        "id": "UPPER_E",
+        "x": 4500,
+        "y": 2400
+      },
+      {
+        "id": "LOWER_W",
+        "x": 2100,
+        "y": 700
+      },
+      {
+        "id": "LOWER_E",
+        "x": 4500,
+        "y": 700
+      }
+    ],
+    "roads": [
+      {
+        "id": "R1",
+        "u": "START",
+        "v": "JUNCTION",
+        "width": 100,
+        "speed_mult": 1.0,
+        "exposure": 0.2
+      },
+      {
+        "id": "R2",
+        "u": "JOIN",
+        "v": "GOAL",
+        "width": 100,
+        "speed_mult": 1.0,
+        "exposure": 0.2
+      },
+      {
+        "id": "R3",
+        "u": "JUNCTION",
+        "v": "JOIN",
+        "width": 100,
+        "speed_mult": 1.0,
+        "exposure": 0.7
+      },
+      {
+        "id": "R4",
+        "u": "JUNCTION",
+        "v": "UPPER_W",
+        "width": 100,
+        "speed_mult": 1.0,
+        "exposure": 0.25
+      },
+      {
+        "id": "R5",
+        "u": "UPPER_W",
+        "v": "UPPER_E",
+        "width": 100,
+        "speed_mult": 1.0,
+        "exposure": 0.25
+      },
+      {
+        "id": "R6",
+        "u": "UPPER_E",
+        "v": "JOIN",
+        "width": 100,
+        "speed_mult": 1.0,
+        "exposure": 0.25
+      },
+      {
+        "id": "R7",
+        "u": "JUNCTION",
+        "v": "LOWER_W",
+        "width": 100,
+        "speed_mult": 1.0,
+        "exposure": 0.2
+      },
+      {
+        "id": "R8",
+        "u": "LOWER_W",
+        "v": "LOWER_E",
+        "width": 100,
+        "speed_mult": 1.0,
+        "exposure": 0.2
+      },
+      {
+        "id": "R9",
+        "u": "LOWER_E",
+        "v": "JOIN",
+        "width": 100,
+        "speed_mult": 1.0,
+        "exposure": 0.2
+      }
+    ],
+    "buildings": [
+      {
+        "id": "B1",
+        "box": [
+          700,
+          900,
+          1600,
+          1350
+        ]
+      },
+      {
+        "id": "B2",
+        "box": [
+          700,
+          1700,
+          1600,
+          2200
+        ]
+      },
+      {
+        "id": "B3",
+        "box": [
+          2300,
+          950,
+          2850,
+          1300
+        ]
+      },
+      {
+        "id": "B4",
+        "box": [
+          3900,
+          950,
+          4500,
+          1300
+        ]
+      },
+      {
+        "id": "B5",
+        "box": [
+          3100,
+          1700,
+          3650,
+          2200
+        ]
+      }
+    ],
+    "start": [
+      100,
+      1500
+    ],
+    "goal": [
+      5750,
+      1500
+    ],
+    "goal_radius": 150,
+    "red": [],
+    "route_mode": "manual",
+    "manual_path": [
+      "START",
+      "JUNCTION",
+      "JOIN",
+      "GOAL"
+    ],
+    "route_bias": 0.5
+  },
+  "mission": {
+    "vehicles_per_unit": 5,
+    "units_per_serial": 3,
+    "serials": 1,
+    "escorts": 3,
+    "layout": "cargo",
+    "crew_mode": "supervised",
+    "control_crew": 2,
+    "cargo_crew": 2,
+    "escort_crew": 3,
+    "recovery_crew": 2,
+    "payload_kg": 5000,
+    "capacity_kg": 5000,
+    "pace": 10,
+    "time_gap": 4,
+    "min_gap": 40,
+    "response": "halt",
+    "leader_loss": "promote",
+    "comms": 0,
+    "seed": 0,
+    "duration": 1800,
+    "required_fraction": 1,
+    "handoff_steps": 5,
+    "succession": "manned_only",
+    "contact_clear_s": 15,
+    "halt_max_s": 0,
+    "halt_clear_steps": 0,
+    "console_transfer": "fixed",
+    "console_delay_s": 20,
+    "span_capacity": 4,
+    "service_rate": 0.5,
+    "decision_interval": 30,
+    "patience": 20,
+    "exceptions": false,
+    "max_speed": 12,
+    "vehicle_length": 6,
+    "staging_m": 900,
+    "herringbone_offset": 20,
+    "escort_range": 1200,
+    "escort_pk": 0.01,
+    "target_priority": "nearest",
+    "diagnostic_loss_s": null
+  }
+}

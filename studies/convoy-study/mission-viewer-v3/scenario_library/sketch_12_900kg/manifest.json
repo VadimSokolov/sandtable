@@ -1,0 +1,3622 @@
+{
+  "id": "sketch_12_900kg",
+  "title": "Your sketch \u00b7 12 integrated scenarios",
+  "version": 1,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "required_load_kg": 10800,
+  "capacity_kg": 907.18474,
+  "scenarios": [
+    {
+      "id": "S1",
+      "title": "S1 \u00b7 sketch \u00b7 core 5 \u00b7 continue \u00b7 C0",
+      "configuration": {
+        "schema_version": 1,
+        "name": "S1 \u00b7 sketch \u00b7 core 5 \u00b7 continue \u00b7 C0",
+        "map": {
+          "route_algorithm": "dijkstra",
+          "width": 6000.0,
+          "height": 3000.0,
+          "cell": 25.0,
+          "nodes": [
+            {
+              "id": "START",
+              "x": 100.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JUNCTION",
+              "x": 1800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JOIN",
+              "x": 4800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "GOAL",
+              "x": 5750.0,
+              "y": 1500.0
+            },
+            {
+              "id": "UPPER_W",
+              "x": 1800.0,
+              "y": 2400.0
+            },
+            {
+              "id": "UPPER_E",
+              "x": 4500.0,
+              "y": 2400.0
+            },
+            {
+              "id": "LOWER_W",
+              "x": 2100.0,
+              "y": 700.0
+            },
+            {
+              "id": "LOWER_E",
+              "x": 4500.0,
+              "y": 700.0
+            }
+          ],
+          "roads": [
+            {
+              "id": "R1",
+              "u": "START",
+              "v": "JUNCTION",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.01237902804415043
+            },
+            {
+              "id": "R2",
+              "u": "JOIN",
+              "v": "GOAL",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.022151944921111295
+            },
+            {
+              "id": "R3",
+              "u": "JUNCTION",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.7,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.7321364579190011
+            },
+            {
+              "id": "R4",
+              "u": "JUNCTION",
+              "v": "UPPER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.25302890508105536
+            },
+            {
+              "id": "R5",
+              "u": "UPPER_W",
+              "v": "UPPER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.35861751052621954
+            },
+            {
+              "id": "R6",
+              "u": "UPPER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.38816848973522144
+            },
+            {
+              "id": "R7",
+              "u": "JUNCTION",
+              "v": "LOWER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06401205823751262
+            },
+            {
+              "id": "R8",
+              "u": "LOWER_W",
+              "v": "LOWER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.5238659774190818
+            },
+            {
+              "id": "R9",
+              "u": "LOWER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06315692587794758
+            }
+          ],
+          "buildings": [
+            {
+              "id": "B1",
+              "box": [
+                700.0,
+                900.0,
+                1600.0,
+                1350.0
+              ]
+            },
+            {
+              "id": "B2",
+              "box": [
+                700.0,
+                1700.0,
+                1600.0,
+                2200.0
+              ]
+            },
+            {
+              "id": "B3",
+              "box": [
+                2300.0,
+                950.0,
+                2850.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B4",
+              "box": [
+                3900.0,
+                950.0,
+                4500.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B5",
+              "box": [
+                3100.0,
+                1700.0,
+                3650.0,
+                2200.0
+              ]
+            }
+          ],
+          "red": [
+            {
+              "id": "E1",
+              "x": 3050.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E2",
+              "x": 3550.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E3",
+              "x": 2500.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E4",
+              "x": 4100.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            }
+          ],
+          "start": [
+            100.0,
+            1500.0
+          ],
+          "goal": [
+            5750.0,
+            1500.0
+          ],
+          "goal_radius": 150.0,
+          "route_mode": "manual",
+          "manual_path": [
+            "START",
+            "JUNCTION",
+            "LOWER_W",
+            "LOWER_E",
+            "JOIN",
+            "GOAL"
+          ],
+          "route_bias": 0.5
+        },
+        "mission": {
+          "vehicles_per_unit": 5,
+          "units_per_serial": 3,
+          "serials": 1,
+          "escorts": 3,
+          "control_crew": 2,
+          "cargo_crew": 2,
+          "escort_crew": 3,
+          "recovery_crew": 2,
+          "comms": 0,
+          "seed": 0,
+          "duration": 1800,
+          "handoff_steps": 5,
+          "halt_max_s": 0,
+          "halt_clear_steps": 0,
+          "console_delay_s": 20,
+          "decision_interval": 30,
+          "patience": 20,
+          "payload_kg": 900.0,
+          "capacity_kg": 907.18474,
+          "pace": 10.0,
+          "time_gap": 4.0,
+          "min_gap": 40.0,
+          "required_fraction": 1.0,
+          "contact_clear_s": 15.0,
+          "span_capacity": 4.0,
+          "service_rate": 0.5,
+          "max_speed": 12.0,
+          "vehicle_length": 6.0,
+          "staging_m": 1400.0,
+          "herringbone_offset": 20.0,
+          "escort_range": 1200.0,
+          "escort_pk": 0.01,
+          "layout": "cargo",
+          "crew_mode": "supervised",
+          "response": "continue",
+          "leader_loss": "promote",
+          "succession": "manned_only",
+          "console_transfer": "successor",
+          "target_priority": "control_first",
+          "exceptions": false,
+          "diagnostic_loss_s": null
+        }
+      },
+      "configuration_hash": "26db897fa1e60b030f8023a58dabd7993bf429219a0940ee9fc4707377b92829",
+      "factors": {
+        "core": 5,
+        "response": "continue",
+        "comms": 0
+      }
+    },
+    {
+      "id": "S2",
+      "title": "S2 \u00b7 sketch \u00b7 core 5 \u00b7 halt \u00b7 C0",
+      "configuration": {
+        "schema_version": 1,
+        "name": "S2 \u00b7 sketch \u00b7 core 5 \u00b7 halt \u00b7 C0",
+        "map": {
+          "route_algorithm": "dijkstra",
+          "width": 6000.0,
+          "height": 3000.0,
+          "cell": 25.0,
+          "nodes": [
+            {
+              "id": "START",
+              "x": 100.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JUNCTION",
+              "x": 1800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JOIN",
+              "x": 4800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "GOAL",
+              "x": 5750.0,
+              "y": 1500.0
+            },
+            {
+              "id": "UPPER_W",
+              "x": 1800.0,
+              "y": 2400.0
+            },
+            {
+              "id": "UPPER_E",
+              "x": 4500.0,
+              "y": 2400.0
+            },
+            {
+              "id": "LOWER_W",
+              "x": 2100.0,
+              "y": 700.0
+            },
+            {
+              "id": "LOWER_E",
+              "x": 4500.0,
+              "y": 700.0
+            }
+          ],
+          "roads": [
+            {
+              "id": "R1",
+              "u": "START",
+              "v": "JUNCTION",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.01237902804415043
+            },
+            {
+              "id": "R2",
+              "u": "JOIN",
+              "v": "GOAL",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.022151944921111295
+            },
+            {
+              "id": "R3",
+              "u": "JUNCTION",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.7,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.7321364579190011
+            },
+            {
+              "id": "R4",
+              "u": "JUNCTION",
+              "v": "UPPER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.25302890508105536
+            },
+            {
+              "id": "R5",
+              "u": "UPPER_W",
+              "v": "UPPER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.35861751052621954
+            },
+            {
+              "id": "R6",
+              "u": "UPPER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.38816848973522144
+            },
+            {
+              "id": "R7",
+              "u": "JUNCTION",
+              "v": "LOWER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06401205823751262
+            },
+            {
+              "id": "R8",
+              "u": "LOWER_W",
+              "v": "LOWER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.5238659774190818
+            },
+            {
+              "id": "R9",
+              "u": "LOWER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06315692587794758
+            }
+          ],
+          "buildings": [
+            {
+              "id": "B1",
+              "box": [
+                700.0,
+                900.0,
+                1600.0,
+                1350.0
+              ]
+            },
+            {
+              "id": "B2",
+              "box": [
+                700.0,
+                1700.0,
+                1600.0,
+                2200.0
+              ]
+            },
+            {
+              "id": "B3",
+              "box": [
+                2300.0,
+                950.0,
+                2850.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B4",
+              "box": [
+                3900.0,
+                950.0,
+                4500.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B5",
+              "box": [
+                3100.0,
+                1700.0,
+                3650.0,
+                2200.0
+              ]
+            }
+          ],
+          "red": [
+            {
+              "id": "E1",
+              "x": 3050.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E2",
+              "x": 3550.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E3",
+              "x": 2500.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E4",
+              "x": 4100.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            }
+          ],
+          "start": [
+            100.0,
+            1500.0
+          ],
+          "goal": [
+            5750.0,
+            1500.0
+          ],
+          "goal_radius": 150.0,
+          "route_mode": "manual",
+          "manual_path": [
+            "START",
+            "JUNCTION",
+            "LOWER_W",
+            "LOWER_E",
+            "JOIN",
+            "GOAL"
+          ],
+          "route_bias": 0.5
+        },
+        "mission": {
+          "vehicles_per_unit": 5,
+          "units_per_serial": 3,
+          "serials": 1,
+          "escorts": 3,
+          "control_crew": 2,
+          "cargo_crew": 2,
+          "escort_crew": 3,
+          "recovery_crew": 2,
+          "comms": 0,
+          "seed": 0,
+          "duration": 1800,
+          "handoff_steps": 5,
+          "halt_max_s": 0,
+          "halt_clear_steps": 0,
+          "console_delay_s": 20,
+          "decision_interval": 30,
+          "patience": 20,
+          "payload_kg": 900.0,
+          "capacity_kg": 907.18474,
+          "pace": 10.0,
+          "time_gap": 4.0,
+          "min_gap": 40.0,
+          "required_fraction": 1.0,
+          "contact_clear_s": 15.0,
+          "span_capacity": 4.0,
+          "service_rate": 0.5,
+          "max_speed": 12.0,
+          "vehicle_length": 6.0,
+          "staging_m": 1400.0,
+          "herringbone_offset": 20.0,
+          "escort_range": 1200.0,
+          "escort_pk": 0.01,
+          "layout": "cargo",
+          "crew_mode": "supervised",
+          "response": "halt",
+          "leader_loss": "promote",
+          "succession": "manned_only",
+          "console_transfer": "successor",
+          "target_priority": "control_first",
+          "exceptions": false,
+          "diagnostic_loss_s": null
+        }
+      },
+      "configuration_hash": "5fc3d250ee00267ac3529d9a605568c3a527ab079266596005aaa6d2176a5ae2",
+      "factors": {
+        "core": 5,
+        "response": "halt",
+        "comms": 0
+      }
+    },
+    {
+      "id": "S3",
+      "title": "S3 \u00b7 sketch \u00b7 core 5 \u00b7 herringbone \u00b7 C0",
+      "configuration": {
+        "schema_version": 1,
+        "name": "S3 \u00b7 sketch \u00b7 core 5 \u00b7 herringbone \u00b7 C0",
+        "map": {
+          "route_algorithm": "dijkstra",
+          "width": 6000.0,
+          "height": 3000.0,
+          "cell": 25.0,
+          "nodes": [
+            {
+              "id": "START",
+              "x": 100.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JUNCTION",
+              "x": 1800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JOIN",
+              "x": 4800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "GOAL",
+              "x": 5750.0,
+              "y": 1500.0
+            },
+            {
+              "id": "UPPER_W",
+              "x": 1800.0,
+              "y": 2400.0
+            },
+            {
+              "id": "UPPER_E",
+              "x": 4500.0,
+              "y": 2400.0
+            },
+            {
+              "id": "LOWER_W",
+              "x": 2100.0,
+              "y": 700.0
+            },
+            {
+              "id": "LOWER_E",
+              "x": 4500.0,
+              "y": 700.0
+            }
+          ],
+          "roads": [
+            {
+              "id": "R1",
+              "u": "START",
+              "v": "JUNCTION",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.01237902804415043
+            },
+            {
+              "id": "R2",
+              "u": "JOIN",
+              "v": "GOAL",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.022151944921111295
+            },
+            {
+              "id": "R3",
+              "u": "JUNCTION",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.7,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.7321364579190011
+            },
+            {
+              "id": "R4",
+              "u": "JUNCTION",
+              "v": "UPPER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.25302890508105536
+            },
+            {
+              "id": "R5",
+              "u": "UPPER_W",
+              "v": "UPPER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.35861751052621954
+            },
+            {
+              "id": "R6",
+              "u": "UPPER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.38816848973522144
+            },
+            {
+              "id": "R7",
+              "u": "JUNCTION",
+              "v": "LOWER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06401205823751262
+            },
+            {
+              "id": "R8",
+              "u": "LOWER_W",
+              "v": "LOWER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.5238659774190818
+            },
+            {
+              "id": "R9",
+              "u": "LOWER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06315692587794758
+            }
+          ],
+          "buildings": [
+            {
+              "id": "B1",
+              "box": [
+                700.0,
+                900.0,
+                1600.0,
+                1350.0
+              ]
+            },
+            {
+              "id": "B2",
+              "box": [
+                700.0,
+                1700.0,
+                1600.0,
+                2200.0
+              ]
+            },
+            {
+              "id": "B3",
+              "box": [
+                2300.0,
+                950.0,
+                2850.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B4",
+              "box": [
+                3900.0,
+                950.0,
+                4500.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B5",
+              "box": [
+                3100.0,
+                1700.0,
+                3650.0,
+                2200.0
+              ]
+            }
+          ],
+          "red": [
+            {
+              "id": "E1",
+              "x": 3050.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E2",
+              "x": 3550.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E3",
+              "x": 2500.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E4",
+              "x": 4100.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            }
+          ],
+          "start": [
+            100.0,
+            1500.0
+          ],
+          "goal": [
+            5750.0,
+            1500.0
+          ],
+          "goal_radius": 150.0,
+          "route_mode": "manual",
+          "manual_path": [
+            "START",
+            "JUNCTION",
+            "LOWER_W",
+            "LOWER_E",
+            "JOIN",
+            "GOAL"
+          ],
+          "route_bias": 0.5
+        },
+        "mission": {
+          "vehicles_per_unit": 5,
+          "units_per_serial": 3,
+          "serials": 1,
+          "escorts": 3,
+          "control_crew": 2,
+          "cargo_crew": 2,
+          "escort_crew": 3,
+          "recovery_crew": 2,
+          "comms": 0,
+          "seed": 0,
+          "duration": 1800,
+          "handoff_steps": 5,
+          "halt_max_s": 0,
+          "halt_clear_steps": 0,
+          "console_delay_s": 20,
+          "decision_interval": 30,
+          "patience": 20,
+          "payload_kg": 900.0,
+          "capacity_kg": 907.18474,
+          "pace": 10.0,
+          "time_gap": 4.0,
+          "min_gap": 40.0,
+          "required_fraction": 1.0,
+          "contact_clear_s": 15.0,
+          "span_capacity": 4.0,
+          "service_rate": 0.5,
+          "max_speed": 12.0,
+          "vehicle_length": 6.0,
+          "staging_m": 1400.0,
+          "herringbone_offset": 20.0,
+          "escort_range": 1200.0,
+          "escort_pk": 0.01,
+          "layout": "cargo",
+          "crew_mode": "supervised",
+          "response": "herringbone",
+          "leader_loss": "promote",
+          "succession": "manned_only",
+          "console_transfer": "successor",
+          "target_priority": "control_first",
+          "exceptions": false,
+          "diagnostic_loss_s": null
+        }
+      },
+      "configuration_hash": "dde9ba40f2621e8e72c2a405bdccadff1402c2290608ccb9494f2a385db91b25",
+      "factors": {
+        "core": 5,
+        "response": "herringbone",
+        "comms": 0
+      }
+    },
+    {
+      "id": "S4",
+      "title": "S4 \u00b7 sketch \u00b7 core 5 \u00b7 continue \u00b7 C3",
+      "configuration": {
+        "schema_version": 1,
+        "name": "S4 \u00b7 sketch \u00b7 core 5 \u00b7 continue \u00b7 C3",
+        "map": {
+          "route_algorithm": "dijkstra",
+          "width": 6000.0,
+          "height": 3000.0,
+          "cell": 25.0,
+          "nodes": [
+            {
+              "id": "START",
+              "x": 100.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JUNCTION",
+              "x": 1800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JOIN",
+              "x": 4800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "GOAL",
+              "x": 5750.0,
+              "y": 1500.0
+            },
+            {
+              "id": "UPPER_W",
+              "x": 1800.0,
+              "y": 2400.0
+            },
+            {
+              "id": "UPPER_E",
+              "x": 4500.0,
+              "y": 2400.0
+            },
+            {
+              "id": "LOWER_W",
+              "x": 2100.0,
+              "y": 700.0
+            },
+            {
+              "id": "LOWER_E",
+              "x": 4500.0,
+              "y": 700.0
+            }
+          ],
+          "roads": [
+            {
+              "id": "R1",
+              "u": "START",
+              "v": "JUNCTION",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.01237902804415043
+            },
+            {
+              "id": "R2",
+              "u": "JOIN",
+              "v": "GOAL",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.022151944921111295
+            },
+            {
+              "id": "R3",
+              "u": "JUNCTION",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.7,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.7321364579190011
+            },
+            {
+              "id": "R4",
+              "u": "JUNCTION",
+              "v": "UPPER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.25302890508105536
+            },
+            {
+              "id": "R5",
+              "u": "UPPER_W",
+              "v": "UPPER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.35861751052621954
+            },
+            {
+              "id": "R6",
+              "u": "UPPER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.38816848973522144
+            },
+            {
+              "id": "R7",
+              "u": "JUNCTION",
+              "v": "LOWER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06401205823751262
+            },
+            {
+              "id": "R8",
+              "u": "LOWER_W",
+              "v": "LOWER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.5238659774190818
+            },
+            {
+              "id": "R9",
+              "u": "LOWER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06315692587794758
+            }
+          ],
+          "buildings": [
+            {
+              "id": "B1",
+              "box": [
+                700.0,
+                900.0,
+                1600.0,
+                1350.0
+              ]
+            },
+            {
+              "id": "B2",
+              "box": [
+                700.0,
+                1700.0,
+                1600.0,
+                2200.0
+              ]
+            },
+            {
+              "id": "B3",
+              "box": [
+                2300.0,
+                950.0,
+                2850.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B4",
+              "box": [
+                3900.0,
+                950.0,
+                4500.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B5",
+              "box": [
+                3100.0,
+                1700.0,
+                3650.0,
+                2200.0
+              ]
+            }
+          ],
+          "red": [
+            {
+              "id": "E1",
+              "x": 3050.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E2",
+              "x": 3550.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E3",
+              "x": 2500.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E4",
+              "x": 4100.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            }
+          ],
+          "start": [
+            100.0,
+            1500.0
+          ],
+          "goal": [
+            5750.0,
+            1500.0
+          ],
+          "goal_radius": 150.0,
+          "route_mode": "manual",
+          "manual_path": [
+            "START",
+            "JUNCTION",
+            "LOWER_W",
+            "LOWER_E",
+            "JOIN",
+            "GOAL"
+          ],
+          "route_bias": 0.5
+        },
+        "mission": {
+          "vehicles_per_unit": 5,
+          "units_per_serial": 3,
+          "serials": 1,
+          "escorts": 3,
+          "control_crew": 2,
+          "cargo_crew": 2,
+          "escort_crew": 3,
+          "recovery_crew": 2,
+          "comms": 3,
+          "seed": 0,
+          "duration": 1800,
+          "handoff_steps": 5,
+          "halt_max_s": 0,
+          "halt_clear_steps": 0,
+          "console_delay_s": 20,
+          "decision_interval": 30,
+          "patience": 20,
+          "payload_kg": 900.0,
+          "capacity_kg": 907.18474,
+          "pace": 10.0,
+          "time_gap": 4.0,
+          "min_gap": 40.0,
+          "required_fraction": 1.0,
+          "contact_clear_s": 15.0,
+          "span_capacity": 4.0,
+          "service_rate": 0.5,
+          "max_speed": 12.0,
+          "vehicle_length": 6.0,
+          "staging_m": 1400.0,
+          "herringbone_offset": 20.0,
+          "escort_range": 1200.0,
+          "escort_pk": 0.01,
+          "layout": "cargo",
+          "crew_mode": "supervised",
+          "response": "continue",
+          "leader_loss": "promote",
+          "succession": "manned_only",
+          "console_transfer": "successor",
+          "target_priority": "control_first",
+          "exceptions": false,
+          "diagnostic_loss_s": null
+        }
+      },
+      "configuration_hash": "0731c9d4ee75b835f23cdc7a12be9e3cf73f4663fc3e25d93e5e56265629d801",
+      "factors": {
+        "core": 5,
+        "response": "continue",
+        "comms": 3
+      }
+    },
+    {
+      "id": "S5",
+      "title": "S5 \u00b7 sketch \u00b7 core 5 \u00b7 halt \u00b7 C3",
+      "configuration": {
+        "schema_version": 1,
+        "name": "S5 \u00b7 sketch \u00b7 core 5 \u00b7 halt \u00b7 C3",
+        "map": {
+          "route_algorithm": "dijkstra",
+          "width": 6000.0,
+          "height": 3000.0,
+          "cell": 25.0,
+          "nodes": [
+            {
+              "id": "START",
+              "x": 100.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JUNCTION",
+              "x": 1800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JOIN",
+              "x": 4800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "GOAL",
+              "x": 5750.0,
+              "y": 1500.0
+            },
+            {
+              "id": "UPPER_W",
+              "x": 1800.0,
+              "y": 2400.0
+            },
+            {
+              "id": "UPPER_E",
+              "x": 4500.0,
+              "y": 2400.0
+            },
+            {
+              "id": "LOWER_W",
+              "x": 2100.0,
+              "y": 700.0
+            },
+            {
+              "id": "LOWER_E",
+              "x": 4500.0,
+              "y": 700.0
+            }
+          ],
+          "roads": [
+            {
+              "id": "R1",
+              "u": "START",
+              "v": "JUNCTION",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.01237902804415043
+            },
+            {
+              "id": "R2",
+              "u": "JOIN",
+              "v": "GOAL",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.022151944921111295
+            },
+            {
+              "id": "R3",
+              "u": "JUNCTION",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.7,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.7321364579190011
+            },
+            {
+              "id": "R4",
+              "u": "JUNCTION",
+              "v": "UPPER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.25302890508105536
+            },
+            {
+              "id": "R5",
+              "u": "UPPER_W",
+              "v": "UPPER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.35861751052621954
+            },
+            {
+              "id": "R6",
+              "u": "UPPER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.38816848973522144
+            },
+            {
+              "id": "R7",
+              "u": "JUNCTION",
+              "v": "LOWER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06401205823751262
+            },
+            {
+              "id": "R8",
+              "u": "LOWER_W",
+              "v": "LOWER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.5238659774190818
+            },
+            {
+              "id": "R9",
+              "u": "LOWER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06315692587794758
+            }
+          ],
+          "buildings": [
+            {
+              "id": "B1",
+              "box": [
+                700.0,
+                900.0,
+                1600.0,
+                1350.0
+              ]
+            },
+            {
+              "id": "B2",
+              "box": [
+                700.0,
+                1700.0,
+                1600.0,
+                2200.0
+              ]
+            },
+            {
+              "id": "B3",
+              "box": [
+                2300.0,
+                950.0,
+                2850.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B4",
+              "box": [
+                3900.0,
+                950.0,
+                4500.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B5",
+              "box": [
+                3100.0,
+                1700.0,
+                3650.0,
+                2200.0
+              ]
+            }
+          ],
+          "red": [
+            {
+              "id": "E1",
+              "x": 3050.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E2",
+              "x": 3550.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E3",
+              "x": 2500.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E4",
+              "x": 4100.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            }
+          ],
+          "start": [
+            100.0,
+            1500.0
+          ],
+          "goal": [
+            5750.0,
+            1500.0
+          ],
+          "goal_radius": 150.0,
+          "route_mode": "manual",
+          "manual_path": [
+            "START",
+            "JUNCTION",
+            "LOWER_W",
+            "LOWER_E",
+            "JOIN",
+            "GOAL"
+          ],
+          "route_bias": 0.5
+        },
+        "mission": {
+          "vehicles_per_unit": 5,
+          "units_per_serial": 3,
+          "serials": 1,
+          "escorts": 3,
+          "control_crew": 2,
+          "cargo_crew": 2,
+          "escort_crew": 3,
+          "recovery_crew": 2,
+          "comms": 3,
+          "seed": 0,
+          "duration": 1800,
+          "handoff_steps": 5,
+          "halt_max_s": 0,
+          "halt_clear_steps": 0,
+          "console_delay_s": 20,
+          "decision_interval": 30,
+          "patience": 20,
+          "payload_kg": 900.0,
+          "capacity_kg": 907.18474,
+          "pace": 10.0,
+          "time_gap": 4.0,
+          "min_gap": 40.0,
+          "required_fraction": 1.0,
+          "contact_clear_s": 15.0,
+          "span_capacity": 4.0,
+          "service_rate": 0.5,
+          "max_speed": 12.0,
+          "vehicle_length": 6.0,
+          "staging_m": 1400.0,
+          "herringbone_offset": 20.0,
+          "escort_range": 1200.0,
+          "escort_pk": 0.01,
+          "layout": "cargo",
+          "crew_mode": "supervised",
+          "response": "halt",
+          "leader_loss": "promote",
+          "succession": "manned_only",
+          "console_transfer": "successor",
+          "target_priority": "control_first",
+          "exceptions": false,
+          "diagnostic_loss_s": null
+        }
+      },
+      "configuration_hash": "c6a9c7cbfdbb0dfa275e27b344e921c772ce351d3156e621c4f3e8a86442ea7f",
+      "factors": {
+        "core": 5,
+        "response": "halt",
+        "comms": 3
+      }
+    },
+    {
+      "id": "S6",
+      "title": "S6 \u00b7 sketch \u00b7 core 5 \u00b7 herringbone \u00b7 C3",
+      "configuration": {
+        "schema_version": 1,
+        "name": "S6 \u00b7 sketch \u00b7 core 5 \u00b7 herringbone \u00b7 C3",
+        "map": {
+          "route_algorithm": "dijkstra",
+          "width": 6000.0,
+          "height": 3000.0,
+          "cell": 25.0,
+          "nodes": [
+            {
+              "id": "START",
+              "x": 100.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JUNCTION",
+              "x": 1800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JOIN",
+              "x": 4800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "GOAL",
+              "x": 5750.0,
+              "y": 1500.0
+            },
+            {
+              "id": "UPPER_W",
+              "x": 1800.0,
+              "y": 2400.0
+            },
+            {
+              "id": "UPPER_E",
+              "x": 4500.0,
+              "y": 2400.0
+            },
+            {
+              "id": "LOWER_W",
+              "x": 2100.0,
+              "y": 700.0
+            },
+            {
+              "id": "LOWER_E",
+              "x": 4500.0,
+              "y": 700.0
+            }
+          ],
+          "roads": [
+            {
+              "id": "R1",
+              "u": "START",
+              "v": "JUNCTION",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.01237902804415043
+            },
+            {
+              "id": "R2",
+              "u": "JOIN",
+              "v": "GOAL",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.022151944921111295
+            },
+            {
+              "id": "R3",
+              "u": "JUNCTION",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.7,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.7321364579190011
+            },
+            {
+              "id": "R4",
+              "u": "JUNCTION",
+              "v": "UPPER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.25302890508105536
+            },
+            {
+              "id": "R5",
+              "u": "UPPER_W",
+              "v": "UPPER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.35861751052621954
+            },
+            {
+              "id": "R6",
+              "u": "UPPER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.38816848973522144
+            },
+            {
+              "id": "R7",
+              "u": "JUNCTION",
+              "v": "LOWER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06401205823751262
+            },
+            {
+              "id": "R8",
+              "u": "LOWER_W",
+              "v": "LOWER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.5238659774190818
+            },
+            {
+              "id": "R9",
+              "u": "LOWER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06315692587794758
+            }
+          ],
+          "buildings": [
+            {
+              "id": "B1",
+              "box": [
+                700.0,
+                900.0,
+                1600.0,
+                1350.0
+              ]
+            },
+            {
+              "id": "B2",
+              "box": [
+                700.0,
+                1700.0,
+                1600.0,
+                2200.0
+              ]
+            },
+            {
+              "id": "B3",
+              "box": [
+                2300.0,
+                950.0,
+                2850.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B4",
+              "box": [
+                3900.0,
+                950.0,
+                4500.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B5",
+              "box": [
+                3100.0,
+                1700.0,
+                3650.0,
+                2200.0
+              ]
+            }
+          ],
+          "red": [
+            {
+              "id": "E1",
+              "x": 3050.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E2",
+              "x": 3550.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E3",
+              "x": 2500.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E4",
+              "x": 4100.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            }
+          ],
+          "start": [
+            100.0,
+            1500.0
+          ],
+          "goal": [
+            5750.0,
+            1500.0
+          ],
+          "goal_radius": 150.0,
+          "route_mode": "manual",
+          "manual_path": [
+            "START",
+            "JUNCTION",
+            "LOWER_W",
+            "LOWER_E",
+            "JOIN",
+            "GOAL"
+          ],
+          "route_bias": 0.5
+        },
+        "mission": {
+          "vehicles_per_unit": 5,
+          "units_per_serial": 3,
+          "serials": 1,
+          "escorts": 3,
+          "control_crew": 2,
+          "cargo_crew": 2,
+          "escort_crew": 3,
+          "recovery_crew": 2,
+          "comms": 3,
+          "seed": 0,
+          "duration": 1800,
+          "handoff_steps": 5,
+          "halt_max_s": 0,
+          "halt_clear_steps": 0,
+          "console_delay_s": 20,
+          "decision_interval": 30,
+          "patience": 20,
+          "payload_kg": 900.0,
+          "capacity_kg": 907.18474,
+          "pace": 10.0,
+          "time_gap": 4.0,
+          "min_gap": 40.0,
+          "required_fraction": 1.0,
+          "contact_clear_s": 15.0,
+          "span_capacity": 4.0,
+          "service_rate": 0.5,
+          "max_speed": 12.0,
+          "vehicle_length": 6.0,
+          "staging_m": 1400.0,
+          "herringbone_offset": 20.0,
+          "escort_range": 1200.0,
+          "escort_pk": 0.01,
+          "layout": "cargo",
+          "crew_mode": "supervised",
+          "response": "herringbone",
+          "leader_loss": "promote",
+          "succession": "manned_only",
+          "console_transfer": "successor",
+          "target_priority": "control_first",
+          "exceptions": false,
+          "diagnostic_loss_s": null
+        }
+      },
+      "configuration_hash": "2d57eb7a71b9a51b6417455ee2846f3d2b213fa6455a10659ee839800cb81e87",
+      "factors": {
+        "core": 5,
+        "response": "herringbone",
+        "comms": 3
+      }
+    },
+    {
+      "id": "S7",
+      "title": "S7 \u00b7 sketch \u00b7 core 7 \u00b7 continue \u00b7 C0",
+      "configuration": {
+        "schema_version": 1,
+        "name": "S7 \u00b7 sketch \u00b7 core 7 \u00b7 continue \u00b7 C0",
+        "map": {
+          "route_algorithm": "dijkstra",
+          "width": 6000.0,
+          "height": 3000.0,
+          "cell": 25.0,
+          "nodes": [
+            {
+              "id": "START",
+              "x": 100.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JUNCTION",
+              "x": 1800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JOIN",
+              "x": 4800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "GOAL",
+              "x": 5750.0,
+              "y": 1500.0
+            },
+            {
+              "id": "UPPER_W",
+              "x": 1800.0,
+              "y": 2400.0
+            },
+            {
+              "id": "UPPER_E",
+              "x": 4500.0,
+              "y": 2400.0
+            },
+            {
+              "id": "LOWER_W",
+              "x": 2100.0,
+              "y": 700.0
+            },
+            {
+              "id": "LOWER_E",
+              "x": 4500.0,
+              "y": 700.0
+            }
+          ],
+          "roads": [
+            {
+              "id": "R1",
+              "u": "START",
+              "v": "JUNCTION",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.01237902804415043
+            },
+            {
+              "id": "R2",
+              "u": "JOIN",
+              "v": "GOAL",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.022151944921111295
+            },
+            {
+              "id": "R3",
+              "u": "JUNCTION",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.7,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.7321364579190011
+            },
+            {
+              "id": "R4",
+              "u": "JUNCTION",
+              "v": "UPPER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.25302890508105536
+            },
+            {
+              "id": "R5",
+              "u": "UPPER_W",
+              "v": "UPPER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.35861751052621954
+            },
+            {
+              "id": "R6",
+              "u": "UPPER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.38816848973522144
+            },
+            {
+              "id": "R7",
+              "u": "JUNCTION",
+              "v": "LOWER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06401205823751262
+            },
+            {
+              "id": "R8",
+              "u": "LOWER_W",
+              "v": "LOWER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.5238659774190818
+            },
+            {
+              "id": "R9",
+              "u": "LOWER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06315692587794758
+            }
+          ],
+          "buildings": [
+            {
+              "id": "B1",
+              "box": [
+                700.0,
+                900.0,
+                1600.0,
+                1350.0
+              ]
+            },
+            {
+              "id": "B2",
+              "box": [
+                700.0,
+                1700.0,
+                1600.0,
+                2200.0
+              ]
+            },
+            {
+              "id": "B3",
+              "box": [
+                2300.0,
+                950.0,
+                2850.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B4",
+              "box": [
+                3900.0,
+                950.0,
+                4500.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B5",
+              "box": [
+                3100.0,
+                1700.0,
+                3650.0,
+                2200.0
+              ]
+            }
+          ],
+          "red": [
+            {
+              "id": "E1",
+              "x": 3050.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E2",
+              "x": 3550.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E3",
+              "x": 2500.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E4",
+              "x": 4100.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            }
+          ],
+          "start": [
+            100.0,
+            1500.0
+          ],
+          "goal": [
+            5750.0,
+            1500.0
+          ],
+          "goal_radius": 150.0,
+          "route_mode": "manual",
+          "manual_path": [
+            "START",
+            "JUNCTION",
+            "LOWER_W",
+            "LOWER_E",
+            "JOIN",
+            "GOAL"
+          ],
+          "route_bias": 0.5
+        },
+        "mission": {
+          "vehicles_per_unit": 7,
+          "units_per_serial": 3,
+          "serials": 1,
+          "escorts": 3,
+          "control_crew": 2,
+          "cargo_crew": 2,
+          "escort_crew": 3,
+          "recovery_crew": 2,
+          "comms": 0,
+          "seed": 0,
+          "duration": 1800,
+          "handoff_steps": 5,
+          "halt_max_s": 0,
+          "halt_clear_steps": 0,
+          "console_delay_s": 20,
+          "decision_interval": 30,
+          "patience": 20,
+          "payload_kg": 600.0,
+          "capacity_kg": 907.18474,
+          "pace": 10.0,
+          "time_gap": 4.0,
+          "min_gap": 40.0,
+          "required_fraction": 1.0,
+          "contact_clear_s": 15.0,
+          "span_capacity": 4.0,
+          "service_rate": 0.5,
+          "max_speed": 12.0,
+          "vehicle_length": 6.0,
+          "staging_m": 1400.0,
+          "herringbone_offset": 20.0,
+          "escort_range": 1200.0,
+          "escort_pk": 0.01,
+          "layout": "cargo",
+          "crew_mode": "supervised",
+          "response": "continue",
+          "leader_loss": "promote",
+          "succession": "manned_only",
+          "console_transfer": "successor",
+          "target_priority": "control_first",
+          "exceptions": false,
+          "diagnostic_loss_s": null
+        }
+      },
+      "configuration_hash": "78e3ca0ea91841868b3b2df4a95829ac138344e51802b0bcb095ac22c23ee2b0",
+      "factors": {
+        "core": 7,
+        "response": "continue",
+        "comms": 0
+      }
+    },
+    {
+      "id": "S8",
+      "title": "S8 \u00b7 sketch \u00b7 core 7 \u00b7 halt \u00b7 C0",
+      "configuration": {
+        "schema_version": 1,
+        "name": "S8 \u00b7 sketch \u00b7 core 7 \u00b7 halt \u00b7 C0",
+        "map": {
+          "route_algorithm": "dijkstra",
+          "width": 6000.0,
+          "height": 3000.0,
+          "cell": 25.0,
+          "nodes": [
+            {
+              "id": "START",
+              "x": 100.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JUNCTION",
+              "x": 1800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JOIN",
+              "x": 4800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "GOAL",
+              "x": 5750.0,
+              "y": 1500.0
+            },
+            {
+              "id": "UPPER_W",
+              "x": 1800.0,
+              "y": 2400.0
+            },
+            {
+              "id": "UPPER_E",
+              "x": 4500.0,
+              "y": 2400.0
+            },
+            {
+              "id": "LOWER_W",
+              "x": 2100.0,
+              "y": 700.0
+            },
+            {
+              "id": "LOWER_E",
+              "x": 4500.0,
+              "y": 700.0
+            }
+          ],
+          "roads": [
+            {
+              "id": "R1",
+              "u": "START",
+              "v": "JUNCTION",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.01237902804415043
+            },
+            {
+              "id": "R2",
+              "u": "JOIN",
+              "v": "GOAL",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.022151944921111295
+            },
+            {
+              "id": "R3",
+              "u": "JUNCTION",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.7,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.7321364579190011
+            },
+            {
+              "id": "R4",
+              "u": "JUNCTION",
+              "v": "UPPER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.25302890508105536
+            },
+            {
+              "id": "R5",
+              "u": "UPPER_W",
+              "v": "UPPER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.35861751052621954
+            },
+            {
+              "id": "R6",
+              "u": "UPPER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.38816848973522144
+            },
+            {
+              "id": "R7",
+              "u": "JUNCTION",
+              "v": "LOWER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06401205823751262
+            },
+            {
+              "id": "R8",
+              "u": "LOWER_W",
+              "v": "LOWER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.5238659774190818
+            },
+            {
+              "id": "R9",
+              "u": "LOWER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06315692587794758
+            }
+          ],
+          "buildings": [
+            {
+              "id": "B1",
+              "box": [
+                700.0,
+                900.0,
+                1600.0,
+                1350.0
+              ]
+            },
+            {
+              "id": "B2",
+              "box": [
+                700.0,
+                1700.0,
+                1600.0,
+                2200.0
+              ]
+            },
+            {
+              "id": "B3",
+              "box": [
+                2300.0,
+                950.0,
+                2850.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B4",
+              "box": [
+                3900.0,
+                950.0,
+                4500.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B5",
+              "box": [
+                3100.0,
+                1700.0,
+                3650.0,
+                2200.0
+              ]
+            }
+          ],
+          "red": [
+            {
+              "id": "E1",
+              "x": 3050.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E2",
+              "x": 3550.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E3",
+              "x": 2500.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E4",
+              "x": 4100.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            }
+          ],
+          "start": [
+            100.0,
+            1500.0
+          ],
+          "goal": [
+            5750.0,
+            1500.0
+          ],
+          "goal_radius": 150.0,
+          "route_mode": "manual",
+          "manual_path": [
+            "START",
+            "JUNCTION",
+            "LOWER_W",
+            "LOWER_E",
+            "JOIN",
+            "GOAL"
+          ],
+          "route_bias": 0.5
+        },
+        "mission": {
+          "vehicles_per_unit": 7,
+          "units_per_serial": 3,
+          "serials": 1,
+          "escorts": 3,
+          "control_crew": 2,
+          "cargo_crew": 2,
+          "escort_crew": 3,
+          "recovery_crew": 2,
+          "comms": 0,
+          "seed": 0,
+          "duration": 1800,
+          "handoff_steps": 5,
+          "halt_max_s": 0,
+          "halt_clear_steps": 0,
+          "console_delay_s": 20,
+          "decision_interval": 30,
+          "patience": 20,
+          "payload_kg": 600.0,
+          "capacity_kg": 907.18474,
+          "pace": 10.0,
+          "time_gap": 4.0,
+          "min_gap": 40.0,
+          "required_fraction": 1.0,
+          "contact_clear_s": 15.0,
+          "span_capacity": 4.0,
+          "service_rate": 0.5,
+          "max_speed": 12.0,
+          "vehicle_length": 6.0,
+          "staging_m": 1400.0,
+          "herringbone_offset": 20.0,
+          "escort_range": 1200.0,
+          "escort_pk": 0.01,
+          "layout": "cargo",
+          "crew_mode": "supervised",
+          "response": "halt",
+          "leader_loss": "promote",
+          "succession": "manned_only",
+          "console_transfer": "successor",
+          "target_priority": "control_first",
+          "exceptions": false,
+          "diagnostic_loss_s": null
+        }
+      },
+      "configuration_hash": "890cc8f2f8a053d9db0d56d1fb5dbab5faf64d1765cd5bedbfd4fddadfbca779",
+      "factors": {
+        "core": 7,
+        "response": "halt",
+        "comms": 0
+      }
+    },
+    {
+      "id": "S9",
+      "title": "S9 \u00b7 sketch \u00b7 core 7 \u00b7 herringbone \u00b7 C0",
+      "configuration": {
+        "schema_version": 1,
+        "name": "S9 \u00b7 sketch \u00b7 core 7 \u00b7 herringbone \u00b7 C0",
+        "map": {
+          "route_algorithm": "dijkstra",
+          "width": 6000.0,
+          "height": 3000.0,
+          "cell": 25.0,
+          "nodes": [
+            {
+              "id": "START",
+              "x": 100.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JUNCTION",
+              "x": 1800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JOIN",
+              "x": 4800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "GOAL",
+              "x": 5750.0,
+              "y": 1500.0
+            },
+            {
+              "id": "UPPER_W",
+              "x": 1800.0,
+              "y": 2400.0
+            },
+            {
+              "id": "UPPER_E",
+              "x": 4500.0,
+              "y": 2400.0
+            },
+            {
+              "id": "LOWER_W",
+              "x": 2100.0,
+              "y": 700.0
+            },
+            {
+              "id": "LOWER_E",
+              "x": 4500.0,
+              "y": 700.0
+            }
+          ],
+          "roads": [
+            {
+              "id": "R1",
+              "u": "START",
+              "v": "JUNCTION",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.01237902804415043
+            },
+            {
+              "id": "R2",
+              "u": "JOIN",
+              "v": "GOAL",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.022151944921111295
+            },
+            {
+              "id": "R3",
+              "u": "JUNCTION",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.7,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.7321364579190011
+            },
+            {
+              "id": "R4",
+              "u": "JUNCTION",
+              "v": "UPPER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.25302890508105536
+            },
+            {
+              "id": "R5",
+              "u": "UPPER_W",
+              "v": "UPPER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.35861751052621954
+            },
+            {
+              "id": "R6",
+              "u": "UPPER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.38816848973522144
+            },
+            {
+              "id": "R7",
+              "u": "JUNCTION",
+              "v": "LOWER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06401205823751262
+            },
+            {
+              "id": "R8",
+              "u": "LOWER_W",
+              "v": "LOWER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.5238659774190818
+            },
+            {
+              "id": "R9",
+              "u": "LOWER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06315692587794758
+            }
+          ],
+          "buildings": [
+            {
+              "id": "B1",
+              "box": [
+                700.0,
+                900.0,
+                1600.0,
+                1350.0
+              ]
+            },
+            {
+              "id": "B2",
+              "box": [
+                700.0,
+                1700.0,
+                1600.0,
+                2200.0
+              ]
+            },
+            {
+              "id": "B3",
+              "box": [
+                2300.0,
+                950.0,
+                2850.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B4",
+              "box": [
+                3900.0,
+                950.0,
+                4500.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B5",
+              "box": [
+                3100.0,
+                1700.0,
+                3650.0,
+                2200.0
+              ]
+            }
+          ],
+          "red": [
+            {
+              "id": "E1",
+              "x": 3050.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E2",
+              "x": 3550.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E3",
+              "x": 2500.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E4",
+              "x": 4100.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            }
+          ],
+          "start": [
+            100.0,
+            1500.0
+          ],
+          "goal": [
+            5750.0,
+            1500.0
+          ],
+          "goal_radius": 150.0,
+          "route_mode": "manual",
+          "manual_path": [
+            "START",
+            "JUNCTION",
+            "LOWER_W",
+            "LOWER_E",
+            "JOIN",
+            "GOAL"
+          ],
+          "route_bias": 0.5
+        },
+        "mission": {
+          "vehicles_per_unit": 7,
+          "units_per_serial": 3,
+          "serials": 1,
+          "escorts": 3,
+          "control_crew": 2,
+          "cargo_crew": 2,
+          "escort_crew": 3,
+          "recovery_crew": 2,
+          "comms": 0,
+          "seed": 0,
+          "duration": 1800,
+          "handoff_steps": 5,
+          "halt_max_s": 0,
+          "halt_clear_steps": 0,
+          "console_delay_s": 20,
+          "decision_interval": 30,
+          "patience": 20,
+          "payload_kg": 600.0,
+          "capacity_kg": 907.18474,
+          "pace": 10.0,
+          "time_gap": 4.0,
+          "min_gap": 40.0,
+          "required_fraction": 1.0,
+          "contact_clear_s": 15.0,
+          "span_capacity": 4.0,
+          "service_rate": 0.5,
+          "max_speed": 12.0,
+          "vehicle_length": 6.0,
+          "staging_m": 1400.0,
+          "herringbone_offset": 20.0,
+          "escort_range": 1200.0,
+          "escort_pk": 0.01,
+          "layout": "cargo",
+          "crew_mode": "supervised",
+          "response": "herringbone",
+          "leader_loss": "promote",
+          "succession": "manned_only",
+          "console_transfer": "successor",
+          "target_priority": "control_first",
+          "exceptions": false,
+          "diagnostic_loss_s": null
+        }
+      },
+      "configuration_hash": "2fa5b3fa9ce107924aecf2a03a706f8ee801b617efac1edbd001cc3313accc47",
+      "factors": {
+        "core": 7,
+        "response": "herringbone",
+        "comms": 0
+      }
+    },
+    {
+      "id": "S10",
+      "title": "S10 \u00b7 sketch \u00b7 core 7 \u00b7 continue \u00b7 C3",
+      "configuration": {
+        "schema_version": 1,
+        "name": "S10 \u00b7 sketch \u00b7 core 7 \u00b7 continue \u00b7 C3",
+        "map": {
+          "route_algorithm": "dijkstra",
+          "width": 6000.0,
+          "height": 3000.0,
+          "cell": 25.0,
+          "nodes": [
+            {
+              "id": "START",
+              "x": 100.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JUNCTION",
+              "x": 1800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JOIN",
+              "x": 4800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "GOAL",
+              "x": 5750.0,
+              "y": 1500.0
+            },
+            {
+              "id": "UPPER_W",
+              "x": 1800.0,
+              "y": 2400.0
+            },
+            {
+              "id": "UPPER_E",
+              "x": 4500.0,
+              "y": 2400.0
+            },
+            {
+              "id": "LOWER_W",
+              "x": 2100.0,
+              "y": 700.0
+            },
+            {
+              "id": "LOWER_E",
+              "x": 4500.0,
+              "y": 700.0
+            }
+          ],
+          "roads": [
+            {
+              "id": "R1",
+              "u": "START",
+              "v": "JUNCTION",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.01237902804415043
+            },
+            {
+              "id": "R2",
+              "u": "JOIN",
+              "v": "GOAL",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.022151944921111295
+            },
+            {
+              "id": "R3",
+              "u": "JUNCTION",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.7,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.7321364579190011
+            },
+            {
+              "id": "R4",
+              "u": "JUNCTION",
+              "v": "UPPER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.25302890508105536
+            },
+            {
+              "id": "R5",
+              "u": "UPPER_W",
+              "v": "UPPER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.35861751052621954
+            },
+            {
+              "id": "R6",
+              "u": "UPPER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.38816848973522144
+            },
+            {
+              "id": "R7",
+              "u": "JUNCTION",
+              "v": "LOWER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06401205823751262
+            },
+            {
+              "id": "R8",
+              "u": "LOWER_W",
+              "v": "LOWER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.5238659774190818
+            },
+            {
+              "id": "R9",
+              "u": "LOWER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06315692587794758
+            }
+          ],
+          "buildings": [
+            {
+              "id": "B1",
+              "box": [
+                700.0,
+                900.0,
+                1600.0,
+                1350.0
+              ]
+            },
+            {
+              "id": "B2",
+              "box": [
+                700.0,
+                1700.0,
+                1600.0,
+                2200.0
+              ]
+            },
+            {
+              "id": "B3",
+              "box": [
+                2300.0,
+                950.0,
+                2850.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B4",
+              "box": [
+                3900.0,
+                950.0,
+                4500.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B5",
+              "box": [
+                3100.0,
+                1700.0,
+                3650.0,
+                2200.0
+              ]
+            }
+          ],
+          "red": [
+            {
+              "id": "E1",
+              "x": 3050.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E2",
+              "x": 3550.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E3",
+              "x": 2500.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E4",
+              "x": 4100.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            }
+          ],
+          "start": [
+            100.0,
+            1500.0
+          ],
+          "goal": [
+            5750.0,
+            1500.0
+          ],
+          "goal_radius": 150.0,
+          "route_mode": "manual",
+          "manual_path": [
+            "START",
+            "JUNCTION",
+            "LOWER_W",
+            "LOWER_E",
+            "JOIN",
+            "GOAL"
+          ],
+          "route_bias": 0.5
+        },
+        "mission": {
+          "vehicles_per_unit": 7,
+          "units_per_serial": 3,
+          "serials": 1,
+          "escorts": 3,
+          "control_crew": 2,
+          "cargo_crew": 2,
+          "escort_crew": 3,
+          "recovery_crew": 2,
+          "comms": 3,
+          "seed": 0,
+          "duration": 1800,
+          "handoff_steps": 5,
+          "halt_max_s": 0,
+          "halt_clear_steps": 0,
+          "console_delay_s": 20,
+          "decision_interval": 30,
+          "patience": 20,
+          "payload_kg": 600.0,
+          "capacity_kg": 907.18474,
+          "pace": 10.0,
+          "time_gap": 4.0,
+          "min_gap": 40.0,
+          "required_fraction": 1.0,
+          "contact_clear_s": 15.0,
+          "span_capacity": 4.0,
+          "service_rate": 0.5,
+          "max_speed": 12.0,
+          "vehicle_length": 6.0,
+          "staging_m": 1400.0,
+          "herringbone_offset": 20.0,
+          "escort_range": 1200.0,
+          "escort_pk": 0.01,
+          "layout": "cargo",
+          "crew_mode": "supervised",
+          "response": "continue",
+          "leader_loss": "promote",
+          "succession": "manned_only",
+          "console_transfer": "successor",
+          "target_priority": "control_first",
+          "exceptions": false,
+          "diagnostic_loss_s": null
+        }
+      },
+      "configuration_hash": "90e9fcc078c38102054083c9eaab2136263abe664cf1267b178cdd354228063c",
+      "factors": {
+        "core": 7,
+        "response": "continue",
+        "comms": 3
+      }
+    },
+    {
+      "id": "S11",
+      "title": "S11 \u00b7 sketch \u00b7 core 7 \u00b7 halt \u00b7 C3",
+      "configuration": {
+        "schema_version": 1,
+        "name": "S11 \u00b7 sketch \u00b7 core 7 \u00b7 halt \u00b7 C3",
+        "map": {
+          "route_algorithm": "dijkstra",
+          "width": 6000.0,
+          "height": 3000.0,
+          "cell": 25.0,
+          "nodes": [
+            {
+              "id": "START",
+              "x": 100.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JUNCTION",
+              "x": 1800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JOIN",
+              "x": 4800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "GOAL",
+              "x": 5750.0,
+              "y": 1500.0
+            },
+            {
+              "id": "UPPER_W",
+              "x": 1800.0,
+              "y": 2400.0
+            },
+            {
+              "id": "UPPER_E",
+              "x": 4500.0,
+              "y": 2400.0
+            },
+            {
+              "id": "LOWER_W",
+              "x": 2100.0,
+              "y": 700.0
+            },
+            {
+              "id": "LOWER_E",
+              "x": 4500.0,
+              "y": 700.0
+            }
+          ],
+          "roads": [
+            {
+              "id": "R1",
+              "u": "START",
+              "v": "JUNCTION",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.01237902804415043
+            },
+            {
+              "id": "R2",
+              "u": "JOIN",
+              "v": "GOAL",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.022151944921111295
+            },
+            {
+              "id": "R3",
+              "u": "JUNCTION",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.7,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.7321364579190011
+            },
+            {
+              "id": "R4",
+              "u": "JUNCTION",
+              "v": "UPPER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.25302890508105536
+            },
+            {
+              "id": "R5",
+              "u": "UPPER_W",
+              "v": "UPPER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.35861751052621954
+            },
+            {
+              "id": "R6",
+              "u": "UPPER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.38816848973522144
+            },
+            {
+              "id": "R7",
+              "u": "JUNCTION",
+              "v": "LOWER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06401205823751262
+            },
+            {
+              "id": "R8",
+              "u": "LOWER_W",
+              "v": "LOWER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.5238659774190818
+            },
+            {
+              "id": "R9",
+              "u": "LOWER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06315692587794758
+            }
+          ],
+          "buildings": [
+            {
+              "id": "B1",
+              "box": [
+                700.0,
+                900.0,
+                1600.0,
+                1350.0
+              ]
+            },
+            {
+              "id": "B2",
+              "box": [
+                700.0,
+                1700.0,
+                1600.0,
+                2200.0
+              ]
+            },
+            {
+              "id": "B3",
+              "box": [
+                2300.0,
+                950.0,
+                2850.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B4",
+              "box": [
+                3900.0,
+                950.0,
+                4500.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B5",
+              "box": [
+                3100.0,
+                1700.0,
+                3650.0,
+                2200.0
+              ]
+            }
+          ],
+          "red": [
+            {
+              "id": "E1",
+              "x": 3050.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E2",
+              "x": 3550.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E3",
+              "x": 2500.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E4",
+              "x": 4100.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            }
+          ],
+          "start": [
+            100.0,
+            1500.0
+          ],
+          "goal": [
+            5750.0,
+            1500.0
+          ],
+          "goal_radius": 150.0,
+          "route_mode": "manual",
+          "manual_path": [
+            "START",
+            "JUNCTION",
+            "LOWER_W",
+            "LOWER_E",
+            "JOIN",
+            "GOAL"
+          ],
+          "route_bias": 0.5
+        },
+        "mission": {
+          "vehicles_per_unit": 7,
+          "units_per_serial": 3,
+          "serials": 1,
+          "escorts": 3,
+          "control_crew": 2,
+          "cargo_crew": 2,
+          "escort_crew": 3,
+          "recovery_crew": 2,
+          "comms": 3,
+          "seed": 0,
+          "duration": 1800,
+          "handoff_steps": 5,
+          "halt_max_s": 0,
+          "halt_clear_steps": 0,
+          "console_delay_s": 20,
+          "decision_interval": 30,
+          "patience": 20,
+          "payload_kg": 600.0,
+          "capacity_kg": 907.18474,
+          "pace": 10.0,
+          "time_gap": 4.0,
+          "min_gap": 40.0,
+          "required_fraction": 1.0,
+          "contact_clear_s": 15.0,
+          "span_capacity": 4.0,
+          "service_rate": 0.5,
+          "max_speed": 12.0,
+          "vehicle_length": 6.0,
+          "staging_m": 1400.0,
+          "herringbone_offset": 20.0,
+          "escort_range": 1200.0,
+          "escort_pk": 0.01,
+          "layout": "cargo",
+          "crew_mode": "supervised",
+          "response": "halt",
+          "leader_loss": "promote",
+          "succession": "manned_only",
+          "console_transfer": "successor",
+          "target_priority": "control_first",
+          "exceptions": false,
+          "diagnostic_loss_s": null
+        }
+      },
+      "configuration_hash": "91fccdf793da45cd95681fbc0c97c2d90309572b24e437237f8e4d036ce6afa2",
+      "factors": {
+        "core": 7,
+        "response": "halt",
+        "comms": 3
+      }
+    },
+    {
+      "id": "S12",
+      "title": "S12 \u00b7 sketch \u00b7 core 7 \u00b7 herringbone \u00b7 C3",
+      "configuration": {
+        "schema_version": 1,
+        "name": "S12 \u00b7 sketch \u00b7 core 7 \u00b7 herringbone \u00b7 C3",
+        "map": {
+          "route_algorithm": "dijkstra",
+          "width": 6000.0,
+          "height": 3000.0,
+          "cell": 25.0,
+          "nodes": [
+            {
+              "id": "START",
+              "x": 100.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JUNCTION",
+              "x": 1800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "JOIN",
+              "x": 4800.0,
+              "y": 1500.0
+            },
+            {
+              "id": "GOAL",
+              "x": 5750.0,
+              "y": 1500.0
+            },
+            {
+              "id": "UPPER_W",
+              "x": 1800.0,
+              "y": 2400.0
+            },
+            {
+              "id": "UPPER_E",
+              "x": 4500.0,
+              "y": 2400.0
+            },
+            {
+              "id": "LOWER_W",
+              "x": 2100.0,
+              "y": 700.0
+            },
+            {
+              "id": "LOWER_E",
+              "x": 4500.0,
+              "y": 700.0
+            }
+          ],
+          "roads": [
+            {
+              "id": "R1",
+              "u": "START",
+              "v": "JUNCTION",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.01237902804415043
+            },
+            {
+              "id": "R2",
+              "u": "JOIN",
+              "v": "GOAL",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.022151944921111295
+            },
+            {
+              "id": "R3",
+              "u": "JUNCTION",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.7,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.7321364579190011
+            },
+            {
+              "id": "R4",
+              "u": "JUNCTION",
+              "v": "UPPER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.25302890508105536
+            },
+            {
+              "id": "R5",
+              "u": "UPPER_W",
+              "v": "UPPER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.35861751052621954
+            },
+            {
+              "id": "R6",
+              "u": "UPPER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.25,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.38816848973522144
+            },
+            {
+              "id": "R7",
+              "u": "JUNCTION",
+              "v": "LOWER_W",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06401205823751262
+            },
+            {
+              "id": "R8",
+              "u": "LOWER_W",
+              "v": "LOWER_E",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.5238659774190818
+            },
+            {
+              "id": "R9",
+              "u": "LOWER_E",
+              "v": "JOIN",
+              "width": 100.0,
+              "speed_mult": 1.0,
+              "exposure": 0.2,
+              "exposure_mode": "auto",
+              "exposure_auto": 0.06315692587794758
+            }
+          ],
+          "buildings": [
+            {
+              "id": "B1",
+              "box": [
+                700.0,
+                900.0,
+                1600.0,
+                1350.0
+              ]
+            },
+            {
+              "id": "B2",
+              "box": [
+                700.0,
+                1700.0,
+                1600.0,
+                2200.0
+              ]
+            },
+            {
+              "id": "B3",
+              "box": [
+                2300.0,
+                950.0,
+                2850.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B4",
+              "box": [
+                3900.0,
+                950.0,
+                4500.0,
+                1300.0
+              ]
+            },
+            {
+              "id": "B5",
+              "box": [
+                3100.0,
+                1700.0,
+                3650.0,
+                2200.0
+              ]
+            }
+          ],
+          "red": [
+            {
+              "id": "E1",
+              "x": 3050.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E2",
+              "x": 3550.0,
+              "y": 1100.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E3",
+              "x": 2500.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            },
+            {
+              "id": "E4",
+              "x": 4100.0,
+              "y": 1900.0,
+              "weapon_range": 1000.0,
+              "sensor_range": 2000.0,
+              "pk": 0.008
+            }
+          ],
+          "start": [
+            100.0,
+            1500.0
+          ],
+          "goal": [
+            5750.0,
+            1500.0
+          ],
+          "goal_radius": 150.0,
+          "route_mode": "manual",
+          "manual_path": [
+            "START",
+            "JUNCTION",
+            "LOWER_W",
+            "LOWER_E",
+            "JOIN",
+            "GOAL"
+          ],
+          "route_bias": 0.5
+        },
+        "mission": {
+          "vehicles_per_unit": 7,
+          "units_per_serial": 3,
+          "serials": 1,
+          "escorts": 3,
+          "control_crew": 2,
+          "cargo_crew": 2,
+          "escort_crew": 3,
+          "recovery_crew": 2,
+          "comms": 3,
+          "seed": 0,
+          "duration": 1800,
+          "handoff_steps": 5,
+          "halt_max_s": 0,
+          "halt_clear_steps": 0,
+          "console_delay_s": 20,
+          "decision_interval": 30,
+          "patience": 20,
+          "payload_kg": 600.0,
+          "capacity_kg": 907.18474,
+          "pace": 10.0,
+          "time_gap": 4.0,
+          "min_gap": 40.0,
+          "required_fraction": 1.0,
+          "contact_clear_s": 15.0,
+          "span_capacity": 4.0,
+          "service_rate": 0.5,
+          "max_speed": 12.0,
+          "vehicle_length": 6.0,
+          "staging_m": 1400.0,
+          "herringbone_offset": 20.0,
+          "escort_range": 1200.0,
+          "escort_pk": 0.01,
+          "layout": "cargo",
+          "crew_mode": "supervised",
+          "response": "herringbone",
+          "leader_loss": "promote",
+          "succession": "manned_only",
+          "console_transfer": "successor",
+          "target_priority": "control_first",
+          "exceptions": false,
+          "diagnostic_loss_s": null
+        }
+      },
+      "configuration_hash": "a7e528c1784003429713ad875337984864b93fb40056cafe2f1672c083a8994f",
+      "factors": {
+        "core": 7,
+        "response": "herringbone",
+        "comms": 3
+      }
+    }
+  ],
+  "metrics": [
+    "cargo_delivered",
+    "delivered_frac",
+    "cargo_lost",
+    "cargo_in_transit",
+    "crew_steps_at_risk",
+    "crew_lost",
+    "blue_losses",
+    "mission_time",
+    "cargo_success",
+    "leaderless_steps",
+    "ll_handoffs",
+    "v3_console_transfers",
+    "v3_console_services",
+    "v3_contact_occurred",
+    "v3_head_loss_occurred",
+    "v3_herringbone_episodes"
+  ],
+  "design": "Full factorial: core vehicles 5/7 \u00d7 Continue/Halt/Herringbone \u00d7 C0/C3",
+  "scope": [
+    "Fixed Your sketch map and lower-loop route; four static Red sites.",
+    "Same initial loaded cargo and 15 onboard people in all arms; fleet size and cargo allocation change together.",
+    "Natural combat only. Leader-loss, console transfer and contact are not guaranteed to trigger in every seed.",
+    "Experimental Herringbone and promoted-head console transfer; #18 enables control-first only, not lane blocking or Red halt cost.",
+    "Exploratory mean/paired 95% t intervals, unadjusted for multiple comparisons. Matched seeds need not preserve matched trajectories."
+  ],
+  "design_hash": "f4baf52d5af979a3637ebb6f21729d1f3709e5e0ce3d22ab17aad3b7972d8ced"
+}

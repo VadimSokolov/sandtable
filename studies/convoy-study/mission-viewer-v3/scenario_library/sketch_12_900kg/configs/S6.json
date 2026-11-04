@@ -1,0 +1,287 @@
+{
+  "schema_version": 1,
+  "name": "S6 \u00b7 sketch \u00b7 core 5 \u00b7 herringbone \u00b7 C3",
+  "map": {
+    "route_algorithm": "dijkstra",
+    "width": 6000.0,
+    "height": 3000.0,
+    "cell": 25.0,
+    "nodes": [
+      {
+        "id": "START",
+        "x": 100.0,
+        "y": 1500.0
+      },
+      {
+        "id": "JUNCTION",
+        "x": 1800.0,
+        "y": 1500.0
+      },
+      {
+        "id": "JOIN",
+        "x": 4800.0,
+        "y": 1500.0
+      },
+      {
+        "id": "GOAL",
+        "x": 5750.0,
+        "y": 1500.0
+      },
+      {
+        "id": "UPPER_W",
+        "x": 1800.0,
+        "y": 2400.0
+      },
+      {
+        "id": "UPPER_E",
+        "x": 4500.0,
+        "y": 2400.0
+      },
+      {
+        "id": "LOWER_W",
+        "x": 2100.0,
+        "y": 700.0
+      },
+      {
+        "id": "LOWER_E",
+        "x": 4500.0,
+        "y": 700.0
+      }
+    ],
+    "roads": [
+      {
+        "id": "R1",
+        "u": "START",
+        "v": "JUNCTION",
+        "width": 100.0,
+        "speed_mult": 1.0,
+        "exposure": 0.2,
+        "exposure_mode": "auto",
+        "exposure_auto": 0.01237902804415043
+      },
+      {
+        "id": "R2",
+        "u": "JOIN",
+        "v": "GOAL",
+        "width": 100.0,
+        "speed_mult": 1.0,
+        "exposure": 0.2,
+        "exposure_mode": "auto",
+        "exposure_auto": 0.022151944921111295
+      },
+      {
+        "id": "R3",
+        "u": "JUNCTION",
+        "v": "JOIN",
+        "width": 100.0,
+        "speed_mult": 1.0,
+        "exposure": 0.7,
+        "exposure_mode": "auto",
+        "exposure_auto": 0.7321364579190011
+      },
+      {
+        "id": "R4",
+        "u": "JUNCTION",
+        "v": "UPPER_W",
+        "width": 100.0,
+        "speed_mult": 1.0,
+        "exposure": 0.25,
+        "exposure_mode": "auto",
+        "exposure_auto": 0.25302890508105536
+      },
+      {
+        "id": "R5",
+        "u": "UPPER_W",
+        "v": "UPPER_E",
+        "width": 100.0,
+        "speed_mult": 1.0,
+        "exposure": 0.25,
+        "exposure_mode": "auto",
+        "exposure_auto": 0.35861751052621954
+      },
+      {
+        "id": "R6",
+        "u": "UPPER_E",
+        "v": "JOIN",
+        "width": 100.0,
+        "speed_mult": 1.0,
+        "exposure": 0.25,
+        "exposure_mode": "auto",
+        "exposure_auto": 0.38816848973522144
+      },
+      {
+        "id": "R7",
+        "u": "JUNCTION",
+        "v": "LOWER_W",
+        "width": 100.0,
+        "speed_mult": 1.0,
+        "exposure": 0.2,
+        "exposure_mode": "auto",
+        "exposure_auto": 0.06401205823751262
+      },
+      {
+        "id": "R8",
+        "u": "LOWER_W",
+        "v": "LOWER_E",
+        "width": 100.0,
+        "speed_mult": 1.0,
+        "exposure": 0.2,
+        "exposure_mode": "auto",
+        "exposure_auto": 0.5238659774190818
+      },
+      {
+        "id": "R9",
+        "u": "LOWER_E",
+        "v": "JOIN",
+        "width": 100.0,
+        "speed_mult": 1.0,
+        "exposure": 0.2,
+        "exposure_mode": "auto",
+        "exposure_auto": 0.06315692587794758
+      }
+    ],
+    "buildings": [
+      {
+        "id": "B1",
+        "box": [
+          700.0,
+          900.0,
+          1600.0,
+          1350.0
+        ]
+      },
+      {
+        "id": "B2",
+        "box": [
+          700.0,
+          1700.0,
+          1600.0,
+          2200.0
+        ]
+      },
+      {
+        "id": "B3",
+        "box": [
+          2300.0,
+          950.0,
+          2850.0,
+          1300.0
+        ]
+      },
+      {
+        "id": "B4",
+        "box": [
+          3900.0,
+          950.0,
+          4500.0,
+          1300.0
+        ]
+      },
+      {
+        "id": "B5",
+        "box": [
+          3100.0,
+          1700.0,
+          3650.0,
+          2200.0
+        ]
+      }
+    ],
+    "red": [
+      {
+        "id": "E1",
+        "x": 3050.0,
+        "y": 1100.0,
+        "weapon_range": 1000.0,
+        "sensor_range": 2000.0,
+        "pk": 0.008
+      },
+      {
+        "id": "E2",
+        "x": 3550.0,
+        "y": 1100.0,
+        "weapon_range": 1000.0,
+        "sensor_range": 2000.0,
+        "pk": 0.008
+      },
+      {
+        "id": "E3",
+        "x": 2500.0,
+        "y": 1900.0,
+        "weapon_range": 1000.0,
+        "sensor_range": 2000.0,
+        "pk": 0.008
+      },
+      {
+        "id": "E4",
+        "x": 4100.0,
+        "y": 1900.0,
+        "weapon_range": 1000.0,
+        "sensor_range": 2000.0,
+        "pk": 0.008
+      }
+    ],
+    "start": [
+      100.0,
+      1500.0
+    ],
+    "goal": [
+      5750.0,
+      1500.0
+    ],
+    "goal_radius": 150.0,
+    "route_mode": "manual",
+    "manual_path": [
+      "START",
+      "JUNCTION",
+      "LOWER_W",
+      "LOWER_E",
+      "JOIN",
+      "GOAL"
+    ],
+    "route_bias": 0.5
+  },
+  "mission": {
+    "vehicles_per_unit": 5,
+    "units_per_serial": 3,
+    "serials": 1,
+    "escorts": 3,
+    "control_crew": 2,
+    "cargo_crew": 2,
+    "escort_crew": 3,
+    "recovery_crew": 2,
+    "comms": 3,
+    "seed": 0,
+    "duration": 1800,
+    "handoff_steps": 5,
+    "halt_max_s": 0,
+    "halt_clear_steps": 0,
+    "console_delay_s": 20,
+    "decision_interval": 30,
+    "patience": 20,
+    "payload_kg": 900.0,
+    "capacity_kg": 907.18474,
+    "pace": 10.0,
+    "time_gap": 4.0,
+    "min_gap": 40.0,
+    "required_fraction": 1.0,
+    "contact_clear_s": 15.0,
+    "span_capacity": 4.0,
+    "service_rate": 0.5,
+    "max_speed": 12.0,
+    "vehicle_length": 6.0,
+    "staging_m": 1400.0,
+    "herringbone_offset": 20.0,
+    "escort_range": 1200.0,
+    "escort_pk": 0.01,
+    "layout": "cargo",
+    "crew_mode": "supervised",
+    "response": "herringbone",
+    "leader_loss": "promote",
+    "succession": "manned_only",
+    "console_transfer": "successor",
+    "target_priority": "control_first",
+    "exceptions": false,
+    "diagnostic_loss_s": null
+  }
+}
