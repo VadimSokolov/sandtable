@@ -682,6 +682,7 @@ canvas.addEventListener('wheel', e => {
 });
 
 function inspector() {
+  $('roadPicker').value = selection?.type === 'road' ? selection.id : '';
   if (selection?.type === 'junction') {
     const n = validated?.summary.graph.nodes.find(n => n.id === selection.id);
     $('inspector').innerHTML = n ? `<h3>${esc(n.id)} · generated crossing</h3><p>x=${fmt(n.x)} m, y=${fmt(n.y)} m. Connected by validation. Move the original road endpoints to edit this junction.</p>` : 'Select a road object.';
@@ -689,7 +690,7 @@ function inspector() {
   }
 
   if (!selection) {
-    $('inspector').textContent = 'Select a map object to edit its exact position and properties.';
+    $('inspector').textContent = 'Choose a road above, or select another object on the map.';
     return;
   }
 
@@ -730,6 +731,31 @@ function inspector() {
   }
 
   const type = selection.type;
+  if (type === 'road') {
+    const id = selection.id;
+    new RoadEditor($('inspector'), o, {
+      routeReady: Boolean(validated),
+      routing: validated?.summary.routing,
+      onChange: (patch, redraw) => {
+        const road = draft.map.roads.find(r => r.id === id);
+        if (!road) return;
+        checkpoint();
+        Object.assign(road, patch);
+        dirty();
+        if (redraw) inspector();
+      },
+      onReplan: async () => {
+        checkpoint();
+        draft.map.route_mode = 'auto';
+        syncMapFields();
+        dirty();
+        await validate();
+        inspector();
+        $('inspector').closest('section').scrollIntoView({block: 'start', behavior: 'instant'});
+      }
+    }).render();
+    return;
+  }
   let edits = [];
 
   if (type === 'node' || type === 'red')
@@ -741,28 +767,15 @@ function inspector() {
     ['pk', 'Base damage probability', o.pk]
   );
 
-  if (type === 'road') edits = [
-    ['width', 'Width (m)', o.width],
-    ['speed_mult', 'Speed multiplier', o.speed_mult],
-    ['exposure', 'Manual exposure override (0–1)', o.exposure]
-  ];
-
   if (type === 'building')
     edits = o.box.map((v, i) => ['box' + i, ['Min x', 'Min y', 'Max x', 'Max y'][i] + ' (m)', v]);
 
   if (type === 'start' || type === 'goal')
     edits = [['x', 'x (m)', o[0]], ['y', 'y (m)', o[1]]];
 
-  $('inspector').innerHTML = `<h3>${esc(type)} · ${esc(selection.id)}</h3>${type === 'road' ? `<p>${esc(o.u)} ↔ ${esc(o.v)}. Known-map scores, not casualty probabilities. Auto uses Red range/proximity and building screening.</p><label>Exposure source<select id="edgeExposureMode"><option value="auto" ${(o.exposure_mode || 'manual') === 'auto' ? 'selected' : ''}>Automatic · updates with map</option><option value="manual" ${(o.exposure_mode || 'manual') === 'manual' ? 'selected' : ''}>Manual override</option></select></label><p>Automatic estimate: ${o.exposure_auto === undefined ? 'recalculating…' : fmt(o.exposure_auto, 4)} · Used: ${(o.exposure_mode || 'manual') === 'auto' ? (o.exposure_auto === undefined ? 'pending' : fmt(o.exposure_auto, 4)) : fmt(o.exposure, 4)}</p>` : ''}${type === 'start' ? '<p>Rear origin of the starting road area. Lead placement uses the fixed staging offset, not this point itself.</p>' : ''}<div class="inspector-fields">${edits.map(
-  ([k, t, v]) => `<label>${esc(t)}<input type="number" data-edit="${k}" value="${v}" ${k === 'exposure' ? 'min="0" max="1" step="0.05"' : 'step="any"'}></label>`
+  $('inspector').innerHTML = `<h3>${esc(type)} · ${esc(selection.id)}</h3>${type === 'start' ? '<p>Rear origin of the starting road area. Lead placement uses the fixed staging offset, not this point itself.</p>' : ''}<div class="inspector-fields">${edits.map(
+  ([k, t, v]) => `<label>${esc(t)}<input type="number" data-edit="${k}" value="${v}" step="any"></label>`
 ).join('')}</div>`;
-
-  if (type === 'road') $('edgeExposureMode').onchange = () => {
-    checkpoint();
-    o.exposure_mode = $('edgeExposureMode').value;
-    dirty();
-    inspector();
-  };
 
   $('inspector').querySelectorAll('[data-edit]').forEach(el => el.onchange = () => {
     checkpoint();
@@ -772,12 +785,8 @@ function inspector() {
       draft.map[type][k === 'x' ? 0 : 1] = v;
     else if (type === 'building')
       o.box[Number(k.slice(3))] = v;
-    else {
+    else
       o[k] = v;
-
-      if (type === 'road' && k === 'exposure')
-        o.exposure_mode = 'manual';
-    }
 
     dirty();
     inspector();
@@ -866,7 +875,7 @@ function scheduleExposure() {
           o.exposure_auto = r.exposure_auto;
       }
 
-      $('exposureStatus').textContent = 'Automatic scores updated from the current map. Validate to select/review the route. Old scenarios retain manual scores until switched to Auto.';
+      $('exposureStatus').textContent = 'Map estimates updated. Custom road scores are kept. Update the route to review the costs.';
       store();
 
       if (selection?.type === 'road' && !$('inspector').contains(document.activeElement))

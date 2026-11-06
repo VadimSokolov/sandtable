@@ -73,6 +73,9 @@ function syncMapFields() {
   $('worldWidth').value = draft.map.width;
   $('worldHeight').value = draft.map.height;
   $('goalRadius').value = draft.map.goal_radius;
+  $('roadPicker').innerHTML = '<option value="">Choose a road…</option>' + draft.map.roads.map(r =>
+    `<option value="${esc(r.id)}">${esc(r.id)} · ${esc(r.u)} ↔ ${esc(r.v)}</option>`).join('');
+  $('roadPicker').value = selection?.type === 'road' ? selection.id : '';
   $('routeMode').value = draft.map.route_mode;
   $('routeAlgorithm').value = draft.map.route_algorithm || 'dijkstra';
   $('manualPath').value = draft.map.manual_path.join(', ');
@@ -141,6 +144,7 @@ async function validate() {
     );
 
     draw();
+    inspector();
   } catch (e) {
     validated = null;
     RoadGraph.render(null);

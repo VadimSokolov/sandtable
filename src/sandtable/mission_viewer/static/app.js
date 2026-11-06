@@ -147,6 +147,14 @@ function bind() {
     dirty();
   };
 
+  $('roadPicker').onchange = () => {
+    selection = $('roadPicker').value ? {type: 'road', id: $('roadPicker').value} : null;
+    setTool('select');
+    if (tab !== 'map') selectTab('map');
+    inspector();
+    $('inspector').closest('section').scrollIntoView({block: 'start', behavior: 'instant'});
+  };
+
   $('autoExposure').onclick = () => {
     checkpoint();
     draft.map.roads.forEach(r => r.exposure_mode = 'auto');
