@@ -1,0 +1,679 @@
+{
+  "registration_hash": "4c97a2a316c1b57cf352bc0eb0c2ab9ca84facc3eebf7b181ab444adaa3e1144",
+  "manifest_status": "frozen_before_run",
+  "source_hashes_at_freeze": {
+    "analysis": {
+      "digest": "b08307d27b05614be6722cba01fbb4b9d6fc4e65b70c551a9235c7c96bba5cea",
+      "files": {
+        "tools/local_manifest.py": "603971c9dc00839507b1b57566c8780d08f370b0244e7bc9109e6236cbed6e93",
+        "tools/make_attention_diagnostic.py": "43e28652f48863a2fae9a69e467c9969a2ea76be9f7097406b96c390a2852a5b"
+      }
+    },
+    "environment": {
+      "numpy": "2.3.5",
+      "python": "3.13.9"
+    },
+    "git_branch": "issue-19-convoy-console-per-unit",
+    "git_commit": "6bd11f21f1fcb141d9059b4d2422c7db2f95ddb1",
+    "simulation": {
+      "digest": "b829f5951efaecfe0388579cece14502fe63aa238611a20fa26a8ec171440161",
+      "files": {
+        "src/sandtable/__init__.py": "87f309349a7f7901fca94c4e1fe577eb7408904ec98de9b6d82d1692abf5b01e",
+        "src/sandtable/bayes_te.py": "559c97e2a96daa335db60895f087dedf475b1dc80a880da9c8252f9f5573e755",
+        "src/sandtable/behavior.py": "c64963d532a636d57a047bdb0e1f67e0daf3fb9c243ed327689831e8d73fece0",
+        "src/sandtable/belief.py": "9ab13698287be786ef7d42392f5b24e16db7590792025cd4a97a805310d56590",
+        "src/sandtable/c2.py": "8811025c4bad48d114e6e3d08e25293c92dfa1eaa063e8279aa3974d89b1da47",
+        "src/sandtable/c2_units.py": "9b29f3dd398e1975f54515b86e54dd748b5e1d5e73e34c04ec6e8962b5a00e9f",
+        "src/sandtable/comms_ew.py": "0816368d246adae185521b4e5282fe880658db166f62451ebf7405446d716a0f",
+        "src/sandtable/convoy.py": "c97dda1453c726fe81083f05c2f1e1198e9a21737677fed9d6f82a5450fc9620",
+        "src/sandtable/convoy_metrics.py": "04b1ba1665ecd04fec02c0478f54289aa498d156c93b87ab93a438ae6d33f62a",
+        "src/sandtable/counter_uas.py": "d57e850523e27ae2f743f2dca9ad0640bbe9e9e7d64a264fcde95bbbe30d8520",
+        "src/sandtable/engagement.py": "ec5fa4ab2cf777023f0fe716fe2c0ec865692a0d51bfcbef9de9f0a2bb5517fa",
+        "src/sandtable/entities.py": "48ccd62cb44c3b048e8940335414f3f4de54828537cd1be241b77d9119b121b9",
+        "src/sandtable/formation_metrics.py": "f8120ad2940458a90bb19e8f1d37c9a0ccd7b74cc5d752de2752e0904a5dfc6a",
+        "src/sandtable/mechanics.py": "d7863d457955e11aef228c58c2d33a2e9af4ef4ff31053121abd92d733714a38",
+        "src/sandtable/metrics.py": "183b80d3e4ca489ca48b4d9c6133dc7f7dad7def1af3831712ccb57556fb47d9",
+        "src/sandtable/motion.py": "4351d89925dd2878f16bf5e9fc88dbb9c1ffa1f516a2ddc447850584f8cebd52",
+        "src/sandtable/opt_metrics.py": "c41f9b0ee4fafa2bc683c4ae7f6e16ea3bf3c8aab2d9d800f3446f4899a651b9",
+        "src/sandtable/personality.py": "e7505b029b999e1a1075ca744458b1dd1ad01474f36460c6a7c799192bade3d6",
+        "src/sandtable/planning.py": "bb942bf1fd55039b889e76a53899687f1ee65c87bbd707a406f76390f4d7444c",
+        "src/sandtable/plugin.py": "b56a789935d60f6200df4c8bff892e98caa381c99a7e39db0016d0f03548dc14",
+        "src/sandtable/replay.py": "792ff3bb3fefb8d46c1c35fc7bf84049e791b4f001817891137f14479099e999",
+        "src/sandtable/route.py": "98795bff5d4075155d825cf1d02aae75d293a695e8879f240c6a01b16c2e48c3",
+        "src/sandtable/runner.py": "4510a29cdf8f9411d0356b331cac72563d4e7498e8d233e687e930a91a9a5524",
+        "src/sandtable/scenario.py": "7db1342980037433a6e7e2880202cc98e0b19e1ee1606e399212e3164cf2ff34",
+        "src/sandtable/search/__init__.py": "1e2dc666772e9541bd1e8f5eb99c4755ddcf15dad2642a446edf8cb2d9fca65c",
+        "src/sandtable/search/methods.py": "0e7bac30c4689269f6a390cde4c7b59e6a7996760d3e73979b3a6fec7188dc8d",
+        "src/sandtable/search/oracle.py": "89797eee80536f69904e6fbe24ee51e98958ef3c3c2c9d90e094455a02bfe2cf",
+        "src/sandtable/search/problems.py": "0ad6a04e0c57009e6b557646b76ed34940478fdce8cd3a9df0a2b53fba42c8ce",
+        "src/sandtable/search/runner.py": "3808b25ec42a7dfd0a35a2f4e1050806b9143bc2f902eef597f4216367280a5a",
+        "src/sandtable/seeding.py": "67b150cf80d33a40965729a3edb401d51f54d73b7ab42ff38954eb62a559a7b7",
+        "src/sandtable/sensing.py": "4f9571d01a04bfc19fda2b486a78e136599a55b02e38687ed6d760c909d5ef5b",
+        "src/sandtable/sim.py": "0f0f511d9d0777181667aaf3d089951e25131711cd61eebf8489b298bf0efd91",
+        "src/sandtable/street_graph.py": "fb89424d1910a7a4d7565611bb3fc35918e0786e44b93a880b64ff27e16f8a5a",
+        "src/sandtable/world.py": "2d7f4cab927653815734189b8a2de3721fdf2854187c292a62062d1596759f8d"
+      }
+    }
+  },
+  "source_hashes_at_run": {
+    "simulation": {
+      "files": {
+        "src/sandtable/__init__.py": "87f309349a7f7901fca94c4e1fe577eb7408904ec98de9b6d82d1692abf5b01e",
+        "src/sandtable/bayes_te.py": "559c97e2a96daa335db60895f087dedf475b1dc80a880da9c8252f9f5573e755",
+        "src/sandtable/behavior.py": "c64963d532a636d57a047bdb0e1f67e0daf3fb9c243ed327689831e8d73fece0",
+        "src/sandtable/belief.py": "9ab13698287be786ef7d42392f5b24e16db7590792025cd4a97a805310d56590",
+        "src/sandtable/c2.py": "8811025c4bad48d114e6e3d08e25293c92dfa1eaa063e8279aa3974d89b1da47",
+        "src/sandtable/c2_units.py": "9b29f3dd398e1975f54515b86e54dd748b5e1d5e73e34c04ec6e8962b5a00e9f",
+        "src/sandtable/comms_ew.py": "0816368d246adae185521b4e5282fe880658db166f62451ebf7405446d716a0f",
+        "src/sandtable/convoy.py": "c97dda1453c726fe81083f05c2f1e1198e9a21737677fed9d6f82a5450fc9620",
+        "src/sandtable/convoy_metrics.py": "04b1ba1665ecd04fec02c0478f54289aa498d156c93b87ab93a438ae6d33f62a",
+        "src/sandtable/counter_uas.py": "d57e850523e27ae2f743f2dca9ad0640bbe9e9e7d64a264fcde95bbbe30d8520",
+        "src/sandtable/engagement.py": "ec5fa4ab2cf777023f0fe716fe2c0ec865692a0d51bfcbef9de9f0a2bb5517fa",
+        "src/sandtable/entities.py": "48ccd62cb44c3b048e8940335414f3f4de54828537cd1be241b77d9119b121b9",
+        "src/sandtable/formation_metrics.py": "f8120ad2940458a90bb19e8f1d37c9a0ccd7b74cc5d752de2752e0904a5dfc6a",
+        "src/sandtable/mechanics.py": "d7863d457955e11aef228c58c2d33a2e9af4ef4ff31053121abd92d733714a38",
+        "src/sandtable/metrics.py": "183b80d3e4ca489ca48b4d9c6133dc7f7dad7def1af3831712ccb57556fb47d9",
+        "src/sandtable/motion.py": "4351d89925dd2878f16bf5e9fc88dbb9c1ffa1f516a2ddc447850584f8cebd52",
+        "src/sandtable/opt_metrics.py": "c41f9b0ee4fafa2bc683c4ae7f6e16ea3bf3c8aab2d9d800f3446f4899a651b9",
+        "src/sandtable/personality.py": "e7505b029b999e1a1075ca744458b1dd1ad01474f36460c6a7c799192bade3d6",
+        "src/sandtable/planning.py": "bb942bf1fd55039b889e76a53899687f1ee65c87bbd707a406f76390f4d7444c",
+        "src/sandtable/plugin.py": "b56a789935d60f6200df4c8bff892e98caa381c99a7e39db0016d0f03548dc14",
+        "src/sandtable/replay.py": "792ff3bb3fefb8d46c1c35fc7bf84049e791b4f001817891137f14479099e999",
+        "src/sandtable/route.py": "98795bff5d4075155d825cf1d02aae75d293a695e8879f240c6a01b16c2e48c3",
+        "src/sandtable/runner.py": "4510a29cdf8f9411d0356b331cac72563d4e7498e8d233e687e930a91a9a5524",
+        "src/sandtable/scenario.py": "7db1342980037433a6e7e2880202cc98e0b19e1ee1606e399212e3164cf2ff34",
+        "src/sandtable/search/__init__.py": "1e2dc666772e9541bd1e8f5eb99c4755ddcf15dad2642a446edf8cb2d9fca65c",
+        "src/sandtable/search/methods.py": "0e7bac30c4689269f6a390cde4c7b59e6a7996760d3e73979b3a6fec7188dc8d",
+        "src/sandtable/search/oracle.py": "89797eee80536f69904e6fbe24ee51e98958ef3c3c2c9d90e094455a02bfe2cf",
+        "src/sandtable/search/problems.py": "0ad6a04e0c57009e6b557646b76ed34940478fdce8cd3a9df0a2b53fba42c8ce",
+        "src/sandtable/search/runner.py": "3808b25ec42a7dfd0a35a2f4e1050806b9143bc2f902eef597f4216367280a5a",
+        "src/sandtable/seeding.py": "67b150cf80d33a40965729a3edb401d51f54d73b7ab42ff38954eb62a559a7b7",
+        "src/sandtable/sensing.py": "4f9571d01a04bfc19fda2b486a78e136599a55b02e38687ed6d760c909d5ef5b",
+        "src/sandtable/sim.py": "0f0f511d9d0777181667aaf3d089951e25131711cd61eebf8489b298bf0efd91",
+        "src/sandtable/street_graph.py": "fb89424d1910a7a4d7565611bb3fc35918e0786e44b93a880b64ff27e16f8a5a",
+        "src/sandtable/world.py": "2d7f4cab927653815734189b8a2de3721fdf2854187c292a62062d1596759f8d"
+      },
+      "digest": "b829f5951efaecfe0388579cece14502fe63aa238611a20fa26a8ec171440161"
+    },
+    "analysis": {
+      "files": {
+        "tools/local_manifest.py": "603971c9dc00839507b1b57566c8780d08f370b0244e7bc9109e6236cbed6e93",
+        "tools/make_attention_diagnostic.py": "43e28652f48863a2fae9a69e467c9969a2ea76be9f7097406b96c390a2852a5b"
+      },
+      "digest": "b08307d27b05614be6722cba01fbb4b9d6fc4e65b70c551a9235c7c96bba5cea"
+    },
+    "git_commit": "6bd11f21f1fcb141d9059b4d2422c7db2f95ddb1",
+    "git_branch": "issue-19-convoy-console-per-unit",
+    "environment": {
+      "python": "3.13.9",
+      "numpy": "2.3.5"
+    }
+  },
+  "source_check": {
+    "ok": true,
+    "message": "ok",
+    "drift_accepted": false
+  },
+  "equation_check": {
+    "span=8": {
+      "expected_attention": 1.0,
+      "expected_quality": 0.95,
+      "max_abs_attention_dev": 0.0,
+      "max_abs_quality_dev": 5.551115123125783e-16,
+      "hosts_lost_max": 0.0,
+      "blue_losses_max": 0.0
+    },
+    "span=4": {
+      "expected_attention": 1.0,
+      "expected_quality": 0.95,
+      "max_abs_attention_dev": 0.0,
+      "max_abs_quality_dev": 5.551115123125783e-16,
+      "hosts_lost_max": 0.0,
+      "blue_losses_max": 0.0
+    },
+    "span=2": {
+      "expected_attention": 0.5,
+      "expected_quality": 0.825,
+      "max_abs_attention_dev": 0.0,
+      "max_abs_quality_dev": 5.551115123125783e-16,
+      "hosts_lost_max": 0.0,
+      "blue_losses_max": 0.0
+    },
+    "span=1": {
+      "expected_attention": 0.25,
+      "expected_quality": 0.7625,
+      "max_abs_attention_dev": 0.0,
+      "max_abs_quality_dev": 3.3306690738754696e-16,
+      "hosts_lost_max": 0.0,
+      "blue_losses_max": 0.0
+    }
+  },
+  "arm_means": {
+    "span=8": {
+      "c2u_attention_mean": 1.0,
+      "c2u_quality_mean": 0.9499999999999995,
+      "c2u_wt": 0.41946463255073607,
+      "c2u_it": 2.0,
+      "c2u_comms_up": 2.0,
+      "c2u_comms_down": 2.0,
+      "c2u_serviced_frac": 0.8140027661062638,
+      "c2u_requests": 96.03333333333333,
+      "c2u_abandon_link": 17.8,
+      "c2u_consoles_lost": 0.0,
+      "blue_losses": 0.0,
+      "delivered_frac": 0.0
+    },
+    "span=4": {
+      "c2u_attention_mean": 1.0,
+      "c2u_quality_mean": 0.9499999999999995,
+      "c2u_wt": 0.41946463255073607,
+      "c2u_it": 2.0,
+      "c2u_comms_up": 2.0,
+      "c2u_comms_down": 2.0,
+      "c2u_serviced_frac": 0.8140027661062638,
+      "c2u_requests": 96.03333333333333,
+      "c2u_abandon_link": 17.8,
+      "c2u_consoles_lost": 0.0,
+      "blue_losses": 0.0,
+      "delivered_frac": 0.0
+    },
+    "span=2": {
+      "c2u_attention_mean": 0.5,
+      "c2u_quality_mean": 0.8249999999999995,
+      "c2u_wt": 0.4191761547857155,
+      "c2u_it": 2.0,
+      "c2u_comms_up": 2.0,
+      "c2u_comms_down": 2.0,
+      "c2u_serviced_frac": 0.8107241431495392,
+      "c2u_requests": 96.06666666666666,
+      "c2u_abandon_link": 18.1,
+      "c2u_consoles_lost": 0.0,
+      "blue_losses": 0.0,
+      "delivered_frac": 0.0
+    },
+    "span=1": {
+      "c2u_attention_mean": 0.25,
+      "c2u_quality_mean": 0.7624999999999996,
+      "c2u_wt": 0.4342245534720243,
+      "c2u_it": 2.0,
+      "c2u_comms_up": 2.0,
+      "c2u_comms_down": 2.0,
+      "c2u_serviced_frac": 0.8043224113912723,
+      "c2u_requests": 96.26666666666667,
+      "c2u_abandon_link": 18.766666666666666,
+      "c2u_consoles_lost": 0.0,
+      "blue_losses": 0.0,
+      "delivered_frac": 0.0
+    }
+  },
+  "comparisons": [
+    {
+      "metric": "c2u_attention_mean",
+      "arm": "span=8",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_quality_mean",
+      "arm": "span=8",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_wt",
+      "arm": "span=8",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_it",
+      "arm": "span=8",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_comms_up",
+      "arm": "span=8",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_comms_down",
+      "arm": "span=8",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_serviced_frac",
+      "arm": "span=8",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_requests",
+      "arm": "span=8",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_abandon_link",
+      "arm": "span=8",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_consoles_lost",
+      "arm": "span=8",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "blue_losses",
+      "arm": "span=8",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "delivered_frac",
+      "arm": "span=8",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_attention_mean",
+      "arm": "span=2",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": -0.5,
+      "se": 0.0,
+      "ci95": [
+        -0.5,
+        -0.5
+      ],
+      "all_zero": false
+    },
+    {
+      "metric": "c2u_quality_mean",
+      "arm": "span=2",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": -0.125,
+      "se": 2.194775289989352e-17,
+      "ci95": [
+        -0.12500000000000006,
+        -0.12499999999999996
+      ],
+      "all_zero": false
+    },
+    {
+      "metric": "c2u_wt",
+      "arm": "span=2",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": -0.00028847776502054315,
+      "se": 0.010018248553387085,
+      "ci95": [
+        -0.020778096668660883,
+        0.0202011411386198
+      ],
+      "all_zero": false
+    },
+    {
+      "metric": "c2u_it",
+      "arm": "span=2",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_comms_up",
+      "arm": "span=2",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_comms_down",
+      "arm": "span=2",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_serviced_frac",
+      "arm": "span=2",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": -0.0032786229567246935,
+      "se": 0.006698959162278629,
+      "ci95": [
+        -0.01697953280685341,
+        0.01042228689340402
+      ],
+      "all_zero": false
+    },
+    {
+      "metric": "c2u_requests",
+      "arm": "span=2",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.03333333333333333,
+      "se": 0.6111668382811354,
+      "ci95": [
+        -1.216643200607769,
+        1.2833098672744359
+      ],
+      "all_zero": false
+    },
+    {
+      "metric": "c2u_abandon_link",
+      "arm": "span=2",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.3,
+      "se": 0.5875137562586118,
+      "ci95": [
+        -0.901600549460841,
+        1.501600549460841
+      ],
+      "all_zero": false
+    },
+    {
+      "metric": "c2u_consoles_lost",
+      "arm": "span=2",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "blue_losses",
+      "arm": "span=2",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "delivered_frac",
+      "arm": "span=2",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_attention_mean",
+      "arm": "span=1",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": -0.75,
+      "se": 0.0,
+      "ci95": [
+        -0.75,
+        -0.75
+      ],
+      "all_zero": false
+    },
+    {
+      "metric": "c2u_quality_mean",
+      "arm": "span=1",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": -0.1874999999999999,
+      "se": 1.9917261214639312e-17,
+      "ci95": [
+        -0.18749999999999992,
+        -0.18749999999999986
+      ],
+      "all_zero": false
+    },
+    {
+      "metric": "c2u_wt",
+      "arm": "span=1",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.014759920921288213,
+      "se": 0.010513391155095284,
+      "ci95": [
+        -0.006742378308448446,
+        0.03626222015102487
+      ],
+      "all_zero": false
+    },
+    {
+      "metric": "c2u_it",
+      "arm": "span=1",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_comms_up",
+      "arm": "span=1",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_comms_down",
+      "arm": "span=1",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "c2u_serviced_frac",
+      "arm": "span=1",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": -0.009680354714991546,
+      "se": 0.008822383171477674,
+      "ci95": [
+        -0.02772415429155041,
+        0.00836344486156732
+      ],
+      "all_zero": false
+    },
+    {
+      "metric": "c2u_requests",
+      "arm": "span=1",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.23333333333333334,
+      "se": 0.5375194908699907,
+      "ci95": [
+        -0.8660174626180508,
+        1.3326841292847176
+      ],
+      "all_zero": false
+    },
+    {
+      "metric": "c2u_abandon_link",
+      "arm": "span=1",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.9666666666666667,
+      "se": 0.7914533892990478,
+      "ci95": [
+        -0.6520372654941401,
+        2.5853705988274736
+      ],
+      "all_zero": false
+    },
+    {
+      "metric": "c2u_consoles_lost",
+      "arm": "span=1",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "blue_losses",
+      "arm": "span=1",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    },
+    {
+      "metric": "delivered_frac",
+      "arm": "span=1",
+      "reference": "span=4",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "all_zero": true
+    }
+  ]
+}

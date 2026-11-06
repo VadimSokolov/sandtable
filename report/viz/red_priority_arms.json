@@ -1,0 +1,1286 @@
+{
+  "seeds": 40,
+  "fixed": {
+    "leader_loss_policy": "continue",
+    "crew_metrics": true,
+    "cargo_per_vehicle": 5.0
+  },
+  "margin": 0.06,
+  "caveat": "Verification and exploration, not a ranking. Paired differences are against legacy within an experiment; P-values are Holm-adjusted within (experiment, metric). Priority only reorders eligible targets, wrecks do not block the road, several classes read ground truth, and every Red parameter is a placeholder.",
+  "experiments": {
+    "head_on_static": {
+      "scenario": "scenarios/uc3_convoy.json",
+      "rows": [
+        {
+          "experiment": "head_on_static",
+          "arm": "legacy",
+          "knowledge": "none",
+          "n_seeds": 40,
+          "blue_losses": 6.125,
+          "blue_losses_se": 0.4819664580307084,
+          "delivered_frac": 0.4583333333333333,
+          "delivered_frac_se": 0.01661316198070527,
+          "cargo_in_transit": 4.125,
+          "cargo_in_transit_se": 0.6907701944485312,
+          "crew_steps_at_risk": 4363.525,
+          "crew_steps_at_risk_se": 186.20350731879492,
+          "tp_head_destroyed": 3.9,
+          "tp_head_destroyed_se": 0.33741095691478934,
+          "tp_trail_destroyed": 1.25,
+          "tp_trail_destroyed_se": 0.21706078553111477,
+          "tp_vehicles_targeted": 13.75,
+          "tp_vehicles_targeted_se": 0.5331930905355693,
+          "tp_activation_frac": 0.0,
+          "tp_activation_frac_se": 0.0,
+          "leaderless_steps": 360.125,
+          "leaderless_steps_se": 31.56767633359421,
+          "policy_active_runs": 0,
+          "head_lost_runs": 39
+        },
+        {
+          "experiment": "head_on_static",
+          "arm": "ends_seen",
+          "knowledge": "observable",
+          "n_seeds": 40,
+          "blue_losses": 6.1,
+          "blue_losses_se": 0.49328828623162474,
+          "delivered_frac": 0.45,
+          "delivered_frac_se": 0.013608276348795433,
+          "cargo_in_transit": 4.375,
+          "cargo_in_transit_se": 0.6743349050008935,
+          "crew_steps_at_risk": 4282.325,
+          "crew_steps_at_risk_se": 186.49231574016176,
+          "tp_head_destroyed": 4.275,
+          "tp_head_destroyed_se": 0.3242100854186672,
+          "tp_trail_destroyed": 1.825,
+          "tp_trail_destroyed_se": 0.3524411207418107,
+          "tp_vehicles_targeted": 8.925,
+          "tp_vehicles_targeted_se": 0.5218157401484423,
+          "tp_activation_frac": 1.0,
+          "tp_activation_frac_se": 0.0,
+          "leaderless_steps": 268.475,
+          "leaderless_steps_se": 21.076082796042556,
+          "policy_active_runs": 40,
+          "head_lost_runs": 39,
+          "paired_vs_legacy": {
+            "blue_losses": {
+              "mean": -0.025,
+              "se": 0.20720205671684896,
+              "ci95": [
+                -0.44410571873411225,
+                0.3941057187341122
+              ],
+              "p": 0.9045836427845795,
+              "p_holm": 1.0
+            },
+            "delivered_frac": {
+              "mean": -0.008333333333333335,
+              "se": 0.01682615993385473,
+              "ci95": [
+                -0.04236745425062763,
+                0.025700787583960962
+              ],
+              "p": 0.6231952830196219,
+              "p_holm": 1.0
+            },
+            "cargo_in_transit": {
+              "mean": 0.25,
+              "se": 0.3983137534078457,
+              "ci95": [
+                -0.5556656123438107,
+                1.0556656123438106
+              ],
+              "p": 0.5338939001152949,
+              "p_holm": 1.0
+            },
+            "crew_steps_at_risk": {
+              "mean": -81.2,
+              "se": 64.28470528308684,
+              "ci95": [
+                -211.2280896733389,
+                48.82808967333891
+              ],
+              "p": 0.21404170539945797,
+              "p_holm": 0.8424633065299499
+            },
+            "tp_head_destroyed": {
+              "mean": 0.375,
+              "se": 0.09927622691646389,
+              "ci95": [
+                0.17419487724055946,
+                0.5758051227594405
+              ],
+              "p": 0.0005295643673941828,
+              "p_holm": 0.0021182574695767314
+            },
+            "tp_trail_destroyed": {
+              "mean": 0.575,
+              "se": 0.255421973634581,
+              "ci95": [
+                0.05836029315146407,
+                1.091639706848536
+              ],
+              "p": 0.03008424326043139,
+              "p_holm": 0.18050545956258834
+            },
+            "leaderless_steps": {
+              "mean": -91.65,
+              "se": 32.92498369448422,
+              "ci95": [
+                -158.24706556119162,
+                -25.052934438808393
+              ],
+              "p": 0.008247678784968635,
+              "p_holm": 0.041024541963062836
+            }
+          }
+        },
+        {
+          "experiment": "head_on_static",
+          "arm": "ends_column",
+          "knowledge": "ground truth (whole column)",
+          "n_seeds": 40,
+          "blue_losses": 6.1,
+          "blue_losses_se": 0.49328828623162474,
+          "delivered_frac": 0.45,
+          "delivered_frac_se": 0.013608276348795433,
+          "cargo_in_transit": 4.375,
+          "cargo_in_transit_se": 0.6743349050008935,
+          "crew_steps_at_risk": 4282.325,
+          "crew_steps_at_risk_se": 186.49231574016176,
+          "tp_head_destroyed": 4.25,
+          "tp_head_destroyed_se": 0.327676356900822,
+          "tp_trail_destroyed": 1.825,
+          "tp_trail_destroyed_se": 0.3524411207418107,
+          "tp_vehicles_targeted": 8.475,
+          "tp_vehicles_targeted_se": 0.4999839741021449,
+          "tp_activation_frac": 0.9943393163756404,
+          "tp_activation_frac_se": 0.0008519936661131735,
+          "leaderless_steps": 268.475,
+          "leaderless_steps_se": 21.076082796042556,
+          "policy_active_runs": 40,
+          "head_lost_runs": 39,
+          "paired_vs_legacy": {
+            "blue_losses": {
+              "mean": -0.025,
+              "se": 0.20720205671684896,
+              "ci95": [
+                -0.44410571873411225,
+                0.3941057187341122
+              ],
+              "p": 0.9045836427845795,
+              "p_holm": 1.0
+            },
+            "delivered_frac": {
+              "mean": -0.008333333333333335,
+              "se": 0.01682615993385473,
+              "ci95": [
+                -0.04236745425062763,
+                0.025700787583960962
+              ],
+              "p": 0.6231952830196219,
+              "p_holm": 1.0
+            },
+            "cargo_in_transit": {
+              "mean": 0.25,
+              "se": 0.3983137534078457,
+              "ci95": [
+                -0.5556656123438107,
+                1.0556656123438106
+              ],
+              "p": 0.5338939001152949,
+              "p_holm": 1.0
+            },
+            "crew_steps_at_risk": {
+              "mean": -81.2,
+              "se": 64.28470528308684,
+              "ci95": [
+                -211.2280896733389,
+                48.82808967333891
+              ],
+              "p": 0.21404170539945797,
+              "p_holm": 0.8424633065299499
+            },
+            "tp_head_destroyed": {
+              "mean": 0.35,
+              "se": 0.10469736606781692,
+              "ci95": [
+                0.13822958830286186,
+                0.561770411697138
+              ],
+              "p": 0.001838600043456526,
+              "p_holm": 0.0021182574695767314
+            },
+            "tp_trail_destroyed": {
+              "mean": 0.575,
+              "se": 0.255421973634581,
+              "ci95": [
+                0.05836029315146407,
+                1.091639706848536
+              ],
+              "p": 0.03008424326043139,
+              "p_holm": 0.18050545956258834
+            },
+            "leaderless_steps": {
+              "mean": -91.65,
+              "se": 32.92498369448422,
+              "ci95": [
+                -158.24706556119162,
+                -25.052934438808393
+              ],
+              "p": 0.008247678784968635,
+              "p_holm": 0.041024541963062836
+            }
+          }
+        },
+        {
+          "experiment": "head_on_static",
+          "arm": "ends_identity",
+          "knowledge": "observable; assumes index order is column order",
+          "n_seeds": 40,
+          "blue_losses": 6.1,
+          "blue_losses_se": 0.49458607402087723,
+          "delivered_frac": 0.4458333333333333,
+          "delivered_frac_se": 0.015082276725516982,
+          "cargo_in_transit": 4.375,
+          "cargo_in_transit_se": 0.6743349050008935,
+          "crew_steps_at_risk": 4280.5,
+          "crew_steps_at_risk_se": 186.35583896929205,
+          "tp_head_destroyed": 4.275,
+          "tp_head_destroyed_se": 0.3242100854186672,
+          "tp_trail_destroyed": 1.825,
+          "tp_trail_destroyed_se": 0.35606017209714164,
+          "tp_vehicles_targeted": 8.925,
+          "tp_vehicles_targeted_se": 0.5205858386324155,
+          "tp_activation_frac": 1.0,
+          "tp_activation_frac_se": 0.0,
+          "leaderless_steps": 268.35,
+          "leaderless_steps_se": 21.061313118046797,
+          "policy_active_runs": 40,
+          "head_lost_runs": 39,
+          "paired_vs_legacy": {
+            "blue_losses": {
+              "mean": -0.025,
+              "se": 0.22213272770564157,
+              "ci95": [
+                -0.47430585137319936,
+                0.4243058513731993
+              ],
+              "p": 0.9109683432219989,
+              "p_holm": 1.0
+            },
+            "delivered_frac": {
+              "mean": -0.0125,
+              "se": 0.01828421937252663,
+              "ci95": [
+                -0.049483324504769846,
+                0.02448332450476984
+              ],
+              "p": 0.4982384034577405,
+              "p_holm": 1.0
+            },
+            "cargo_in_transit": {
+              "mean": 0.25,
+              "se": 0.3983137534078457,
+              "ci95": [
+                -0.5556656123438107,
+                1.0556656123438106
+              ],
+              "p": 0.5338939001152949,
+              "p_holm": 1.0
+            },
+            "crew_steps_at_risk": {
+              "mean": -83.025,
+              "se": 65.2289212195138,
+              "ci95": [
+                -214.9629466745037,
+                48.9129466745037
+              ],
+              "p": 0.21061582663248749,
+              "p_holm": 0.8424633065299499
+            },
+            "tp_head_destroyed": {
+              "mean": 0.375,
+              "se": 0.09927622691646389,
+              "ci95": [
+                0.17419487724055946,
+                0.5758051227594405
+              ],
+              "p": 0.0005295643673941828,
+              "p_holm": 0.0021182574695767314
+            },
+            "tp_trail_destroyed": {
+              "mean": 0.575,
+              "se": 0.27006053452456225,
+              "ci95": [
+                0.028751008956893864,
+                1.121248991043106
+              ],
+              "p": 0.039610640439677054,
+              "p_holm": 0.18050545956258834
+            },
+            "leaderless_steps": {
+              "mean": -91.775,
+              "se": 32.945885846805965,
+              "ci95": [
+                -158.41434415490204,
+                -25.135655845097972
+              ],
+              "p": 0.008204908392612568,
+              "p_holm": 0.041024541963062836
+            }
+          }
+        },
+        {
+          "experiment": "head_on_static",
+          "arm": "security_first",
+          "knowledge": "ground truth (convoy_role)",
+          "n_seeds": 40,
+          "blue_losses": 5.725,
+          "blue_losses_se": 0.46683261701352047,
+          "delivered_frac": 0.475,
+          "delivered_frac_se": 0.014058789871449557,
+          "cargo_in_transit": 9.375,
+          "cargo_in_transit_se": 0.8432898792899275,
+          "crew_steps_at_risk": 4036.975,
+          "crew_steps_at_risk_se": 166.72422911418107,
+          "tp_head_destroyed": 1.45,
+          "tp_head_destroyed_se": 0.26542177368994796,
+          "tp_trail_destroyed": 1.075,
+          "tp_trail_destroyed_se": 0.21299903695460629,
+          "tp_vehicles_targeted": 11.95,
+          "tp_vehicles_targeted_se": 0.6914774223653479,
+          "tp_activation_frac": 0.4479359229780524,
+          "tp_activation_frac_se": 0.035445084711600884,
+          "leaderless_steps": 260.425,
+          "leaderless_steps_se": 29.76656805407618,
+          "policy_active_runs": 40,
+          "head_lost_runs": 27,
+          "paired_vs_legacy": {
+            "blue_losses": {
+              "mean": -0.4,
+              "se": 0.4512092015792049,
+              "ci95": [
+                -1.312656755071294,
+                0.512656755071294
+              ],
+              "p": 0.38077862514797656,
+              "p_holm": 1.0
+            },
+            "delivered_frac": {
+              "mean": 0.01666666666666667,
+              "se": 0.01163304067420188,
+              "ci95": [
+                -0.006863379077459788,
+                0.04019671241079313
+              ],
+              "p": 0.15991096003143135,
+              "p_holm": 0.7995548001571567
+            },
+            "cargo_in_transit": {
+              "mean": 5.25,
+              "se": 0.9464847243000456,
+              "ci95": [
+                3.3355539422048013,
+                7.164446057795199
+              ],
+              "p": 2.204825773356066e-06,
+              "p_holm": 1.3228954640136394e-05
+            },
+            "crew_steps_at_risk": {
+              "mean": -326.55,
+              "se": 125.59364648922946,
+              "ci95": [
+                -580.5871283680711,
+                -72.51287163192885
+              ],
+              "p": 0.013096817267869794,
+              "p_holm": 0.07858090360721877
+            },
+            "tp_head_destroyed": {
+              "mean": -2.45,
+              "se": 0.33001553964966013,
+              "ci95": [
+                -3.117519435520399,
+                -1.7824805644796011
+              ],
+              "p": 5.650596090781774e-09,
+              "p_holm": 3.3903576544690646e-08
+            },
+            "tp_trail_destroyed": {
+              "mean": -0.175,
+              "se": 0.23448661872050258,
+              "ci95": [
+                -0.6492939545560824,
+                0.29929395455608243
+              ],
+              "p": 0.45995474105083567,
+              "p_holm": 0.45995474105083567
+            },
+            "leaderless_steps": {
+              "mean": -99.7,
+              "se": 40.958033556562654,
+              "ci95": [
+                -182.5454425774202,
+                -16.854557422579788
+              ],
+              "p": 0.019604964948509288,
+              "p_holm": 0.041024541963062836
+            }
+          }
+        },
+        {
+          "experiment": "head_on_static",
+          "arm": "control_first",
+          "knowledge": "ground truth (convoy_role)",
+          "n_seeds": 40,
+          "blue_losses": 5.225,
+          "blue_losses_se": 0.3881043674065005,
+          "delivered_frac": 0.4875,
+          "delivered_frac_se": 0.009220896310821892,
+          "cargo_in_transit": 8.25,
+          "cargo_in_transit_se": 0.8501508161828759,
+          "crew_steps_at_risk": 3928.825,
+          "crew_steps_at_risk_se": 176.36177447733638,
+          "tp_head_destroyed": 1.975,
+          "tp_head_destroyed_se": 0.19770315743947658,
+          "tp_trail_destroyed": 0.825,
+          "tp_trail_destroyed_se": 0.18566408873595844,
+          "tp_vehicles_targeted": 11.825,
+          "tp_vehicles_targeted_se": 0.7124240850245568,
+          "tp_activation_frac": 0.5471088922543046,
+          "tp_activation_frac_se": 0.03834343104587215,
+          "leaderless_steps": 804.025,
+          "leaderless_steps_se": 31.206086838455583,
+          "policy_active_runs": 40,
+          "head_lost_runs": 39,
+          "paired_vs_legacy": {
+            "blue_losses": {
+              "mean": -0.9,
+              "se": 0.4624350266212041,
+              "ci95": [
+                -1.8353631294536672,
+                0.03536312945366715
+              ],
+              "p": 0.05885891950701082,
+              "p_holm": 0.3531535170420649
+            },
+            "delivered_frac": {
+              "mean": 0.029166666666666667,
+              "se": 0.01779062703381784,
+              "ci95": [
+                -0.006818273096397202,
+                0.06515160642973053
+              ],
+              "p": 0.1091646908748927,
+              "p_holm": 0.6549881452493562
+            },
+            "cargo_in_transit": {
+              "mean": 4.125,
+              "se": 0.9108938270196829,
+              "ci95": [
+                2.282543326969752,
+                5.967456673030248
+              ],
+              "p": 5.47357456766402e-05,
+              "p_holm": 0.000273678728383201
+            },
+            "crew_steps_at_risk": {
+              "mean": -434.7,
+              "se": 184.63133814615824,
+              "ci95": [
+                -808.1521312224711,
+                -61.247868777528936
+              ],
+              "p": 0.02368132827621801,
+              "p_holm": 0.11840664138109004
+            },
+            "tp_head_destroyed": {
+              "mean": -1.925,
+              "se": 0.31088686209880445,
+              "ci95": [
+                -2.5538280331259724,
+                -1.2961719668740277
+              ],
+              "p": 2.803034719162869e-07,
+              "p_holm": 1.4015173595814346e-06
+            },
+            "tp_trail_destroyed": {
+              "mean": -0.425,
+              "se": 0.22328405503028925,
+              "ci95": [
+                -0.8766346306987545,
+                0.026634630698754436
+              ],
+              "p": 0.06438687984996756,
+              "p_holm": 0.18050545956258834
+            },
+            "leaderless_steps": {
+              "mean": 443.9,
+              "se": 38.629217054664856,
+              "ci95": [
+                365.7650334154002,
+                522.0349665845997
+              ],
+              "p": 4.331100810921408e-14,
+              "p_holm": 2.5986604865528445e-13
+            }
+          }
+        },
+        {
+          "experiment": "head_on_static",
+          "arm": "ends_then_security",
+          "knowledge": "ground truth (security class)",
+          "n_seeds": 40,
+          "blue_losses": 6.1,
+          "blue_losses_se": 0.49328828623162474,
+          "delivered_frac": 0.45,
+          "delivered_frac_se": 0.013608276348795433,
+          "cargo_in_transit": 4.375,
+          "cargo_in_transit_se": 0.6743349050008935,
+          "crew_steps_at_risk": 4282.325,
+          "crew_steps_at_risk_se": 186.49231574016176,
+          "tp_head_destroyed": 4.275,
+          "tp_head_destroyed_se": 0.3242100854186672,
+          "tp_trail_destroyed": 1.825,
+          "tp_trail_destroyed_se": 0.3524411207418107,
+          "tp_vehicles_targeted": 8.925,
+          "tp_vehicles_targeted_se": 0.5218157401484423,
+          "tp_activation_frac": 1.0,
+          "tp_activation_frac_se": 0.0,
+          "leaderless_steps": 268.475,
+          "leaderless_steps_se": 21.076082796042556,
+          "policy_active_runs": 40,
+          "head_lost_runs": 39,
+          "paired_vs_legacy": {
+            "blue_losses": {
+              "mean": -0.025,
+              "se": 0.20720205671684896,
+              "ci95": [
+                -0.44410571873411225,
+                0.3941057187341122
+              ],
+              "p": 0.9045836427845795,
+              "p_holm": 1.0
+            },
+            "delivered_frac": {
+              "mean": -0.008333333333333335,
+              "se": 0.01682615993385473,
+              "ci95": [
+                -0.04236745425062763,
+                0.025700787583960962
+              ],
+              "p": 0.6231952830196219,
+              "p_holm": 1.0
+            },
+            "cargo_in_transit": {
+              "mean": 0.25,
+              "se": 0.3983137534078457,
+              "ci95": [
+                -0.5556656123438107,
+                1.0556656123438106
+              ],
+              "p": 0.5338939001152949,
+              "p_holm": 1.0
+            },
+            "crew_steps_at_risk": {
+              "mean": -81.2,
+              "se": 64.28470528308684,
+              "ci95": [
+                -211.2280896733389,
+                48.82808967333891
+              ],
+              "p": 0.21404170539945797,
+              "p_holm": 0.8424633065299499
+            },
+            "tp_head_destroyed": {
+              "mean": 0.375,
+              "se": 0.09927622691646389,
+              "ci95": [
+                0.17419487724055946,
+                0.5758051227594405
+              ],
+              "p": 0.0005295643673941828,
+              "p_holm": 0.0021182574695767314
+            },
+            "tp_trail_destroyed": {
+              "mean": 0.575,
+              "se": 0.255421973634581,
+              "ci95": [
+                0.05836029315146407,
+                1.091639706848536
+              ],
+              "p": 0.03008424326043139,
+              "p_holm": 0.18050545956258834
+            },
+            "leaderless_steps": {
+              "mean": -91.65,
+              "se": 32.92498369448422,
+              "ci95": [
+                -158.24706556119162,
+                -25.052934438808393
+              ],
+              "p": 0.008247678784968635,
+              "p_holm": 0.041024541963062836
+            }
+          }
+        }
+      ],
+      "negative_control": {
+        "arm": "ends_seen",
+        "metric": "blue_loss_fraction (blue_losses / 15)",
+        "pairs": 40,
+        "mean_diff": -0.0016666666666666683,
+        "se": 0.013813470447789933,
+        "t_min": 1.7,
+        "alpha_each_one_sided_test": 0.04854711286563124,
+        "ci_equivalent_two_sided_level": 0.9029057742687375,
+        "ci_at_that_level": [
+          -0.025149566427909553,
+          0.02181623309457622
+        ],
+        "primary_margin": 0.06,
+        "equivalent": true,
+        "tost_stat": 4.222931055147426,
+        "margin_note": "The primary margin (absolute 0.06 of the loss fraction) was fixed in the tool before any result was inspected. The issue says '0.06 of the contrast spread', which is not defined; the two other readings below were added AFTER the results were seen and are an exploratory sensitivity check.",
+        "margin_variants_exploratory": {
+          "absolute_0.06_of_loss_fraction": {
+            "margin": 0.06,
+            "equivalent": true,
+            "tost_stat": 4.222931055147426
+          },
+          "ar_gate.margin_0.06_x_legacy_level": {
+            "margin": 0.024499999999999997,
+            "equivalent": false,
+            "tost_stat": 1.6529758701577066
+          },
+          "0.06_x_sd_of_paired_contrast": {
+            "margin": 0.005241843480773064,
+            "equivalent": false,
+            "tost_stat": 0.2588181462159932
+          }
+        },
+        "scope": "this metric, this arm, this head-on setting only"
+      }
+    },
+    "abeam_ambush": {
+      "scenario": "scenarios/uc3_convoy_ambush.json",
+      "rows": [
+        {
+          "experiment": "abeam_ambush",
+          "arm": "legacy",
+          "knowledge": "none",
+          "n_seeds": 40,
+          "blue_losses": 3.75,
+          "blue_losses_se": 0.3699445557904243,
+          "delivered_frac": 0.4916666666666666,
+          "delivered_frac_se": 0.00581652033710094,
+          "cargo_in_transit": 7.625,
+          "cargo_in_transit_se": 0.7801113497115126,
+          "crew_steps_at_risk": 5067.35,
+          "crew_steps_at_risk_se": 193.6166896215303,
+          "tp_head_destroyed": 2.65,
+          "tp_head_destroyed_se": 0.3272848676846893,
+          "tp_trail_destroyed": 0.425,
+          "tp_trail_destroyed_se": 0.10674376220290706,
+          "tp_vehicles_targeted": 12.7,
+          "tp_vehicles_targeted_se": 0.578681082178945,
+          "tp_activation_frac": 0.0,
+          "tp_activation_frac_se": 0.0,
+          "leaderless_steps": 281.975,
+          "leaderless_steps_se": 26.351944595690824,
+          "policy_active_runs": 0,
+          "head_lost_runs": 35
+        },
+        {
+          "experiment": "abeam_ambush",
+          "arm": "ends_seen",
+          "knowledge": "observable",
+          "n_seeds": 40,
+          "blue_losses": 3.825,
+          "blue_losses_se": 0.3736299760115065,
+          "delivered_frac": 0.4958333333333333,
+          "delivered_frac_se": 0.004166666666666667,
+          "cargo_in_transit": 8.0,
+          "cargo_in_transit_se": 0.7762500258061849,
+          "crew_steps_at_risk": 5060.3,
+          "crew_steps_at_risk_se": 189.94754066617497,
+          "tp_head_destroyed": 3.05,
+          "tp_head_destroyed_se": 0.3470572257549437,
+          "tp_trail_destroyed": 0.775,
+          "tp_trail_destroyed_se": 0.1620679661161503,
+          "tp_vehicles_targeted": 6.6,
+          "tp_vehicles_targeted_se": 0.4095025124371127,
+          "tp_activation_frac": 1.0,
+          "tp_activation_frac_se": 0.0,
+          "leaderless_steps": 283.475,
+          "leaderless_steps_se": 18.76156011158221,
+          "policy_active_runs": 40,
+          "head_lost_runs": 36,
+          "paired_vs_legacy": {
+            "blue_losses": {
+              "mean": 0.075,
+              "se": 0.06590105247982553,
+              "ci95": [
+                -0.05829746047180913,
+                0.20829746047180914
+              ],
+              "p": 0.2620346280225958,
+              "p_holm": 1.0
+            },
+            "delivered_frac": {
+              "mean": 0.0041666666666666675,
+              "se": 0.004166666666666667,
+              "ci95": [
+                -0.004261212166819834,
+                0.01259454550015317
+              ],
+              "p": 0.3234749451713832,
+              "p_holm": 1.0
+            },
+            "cargo_in_transit": {
+              "mean": 0.375,
+              "se": 0.375,
+              "ci95": [
+                -0.38350909501378516,
+                1.1335090950137852
+              ],
+              "p": 0.3234749451713834,
+              "p_holm": 0.9704248355141503
+            },
+            "crew_steps_at_risk": {
+              "mean": -7.05,
+              "se": 18.591421719127926,
+              "ci95": [
+                -44.65469990185427,
+                30.554699901854274
+              ],
+              "p": 0.7065909287348254,
+              "p_holm": 1.0
+            },
+            "tp_head_destroyed": {
+              "mean": 0.4,
+              "se": 0.11766968108291043,
+              "ci95": [
+                0.16199060450997574,
+                0.6380093954900243
+              ],
+              "p": 0.001569806727049562,
+              "p_holm": 0.006279226908198248
+            },
+            "tp_trail_destroyed": {
+              "mean": 0.35,
+              "se": 0.11629978944796515,
+              "ci95": [
+                0.11476147188141383,
+                0.5852385281185861
+              ],
+              "p": 0.00457000617880566,
+              "p_holm": 0.0228500308940283
+            },
+            "leaderless_steps": {
+              "mean": 1.5,
+              "se": 21.846492413411145,
+              "ci95": [
+                -42.6887018392587,
+                45.6887018392587
+              ],
+              "p": 0.9456103692904216,
+              "p_holm": 1.0
+            }
+          }
+        },
+        {
+          "experiment": "abeam_ambush",
+          "arm": "ends_column",
+          "knowledge": "ground truth (whole column)",
+          "n_seeds": 40,
+          "blue_losses": 3.8,
+          "blue_losses_se": 0.3654993072356548,
+          "delivered_frac": 0.5,
+          "delivered_frac_se": 0.0,
+          "cargo_in_transit": 8.125,
+          "cargo_in_transit_se": 0.7529323019249814,
+          "crew_steps_at_risk": 5056.625,
+          "crew_steps_at_risk_se": 190.36444025127037,
+          "tp_head_destroyed": 2.9,
+          "tp_head_destroyed_se": 0.3198557367121814,
+          "tp_trail_destroyed": 0.85,
+          "tp_trail_destroyed_se": 0.16231498343083992,
+          "tp_vehicles_targeted": 6.025,
+          "tp_vehicles_targeted_se": 0.36948942596160433,
+          "tp_activation_frac": 0.9916967802598655,
+          "tp_activation_frac_se": 0.0013364967592045416,
+          "leaderless_steps": 276.0,
+          "leaderless_steps_se": 19.587967264074685,
+          "policy_active_runs": 40,
+          "head_lost_runs": 36,
+          "paired_vs_legacy": {
+            "blue_losses": {
+              "mean": 0.05,
+              "se": 0.08733959656539023,
+              "ci95": [
+                -0.12666100893248866,
+                0.22666100893248864
+              ],
+              "p": 0.5702839158682147,
+              "p_holm": 1.0
+            },
+            "delivered_frac": {
+              "mean": 0.008333333333333335,
+              "se": 0.00581652033710094,
+              "ci95": [
+                -0.003431689538729894,
+                0.020098356205396566
+              ],
+              "p": 0.15991096003143135,
+              "p_holm": 0.9594657601885881
+            },
+            "cargo_in_transit": {
+              "mean": 0.5,
+              "se": 0.39223227027636803,
+              "ci95": [
+                -0.2933646516334142,
+                1.2933646516334143
+              ],
+              "p": 0.20993874257441797,
+              "p_holm": 0.8397549702976719
+            },
+            "crew_steps_at_risk": {
+              "mean": -10.725,
+              "se": 26.478316903187807,
+              "ci95": [
+                -64.28245117793385,
+                42.83245117793385
+              ],
+              "p": 0.6876552243621303,
+              "p_holm": 1.0
+            },
+            "tp_head_destroyed": {
+              "mean": 0.25,
+              "se": 0.15912420563984858,
+              "ci95": [
+                -0.07185908590578399,
+                0.5718590859057839
+              ],
+              "p": 0.12423823889519238,
+              "p_holm": 0.12423823889519238
+            },
+            "tp_trail_destroyed": {
+              "mean": 0.425,
+              "se": 0.12345195265926179,
+              "ci95": [
+                0.17529485629530317,
+                0.6747051437046968
+              ],
+              "p": 0.001389359274470085,
+              "p_holm": 0.00833615564682051
+            },
+            "leaderless_steps": {
+              "mean": -5.975,
+              "se": 23.067389777645975,
+              "ci95": [
+                -52.6331998521933,
+                40.6831998521933
+              ],
+              "p": 0.7969792988305782,
+              "p_holm": 1.0
+            }
+          }
+        },
+        {
+          "experiment": "abeam_ambush",
+          "arm": "ends_identity",
+          "knowledge": "observable; assumes index order is column order",
+          "n_seeds": 40,
+          "blue_losses": 3.825,
+          "blue_losses_se": 0.3736299760115065,
+          "delivered_frac": 0.4958333333333333,
+          "delivered_frac_se": 0.004166666666666667,
+          "cargo_in_transit": 8.0,
+          "cargo_in_transit_se": 0.7762500258061849,
+          "crew_steps_at_risk": 5060.3,
+          "crew_steps_at_risk_se": 189.94754066617497,
+          "tp_head_destroyed": 3.05,
+          "tp_head_destroyed_se": 0.3470572257549437,
+          "tp_trail_destroyed": 0.775,
+          "tp_trail_destroyed_se": 0.1620679661161503,
+          "tp_vehicles_targeted": 6.6,
+          "tp_vehicles_targeted_se": 0.4095025124371127,
+          "tp_activation_frac": 1.0,
+          "tp_activation_frac_se": 0.0,
+          "leaderless_steps": 283.475,
+          "leaderless_steps_se": 18.76156011158221,
+          "policy_active_runs": 40,
+          "head_lost_runs": 36,
+          "paired_vs_legacy": {
+            "blue_losses": {
+              "mean": 0.075,
+              "se": 0.06590105247982553,
+              "ci95": [
+                -0.05829746047180913,
+                0.20829746047180914
+              ],
+              "p": 0.2620346280225958,
+              "p_holm": 1.0
+            },
+            "delivered_frac": {
+              "mean": 0.0041666666666666675,
+              "se": 0.004166666666666667,
+              "ci95": [
+                -0.004261212166819834,
+                0.01259454550015317
+              ],
+              "p": 0.3234749451713832,
+              "p_holm": 1.0
+            },
+            "cargo_in_transit": {
+              "mean": 0.375,
+              "se": 0.375,
+              "ci95": [
+                -0.38350909501378516,
+                1.1335090950137852
+              ],
+              "p": 0.3234749451713834,
+              "p_holm": 0.9704248355141503
+            },
+            "crew_steps_at_risk": {
+              "mean": -7.05,
+              "se": 18.591421719127926,
+              "ci95": [
+                -44.65469990185427,
+                30.554699901854274
+              ],
+              "p": 0.7065909287348254,
+              "p_holm": 1.0
+            },
+            "tp_head_destroyed": {
+              "mean": 0.4,
+              "se": 0.11766968108291043,
+              "ci95": [
+                0.16199060450997574,
+                0.6380093954900243
+              ],
+              "p": 0.001569806727049562,
+              "p_holm": 0.006279226908198248
+            },
+            "tp_trail_destroyed": {
+              "mean": 0.35,
+              "se": 0.11629978944796515,
+              "ci95": [
+                0.11476147188141383,
+                0.5852385281185861
+              ],
+              "p": 0.00457000617880566,
+              "p_holm": 0.0228500308940283
+            },
+            "leaderless_steps": {
+              "mean": 1.5,
+              "se": 21.846492413411145,
+              "ci95": [
+                -42.6887018392587,
+                45.6887018392587
+              ],
+              "p": 0.9456103692904216,
+              "p_holm": 1.0
+            }
+          }
+        },
+        {
+          "experiment": "abeam_ambush",
+          "arm": "security_first",
+          "knowledge": "ground truth (convoy_role)",
+          "n_seeds": 40,
+          "blue_losses": 4.075,
+          "blue_losses_se": 0.40570846549506323,
+          "delivered_frac": 0.5,
+          "delivered_frac_se": 0.0,
+          "cargo_in_transit": 11.625,
+          "cargo_in_transit_se": 0.7022742360104793,
+          "crew_steps_at_risk": 4729.05,
+          "crew_steps_at_risk_se": 183.92918073443653,
+          "tp_head_destroyed": 0.775,
+          "tp_head_destroyed_se": 0.20091936129599294,
+          "tp_trail_destroyed": 0.225,
+          "tp_trail_destroyed_se": 0.08387643536927646,
+          "tp_vehicles_targeted": 11.175,
+          "tp_vehicles_targeted_se": 0.7753307813525917,
+          "tp_activation_frac": 0.6287893932895077,
+          "tp_activation_frac_se": 0.038141699998203986,
+          "leaderless_steps": 153.35,
+          "leaderless_steps_se": 30.40351594883858,
+          "policy_active_runs": 40,
+          "head_lost_runs": 17,
+          "paired_vs_legacy": {
+            "blue_losses": {
+              "mean": 0.325,
+              "se": 0.4150803135137423,
+              "ci95": [
+                -0.5145791812302585,
+                1.1645791812302584
+              ],
+              "p": 0.43836717353344123,
+              "p_holm": 1.0
+            },
+            "delivered_frac": {
+              "mean": 0.008333333333333335,
+              "se": 0.00581652033710094,
+              "ci95": [
+                -0.003431689538729894,
+                0.020098356205396566
+              ],
+              "p": 0.15991096003143135,
+              "p_holm": 0.9594657601885881
+            },
+            "cargo_in_transit": {
+              "mean": 4.0,
+              "se": 1.0,
+              "ci95": [
+                1.9773090799632396,
+                6.02269092003676
+              ],
+              "p": 0.0002738573794739006,
+              "p_holm": 0.001369286897369503
+            },
+            "crew_steps_at_risk": {
+              "mean": -338.3,
+              "se": 172.73349934182363,
+              "ci95": [
+                -687.6864807048823,
+                11.086480704882376
+              ],
+              "p": 0.05734982218227324,
+              "p_holm": 0.3440989330936394
+            },
+            "tp_head_destroyed": {
+              "mean": -1.875,
+              "se": 0.3775553958336139,
+              "ci95": [
+                -2.638677870963536,
+                -1.111322129036464
+              ],
+              "p": 1.3934928597785358e-05,
+              "p_holm": 6.967464298892679e-05
+            },
+            "tp_trail_destroyed": {
+              "mean": -0.2,
+              "se": 0.13959648809042255,
+              "ci95": [
+                -0.48236054892951746,
+                0.08236054892951744
+              ],
+              "p": 0.15991096003143135,
+              "p_holm": 0.3198219200628627
+            },
+            "leaderless_steps": {
+              "mean": -128.625,
+              "se": 34.31643262457394,
+              "ci95": [
+                -198.03653667777897,
+                -59.21346332222103
+              ],
+              "p": 0.0005767202582967673,
+              "p_holm": 0.0028836012914838366
+            }
+          }
+        },
+        {
+          "experiment": "abeam_ambush",
+          "arm": "control_first",
+          "knowledge": "ground truth (convoy_role)",
+          "n_seeds": 40,
+          "blue_losses": 3.65,
+          "blue_losses_se": 0.3590407447773252,
+          "delivered_frac": 0.4958333333333333,
+          "delivered_frac_se": 0.004166666666666667,
+          "cargo_in_transit": 12.0,
+          "cargo_in_transit_se": 0.6405126152203485,
+          "crew_steps_at_risk": 4949.875,
+          "crew_steps_at_risk_se": 166.1882126844633,
+          "tp_head_destroyed": 1.4,
+          "tp_head_destroyed_se": 0.17097008285302207,
+          "tp_trail_destroyed": 0.225,
+          "tp_trail_destroyed_se": 0.09797631843644143,
+          "tp_vehicles_targeted": 9.8,
+          "tp_vehicles_targeted_se": 0.7656068482934607,
+          "tp_activation_frac": 0.7018203191174287,
+          "tp_activation_frac_se": 0.04499600291651126,
+          "leaderless_steps": 654.625,
+          "leaderless_steps_se": 40.322779200296914,
+          "policy_active_runs": 40,
+          "head_lost_runs": 35,
+          "paired_vs_legacy": {
+            "blue_losses": {
+              "mean": -0.1,
+              "se": 0.2859980276066109,
+              "ci95": [
+                -0.6784856135883146,
+                0.47848561358831465
+              ],
+              "p": 0.7284804446881536,
+              "p_holm": 1.0
+            },
+            "delivered_frac": {
+              "mean": 0.0041666666666666675,
+              "se": 0.007278299713782521,
+              "ci95": [
+                -0.01055508407770739,
+                0.018888417411040727
+              ],
+              "p": 0.5702839158682146,
+              "p_holm": 1.0
+            },
+            "cargo_in_transit": {
+              "mean": 4.375,
+              "se": 0.650135587436407,
+              "ci95": [
+                3.059976650499614,
+                5.690023349500386
+              ],
+              "p": 5.0525332407831e-08,
+              "p_holm": 3.03151994446986e-07
+            },
+            "crew_steps_at_risk": {
+              "mean": -117.475,
+              "se": 127.22707837230973,
+              "ci95": [
+                -374.8160562064762,
+                139.8660562064762
+              ],
+              "p": 0.361503026791148,
+              "p_holm": 1.0
+            },
+            "tp_head_destroyed": {
+              "mean": -1.25,
+              "se": 0.2421855614066333,
+              "ci95": [
+                -1.7398665360212024,
+                -0.7601334639787976
+              ],
+              "p": 7.518478313312064e-06,
+              "p_holm": 4.5110869879872385e-05
+            },
+            "tp_trail_destroyed": {
+              "mean": -0.2,
+              "se": 0.13959648809042258,
+              "ci95": [
+                -0.4823605489295175,
+                0.0823605489295175
+              ],
+              "p": 0.1599109600314314,
+              "p_holm": 0.3198219200628627
+            },
+            "leaderless_steps": {
+              "mean": 372.65,
+              "se": 35.57366048796244,
+              "ci95": [
+                300.69547993852785,
+                444.6045200614721
+              ],
+              "p": 6.755710208128218e-13,
+              "p_holm": 4.053426124876931e-12
+            }
+          }
+        },
+        {
+          "experiment": "abeam_ambush",
+          "arm": "ends_then_security",
+          "knowledge": "ground truth (security class)",
+          "n_seeds": 40,
+          "blue_losses": 3.825,
+          "blue_losses_se": 0.3736299760115065,
+          "delivered_frac": 0.4958333333333333,
+          "delivered_frac_se": 0.004166666666666667,
+          "cargo_in_transit": 8.0,
+          "cargo_in_transit_se": 0.7762500258061849,
+          "crew_steps_at_risk": 5060.3,
+          "crew_steps_at_risk_se": 189.94754066617497,
+          "tp_head_destroyed": 3.05,
+          "tp_head_destroyed_se": 0.3470572257549437,
+          "tp_trail_destroyed": 0.775,
+          "tp_trail_destroyed_se": 0.1620679661161503,
+          "tp_vehicles_targeted": 6.6,
+          "tp_vehicles_targeted_se": 0.4095025124371127,
+          "tp_activation_frac": 1.0,
+          "tp_activation_frac_se": 0.0,
+          "leaderless_steps": 283.475,
+          "leaderless_steps_se": 18.76156011158221,
+          "policy_active_runs": 40,
+          "head_lost_runs": 36,
+          "paired_vs_legacy": {
+            "blue_losses": {
+              "mean": 0.075,
+              "se": 0.06590105247982553,
+              "ci95": [
+                -0.05829746047180913,
+                0.20829746047180914
+              ],
+              "p": 0.2620346280225958,
+              "p_holm": 1.0
+            },
+            "delivered_frac": {
+              "mean": 0.0041666666666666675,
+              "se": 0.004166666666666667,
+              "ci95": [
+                -0.004261212166819834,
+                0.01259454550015317
+              ],
+              "p": 0.3234749451713832,
+              "p_holm": 1.0
+            },
+            "cargo_in_transit": {
+              "mean": 0.375,
+              "se": 0.375,
+              "ci95": [
+                -0.38350909501378516,
+                1.1335090950137852
+              ],
+              "p": 0.3234749451713834,
+              "p_holm": 0.9704248355141503
+            },
+            "crew_steps_at_risk": {
+              "mean": -7.05,
+              "se": 18.591421719127926,
+              "ci95": [
+                -44.65469990185427,
+                30.554699901854274
+              ],
+              "p": 0.7065909287348254,
+              "p_holm": 1.0
+            },
+            "tp_head_destroyed": {
+              "mean": 0.4,
+              "se": 0.11766968108291043,
+              "ci95": [
+                0.16199060450997574,
+                0.6380093954900243
+              ],
+              "p": 0.001569806727049562,
+              "p_holm": 0.006279226908198248
+            },
+            "tp_trail_destroyed": {
+              "mean": 0.35,
+              "se": 0.11629978944796515,
+              "ci95": [
+                0.11476147188141383,
+                0.5852385281185861
+              ],
+              "p": 0.00457000617880566,
+              "p_holm": 0.0228500308940283
+            },
+            "leaderless_steps": {
+              "mean": 1.5,
+              "se": 21.846492413411145,
+              "ci95": [
+                -42.6887018392587,
+                45.6887018392587
+              ],
+              "p": 0.9456103692904216,
+              "p_holm": 1.0
+            }
+          }
+        }
+      ]
+    }
+  }
+}

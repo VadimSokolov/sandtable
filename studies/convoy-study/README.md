@@ -68,7 +68,7 @@ hold_i,k = 1 when contact is active, action is halt,
 
 Holding freezes the movement target at the vehicle's current position; firing can continue. `continue` observes contact without issuing that movement hold. The initial implemented increment does not implement herringbone/disperse. Escorts can use a separately configured security platform; assigning a security label alone should not be confused with giving a vehicle a stronger weapon.
 
-**Saved UC-3 experiment, 20 seeds:**
+**Archived UC-3 experiment, 20 seeds**
 
 | Arrangement | Mean Blue losses | Mean time to objective, seconds | Success frequency |
 |---|---:|---:|---:|
@@ -81,7 +81,7 @@ Holding freezes the movement target at the vehicle's current position; firing ca
 
 **Interpretation:** in this setup halt has fewer losses and takes longer than continue. No uncertainty was stored, gun-truck strength is a placeholder, and Red has no added mechanism to exploit a halted convoy. Do not conclude that stopping is generally safer. The base scenario has no cargo configured, so its success field must not be relabeled cargo-delivery success.
 
-**Result file:** `report/viz/contact_arms.json`. **Model:** `behavior.py::_update_contact`; tool: `tools/make_contact_arms.py`.
+The current `report/viz/contact_arms.json` contains the 40-seed rerun. The table and figure above describe the archived 20-seed experiment. **Model:** `behavior.py::_update_contact`; tool: `tools/make_contact_arms.py`.
 
 ## #14 — How many people are exposed?
 
@@ -98,7 +98,7 @@ E is **crew-steps**. Multiplying by Δt converts to crew-seconds. The `there exi
 
 **Worked example:** one control vehicle with two people plus four cargo trucks. Manned cargo trucks have two people each: 10 people total. Unmanned cargo trucks have zero: 2 people total. If all vehicles have exactly 100 exposed steps, the totals are 1000 versus 200 crew-steps. That difference is arithmetic under the chosen crew assignments, not proof of better mission performance.
 
-**Older saved experiment, C0, 10 seeds:**
+**Archived experiment, C0, 10 seeds**
 
 | Arm | Mean crew-steps at risk | Mean delivered fraction | Success frequency |
 |---|---:|---:|---:|
@@ -110,7 +110,7 @@ E is **crew-steps**. Multiplying by Δt converts to crew-seconds. The `there exi
 
 **Important:** all C0–C5 values repeat exactly within each arm in this saved file. It does not demonstrate sensitivity to communication degradation. Its headless policy is also explicitly labeled a placeholder predating the #17 experiments. No standard errors are saved. Different success frequency and average delivery can coexist: success is a threshold per run, while delivered fraction is averaged across runs.
 
-**Result file:** `report/viz/autonomy_arms.json`. **Model:** `metrics.py::accumulate_crew_at_risk`, `crew_metrics`; configuration: `convoy.py`.
+The current `report/viz/autonomy_arms.json` contains the 40-seed rerun. The table and figure above describe the archived 10-seed experiment. **Model:** `metrics.py::accumulate_crew_at_risk`, `crew_metrics`; configuration: `convoy.py`.
 
 ## #16 — Which street path, and what is visible?
 

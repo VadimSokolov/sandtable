@@ -1,0 +1,1170 @@
+{
+  "manifest_status": "frozen_before_run",
+  "registration_hash": "6bc4a5602a008f31a18902151b3202a57a1a77aef5e4cdd27c3d539784f5d56c",
+  "manifest_commit": "8a2ad6a12959eb14f7742e250f2827b5212d49c8",
+  "run_commit": "8a2ad6a12959eb14f7742e250f2827b5212d49c8",
+  "arm_means": {
+    "legacy|off": {
+      "success": 0.9333333333333333,
+      "delivered_frac": 0.4888888888888889,
+      "blue_losses": 3.8,
+      "lane_blocked_vehicle_steps": 0.0
+    },
+    "legacy|r60": {
+      "success": 0.9666666666666667,
+      "delivered_frac": 0.5555555555555555,
+      "blue_losses": 4.066666666666666,
+      "lane_blocked_vehicle_steps": 625.2333333333333
+    },
+    "legacy|r300": {
+      "success": 0.9666666666666667,
+      "delivered_frac": 0.5555555555555555,
+      "blue_losses": 4.466666666666667,
+      "lane_blocked_vehicle_steps": 2418.766666666667
+    },
+    "legacy|r900": {
+      "success": 0.9,
+      "delivered_frac": 0.5166666666666666,
+      "blue_losses": 4.4,
+      "lane_blocked_vehicle_steps": 5469.866666666667
+    },
+    "ends_seen|off": {
+      "success": 0.9666666666666667,
+      "delivered_frac": 0.4944444444444444,
+      "blue_losses": 3.8,
+      "lane_blocked_vehicle_steps": 0.0
+    },
+    "ends_seen|r60": {
+      "success": 1.0,
+      "delivered_frac": 0.5833333333333334,
+      "blue_losses": 3.9,
+      "lane_blocked_vehicle_steps": 545.9333333333333
+    },
+    "ends_seen|r300": {
+      "success": 0.9333333333333333,
+      "delivered_frac": 0.5666666666666667,
+      "blue_losses": 4.166666666666667,
+      "lane_blocked_vehicle_steps": 2064.4
+    },
+    "ends_seen|r900": {
+      "success": 0.9333333333333333,
+      "delivered_frac": 0.55,
+      "blue_losses": 4.166666666666667,
+      "lane_blocked_vehicle_steps": 5103.3
+    },
+    "control_first|off": {
+      "success": 0.9666666666666667,
+      "delivered_frac": 0.49444444444444446,
+      "blue_losses": 3.8333333333333335,
+      "lane_blocked_vehicle_steps": 0.0
+    },
+    "control_first|r60": {
+      "success": 0.9666666666666667,
+      "delivered_frac": 0.6722222222222223,
+      "blue_losses": 4.5,
+      "lane_blocked_vehicle_steps": 1005.6666666666666
+    },
+    "control_first|r300": {
+      "success": 0.8666666666666667,
+      "delivered_frac": 0.6166666666666667,
+      "blue_losses": 4.933333333333334,
+      "lane_blocked_vehicle_steps": 3305.8333333333335
+    },
+    "control_first|r900": {
+      "success": 0.8333333333333334,
+      "delivered_frac": 0.5888888888888888,
+      "blue_losses": 5.0,
+      "lane_blocked_vehicle_steps": 7934.5
+    }
+  },
+  "comparisons": [
+    {
+      "family": "block_effect",
+      "metric": "success",
+      "targeting": "legacy",
+      "arm": "legacy|r60",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.03333333333333333,
+      "se": 0.058394877222439266,
+      "ci95": [
+        -0.08609760051069928,
+        0.15276426717736594
+      ],
+      "p": 0.5725145639415321,
+      "p_holm": 1.0
+    },
+    {
+      "family": "block_effect",
+      "metric": "delivered_frac",
+      "targeting": "legacy",
+      "arm": "legacy|r60",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.06666666666666665,
+      "se": 0.018910287631039177,
+      "ci95": [
+        0.027990785862409905,
+        0.10534254747092339
+      ],
+      "p": 0.001425827417902557,
+      "p_holm": 0.00427748225370767
+    },
+    {
+      "family": "block_effect",
+      "metric": "blue_losses",
+      "targeting": "legacy",
+      "arm": "legacy|r60",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.26666666666666666,
+      "se": 0.32847027309410115,
+      "ci95": [
+        -0.4051304724248132,
+        0.9384638057581465
+      ],
+      "p": 0.4234950884933464,
+      "p_holm": 0.4234950884933464
+    },
+    {
+      "family": "block_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "targeting": "legacy",
+      "arm": "legacy|r60",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 625.2333333333333,
+      "se": 72.15159142800573,
+      "ci95": [
+        477.6667598177281,
+        772.7999068489386
+      ],
+      "p": 1.530665884328597e-09,
+      "p_holm": 3.061331768657194e-09
+    },
+    {
+      "family": "block_effect",
+      "metric": "success",
+      "targeting": "legacy",
+      "arm": "legacy|r300",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.03333333333333333,
+      "se": 0.05839487722243926,
+      "ci95": [
+        -0.08609760051069926,
+        0.15276426717736594
+      ],
+      "p": 0.5725145639415321,
+      "p_holm": 1.0
+    },
+    {
+      "family": "block_effect",
+      "metric": "delivered_frac",
+      "targeting": "legacy",
+      "arm": "legacy|r300",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.06666666666666664,
+      "se": 0.027216552697590865,
+      "ci95": [
+        0.011002566332887008,
+        0.12233076700044626
+      ],
+      "p": 0.020582701514682004,
+      "p_holm": 0.04116540302936401
+    },
+    {
+      "family": "block_effect",
+      "metric": "blue_losses",
+      "targeting": "legacy",
+      "arm": "legacy|r300",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.6666666666666666,
+      "se": 0.3724208882536838,
+      "ci95": [
+        -0.09501957333915867,
+        1.428352906672492
+      ],
+      "p": 0.08388676038881733,
+      "p_holm": 0.251660281166452
+    },
+    {
+      "family": "block_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "targeting": "legacy",
+      "arm": "legacy|r300",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 2418.766666666667,
+      "se": 280.19216592678555,
+      "ci95": [
+        1845.7093434198403,
+        2991.8239899134933
+      ],
+      "p": 1.659428192326833e-09,
+      "p_holm": 3.061331768657194e-09
+    },
+    {
+      "family": "block_effect",
+      "metric": "success",
+      "targeting": "legacy",
+      "arm": "legacy|r900",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": -0.03333333333333333,
+      "se": 0.05839487722243926,
+      "ci95": [
+        -0.15276426717736594,
+        0.08609760051069926
+      ],
+      "p": 0.5725145639415321,
+      "p_holm": 1.0
+    },
+    {
+      "family": "block_effect",
+      "metric": "delivered_frac",
+      "targeting": "legacy",
+      "arm": "legacy|r900",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.027777777777777766,
+      "se": 0.03398156413003545,
+      "ci95": [
+        -0.04172232446700416,
+        0.09727788002255969
+      ],
+      "p": 0.4203443586348915,
+      "p_holm": 0.4203443586348915
+    },
+    {
+      "family": "block_effect",
+      "metric": "blue_losses",
+      "targeting": "legacy",
+      "arm": "legacy|r900",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.6,
+      "se": 0.35751376470567253,
+      "ci95": [
+        -0.13119774904649817,
+        1.3311977490464981
+      ],
+      "p": 0.10404312439950611,
+      "p_holm": 0.251660281166452
+    },
+    {
+      "family": "block_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "targeting": "legacy",
+      "arm": "legacy|r900",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 5469.866666666667,
+      "se": 567.1283982279748,
+      "ci95": [
+        4309.958855715573,
+        6629.774477617761
+      ],
+      "p": 1.4894165731761262e-10,
+      "p_holm": 4.4682497195283785e-10
+    },
+    {
+      "family": "block_effect",
+      "metric": "success",
+      "targeting": "ends_seen",
+      "arm": "ends_seen|r60",
+      "reference": "ends_seen|off",
+      "pairing": "seed",
+      "mean": 0.03333333333333333,
+      "se": 0.033333333333333326,
+      "ci95": [
+        -0.0348409880710901,
+        0.10150765473775678
+      ],
+      "p": 0.32558198801619365,
+      "p_holm": 0.9767459640485809
+    },
+    {
+      "family": "block_effect",
+      "metric": "delivered_frac",
+      "targeting": "ends_seen",
+      "arm": "ends_seen|r60",
+      "reference": "ends_seen|off",
+      "pairing": "seed",
+      "mean": 0.08888888888888886,
+      "se": 0.015440185195103357,
+      "ci95": [
+        0.05731016444784496,
+        0.12046761332993278
+      ],
+      "p": 3.1085411891047286e-06,
+      "p_holm": 9.325623567314186e-06
+    },
+    {
+      "family": "block_effect",
+      "metric": "blue_losses",
+      "targeting": "ends_seen",
+      "arm": "ends_seen|r60",
+      "reference": "ends_seen|off",
+      "pairing": "seed",
+      "mean": 0.1,
+      "se": 0.2414039396301674,
+      "ci95": [
+        -0.393726493059232,
+        0.593726493059232
+      ],
+      "p": 0.6817438810676205,
+      "p_holm": 0.8719692811635951
+    },
+    {
+      "family": "block_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "targeting": "ends_seen",
+      "arm": "ends_seen|r60",
+      "reference": "ends_seen|off",
+      "pairing": "seed",
+      "mean": 545.9333333333333,
+      "se": 53.97078676242166,
+      "ci95": [
+        435.5506804376052,
+        656.3159862290614
+      ],
+      "p": 5.084556837003021e-11,
+      "p_holm": 5.084556837003021e-11
+    },
+    {
+      "family": "block_effect",
+      "metric": "success",
+      "targeting": "ends_seen",
+      "arm": "ends_seen|r300",
+      "reference": "ends_seen|off",
+      "pairing": "seed",
+      "mean": -0.03333333333333333,
+      "se": 0.058394877222439266,
+      "ci95": [
+        -0.15276426717736594,
+        0.08609760051069928
+      ],
+      "p": 0.5725145639415321,
+      "p_holm": 1.0
+    },
+    {
+      "family": "block_effect",
+      "metric": "delivered_frac",
+      "targeting": "ends_seen",
+      "arm": "ends_seen|r300",
+      "reference": "ends_seen|off",
+      "pairing": "seed",
+      "mean": 0.07222222222222219,
+      "se": 0.022150266645649952,
+      "ci95": [
+        0.02691984029739558,
+        0.1175246041470488
+      ],
+      "p": 0.0028414245586514874,
+      "p_holm": 0.005682849117302975
+    },
+    {
+      "family": "block_effect",
+      "metric": "blue_losses",
+      "targeting": "ends_seen",
+      "arm": "ends_seen|r300",
+      "reference": "ends_seen|off",
+      "pairing": "seed",
+      "mean": 0.36666666666666664,
+      "se": 0.3406664642237966,
+      "ci95": [
+        -0.3300744840443823,
+        1.0634078173777155
+      ],
+      "p": 0.2906564270545317,
+      "p_holm": 0.8719692811635951
+    },
+    {
+      "family": "block_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "targeting": "ends_seen",
+      "arm": "ends_seen|r300",
+      "reference": "ends_seen|off",
+      "pairing": "seed",
+      "mean": 2064.4,
+      "se": 191.23888653759187,
+      "ci95": [
+        1673.2725605248643,
+        2455.527439475136
+      ],
+      "p": 1.131930165053865e-11,
+      "p_holm": 2.26386033010773e-11
+    },
+    {
+      "family": "block_effect",
+      "metric": "success",
+      "targeting": "ends_seen",
+      "arm": "ends_seen|r900",
+      "reference": "ends_seen|off",
+      "pairing": "seed",
+      "mean": -0.03333333333333333,
+      "se": 0.058394877222439266,
+      "ci95": [
+        -0.15276426717736594,
+        0.08609760051069928
+      ],
+      "p": 0.5725145639415321,
+      "p_holm": 1.0
+    },
+    {
+      "family": "block_effect",
+      "metric": "delivered_frac",
+      "targeting": "ends_seen",
+      "arm": "ends_seen|r900",
+      "reference": "ends_seen|off",
+      "pairing": "seed",
+      "mean": 0.05555555555555554,
+      "se": 0.03129121377639144,
+      "ci95": [
+        -0.008442162398231451,
+        0.11955327350934253
+      ],
+      "p": 0.08632271403007072,
+      "p_holm": 0.08632271403007072
+    },
+    {
+      "family": "block_effect",
+      "metric": "blue_losses",
+      "targeting": "ends_seen",
+      "arm": "ends_seen|r900",
+      "reference": "ends_seen|off",
+      "pairing": "seed",
+      "mean": 0.36666666666666664,
+      "se": 0.3406664642237966,
+      "ci95": [
+        -0.3300744840443823,
+        1.0634078173777155
+      ],
+      "p": 0.2906564270545317,
+      "p_holm": 0.8719692811635951
+    },
+    {
+      "family": "block_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "targeting": "ends_seen",
+      "arm": "ends_seen|r900",
+      "reference": "ends_seen|off",
+      "pairing": "seed",
+      "mean": 5103.3,
+      "se": 438.7562414659048,
+      "ci95": [
+        4205.942729283198,
+        6000.6572707168025
+      ],
+      "p": 1.9263958479642067e-12,
+      "p_holm": 5.77918754389262e-12
+    },
+    {
+      "family": "block_effect",
+      "metric": "success",
+      "targeting": "control_first",
+      "arm": "control_first|r60",
+      "reference": "control_first|off",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.047946330148538406,
+      "ci95": [
+        -0.09806125565127165,
+        0.09806125565127165
+      ],
+      "p": 1.0,
+      "p_holm": 1.0
+    },
+    {
+      "family": "block_effect",
+      "metric": "delivered_frac",
+      "targeting": "control_first",
+      "arm": "control_first|r60",
+      "reference": "control_first|off",
+      "pairing": "seed",
+      "mean": 0.17777777777777776,
+      "se": 0.03742453738254018,
+      "ci95": [
+        0.10123600457990312,
+        0.2543195509756524
+      ],
+      "p": 5.075885403056228e-05,
+      "p_holm": 0.00015227656209168682
+    },
+    {
+      "family": "block_effect",
+      "metric": "blue_losses",
+      "targeting": "control_first",
+      "arm": "control_first|r60",
+      "reference": "control_first|off",
+      "pairing": "seed",
+      "mean": 0.6666666666666666,
+      "se": 0.2596785516587207,
+      "ci95": [
+        0.13556439538816245,
+        1.1977689379451708
+      ],
+      "p": 0.015672206359692232,
+      "p_holm": 0.0174265253214509
+    },
+    {
+      "family": "block_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "targeting": "control_first",
+      "arm": "control_first|r60",
+      "reference": "control_first|off",
+      "pairing": "seed",
+      "mean": 1005.6666666666666,
+      "se": 92.02382666641016,
+      "ci95": [
+        817.4568085860426,
+        1193.8765247472907
+      ],
+      "p": 8.484687605148811e-12,
+      "p_holm": 8.484687605148811e-12
+    },
+    {
+      "family": "block_effect",
+      "metric": "success",
+      "targeting": "control_first",
+      "arm": "control_first|r300",
+      "reference": "control_first|off",
+      "pairing": "seed",
+      "mean": -0.1,
+      "se": 0.055708601453115555,
+      "ci95": [
+        -0.21393688301366892,
+        0.013936883013668924
+      ],
+      "p": 0.08307466551442909,
+      "p_holm": 0.16614933102885818
+    },
+    {
+      "family": "block_effect",
+      "metric": "delivered_frac",
+      "targeting": "control_first",
+      "arm": "control_first|r300",
+      "reference": "control_first|off",
+      "pairing": "seed",
+      "mean": 0.12222222222222219,
+      "se": 0.04069427281488006,
+      "ci95": [
+        0.038993089196194444,
+        0.20545135524824992
+      ],
+      "p": 0.005452376252782357,
+      "p_holm": 0.010904752505564714
+    },
+    {
+      "family": "block_effect",
+      "metric": "blue_losses",
+      "targeting": "control_first",
+      "arm": "control_first|r300",
+      "reference": "control_first|off",
+      "pairing": "seed",
+      "mean": 1.1,
+      "se": 0.3693734987911225,
+      "ci95": [
+        0.344546371254128,
+        1.855453628745872
+      ],
+      "p": 0.005808841773816967,
+      "p_holm": 0.0174265253214509
+    },
+    {
+      "family": "block_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "targeting": "control_first",
+      "arm": "control_first|r300",
+      "reference": "control_first|off",
+      "pairing": "seed",
+      "mean": 3305.8333333333335,
+      "se": 244.58354040602956,
+      "ci95": [
+        2805.60382651716,
+        3806.062840149507
+      ],
+      "p": 4.775300749180954e-14,
+      "p_holm": 9.550601498361908e-14
+    },
+    {
+      "family": "block_effect",
+      "metric": "success",
+      "targeting": "control_first",
+      "arm": "control_first|r900",
+      "reference": "control_first|off",
+      "pairing": "seed",
+      "mean": -0.13333333333333333,
+      "se": 0.06312427686319992,
+      "ci95": [
+        -0.2624369755121414,
+        -0.004229691154525261
+      ],
+      "p": 0.043397417810775565,
+      "p_holm": 0.1301922534323267
+    },
+    {
+      "family": "block_effect",
+      "metric": "delivered_frac",
+      "targeting": "control_first",
+      "arm": "control_first|r900",
+      "reference": "control_first|off",
+      "pairing": "seed",
+      "mean": 0.09444444444444441,
+      "se": 0.05033941840696313,
+      "ci95": [
+        -0.008511226249197201,
+        0.19740011513808603
+      ],
+      "p": 0.07073209787658048,
+      "p_holm": 0.07073209787658048
+    },
+    {
+      "family": "block_effect",
+      "metric": "blue_losses",
+      "targeting": "control_first",
+      "arm": "control_first|r900",
+      "reference": "control_first|off",
+      "pairing": "seed",
+      "mean": 1.1666666666666667,
+      "se": 0.40423998031593034,
+      "ci95": [
+        0.33990307638938544,
+        1.993430256943948
+      ],
+      "p": 0.00729193539453821,
+      "p_holm": 0.0174265253214509
+    },
+    {
+      "family": "block_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "targeting": "control_first",
+      "arm": "control_first|r900",
+      "reference": "control_first|off",
+      "pairing": "seed",
+      "mean": 7934.5,
+      "se": 556.841748397712,
+      "ci95": [
+        6795.630750199998,
+        9073.369249800002
+      ],
+      "p": 1.2537045404560264e-14,
+      "p_holm": 3.761113621368079e-14
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "success",
+      "recovery": "off",
+      "arm": "ends_seen|off",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.03333333333333333,
+      "se": 0.033333333333333326,
+      "ci95": [
+        -0.0348409880710901,
+        0.10150765473775678
+      ],
+      "p": 0.32558198801619365,
+      "p_holm": 0.6511639760323873
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "delivered_frac",
+      "recovery": "off",
+      "arm": "ends_seen|off",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.005555555555555556,
+      "se": 0.005555555555555557,
+      "ci95": [
+        -0.005806831345181688,
+        0.0169179424562928
+      ],
+      "p": 0.32558198801619365,
+      "p_holm": 0.6511639760323873
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "blue_losses",
+      "recovery": "off",
+      "arm": "ends_seen|off",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.047946330148538406,
+      "ci95": [
+        -0.09806125565127165,
+        0.09806125565127165
+      ],
+      "p": 1.0,
+      "p_holm": 1.0
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "recovery": "off",
+      "arm": "ends_seen|off",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "p": 1.0,
+      "p_holm": 1.0
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "success",
+      "recovery": "off",
+      "arm": "control_first|off",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.03333333333333333,
+      "se": 0.058394877222439266,
+      "ci95": [
+        -0.08609760051069928,
+        0.15276426717736594
+      ],
+      "p": 0.5725145639415321,
+      "p_holm": 0.6511639760323873
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "delivered_frac",
+      "recovery": "off",
+      "arm": "control_first|off",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.005555555555555556,
+      "se": 0.009732479537073208,
+      "ci95": [
+        -0.01434960008511654,
+        0.025460711196227653
+      ],
+      "p": 0.5725145639415321,
+      "p_holm": 0.6511639760323873
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "blue_losses",
+      "recovery": "off",
+      "arm": "control_first|off",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.03333333333333333,
+      "se": 0.36034253606120265,
+      "ci95": [
+        -0.7036499027403109,
+        0.7703165694069776
+      ],
+      "p": 0.9269332496873659,
+      "p_holm": 1.0
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "recovery": "off",
+      "arm": "control_first|off",
+      "reference": "legacy|off",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "p": 1.0,
+      "p_holm": 1.0
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "success",
+      "recovery": "r60",
+      "arm": "ends_seen|r60",
+      "reference": "legacy|r60",
+      "pairing": "seed",
+      "mean": 0.03333333333333333,
+      "se": 0.033333333333333326,
+      "ci95": [
+        -0.0348409880710901,
+        0.10150765473775678
+      ],
+      "p": 0.32558198801619365,
+      "p_holm": 0.6511639760323873
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "delivered_frac",
+      "recovery": "r60",
+      "arm": "ends_seen|r60",
+      "reference": "legacy|r60",
+      "pairing": "seed",
+      "mean": 0.027777777777777773,
+      "se": 0.016147732193782773,
+      "ci95": [
+        -0.005248042758167298,
+        0.06080359831372284
+      ],
+      "p": 0.09604701694825685,
+      "p_holm": 0.09604701694825685
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "blue_losses",
+      "recovery": "r60",
+      "arm": "ends_seen|r60",
+      "reference": "legacy|r60",
+      "pairing": "seed",
+      "mean": -0.16666666666666666,
+      "se": 0.1981717201099617,
+      "ci95": [
+        -0.5719733428679858,
+        0.23864000953465256
+      ],
+      "p": 0.40721739047792593,
+      "p_holm": 0.40721739047792593
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "recovery": "r60",
+      "arm": "ends_seen|r60",
+      "reference": "legacy|r60",
+      "pairing": "seed",
+      "mean": -79.3,
+      "se": 45.5190789858949,
+      "ci95": [
+        -172.3969696245321,
+        13.796969624532096
+      ],
+      "p": 0.0920845059802137,
+      "p_holm": 0.0920845059802137
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "success",
+      "recovery": "r60",
+      "arm": "control_first|r60",
+      "reference": "legacy|r60",
+      "pairing": "seed",
+      "mean": 0.0,
+      "se": 0.047946330148538406,
+      "ci95": [
+        -0.09806125565127165,
+        0.09806125565127165
+      ],
+      "p": 1.0,
+      "p_holm": 1.0
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "delivered_frac",
+      "recovery": "r60",
+      "arm": "control_first|r60",
+      "reference": "legacy|r60",
+      "pairing": "seed",
+      "mean": 0.11666666666666667,
+      "se": 0.035870848222965025,
+      "ci95": [
+        0.043302544592615386,
+        0.19003078874071794
+      ],
+      "p": 0.002901551294514951,
+      "p_holm": 0.005803102589029902
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "blue_losses",
+      "recovery": "r60",
+      "arm": "control_first|r60",
+      "reference": "legacy|r60",
+      "pairing": "seed",
+      "mean": 0.43333333333333335,
+      "se": 0.31324527987502815,
+      "ci95": [
+        -0.207325198325229,
+        1.0739918649918958
+      ],
+      "p": 0.17711004654475104,
+      "p_holm": 0.3542200930895021
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "recovery": "r60",
+      "arm": "control_first|r60",
+      "reference": "legacy|r60",
+      "pairing": "seed",
+      "mean": 380.43333333333334,
+      "se": 65.93087085577412,
+      "ci95": [
+        245.58956192748096,
+        515.2771047391857
+      ],
+      "p": 2.9973705014575082e-06,
+      "p_holm": 5.9947410029150165e-06
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "success",
+      "recovery": "r300",
+      "arm": "ends_seen|r300",
+      "reference": "legacy|r300",
+      "pairing": "seed",
+      "mean": -0.03333333333333333,
+      "se": 0.033333333333333326,
+      "ci95": [
+        -0.10150765473775678,
+        0.0348409880710901
+      ],
+      "p": 0.32558198801619365,
+      "p_holm": 0.32558198801619365
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "delivered_frac",
+      "recovery": "r300",
+      "arm": "ends_seen|r300",
+      "reference": "legacy|r300",
+      "pairing": "seed",
+      "mean": 0.011111111111111103,
+      "se": 0.02104142562106663,
+      "ci95": [
+        -0.031923436281824896,
+        0.05414565850404711
+      ],
+      "p": 0.6014762511281211,
+      "p_holm": 0.6014762511281211
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "blue_losses",
+      "recovery": "r300",
+      "arm": "ends_seen|r300",
+      "reference": "legacy|r300",
+      "pairing": "seed",
+      "mean": -0.3,
+      "se": 0.3185816267043083,
+      "ci95": [
+        -0.951572586374507,
+        0.351572586374507
+      ],
+      "p": 0.35413843199106565,
+      "p_holm": 0.6511639760323873
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "recovery": "r300",
+      "arm": "ends_seen|r300",
+      "reference": "legacy|r300",
+      "pairing": "seed",
+      "mean": -354.3666666666667,
+      "se": 225.99216486943848,
+      "ci95": [
+        -816.5725411473833,
+        107.83920781404993
+      ],
+      "p": 0.12771805584502197,
+      "p_holm": 0.12771805584502197
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "success",
+      "recovery": "r300",
+      "arm": "control_first|r300",
+      "reference": "legacy|r300",
+      "pairing": "seed",
+      "mean": -0.1,
+      "se": 0.055708601453115555,
+      "ci95": [
+        -0.21393688301366892,
+        0.013936883013668924
+      ],
+      "p": 0.08307466551442909,
+      "p_holm": 0.16614933102885818
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "delivered_frac",
+      "recovery": "r300",
+      "arm": "control_first|r300",
+      "reference": "legacy|r300",
+      "pairing": "seed",
+      "mean": 0.061111111111111116,
+      "se": 0.03872433713997709,
+      "ci95": [
+        -0.01808905107951038,
+        0.1403112733017326
+      ],
+      "p": 0.1253885369515381,
+      "p_holm": 0.2507770739030762
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "blue_losses",
+      "recovery": "r300",
+      "arm": "control_first|r300",
+      "reference": "legacy|r300",
+      "pairing": "seed",
+      "mean": 0.4666666666666667,
+      "se": 0.4666666666666666,
+      "ci95": [
+        -0.48777383299526145,
+        1.4211071663285948
+      ],
+      "p": 0.32558198801619365,
+      "p_holm": 0.6511639760323873
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "recovery": "r300",
+      "arm": "control_first|r300",
+      "reference": "legacy|r300",
+      "pairing": "seed",
+      "mean": 887.0666666666667,
+      "se": 212.06348503649505,
+      "ci95": [
+        453.34814105606205,
+        1320.7851922772713
+      ],
+      "p": 0.00024287784275631535,
+      "p_holm": 0.0004857556855126307
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "success",
+      "recovery": "r900",
+      "arm": "ends_seen|r900",
+      "reference": "legacy|r900",
+      "pairing": "seed",
+      "mean": 0.03333333333333333,
+      "se": 0.058394877222439266,
+      "ci95": [
+        -0.08609760051069928,
+        0.15276426717736594
+      ],
+      "p": 0.5725145639415321,
+      "p_holm": 0.6511639760323873
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "delivered_frac",
+      "recovery": "r900",
+      "arm": "ends_seen|r900",
+      "reference": "legacy|r900",
+      "pairing": "seed",
+      "mean": 0.03333333333333332,
+      "se": 0.03427780727409201,
+      "ci95": [
+        -0.036772654170951664,
+        0.10343932083761831
+      ],
+      "p": 0.3388703109351987,
+      "p_holm": 0.3388703109351987
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "blue_losses",
+      "recovery": "r900",
+      "arm": "ends_seen|r900",
+      "reference": "legacy|r900",
+      "pairing": "seed",
+      "mean": -0.23333333333333334,
+      "se": 0.2982066449043919,
+      "ci95": [
+        -0.843234402972737,
+        0.37656773630607027
+      ],
+      "p": 0.4402898480745049,
+      "p_holm": 0.4402898480745049
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "recovery": "r900",
+      "arm": "ends_seen|r900",
+      "reference": "legacy|r900",
+      "pairing": "seed",
+      "mean": -366.56666666666666,
+      "se": 395.86263344673864,
+      "ci95": [
+        -1176.1966588046496,
+        443.0633254713162
+      ],
+      "p": 0.36209119323929695,
+      "p_holm": 0.36209119323929695
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "success",
+      "recovery": "r900",
+      "arm": "control_first|r900",
+      "reference": "legacy|r900",
+      "pairing": "seed",
+      "mean": -0.06666666666666667,
+      "se": 0.06666666666666667,
+      "ci95": [
+        -0.20301530947551355,
+        0.06968197614218023
+      ],
+      "p": 0.32558198801619365,
+      "p_holm": 0.6511639760323873
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "delivered_frac",
+      "recovery": "r900",
+      "arm": "control_first|r900",
+      "reference": "legacy|r900",
+      "pairing": "seed",
+      "mean": 0.07222222222222222,
+      "se": 0.047061366783253074,
+      "ci95": [
+        -0.02402908012216637,
+        0.1684735245666108
+      ],
+      "p": 0.1357114779859864,
+      "p_holm": 0.2714229559719728
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "blue_losses",
+      "recovery": "r900",
+      "arm": "control_first|r900",
+      "reference": "legacy|r900",
+      "pairing": "seed",
+      "mean": 0.6,
+      "se": 0.4085297439895142,
+      "ci95": [
+        -0.23553714210023913,
+        1.4355371421002392
+      ],
+      "p": 0.15268390190920877,
+      "p_holm": 0.30536780381841755
+    },
+    {
+      "family": "targeting_effect",
+      "metric": "lane_blocked_vehicle_steps",
+      "recovery": "r900",
+      "arm": "control_first|r900",
+      "reference": "legacy|r900",
+      "pairing": "seed",
+      "mean": 2464.633333333333,
+      "se": 472.11266793642983,
+      "ci95": [
+        1499.0545104433932,
+        3430.2121562232733
+      ],
+      "p": 1.3745518437097212e-05,
+      "p_holm": 2.7491036874194424e-05
+    }
+  ]
+}

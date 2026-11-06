@@ -23,7 +23,7 @@ import numpy as np
 from sandtable.scenario import Scenario
 from sandtable.sim import run_mission
 
-SEEDS = 20
+SEEDS = 40
 TRIGGERS = ["receive_fire", "lead_lost", "detect_range"]
 KEYS = ("success", "time_to_objective", "blue_losses", "red_losses", "escort_vehicle_steps",
         "convoy_contact_count", "convoy_contact_steps", "convoy_halt_steps")

@@ -22,7 +22,7 @@ import numpy as np
 from sandtable.scenario import load_scenario
 from sandtable.sim import run_mission
 
-SEEDS = 10
+SEEDS = 40
 UNIT = {"march_unit_size": 5, "march_units_per_serial": 3, "serials_per_column": 1, "pace": 10.0,
         "time_gap": 4.0, "cargo_per_vehicle": 5.0, "roles": ["control", "cargo", "cargo", "cargo", "cargo"]}
 KEYS = ("success", "delivered_frac", "time_to_delivery", "cargo_lost", "blue_losses", "crew_steps_at_risk",

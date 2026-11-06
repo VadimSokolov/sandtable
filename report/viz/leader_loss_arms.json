@@ -1,0 +1,1827 @@
+{
+  "scenario": "scenarios/uc3_convoy.json",
+  "seeds": 20,
+  "kill_step": 15,
+  "reference": "legacy",
+  "paired_comparisons": 110,
+  "paired_significant_at_95": 22,
+  "caveat": "Verification and exploration, not a ranking. Differences are paired by seed within each experiment and never across experiments. After the first loss the arms' engagement draws diverge, so pairing only removes the pre-loss noise. With this many comparisons some 95% intervals exclude zero by chance. clear_steps uses ground-truth Red; absorb is an experimental logical reassignment; handoff delays are unsourced and 0 is an idealized baseline.",
+  "rows": [
+    {
+      "experiment": "forced_head_kill",
+      "arm": "legacy",
+      "n_seeds": 20,
+      "head_loss_runs": 20,
+      "success": 0.65,
+      "success_se": 0.1094243309804831,
+      "delivered_frac": 0.41666666666666663,
+      "delivered_frac_se": 0.028356543640780028,
+      "time_to_delivery": 999.35,
+      "time_to_delivery_se": 134.78788940991302,
+      "time_to_objective": 999.35,
+      "time_to_objective_se": 134.78788940991302,
+      "cargo_lost": 15.0,
+      "cargo_lost_se": 1.3572417850765923,
+      "cargo_in_transit": 2.5,
+      "cargo_in_transit_se": 0.6786208925382962,
+      "blue_losses": 7.35,
+      "blue_losses_se": 0.7300865125377085,
+      "leaderless_steps": null,
+      "leaderless_steps_se": null,
+      "ll_halt_steps": null,
+      "ll_halt_steps_se": null,
+      "ll_handoffs": null,
+      "ll_handoffs_se": null,
+      "first_leader_loss_step": null,
+      "first_leader_loss_step_se": null
+    },
+    {
+      "experiment": "forced_head_kill",
+      "arm": "continue",
+      "n_seeds": 20,
+      "head_loss_runs": 20,
+      "success": 0.4,
+      "success_se": 0.11239029738980327,
+      "delivered_frac": 0.31666666666666665,
+      "delivered_frac_se": 0.04342769752451426,
+      "time_to_delivery": 1304.75,
+      "time_to_delivery_se": 139.16432685290096,
+      "time_to_objective": 1304.75,
+      "time_to_objective_se": 139.16432685290096,
+      "cargo_lost": 18.25,
+      "cargo_lost_se": 2.0285787090836203,
+      "cargo_in_transit": 2.25,
+      "cargo_in_transit_se": 1.0559979066964897,
+      "blue_losses": 9.1,
+      "blue_losses_se": 0.8822817308726159,
+      "leaderless_steps": 517.15,
+      "leaderless_steps_se": 34.085671862467215,
+      "ll_halt_steps": 0.0,
+      "ll_halt_steps_se": 0.0,
+      "ll_handoffs": 0.0,
+      "ll_handoffs_se": 0.0,
+      "first_leader_loss_step": 15.0,
+      "first_leader_loss_step_se": 0.0,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": -0.25,
+          "se": 0.16018081887929686,
+          "ci95": [
+            -0.5852623069691816,
+            0.08526230696918158
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": -0.1,
+          "se": 0.05461186812727502,
+          "ci95": [
+            -0.21430395364655858,
+            0.014303953646558551
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_in_transit": {
+          "mean": -0.25,
+          "se": 0.9230242056471359,
+          "ci95": [
+            -2.1819118652205347,
+            1.6819118652205347
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": 3.25,
+          "se": 2.3304336619246593,
+          "ci95": [
+            -1.6276537116110452,
+            8.127653711611046
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": 1.75,
+          "se": 1.0022999866097446,
+          "ci95": [
+            -0.3478379817072752,
+            3.847837981707275
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "forced_head_kill",
+      "arm": "promote_h0_idealized",
+      "n_seeds": 20,
+      "head_loss_runs": 20,
+      "success": 0.7,
+      "success_se": 0.10513149660756935,
+      "delivered_frac": 0.36666666666666664,
+      "delivered_frac_se": 0.04926358274420692,
+      "time_to_delivery": 937.05,
+      "time_to_delivery_se": 129.60897619581107,
+      "time_to_objective": 937.05,
+      "time_to_objective_se": 129.60897619581107,
+      "cargo_lost": 15.75,
+      "cargo_lost_se": 2.0285787090836203,
+      "cargo_in_transit": 3.25,
+      "cargo_in_transit_se": 0.75,
+      "blue_losses": 7.3,
+      "blue_losses_se": 0.9293461198747835,
+      "leaderless_steps": 0.0,
+      "leaderless_steps_se": 0.0,
+      "ll_halt_steps": 0.0,
+      "ll_halt_steps_se": 0.0,
+      "ll_handoffs": 5.0,
+      "ll_handoffs_se": 0.5380275868489703,
+      "first_leader_loss_step": 15.0,
+      "first_leader_loss_step_se": 0.0,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.05,
+          "se": 0.1352385806055747,
+          "ci95": [
+            -0.23305760229149863,
+            0.3330576022914986
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": -0.049999999999999996,
+          "se": 0.05144121723296753,
+          "ci95": [
+            -0.1576677050566419,
+            0.05766770505664192
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_in_transit": {
+          "mean": 0.75,
+          "se": 0.9086571931905024,
+          "ci95": [
+            -1.1518413625588177,
+            2.6518413625588177
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": 0.75,
+          "se": 2.184725684334185,
+          "ci95": [
+            -3.822683409595003,
+            5.322683409595003
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": -0.05,
+          "se": 1.0424540883491176,
+          "ci95": [
+            -2.2318814825309397,
+            2.13188148253094
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "forced_head_kill",
+      "arm": "promote_h5",
+      "n_seeds": 20,
+      "head_loss_runs": 20,
+      "success": 0.55,
+      "success_se": 0.11413288653790231,
+      "delivered_frac": 0.38333333333333336,
+      "delivered_frac_se": 0.03647477699349437,
+      "time_to_delivery": 1122.3,
+      "time_to_delivery_se": 140.6411091357977,
+      "time_to_objective": 1122.3,
+      "time_to_objective_se": 140.6411091357977,
+      "cargo_lost": 15.75,
+      "cargo_lost_se": 1.75,
+      "cargo_in_transit": 2.75,
+      "cargo_in_transit_se": 0.9230242056471359,
+      "blue_losses": 7.95,
+      "blue_losses_se": 0.8350070910508862,
+      "leaderless_steps": 23.75,
+      "leaderless_steps_se": 2.2616656647142537,
+      "ll_halt_steps": 0.0,
+      "ll_halt_steps_se": 0.0,
+      "ll_handoffs": 4.75,
+      "ll_handoffs_se": 0.4523331329428508,
+      "first_leader_loss_step": 15.0,
+      "first_leader_loss_step_se": 0.0,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": -0.1,
+          "se": 0.14327007988227577,
+          "ci95": [
+            -0.3998677234705965,
+            0.19986772347059653
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": -0.03333333333333333,
+          "se": 0.04118138454142282,
+          "ci95": [
+            -0.11952696177236788,
+            0.05286029510570122
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_in_transit": {
+          "mean": 0.25,
+          "se": 1.228767032863688,
+          "ci95": [
+            -2.3218389570475675,
+            2.8218389570475675
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": 0.75,
+          "se": 2.184725684334185,
+          "ci95": [
+            -3.822683409595003,
+            5.322683409595003
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": 0.6,
+          "se": 1.1525714956702593,
+          "ci95": [
+            -1.8123598648631618,
+            3.012359864863162
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "forced_head_kill",
+      "arm": "promote_h20",
+      "n_seeds": 20,
+      "head_loss_runs": 20,
+      "success": 0.7,
+      "success_se": 0.10513149660756935,
+      "delivered_frac": 0.4083333333333333,
+      "delivered_frac_se": 0.037218730743117164,
+      "time_to_delivery": 936.25,
+      "time_to_delivery_se": 129.7378911295264,
+      "time_to_objective": 936.25,
+      "time_to_objective_se": 129.7378911295264,
+      "cargo_lost": 14.25,
+      "cargo_lost_se": 1.894417005169053,
+      "cargo_in_transit": 3.5,
+      "cargo_in_transit_se": 1.1527997954636582,
+      "blue_losses": 7.2,
+      "blue_losses_se": 0.9420023466279855,
+      "leaderless_steps": 70.55,
+      "leaderless_steps_se": 7.2802815879607286,
+      "ll_halt_steps": 0.0,
+      "ll_halt_steps_se": 0.0,
+      "ll_handoffs": 3.35,
+      "ll_handoffs_se": 0.3346246915733002,
+      "first_leader_loss_step": 15.0,
+      "first_leader_loss_step_se": 0.0,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.05,
+          "se": 0.1534686664402456,
+          "ci95": [
+            -0.2712136104573922,
+            0.37121361045739215
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": -0.00833333333333333,
+          "se": 0.050545272394196365,
+          "ci95": [
+            -0.11412580429100426,
+            0.0974591376243376
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_in_transit": {
+          "mean": 1.0,
+          "se": 1.063756996389881,
+          "ci95": [
+            -1.2264689814891048,
+            3.2264689814891048
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -0.75,
+          "se": 2.2441444272876727,
+          "ci95": [
+            -5.447048267879354,
+            3.947048267879354
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": -0.15,
+          "se": 1.1948904376112215,
+          "ci95": [
+            -2.6509344283027025,
+            2.3509344283027027
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "forced_head_kill",
+      "arm": "absorb_h0_idealized",
+      "n_seeds": 20,
+      "head_loss_runs": 20,
+      "success": 1.0,
+      "success_se": 0.0,
+      "delivered_frac": 0.6333333333333334,
+      "delivered_frac_se": 0.03333333333333333,
+      "time_to_delivery": 536.85,
+      "time_to_delivery_se": 3.9190996549288157,
+      "time_to_objective": 536.85,
+      "time_to_objective_se": 3.9190996549288157,
+      "cargo_lost": 7.0,
+      "cargo_lost_se": 1.3278395591097751,
+      "cargo_in_transit": 4.0,
+      "cargo_in_transit_se": 0.5848976518656018,
+      "blue_losses": 5.45,
+      "blue_losses_se": 0.5354535706443552,
+      "leaderless_steps": 215.45,
+      "leaderless_steps_se": 28.838614007866898,
+      "ll_halt_steps": 0.0,
+      "ll_halt_steps_se": 0.0,
+      "ll_handoffs": 1.95,
+      "ll_handoffs_se": 0.05000000000000001,
+      "first_leader_loss_step": 15.0,
+      "first_leader_loss_step_se": 0.0,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.35,
+          "se": 0.1094243309804831,
+          "ci95": [
+            0.12097224312031754,
+            0.5790277568796824
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "delivered_frac": {
+          "mean": 0.2166666666666667,
+          "se": 0.043763051520233055,
+          "ci95": [
+            0.12506954714051083,
+            0.3082637861928226
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "cargo_in_transit": {
+          "mean": 1.5,
+          "se": 0.966545666958261,
+          "ci95": [
+            -0.5230033306277182,
+            3.523003330627718
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -8.0,
+          "se": 1.8987530534260468,
+          "ci95": [
+            -11.974135814201855,
+            -4.025864185798146
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "blue_losses": {
+          "mean": -1.9,
+          "se": 0.8999999999999999,
+          "ci95": [
+            -3.783721648967436,
+            -0.016278351032563476
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        }
+      }
+    },
+    {
+      "experiment": "forced_head_kill",
+      "arm": "absorb_h5",
+      "n_seeds": 20,
+      "head_loss_runs": 20,
+      "success": 0.85,
+      "success_se": 0.08191780219091252,
+      "delivered_frac": 0.6083333333333333,
+      "delivered_frac_se": 0.04877895001855084,
+      "time_to_delivery": 729.6,
+      "time_to_delivery_se": 103.21802168226246,
+      "time_to_objective": 729.6,
+      "time_to_objective_se": 103.21802168226246,
+      "cargo_lost": 8.25,
+      "cargo_lost_se": 1.8236386414903698,
+      "cargo_in_transit": 3.5,
+      "cargo_in_transit_se": 0.6386663736585051,
+      "blue_losses": 5.7,
+      "blue_losses_se": 0.7542859990885767,
+      "leaderless_steps": 217.1,
+      "leaderless_steps_se": 28.012018097501233,
+      "ll_halt_steps": 0.0,
+      "ll_halt_steps_se": 0.0,
+      "ll_handoffs": 1.95,
+      "ll_handoffs_se": 0.05000000000000001,
+      "first_leader_loss_step": 15.0,
+      "first_leader_loss_step_se": 0.0,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.2,
+          "se": 0.1555973210430998,
+          "ci95": [
+            -0.1256689357446929,
+            0.5256689357446929
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": 0.1916666666666667,
+          "se": 0.061978821132753464,
+          "ci95": [
+            0.06194350317194652,
+            0.3213898301613869
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "cargo_in_transit": {
+          "mean": 1.0,
+          "se": 1.0,
+          "ci95": [
+            -1.093024054408263,
+            3.093024054408263
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -6.75,
+          "se": 2.494071918939409,
+          "ci95": [
+            -11.970152519764358,
+            -1.5298474802356417
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "blue_losses": {
+          "mean": -1.65,
+          "se": 1.21020876841886,
+          "ci95": [
+            -4.182996063156473,
+            0.8829960631564733
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "forced_head_kill",
+      "arm": "absorb_h20",
+      "n_seeds": 20,
+      "head_loss_runs": 20,
+      "success": 0.9,
+      "success_se": 0.06882472016116853,
+      "delivered_frac": 0.6333333333333335,
+      "delivered_frac_se": 0.05072572735017881,
+      "time_to_delivery": 668.8,
+      "time_to_delivery_se": 86.58152835698604,
+      "time_to_objective": 668.8,
+      "time_to_objective_se": 86.58152835698604,
+      "cargo_lost": 7.75,
+      "cargo_lost_se": 1.9013499359527084,
+      "cargo_in_transit": 3.25,
+      "cargo_in_transit_se": 0.6564457728034958,
+      "blue_losses": 5.6,
+      "blue_losses_se": 0.7269257545524019,
+      "leaderless_steps": 220.8,
+      "leaderless_steps_se": 29.14208387592724,
+      "ll_halt_steps": 0.0,
+      "ll_halt_steps_se": 0.0,
+      "ll_handoffs": 1.95,
+      "ll_handoffs_se": 0.05000000000000001,
+      "first_leader_loss_step": 15.0,
+      "first_leader_loss_step_se": 0.0,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.25,
+          "se": 0.14281014264436984,
+          "ci95": [
+            -0.048905063768141355,
+            0.5489050637681414
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": 0.21666666666666665,
+          "se": 0.0652256541930572,
+          "ci95": [
+            0.08014780347608275,
+            0.35318552985725055
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "cargo_in_transit": {
+          "mean": 0.75,
+          "se": 1.1047147762395981,
+          "ci95": [
+            -1.5621945999297209,
+            3.062194599929721
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -7.25,
+          "se": 2.677267853221776,
+          "ci95": [
+            -12.853586016887148,
+            -1.6464139831128524
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "blue_losses": {
+          "mean": -1.75,
+          "se": 1.095144787351498,
+          "ci95": [
+            -4.042164382986507,
+            0.542164382986507
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "forced_head_kill",
+      "arm": "halt_no_release",
+      "n_seeds": 20,
+      "head_loss_runs": 20,
+      "success": 0.05,
+      "success_se": 0.04999999999999999,
+      "delivered_frac": 0.025,
+      "delivered_frac_se": 0.024999999999999994,
+      "time_to_delivery": 1738.7,
+      "time_to_delivery_se": 61.29999999999999,
+      "time_to_objective": 1738.7,
+      "time_to_objective_se": 61.29999999999999,
+      "cargo_lost": 15.0,
+      "cargo_lost_se": 1.3078709094514922,
+      "cargo_in_transit": 14.25,
+      "cargo_in_transit_se": 1.2180117534650259,
+      "blue_losses": 8.2,
+      "blue_losses_se": 0.6633249580710798,
+      "leaderless_steps": 3145.75,
+      "leaderless_steps_se": 289.7547953828692,
+      "ll_halt_steps": 11217.85,
+      "ll_halt_steps_se": 958.6163720778972,
+      "ll_handoffs": 0.0,
+      "ll_handoffs_se": 0.0,
+      "first_leader_loss_step": 15.0,
+      "first_leader_loss_step_se": 0.0,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": -0.6,
+          "se": 0.11239029738980327,
+          "ci95": [
+            -0.8352355959189565,
+            -0.3647644040810435
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "delivered_frac": {
+          "mean": -0.39166666666666666,
+          "se": 0.03478211209281901,
+          "ci95": [
+            -0.4644664639400614,
+            -0.3188668693932719
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "cargo_in_transit": {
+          "mean": 11.75,
+          "se": 1.1627440321113354,
+          "ci95": [
+            9.316348771671322,
+            14.183651228328678
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "cargo_lost": {
+          "mean": 0.0,
+          "se": 1.5811388300841895,
+          "ci95": [
+            -3.309361604725148,
+            3.309361604725148
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": 0.85,
+          "se": 0.85,
+          "ci95": [
+            -0.9290704462470235,
+            2.6290704462470234
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "forced_head_kill",
+      "arm": "halt_clear10",
+      "n_seeds": 20,
+      "head_loss_runs": 20,
+      "success": 0.7,
+      "success_se": 0.10513149660756935,
+      "delivered_frac": 0.35833333333333334,
+      "delivered_frac_se": 0.05025519669966119,
+      "time_to_delivery": 1013.7,
+      "time_to_delivery_se": 120.11433369042487,
+      "time_to_objective": 1013.7,
+      "time_to_objective_se": 120.11433369042487,
+      "cargo_lost": 15.75,
+      "cargo_lost_se": 2.214634340733904,
+      "cargo_in_transit": 3.5,
+      "cargo_in_transit_se": 1.0323708024175278,
+      "blue_losses": 6.9,
+      "blue_losses_se": 0.8426149773176357,
+      "leaderless_steps": 408.8,
+      "leaderless_steps_se": 58.447124101956234,
+      "ll_halt_steps": 1218.55,
+      "ll_halt_steps_se": 165.28453098886936,
+      "ll_handoffs": 2.65,
+      "ll_handoffs_se": 0.31013579368772604,
+      "first_leader_loss_step": 15.0,
+      "first_leader_loss_step_se": 0.0,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.05,
+          "se": 0.15346866644024557,
+          "ci95": [
+            -0.2712136104573921,
+            0.3712136104573921
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": -0.05833333333333333,
+          "se": 0.06197882113275348,
+          "ci95": [
+            -0.18805649682805353,
+            0.07138983016138689
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_in_transit": {
+          "mean": 1.0,
+          "se": 1.2354415362426845,
+          "ci95": [
+            -1.5858088531710366,
+            3.5858088531710366
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": 0.75,
+          "se": 2.7690726169414077,
+          "ci95": [
+            -5.045735595661604,
+            6.545735595661604
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": -0.45,
+          "se": 1.21064358699695,
+          "ci95": [
+            -2.9839061488997194,
+            2.083906148899719
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "forced_head_kill",
+      "arm": "halt_max30",
+      "n_seeds": 20,
+      "head_loss_runs": 20,
+      "success": 0.6,
+      "success_se": 0.11239029738980327,
+      "delivered_frac": 0.375,
+      "delivered_frac_se": 0.041666666666666664,
+      "time_to_delivery": 1076.95,
+      "time_to_delivery_se": 135.478381942228,
+      "time_to_objective": 1076.95,
+      "time_to_objective_se": 135.478381942228,
+      "cargo_lost": 14.75,
+      "cargo_lost_se": 2.12983196767405,
+      "cargo_in_transit": 4.0,
+      "cargo_in_transit_se": 1.1809897722272038,
+      "blue_losses": 6.9,
+      "blue_losses_se": 0.6361893131020538,
+      "leaderless_steps": 136.1,
+      "leaderless_steps_se": 10.673355906920253,
+      "ll_halt_steps": 452.7,
+      "ll_halt_steps_se": 30.46189163701531,
+      "ll_handoffs": 4.6,
+      "ll_handoffs_se": 0.35093859111936104,
+      "first_leader_loss_step": 15.0,
+      "first_leader_loss_step_se": 0.0,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": -0.05,
+          "se": 0.11413288653790232,
+          "ci95": [
+            -0.28888287692287856,
+            0.18888287692287858
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": -0.04166666666666667,
+          "se": 0.04166666666666667,
+          "ci95": [
+            -0.12887600226701096,
+            0.04554266893367763
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_in_transit": {
+          "mean": 1.5,
+          "se": 1.0323708024175278,
+          "ci95": [
+            -0.6607769225286457,
+            3.6607769225286457
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -0.25,
+          "se": 1.83083961182036,
+          "ci95": [
+            -4.0819913473035,
+            3.5819913473035006
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": -0.45,
+          "se": 0.7379737550603643,
+          "ci95": [
+            -1.994596820863334,
+            1.094596820863334
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "forced_head_kill",
+      "arm": "halt_clear10_max30",
+      "n_seeds": 20,
+      "head_loss_runs": 20,
+      "success": 0.7,
+      "success_se": 0.10513149660756935,
+      "delivered_frac": 0.41666666666666663,
+      "delivered_frac_se": 0.033113308926626096,
+      "time_to_delivery": 951.3,
+      "time_to_delivery_se": 127.51274652487018,
+      "time_to_objective": 951.3,
+      "time_to_objective_se": 127.51274652487018,
+      "cargo_lost": 12.75,
+      "cargo_lost_se": 1.83083961182036,
+      "cargo_in_transit": 4.75,
+      "cargo_in_transit_se": 1.0559979066964897,
+      "blue_losses": 5.9,
+      "blue_losses_se": 0.7030010855722695,
+      "leaderless_steps": 96.55,
+      "leaderless_steps_se": 10.272721927000346,
+      "ll_halt_steps": 304.95,
+      "ll_halt_steps_se": 30.697460464138857,
+      "ll_handoffs": 4.05,
+      "ll_handoffs_se": 0.3439323678925996,
+      "first_leader_loss_step": 15.0,
+      "first_leader_loss_step_se": 0.0,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.05,
+          "se": 0.1534686664402456,
+          "ci95": [
+            -0.2712136104573922,
+            0.37121361045739215
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": 0.0,
+          "se": 0.04188539082916955,
+          "ci95": [
+            -0.08766713053374313,
+            0.08766713053374313
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_in_transit": {
+          "mean": 2.25,
+          "se": 1.2811898252878269,
+          "ci95": [
+            -0.4315611225905416,
+            4.931561122590542
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -2.25,
+          "se": 2.2205677320522286,
+          "ci95": [
+            -6.897701677628117,
+            2.397701677628117
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": -1.45,
+          "se": 0.9906802553907353,
+          "ci95": [
+            -3.52351760476013,
+            0.6235176047601303
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "engagement",
+      "arm": "legacy",
+      "n_seeds": 20,
+      "head_loss_runs": 19,
+      "success": 0.65,
+      "success_se": 0.10942433098048311,
+      "delivered_frac": 0.4,
+      "delivered_frac_se": 0.03707113440195691,
+      "time_to_delivery": 996.95,
+      "time_to_delivery_se": 135.20254737167295,
+      "time_to_objective": 996.95,
+      "time_to_objective_se": 135.20254737167295,
+      "cargo_lost": 13.5,
+      "cargo_lost_se": 2.022895267471328,
+      "cargo_in_transit": 4.5,
+      "cargo_in_transit_se": 1.1975852897876582,
+      "blue_losses": 6.3,
+      "blue_losses_se": 0.9433981132056602,
+      "leaderless_steps": null,
+      "leaderless_steps_se": null,
+      "ll_halt_steps": null,
+      "ll_halt_steps_se": null,
+      "ll_handoffs": null,
+      "ll_handoffs_se": null,
+      "first_leader_loss_step": null,
+      "first_leader_loss_step_se": null
+    },
+    {
+      "experiment": "engagement",
+      "arm": "continue",
+      "n_seeds": 20,
+      "head_loss_runs": 19,
+      "success": 0.85,
+      "success_se": 0.08191780219091253,
+      "delivered_frac": 0.4666666666666666,
+      "delivered_frac_se": 0.01949658839552006,
+      "time_to_delivery": 744.4,
+      "time_to_delivery_se": 101.77442549192072,
+      "time_to_objective": 744.4,
+      "time_to_objective_se": 101.77442549192072,
+      "cargo_lost": 12.0,
+      "cargo_lost_se": 1.3764944032233706,
+      "cargo_in_transit": 4.0,
+      "cargo_in_transit_se": 1.063756996389881,
+      "blue_losses": 5.9,
+      "blue_losses_se": 0.691679877278195,
+      "leaderless_steps": 415.6,
+      "leaderless_steps_se": 48.169896692523864,
+      "ll_halt_steps": 0.0,
+      "ll_halt_steps_se": 0.0,
+      "ll_handoffs": 0.0,
+      "ll_handoffs_se": 0.0,
+      "first_leader_loss_step": 185.35,
+      "first_leader_loss_step_se": 11.173341157933866,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.2,
+          "se": 0.13764944032233706,
+          "ci95": [
+            -0.08810358967048615,
+            0.48810358967048617
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": 0.06666666666666668,
+          "se": 0.040824829046386304,
+          "ci95": [
+            -0.018780682544525,
+            0.15211401587785836
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_in_transit": {
+          "mean": -0.5,
+          "se": 1.446411166701189,
+          "ci95": [
+            -3.5273733644703085,
+            2.5273733644703085
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -1.5,
+          "se": 2.3254880642226707,
+          "ci95": [
+            -6.367302456657358,
+            3.3673024566573577
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": -0.4,
+          "se": 1.0167026165631305,
+          "ci95": [
+            -2.527983032646453,
+            1.7279830326464531
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "engagement",
+      "arm": "promote_h0_idealized",
+      "n_seeds": 20,
+      "head_loss_runs": 19,
+      "success": 0.65,
+      "success_se": 0.10942433098048308,
+      "delivered_frac": 0.39166666666666666,
+      "delivered_frac_se": 0.036823825874653264,
+      "time_to_delivery": 997.35,
+      "time_to_delivery_se": 135.1305660034807,
+      "time_to_objective": 997.35,
+      "time_to_objective_se": 135.1305660034807,
+      "cargo_lost": 14.0,
+      "cargo_lost_se": 1.939886051998117,
+      "cargo_in_transit": 4.25,
+      "cargo_in_transit_se": 1.0434633627845704,
+      "blue_losses": 6.25,
+      "blue_losses_se": 0.8518555597851329,
+      "leaderless_steps": 0.0,
+      "leaderless_steps_se": 0.0,
+      "ll_halt_steps": 0.0,
+      "ll_halt_steps_se": 0.0,
+      "ll_handoffs": 4.25,
+      "ll_handoffs_se": 0.4581139825989069,
+      "first_leader_loss_step": 185.35,
+      "first_leader_loss_step_se": 11.173341157933866,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.0,
+          "se": 0.12565617248750863,
+          "ci95": [
+            -0.2630013916012293,
+            0.2630013916012293
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": -0.00833333333333334,
+          "se": 0.03305807401089697,
+          "ci95": [
+            -0.07752467743054935,
+            0.06085801076388266
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_in_transit": {
+          "mean": -0.25,
+          "se": 0.7673433322012281,
+          "ci95": [
+            -1.856068052286961,
+            1.356068052286961
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": 0.5,
+          "se": 1.5346866644024562,
+          "ci95": [
+            -2.712136104573922,
+            3.712136104573922
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": -0.05,
+          "se": 0.7415311328950602,
+          "ci95": [
+            -1.6020424982419714,
+            1.5020424982419713
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "engagement",
+      "arm": "promote_h5",
+      "n_seeds": 20,
+      "head_loss_runs": 19,
+      "success": 0.9,
+      "success_se": 0.06882472016116853,
+      "delivered_frac": 0.475,
+      "delivered_frac_se": 0.01823738849674719,
+      "time_to_delivery": 685.85,
+      "time_to_delivery_se": 85.22444901861387,
+      "time_to_objective": 685.85,
+      "time_to_objective_se": 85.22444901861387,
+      "cargo_lost": 10.5,
+      "cargo_lost_se": 1.4912022701586514,
+      "cargo_in_transit": 5.25,
+      "cargo_in_transit_se": 1.228767032863688,
+      "blue_losses": 5.4,
+      "blue_losses_se": 0.7759544207992469,
+      "leaderless_steps": 13.75,
+      "leaderless_steps_se": 1.6965522313457404,
+      "ll_halt_steps": 0.0,
+      "ll_halt_steps_se": 0.0,
+      "ll_handoffs": 2.75,
+      "ll_handoffs_se": 0.3393104462691481,
+      "first_leader_loss_step": 185.35,
+      "first_leader_loss_step_se": 11.173341157933866,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.25,
+          "se": 0.14281014264436984,
+          "ci95": [
+            -0.048905063768141355,
+            0.5489050637681414
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": 0.07500000000000001,
+          "se": 0.044385011431406454,
+          "ci95": [
+            -0.017898896581119428,
+            0.16789889658111945
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_in_transit": {
+          "mean": 0.75,
+          "se": 1.5506789684386302,
+          "ci95": [
+            -2.4956083816070445,
+            3.9956083816070445
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -3.0,
+          "se": 2.3055995909273164,
+          "ci95": [
+            -7.825675403644724,
+            1.8256754036447242
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": -0.9,
+          "se": 1.0831241363467266,
+          "ci95": [
+            -3.167004871283874,
+            1.367004871283874
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "engagement",
+      "arm": "promote_h20",
+      "n_seeds": 20,
+      "head_loss_runs": 19,
+      "success": 0.75,
+      "success_se": 0.09933992677987828,
+      "delivered_frac": 0.45,
+      "delivered_frac_se": 0.02128887912195017,
+      "time_to_delivery": 871.55,
+      "time_to_delivery_se": 122.99134490301596,
+      "time_to_objective": 871.55,
+      "time_to_objective_se": 122.99134490301596,
+      "cargo_lost": 11.75,
+      "cargo_lost_se": 1.6731234578665013,
+      "cargo_in_transit": 4.75,
+      "cargo_in_transit_se": 1.2811898252878269,
+      "blue_losses": 5.7,
+      "blue_losses_se": 0.6692493831466004,
+      "leaderless_steps": 44.65,
+      "leaderless_steps_se": 4.661304877166342,
+      "ll_halt_steps": 0.0,
+      "ll_halt_steps_se": 0.0,
+      "ll_handoffs": 2.2,
+      "ll_handoffs_se": 0.22478059477960655,
+      "first_leader_loss_step": 185.35,
+      "first_leader_loss_step_se": 11.173341157933866,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.1,
+          "se": 0.16059101370939327,
+          "ci95": [
+            -0.23612085461556723,
+            0.43612085461556727
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": 0.05,
+          "se": 0.04698512891523537,
+          "ci95": [
+            -0.04834100501906084,
+            0.14834100501906083
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_in_transit": {
+          "mean": 0.25,
+          "se": 1.7196618394629983,
+          "ci95": [
+            -3.349293595444016,
+            3.849293595444016
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -1.75,
+          "se": 2.672348661462619,
+          "ci95": [
+            -7.343290030206985,
+            3.843290030206985
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": -0.6,
+          "se": 1.054813528045298,
+          "ci95": [
+            -2.8077500871140537,
+            1.6077500871140535
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "engagement",
+      "arm": "absorb_h0_idealized",
+      "n_seeds": 20,
+      "head_loss_runs": 19,
+      "success": 1.0,
+      "success_se": 0.0,
+      "delivered_frac": 0.65,
+      "delivered_frac_se": 0.029369594811900362,
+      "time_to_delivery": 542.25,
+      "time_to_delivery_se": 3.9228581148792117,
+      "time_to_objective": 542.25,
+      "time_to_objective_se": 3.9228581148792117,
+      "cargo_lost": 4.75,
+      "cargo_lost_se": 1.0559979066964897,
+      "cargo_in_transit": 5.75,
+      "cargo_in_transit_se": 1.0434633627845704,
+      "blue_losses": 4.35,
+      "blue_losses_se": 0.6294316567557718,
+      "leaderless_steps": 165.05,
+      "leaderless_steps_se": 31.12398592725552,
+      "ll_halt_steps": 0.0,
+      "ll_halt_steps_se": 0.0,
+      "ll_handoffs": 1.8,
+      "ll_handoffs_se": 0.11697953037312038,
+      "first_leader_loss_step": 185.35,
+      "first_leader_loss_step_se": 11.173341157933866,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.35,
+          "se": 0.10942433098048311,
+          "ci95": [
+            0.12097224312031751,
+            0.5790277568796824
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "delivered_frac": {
+          "mean": 0.25000000000000006,
+          "se": 0.046042187621090205,
+          "ci95": [
+            0.1536325937914799,
+            0.34636740620852025
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "cargo_in_transit": {
+          "mean": 1.25,
+          "se": 1.4452736036729115,
+          "ci95": [
+            -1.7749924176887184,
+            4.274992417688718
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -8.75,
+          "se": 2.079821601661268,
+          "ci95": [
+            -13.103116641154955,
+            -4.396883358845046
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "blue_losses": {
+          "mean": -1.95,
+          "se": 0.9637508959651785,
+          "ci95": [
+            -3.9671538077126343,
+            0.06715380771263413
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "engagement",
+      "arm": "absorb_h5",
+      "n_seeds": 20,
+      "head_loss_runs": 19,
+      "success": 0.95,
+      "success_se": 0.05000000000000001,
+      "delivered_frac": 0.5666666666666667,
+      "delivered_frac_se": 0.0253628636750894,
+      "time_to_delivery": 602.2,
+      "time_to_delivery_se": 63.1316752593548,
+      "time_to_objective": 602.2,
+      "time_to_objective_se": 63.1316752593548,
+      "cargo_lost": 7.5,
+      "cargo_lost_se": 1.2301048307916045,
+      "cargo_in_transit": 5.5,
+      "cargo_in_transit_se": 1.019545822516343,
+      "blue_losses": 5.35,
+      "blue_losses_se": 0.6418517618660295,
+      "leaderless_steps": 201.3,
+      "leaderless_steps_se": 29.605840462207524,
+      "ll_halt_steps": 0.0,
+      "ll_halt_steps_se": 0.0,
+      "ll_handoffs": 1.8,
+      "ll_handoffs_se": 0.11697953037312038,
+      "first_leader_loss_step": 185.35,
+      "first_leader_loss_step_se": 11.173341157933866,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.3,
+          "se": 0.12773327473170104,
+          "ci95": [
+            0.03265118343821055,
+            0.5673488165617895
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "delivered_frac": {
+          "mean": 0.16666666666666669,
+          "se": 0.04188539082916955,
+          "ci95": [
+            0.07899953613292356,
+            0.25433379720040983
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "cargo_in_transit": {
+          "mean": 1.0,
+          "se": 1.521771820505364,
+          "ci95": [
+            -2.1851050256383804,
+            4.18510502563838
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -6.0,
+          "se": 2.1944907094094086,
+          "ci95": [
+            -10.593121841969346,
+            -1.4068781580306542
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "blue_losses": {
+          "mean": -0.95,
+          "se": 0.9986174653516046,
+          "ci95": [
+            -3.040130376133119,
+            1.1401303761331187
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "engagement",
+      "arm": "absorb_h20",
+      "n_seeds": 20,
+      "head_loss_runs": 19,
+      "success": 0.85,
+      "success_se": 0.08191780219091253,
+      "delivered_frac": 0.525,
+      "delivered_frac_se": 0.027770466874169702,
+      "time_to_delivery": 737.9,
+      "time_to_delivery_se": 102.41078016857816,
+      "time_to_objective": 737.9,
+      "time_to_objective_se": 102.41078016857816,
+      "cargo_lost": 9.25,
+      "cargo_lost_se": 1.6333288578528014,
+      "cargo_in_transit": 5.0,
+      "cargo_in_transit_se": 1.2565617248750864,
+      "blue_losses": 6.1,
+      "blue_losses_se": 0.8172482712383705,
+      "leaderless_steps": 164.25,
+      "leaderless_steps_se": 31.010853363230577,
+      "ll_halt_steps": 0.0,
+      "ll_halt_steps_se": 0.0,
+      "ll_handoffs": 1.75,
+      "ll_handoffs_se": 0.12301048307916045,
+      "first_leader_loss_step": 185.35,
+      "first_leader_loss_step_se": 11.173341157933866,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.2,
+          "se": 0.11697953037312038,
+          "ci95": [
+            -0.04484097094432296,
+            0.44484097094432296
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": 0.125,
+          "se": 0.033931044626914805,
+          "ci95": [
+            0.05398150740466706,
+            0.19601849259533294
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "cargo_in_transit": {
+          "mean": 0.5,
+          "se": 1.4912022701586514,
+          "ci95": [
+            -2.6211222214302663,
+            3.6211222214302663
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -4.25,
+          "se": 1.9288324802434516,
+          "ci95": [
+            -8.287092778073495,
+            -0.21290722192650513
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "blue_losses": {
+          "mean": -0.2,
+          "se": 0.8571679194330963,
+          "ci95": [
+            -1.9940730740405546,
+            1.5940730740405546
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "engagement",
+      "arm": "halt_no_release",
+      "n_seeds": 20,
+      "head_loss_runs": 19,
+      "success": 0.15,
+      "success_se": 0.08191780219091253,
+      "delivered_frac": 0.15,
+      "delivered_frac_se": 0.0450795268685249,
+      "time_to_delivery": 1614.35,
+      "time_to_delivery_se": 101.39039389253898,
+      "time_to_objective": 1614.35,
+      "time_to_objective_se": 101.39039389253898,
+      "cargo_lost": 9.75,
+      "cargo_lost_se": 2.12983196767405,
+      "cargo_in_transit": 15.75,
+      "cargo_in_transit_se": 1.75,
+      "blue_losses": 5.1,
+      "blue_losses_se": 0.7605399743810833,
+      "leaderless_steps": 3152.65,
+      "leaderless_steps_se": 378.7787110882609,
+      "ll_halt_steps": 10522.0,
+      "ll_halt_steps_se": 1355.7288018665556,
+      "ll_handoffs": 0.0,
+      "ll_handoffs_se": 0.0,
+      "first_leader_loss_step": 185.35,
+      "first_leader_loss_step_se": 11.173341157933866,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": -0.5,
+          "se": 0.13572417850765922,
+          "ci95": [
+            -0.7840739703813318,
+            -0.21592602961866825
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "delivered_frac": {
+          "mean": -0.25000000000000006,
+          "se": 0.0586146100782039,
+          "ci95": [
+            -0.37268178883344183,
+            -0.12731821116655828
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "cargo_in_transit": {
+          "mean": 11.25,
+          "se": 1.880474464204796,
+          "ci95": [
+            7.3141217127188725,
+            15.185878287281128
+          ],
+          "n_pairs": 20,
+          "sig_at_95": true
+        },
+        "cargo_lost": {
+          "mean": -3.75,
+          "se": 2.45686471148216,
+          "ci95": [
+            -8.892276939558977,
+            1.3922769395589771
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": -1.2,
+          "se": 1.0701696864959018,
+          "ci95": [
+            -3.4398908961344725,
+            1.0398908961344724
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "engagement",
+      "arm": "halt_clear10",
+      "n_seeds": 20,
+      "head_loss_runs": 19,
+      "success": 0.7,
+      "success_se": 0.10513149660756935,
+      "delivered_frac": 0.38333333333333336,
+      "delivered_frac_se": 0.043763051520233055,
+      "time_to_delivery": 1023.75,
+      "time_to_delivery_se": 118.79418014718608,
+      "time_to_objective": 1023.75,
+      "time_to_objective_se": 118.79418014718608,
+      "cargo_lost": 11.5,
+      "cargo_lost_se": 2.4628823507598185,
+      "cargo_in_transit": 7.0,
+      "cargo_in_transit_se": 1.3278395591097751,
+      "blue_losses": 5.65,
+      "blue_losses_se": 0.8833995340966085,
+      "leaderless_steps": 449.0,
+      "leaderless_steps_se": 62.85425916146687,
+      "ll_halt_steps": 1463.15,
+      "ll_halt_steps_se": 192.15553287841976,
+      "ll_handoffs": 2.05,
+      "ll_handoffs_se": 0.223312384458703,
+      "first_leader_loss_step": 185.35,
+      "first_leader_loss_step_se": 11.173341157933866,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.05,
+          "se": 0.15346866644024557,
+          "ci95": [
+            -0.2712136104573921,
+            0.3712136104573921
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": -0.016666666666666666,
+          "se": 0.05115622214674854,
+          "ci95": [
+            -0.12373787015246407,
+            0.09040453681913074
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_in_transit": {
+          "mean": 2.5,
+          "se": 1.6423667133294657,
+          "ci95": [
+            -0.9375130371580118,
+            5.937513037158012
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -2.0,
+          "se": 2.8654015976455156,
+          "ci95": [
+            -7.997354469411931,
+            3.997354469411931
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": -0.65,
+          "se": 1.2123813018405682,
+          "ci95": [
+            -3.1875432278671143,
+            1.8875432278671145
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "engagement",
+      "arm": "halt_max30",
+      "n_seeds": 20,
+      "head_loss_runs": 19,
+      "success": 0.85,
+      "success_se": 0.08191780219091253,
+      "delivered_frac": 0.425,
+      "delivered_frac_se": 0.04095890109545627,
+      "time_to_delivery": 765.75,
+      "time_to_delivery_se": 99.74195324356799,
+      "time_to_objective": 765.75,
+      "time_to_objective_se": 99.74195324356799,
+      "cargo_lost": 10.5,
+      "cargo_lost_se": 2.203466168992557,
+      "cargo_in_transit": 6.75,
+      "cargo_in_transit_se": 1.3216317665355162,
+      "blue_losses": 4.7,
+      "blue_losses_se": 0.7612316889164075,
+      "leaderless_steps": 88.7,
+      "leaderless_steps_se": 11.836629143201378,
+      "ll_halt_steps": 286.1,
+      "ll_halt_steps_se": 32.21293463648937,
+      "ll_handoffs": 3.0,
+      "ll_handoffs_se": 0.40392808114420825,
+      "first_leader_loss_step": 185.35,
+      "first_leader_loss_step_se": 11.173341157933866,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.2,
+          "se": 0.11697953037312038,
+          "ci95": [
+            -0.04484097094432296,
+            0.44484097094432296
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": 0.025,
+          "se": 0.05025519669966119,
+          "ci95": [
+            -0.08018533555140964,
+            0.13018533555140963
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_in_transit": {
+          "mean": 2.25,
+          "se": 1.5591411265923232,
+          "ci95": [
+            -1.013319882174931,
+            5.513319882174931
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -3.0,
+          "se": 2.444112151789749,
+          "ci95": [
+            -8.115585525367484,
+            2.115585525367484
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": -1.6,
+          "se": 1.0721351053904196,
+          "ci95": [
+            -3.8440045651576864,
+            0.6440045651576862
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    },
+    {
+      "experiment": "engagement",
+      "arm": "halt_clear10_max30",
+      "n_seeds": 20,
+      "head_loss_runs": 19,
+      "success": 0.8,
+      "success_se": 0.0917662935482247,
+      "delivered_frac": 0.4,
+      "delivered_frac_se": 0.04588314677411235,
+      "time_to_delivery": 825.0,
+      "time_to_delivery_se": 111.88751400166903,
+      "time_to_objective": 825.0,
+      "time_to_objective_se": 111.88751400166903,
+      "cargo_lost": 11.25,
+      "cargo_lost_se": 2.4027122831894525,
+      "cargo_in_transit": 6.75,
+      "cargo_in_transit_se": 1.3216317665355162,
+      "blue_losses": 5.1,
+      "blue_losses_se": 0.8911849001839008,
+      "leaderless_steps": 92.05,
+      "leaderless_steps_se": 12.686809353771629,
+      "ll_halt_steps": 292.35,
+      "ll_halt_steps_se": 33.85862830249205,
+      "ll_handoffs": 3.15,
+      "ll_handoffs_se": 0.4488288854575345,
+      "first_leader_loss_step": 185.35,
+      "first_leader_loss_step_se": 11.173341157933866,
+      "paired_vs_legacy": {
+        "success": {
+          "mean": 0.15,
+          "se": 0.13128915456069917,
+          "ci95": [
+            -0.12479135857846771,
+            0.4247913585784677
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "delivered_frac": {
+          "mean": 1.3877787807814458e-18,
+          "se": 0.05671308728156004,
+          "ci95": [
+            -0.11870185588006049,
+            0.11870185588006049
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_in_transit": {
+          "mean": 2.25,
+          "se": 1.5591411265923232,
+          "ci95": [
+            -1.013319882174931,
+            5.513319882174931
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "cargo_lost": {
+          "mean": -2.25,
+          "se": 2.677267853221776,
+          "ci95": [
+            -7.853586016887148,
+            3.3535860168871476
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        },
+        "blue_losses": {
+          "mean": -1.2,
+          "se": 1.2087401009228358,
+          "ci95": [
+            -3.729922106759367,
+            1.3299221067593667
+          ],
+          "n_pairs": 20,
+          "sig_at_95": false
+        }
+      }
+    }
+  ]
+}
