@@ -355,6 +355,93 @@ it is exploration, not a ranking of policies. How to read its table:
   has not been tested. It may come from the reassignment device itself (survivors are handed a living head)
   and not from anything a real convoy could do, so treat it as an open question.
 
+## Red target priority and the abstract ambush template (Issue #18)
+
+Issue #18 adds optional target priority, ambush fire control and physical lane blocking.
+Target priority reorders eligible targets. The ambush template controls when static Red shooters
+fire. Lane blocking models a physical obstruction separately from contact halts (Issue #12) and
+leader loss (Issue #17).
+
+### `target_priority`
+
+The legacy rule is "each Red shooter fires at its nearest eligible target". Eligibility (alive, seen, in
+weapon range, line of sight, ground domain, ammunition) is computed first and is never widened. A priority
+only chooses among the eligible targets: the nearest eligible target of the first listed class that has
+one, else the nearest eligible target overall. Ties go to the lowest entity index. No random numbers are
+drawn and the number of kill draws is unchanged.
+
+```json
+"target_priority": {"order": ["ends", "security"], "end_definition": "position",
+                    "ends_basis": "seen", "applies_to": ["at_ambush"]}
+```
+
+| Class | Meaning | What Red must know |
+|---|---|---|
+| `ends` | head and trail of the column | `ends_basis="seen"`: only vehicles on Red's picture (observable). `"column"`: the whole living column (ground truth) |
+| `security` | Blue security vehicles | ground truth (`convoy_role`) |
+| `control` | Blue control vehicles | ground truth (`convoy_role`) |
+| `armed` | weapon range and kill probability above zero | assumes Red can tell armed from unarmed |
+| `armored` | initial hp at or above `armored_hp` (required, no default) | assumes Red can tell armored vehicles |
+
+`end_definition` says what head and trail mean. `position` (default): the convoy vehicle nearest to, and
+farthest from, the objective; it follows vehicles as they move and are lost. `identity`: the current head of
+the first occupied march unit and the last-indexed vehicle of the last occupied unit; it follows
+succession and regrouping (Issues #8, #17) and assumes index order is column order. `applies_to` limits the
+rule to listed Red platform types; other Red shooters keep the legacy rule. An empty `order` is
+report-only: the legacy rule selects and the statistics are collected.
+
+Metrics (only when declared). Counts of targeting EVENTS (one per Red shooter per tick): `tp_shots`,
+`tp_priority_shots`, `tp_fallback_shots`, `tp_activation_frac` (share of shots a class chose), `tp_shots_<class>`,
+`tp_kills_<class>` (kill draws that hit), `tp_targeted_head`, `tp_targeted_trail`. Counts of distinct VEHICLES:
+`tp_vehicles_targeted` (aimed at at least once; not the number destroyed, which is `blue_losses`). Counts of
+ticks: `tp_head_destroyed`, `tp_trail_destroyed` (an end vehicle destroyed on the tick it was an end), `tp_end_steps`.
+Leaderless time (`leaderless_steps`, Issue #17) is in unit-steps, so unit-seconds are `leaderless_steps * dt`.
+Not available with belief tracks.
+
+### `ambush`
+
+A fire-control template for static Red. Red platform types are given a role; the roles and the launch and
+withdrawal rules follow the public OPFOR description in TC 7-100.2 (see the plan for the source table), but
+every number is a placeholder.
+
+```json
+"ambush": {"roles": {"ambush": ["at_ambush"], "support": ["at_support"], "security": ["at_security"]},
+           "trigger": {"point": [2400, 1500], "radius": 250}, "security_rule": "let_pass",
+           "withdraw": {"after_s": 120, "loss_fraction": 0.67, "support_delay_s": 20}}
+```
+
+Listed Red types hold fire until a Blue vehicle that Red has seen is within `trigger.radius` of
+`trigger.point` (latched). `security_rule="let_pass"` ignores Blue security vehicles when launching
+(ground truth: reads `convoy_role`); `"engage"` counts them. Withdrawal is ordered: `after_s` after launch
+or when the ambush-role loss fraction reaches `loss_fraction`, whichever comes first, ambush-role units cease
+fire, support-role units `support_delay_s` later, and security-role units stay. A withdrawn unit does not
+leave the map. Metrics: `ambush_launched`, `ambush_launch_step`, `ambush_withdraw_step`,
+`ambush_held_steps`. The template is `scenarios/uc3_convoy_ambush.json`; its Red types share the `at_team`
+numbers and differ in fire control only.
+
+### `lane_blocking` (Issue #18, Change item 2)
+
+A destroyed Blue ground vehicle leaves a wreck that holds up the vehicles behind it. Absent, every run is byte-identical.
+
+```json
+"lane_blocking": {"recovery_time_s": 300, "standoff_m": 20, "lane_width_m": null, "wreck_roles": null}
+```
+
+`recovery_time_s` and `standoff_m` are required and have no default (both are placeholders with no public source). The wreck blocks the road at its
+along-track coordinate (route arc length if the world has a route, else distance along the line from the Blue start centroid to the objective) from the
+tick after the vehicle is destroyed until `recovery_time_s` later. Living Blue ground vehicles behind it, and within half of `lane_width_m` laterally when
+that is given, stop `standoff_m` short and never reverse; vehicles already past are unaffected; Red wrecks block nothing. There is **no bypass and no
+rerouting** and the street graph is not consulted. It is not a halt: contact halts (#12) and leader-loss halts (#17) go through `behavior.holding`, a lane
+block only moves targets back and is counted separately. Metrics (only when declared): `lane_blockages`, `lane_block_steps` (ticks with an active wreck),
+`lane_blocked_vehicle_steps` (vehicle-ticks whose target was pulled back), `lane_first_block_step`. Not wired into the replay path.
+
+### Manifest and registration hash (Issue #18, Change item 5)
+
+`src/sandtable/manifest.py` and `tools/manifest_cli.py`. The hash covers the scenario inputs, resolved arm configuration, fixed parameters, seed list, comparison
+definitions and analysis settings, serialized canonically; it excludes results, timestamps, status, notes and the source revision, which is recorded separately.
+Source hashes (simulation `src/sandtable/**/*.py` and the tool's analysis files, from the bytes on disk, so uncommitted edits count; tests, docs, scenario files, outputs and third-party code are not covered) are recorded beside it in `provenance`, never inside the registration hash. Scenario-input coverage: the registration contains the parsed content of exactly the scenario files the experiment lists (any other file, and seeds outside the listed range, are not covered). `freeze --status frozen_before_run` before running (the run tool then refuses a mismatched configuration or source hash, unless `--accept-source-drift`, which is recorded); `post_hoc` for an experiment already run, which is not a
+preregistration. Manifests are in `doc/manifests/`.
+
 ## One console per march unit (Issue #19)
 
 Opt-in dedicated consoles for convoy command and control. Absent, `c2.py` runs as before and every run is byte-identical. Definitions: a **march unit** is a group under one

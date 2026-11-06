@@ -1,0 +1,1207 @@
+{
+ "note": "Created after the sweep was run and its results examined (commit 8a2ad6a). Fixes the definitions for reproducibility. NOT a preregistration.",
+ "provenance": {
+  "source_revision": {
+   "branch": "issue-18-convoy-red-target-priority",
+   "commit": "8a2ad6a12959eb14f7742e250f2827b5212d49c8",
+   "dirty_files": [
+    "doc/plans/issue_14_open_questions_ar.md",
+    "oc/plans/issue_14_email_to_vadim.md",
+    "src/sandtable/lane_block.py",
+    "src/sandtable/manifest.py",
+    "src/sandtable/planning.py",
+    "src/sandtable/sim.py",
+    "tests/test_convoy_lane_block.py",
+    "tools/make_lane_block_arms.py",
+    "tools/make_red_priority_arms.py",
+    "tools/manifest_cli.py"
+   ]
+  }
+ },
+ "registration": {
+  "analysis": {
+   "interval": "95% t interval",
+   "n_blue": 15,
+   "p_values": "two-sided paired t, Holm-adjusted",
+   "ranking": "none"
+  },
+  "arms": {
+   "control_first": {
+    "params": {
+     "cargo_per_vehicle": 5.0,
+     "crew_metrics": true,
+     "leader_loss_policy": "continue",
+     "target_priority": {
+      "order": [
+       "control"
+      ]
+     }
+    },
+    "resolved": {
+     "target_priority": {
+      "applies_to": null,
+      "armored_hp": null,
+      "attribute_knowledge": [],
+      "end_definition": "position",
+      "ends_basis": "seen",
+      "ground_truth": [
+       "control"
+      ],
+      "order": [
+       "control"
+      ]
+     }
+    }
+   },
+   "ends_column": {
+    "params": {
+     "cargo_per_vehicle": 5.0,
+     "crew_metrics": true,
+     "leader_loss_policy": "continue",
+     "target_priority": {
+      "ends_basis": "column",
+      "order": [
+       "ends"
+      ]
+     }
+    },
+    "resolved": {
+     "target_priority": {
+      "applies_to": null,
+      "armored_hp": null,
+      "attribute_knowledge": [],
+      "end_definition": "position",
+      "ends_basis": "column",
+      "ground_truth": [
+       "ends(column basis)"
+      ],
+      "order": [
+       "ends"
+      ]
+     }
+    }
+   },
+   "ends_identity": {
+    "params": {
+     "cargo_per_vehicle": 5.0,
+     "crew_metrics": true,
+     "leader_loss_policy": "continue",
+     "target_priority": {
+      "end_definition": "identity",
+      "order": [
+       "ends"
+      ]
+     }
+    },
+    "resolved": {
+     "target_priority": {
+      "applies_to": null,
+      "armored_hp": null,
+      "attribute_knowledge": [],
+      "end_definition": "identity",
+      "ends_basis": "seen",
+      "ground_truth": [],
+      "order": [
+       "ends"
+      ]
+     }
+    }
+   },
+   "ends_seen": {
+    "params": {
+     "cargo_per_vehicle": 5.0,
+     "crew_metrics": true,
+     "leader_loss_policy": "continue",
+     "target_priority": {
+      "order": [
+       "ends"
+      ]
+     }
+    },
+    "resolved": {
+     "target_priority": {
+      "applies_to": null,
+      "armored_hp": null,
+      "attribute_knowledge": [],
+      "end_definition": "position",
+      "ends_basis": "seen",
+      "ground_truth": [],
+      "order": [
+       "ends"
+      ]
+     }
+    }
+   },
+   "ends_then_security": {
+    "params": {
+     "cargo_per_vehicle": 5.0,
+     "crew_metrics": true,
+     "leader_loss_policy": "continue",
+     "target_priority": {
+      "order": [
+       "ends",
+       "security"
+      ]
+     }
+    },
+    "resolved": {
+     "target_priority": {
+      "applies_to": null,
+      "armored_hp": null,
+      "attribute_knowledge": [],
+      "end_definition": "position",
+      "ends_basis": "seen",
+      "ground_truth": [
+       "security"
+      ],
+      "order": [
+       "ends",
+       "security"
+      ]
+     }
+    }
+   },
+   "legacy": {
+    "params": {
+     "cargo_per_vehicle": 5.0,
+     "crew_metrics": true,
+     "leader_loss_policy": "continue",
+     "target_priority": {
+      "order": []
+     }
+    },
+    "resolved": {
+     "target_priority": {
+      "applies_to": null,
+      "armored_hp": null,
+      "attribute_knowledge": [],
+      "end_definition": "position",
+      "ends_basis": "seen",
+      "ground_truth": [],
+      "order": []
+     }
+    }
+   },
+   "security_first": {
+    "params": {
+     "cargo_per_vehicle": 5.0,
+     "crew_metrics": true,
+     "leader_loss_policy": "continue",
+     "target_priority": {
+      "order": [
+       "security"
+      ]
+     }
+    },
+    "resolved": {
+     "target_priority": {
+      "applies_to": null,
+      "armored_hp": null,
+      "attribute_knowledge": [],
+      "end_definition": "position",
+      "ends_basis": "seen",
+      "ground_truth": [
+       "security"
+      ],
+      "order": [
+       "security"
+      ]
+     }
+    }
+   }
+  },
+  "comparisons": [
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_seen",
+    "experiment": "head_on_static",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_seen",
+    "experiment": "head_on_static",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_seen",
+    "experiment": "head_on_static",
+    "metric": "cargo_in_transit",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_seen",
+    "experiment": "head_on_static",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_seen",
+    "experiment": "head_on_static",
+    "metric": "tp_head_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_seen",
+    "experiment": "head_on_static",
+    "metric": "tp_trail_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_seen",
+    "experiment": "head_on_static",
+    "metric": "leaderless_steps",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_column",
+    "experiment": "head_on_static",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_column",
+    "experiment": "head_on_static",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_column",
+    "experiment": "head_on_static",
+    "metric": "cargo_in_transit",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_column",
+    "experiment": "head_on_static",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_column",
+    "experiment": "head_on_static",
+    "metric": "tp_head_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_column",
+    "experiment": "head_on_static",
+    "metric": "tp_trail_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_column",
+    "experiment": "head_on_static",
+    "metric": "leaderless_steps",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_identity",
+    "experiment": "head_on_static",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_identity",
+    "experiment": "head_on_static",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_identity",
+    "experiment": "head_on_static",
+    "metric": "cargo_in_transit",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_identity",
+    "experiment": "head_on_static",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_identity",
+    "experiment": "head_on_static",
+    "metric": "tp_head_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_identity",
+    "experiment": "head_on_static",
+    "metric": "tp_trail_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_identity",
+    "experiment": "head_on_static",
+    "metric": "leaderless_steps",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "security_first",
+    "experiment": "head_on_static",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "security_first",
+    "experiment": "head_on_static",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "security_first",
+    "experiment": "head_on_static",
+    "metric": "cargo_in_transit",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "security_first",
+    "experiment": "head_on_static",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "security_first",
+    "experiment": "head_on_static",
+    "metric": "tp_head_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "security_first",
+    "experiment": "head_on_static",
+    "metric": "tp_trail_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "security_first",
+    "experiment": "head_on_static",
+    "metric": "leaderless_steps",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "control_first",
+    "experiment": "head_on_static",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "control_first",
+    "experiment": "head_on_static",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "control_first",
+    "experiment": "head_on_static",
+    "metric": "cargo_in_transit",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "control_first",
+    "experiment": "head_on_static",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "control_first",
+    "experiment": "head_on_static",
+    "metric": "tp_head_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "control_first",
+    "experiment": "head_on_static",
+    "metric": "tp_trail_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "control_first",
+    "experiment": "head_on_static",
+    "metric": "leaderless_steps",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_then_security",
+    "experiment": "head_on_static",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_then_security",
+    "experiment": "head_on_static",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_then_security",
+    "experiment": "head_on_static",
+    "metric": "cargo_in_transit",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_then_security",
+    "experiment": "head_on_static",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_then_security",
+    "experiment": "head_on_static",
+    "metric": "tp_head_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_then_security",
+    "experiment": "head_on_static",
+    "metric": "tp_trail_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_then_security",
+    "experiment": "head_on_static",
+    "metric": "leaderless_steps",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_seen",
+    "experiment": "abeam_ambush",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_seen",
+    "experiment": "abeam_ambush",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_seen",
+    "experiment": "abeam_ambush",
+    "metric": "cargo_in_transit",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_seen",
+    "experiment": "abeam_ambush",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_seen",
+    "experiment": "abeam_ambush",
+    "metric": "tp_head_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_seen",
+    "experiment": "abeam_ambush",
+    "metric": "tp_trail_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_seen",
+    "experiment": "abeam_ambush",
+    "metric": "leaderless_steps",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_column",
+    "experiment": "abeam_ambush",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_column",
+    "experiment": "abeam_ambush",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_column",
+    "experiment": "abeam_ambush",
+    "metric": "cargo_in_transit",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_column",
+    "experiment": "abeam_ambush",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_column",
+    "experiment": "abeam_ambush",
+    "metric": "tp_head_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_column",
+    "experiment": "abeam_ambush",
+    "metric": "tp_trail_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_column",
+    "experiment": "abeam_ambush",
+    "metric": "leaderless_steps",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_identity",
+    "experiment": "abeam_ambush",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_identity",
+    "experiment": "abeam_ambush",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_identity",
+    "experiment": "abeam_ambush",
+    "metric": "cargo_in_transit",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_identity",
+    "experiment": "abeam_ambush",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_identity",
+    "experiment": "abeam_ambush",
+    "metric": "tp_head_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_identity",
+    "experiment": "abeam_ambush",
+    "metric": "tp_trail_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_identity",
+    "experiment": "abeam_ambush",
+    "metric": "leaderless_steps",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "security_first",
+    "experiment": "abeam_ambush",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "security_first",
+    "experiment": "abeam_ambush",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "security_first",
+    "experiment": "abeam_ambush",
+    "metric": "cargo_in_transit",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "security_first",
+    "experiment": "abeam_ambush",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "security_first",
+    "experiment": "abeam_ambush",
+    "metric": "tp_head_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "security_first",
+    "experiment": "abeam_ambush",
+    "metric": "tp_trail_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "security_first",
+    "experiment": "abeam_ambush",
+    "metric": "leaderless_steps",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "control_first",
+    "experiment": "abeam_ambush",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "control_first",
+    "experiment": "abeam_ambush",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "control_first",
+    "experiment": "abeam_ambush",
+    "metric": "cargo_in_transit",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "control_first",
+    "experiment": "abeam_ambush",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "control_first",
+    "experiment": "abeam_ambush",
+    "metric": "tp_head_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "control_first",
+    "experiment": "abeam_ambush",
+    "metric": "tp_trail_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "control_first",
+    "experiment": "abeam_ambush",
+    "metric": "leaderless_steps",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_then_security",
+    "experiment": "abeam_ambush",
+    "metric": "blue_losses",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_then_security",
+    "experiment": "abeam_ambush",
+    "metric": "delivered_frac",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_then_security",
+    "experiment": "abeam_ambush",
+    "metric": "cargo_in_transit",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_then_security",
+    "experiment": "abeam_ambush",
+    "metric": "crew_steps_at_risk",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_then_security",
+    "experiment": "abeam_ambush",
+    "metric": "tp_head_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_then_security",
+    "experiment": "abeam_ambush",
+    "metric": "tp_trail_destroyed",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "adjustment": "Holm within (experiment, metric)",
+    "arm": "ends_then_security",
+    "experiment": "abeam_ambush",
+    "metric": "leaderless_steps",
+    "pairing": "seed",
+    "reference": "legacy"
+   },
+   {
+    "arm": "ends_seen",
+    "experiment": "head_on_static",
+    "exploratory_margins": [
+     "ar_gate.margin 0.06 x legacy level",
+     "0.06 x sd of paired contrast"
+    ],
+    "exploratory_margins_added": "after results were inspected",
+    "metric": "blue_loss_fraction",
+    "primary_margin": 0.06,
+    "primary_margin_fixed": "before results were inspected",
+    "reference": "legacy",
+    "t_min": 1.7,
+    "test": "ar_gate.tost"
+   }
+  ],
+  "fixed": {
+   "cargo_per_vehicle": 5.0,
+   "crew_metrics": true,
+   "leader_loss_policy": "continue"
+  },
+  "name": "red_priority",
+  "scenarios": {
+   "abeam_ambush": {
+    "content": {
+     "description": "Abstract synthetic template, not a reconstruction of any event. Six static Red teams sit 300 m off the route (abeam) and hold fire until a seen non-security Blue vehicle reaches the trigger point. All Red types share the at_team numbers; roles differ in fire control only. Positions, trigger and withdrawal values are placeholders.",
+     "dt": 1.0,
+     "duration": 1800.0,
+     "forces": [
+      {
+       "count": 15,
+       "formation": "column",
+       "ptype": "ugv",
+       "side": 0,
+       "spawn": [
+        250,
+        1500
+       ],
+       "spawn_spread": 40.0
+      },
+      {
+       "count": 3,
+       "formation": "column",
+       "ptype": "at_ambush",
+       "side": 1,
+       "spawn": [
+        3000,
+        1800
+       ],
+       "spawn_spread": 60.0
+      },
+      {
+       "count": 2,
+       "formation": "column",
+       "ptype": "at_support",
+       "side": 1,
+       "spawn": [
+        2850,
+        1800
+       ],
+       "spawn_spread": 60.0
+      },
+      {
+       "count": 1,
+       "formation": "column",
+       "ptype": "at_security",
+       "side": 1,
+       "spawn": [
+        3150,
+        1800
+       ],
+       "spawn_spread": 60.0
+      }
+     ],
+     "id": 31,
+     "name": "UC-3 Convoy: abstract ambush template",
+     "objective": {
+      "goal": [
+       5750,
+       1500
+      ],
+      "goal_radius": 150.0,
+      "survive_fraction": 0.5
+     },
+     "params": {
+      "ambush": {
+       "roles": {
+        "ambush": [
+         "at_ambush"
+        ],
+        "security": [
+         "at_security"
+        ],
+        "support": [
+         "at_support"
+        ]
+       },
+       "security_rule": "let_pass",
+       "trigger": {
+        "point": [
+         2400.0,
+         1500.0
+        ],
+        "radius": 250.0
+       },
+       "withdraw": {
+        "after_s": 120.0,
+        "loss_fraction": 0.67,
+        "support_delay_s": 20.0
+       }
+      },
+      "cargo_per_vehicle": 5.0,
+      "convoy": {
+       "march_unit_size": 5,
+       "march_units_per_serial": 3,
+       "pace": 10.0,
+       "roles": [
+        "control",
+        "cargo",
+        "cargo",
+        "security",
+        "recovery"
+       ],
+       "serials_per_column": 1,
+       "time_gap": 4.0
+      },
+      "formation_spread": 40.0,
+      "route_bias": 0.0,
+      "tempo": 1.0
+     },
+     "platform_types": {
+      "at_ambush": {
+       "domain": 0,
+       "hp": 1.0,
+       "max_speed": 0.0,
+       "pk_base": 0.008,
+       "sensor_range": 2000.0,
+       "turn_rate": 0.0,
+       "weapon_range": 1000.0
+      },
+      "at_security": {
+       "domain": 0,
+       "hp": 1.0,
+       "max_speed": 0.0,
+       "pk_base": 0.008,
+       "sensor_range": 2000.0,
+       "turn_rate": 0.0,
+       "weapon_range": 1000.0
+      },
+      "at_support": {
+       "domain": 0,
+       "hp": 1.0,
+       "max_speed": 0.0,
+       "pk_base": 0.008,
+       "sensor_range": 2000.0,
+       "turn_rate": 0.0,
+       "weapon_range": 1000.0
+      },
+      "at_team": {
+       "domain": 0,
+       "hp": 1.0,
+       "max_speed": 0.0,
+       "pk_base": 0.008,
+       "sensor_range": 2000.0,
+       "turn_rate": 0.0,
+       "weapon_range": 1000.0
+      },
+      "ugv": {
+       "domain": 0,
+       "hp": 1.0,
+       "max_speed": 12.0,
+       "pk_base": 0.002,
+       "sensor_range": 1500.0,
+       "turn_rate": 0.6,
+       "weapon_range": 1200.0
+      }
+     },
+     "size": [
+      6000,
+      3000
+     ],
+     "terrain": {
+      "cell": 25.0
+     }
+    },
+    "path": "scenarios/uc3_convoy_ambush.json"
+   },
+   "head_on_static": {
+    "content": {
+     "dt": 1.0,
+     "duration": 1800.0,
+     "forces": [
+      {
+       "count": 15,
+       "formation": "column",
+       "ptype": "ugv",
+       "side": 0,
+       "spawn": [
+        250,
+        1500
+       ],
+       "spawn_spread": 40.0
+      },
+      {
+       "count": 6,
+       "formation": "column",
+       "ptype": "at_team",
+       "side": 1,
+       "spawn": [
+        3000,
+        1500
+       ],
+       "spawn_spread": 60.0
+      }
+     ],
+     "id": 30,
+     "name": "UC-3 Route vs Defilade (Convoy)",
+     "objective": {
+      "goal": [
+       5750,
+       1500
+      ],
+      "goal_radius": 150.0,
+      "survive_fraction": 0.5
+     },
+     "params": {
+      "convoy": {
+       "march_unit_size": 5,
+       "march_units_per_serial": 3,
+       "pace": 10.0,
+       "roles": [
+        "control",
+        "cargo",
+        "cargo",
+        "security",
+        "recovery"
+       ],
+       "serials_per_column": 1,
+       "time_gap": 4.0
+      },
+      "formation_spread": 40.0,
+      "route_bias": 0.0,
+      "tempo": 1.0
+     },
+     "platform_types": {
+      "at_team": {
+       "domain": 0,
+       "hp": 1.0,
+       "max_speed": 0.0,
+       "pk_base": 0.008,
+       "sensor_range": 2000.0,
+       "turn_rate": 0.0,
+       "weapon_range": 1000.0
+      },
+      "ugv": {
+       "domain": 0,
+       "hp": 1.0,
+       "max_speed": 12.0,
+       "pk_base": 0.002,
+       "sensor_range": 1500.0,
+       "turn_rate": 0.6,
+       "weapon_range": 1200.0
+      }
+     },
+     "size": [
+      6000,
+      3000
+     ],
+     "terrain": {
+      "cell": 25.0
+     }
+    },
+    "path": "scenarios/uc3_convoy.json"
+   }
+  },
+  "schema": 1,
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   27,
+   28,
+   29,
+   30,
+   31,
+   32,
+   33,
+   34,
+   35,
+   36,
+   37,
+   38,
+   39
+  ]
+ },
+ "registration_hash": "dbd181399bb22f09cab75aab79ea8e0196ffb10d4d2518279f13e42a28219696",
+ "status": "post_hoc"
+}

@@ -159,6 +159,13 @@ class ContractTests(unittest.TestCase):
                 sum(f["cargo"][k] for k in ["delivered", "lost", "in_transit"]),
             )
 
+    def test_control_first_viewer_mission_records_priority_shots(self):
+        config = self.config()
+        config["mission"]["target_priority"] = "control_first"
+        config["map"]["red"] = [dict(id="test-red", x=1100, y=1500)]
+        result = run(compile_config(config), 0)
+        self.assertGreater(result["outcome"]["tp_shots_control"], 0)
+
     def test_end_snapshot_has_delivery_not_one_tick_stale(self):
         c = self.config(1400)
         x = run(compile_config(c), 0)

@@ -11,11 +11,13 @@ from __future__ import annotations
 import numpy as np
 
 from sandtable import (
+    ambush,
     behavior,
     belief,
     c2,
     counter_uas,
     engagement,
+    lane_block,
     formation_metrics,
     mechanics,
     metrics,
@@ -23,6 +25,7 @@ from sandtable import (
     personality,
     planning,
     sensing,
+    target_priority,
 )
 from sandtable.comms_ew import build_comms
 from sandtable.convoy import ROLE_SECURITY, resolve_convoy_spec, resolve_crew_table, resolve_delivery_fraction
@@ -70,6 +73,14 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
     if fired_at is not None and tracks is not None and "receive_fire" in bhv.contact["triggers"]:
         raise ValueError("contact trigger 'receive_fire' is not available with belief tracks "
                          "(belief.engage does not record incoming fire)")
+    # Red target priority and the abstract ambush template (Issue #18). Both None unless declared, so the
+    # legacy engagement path (and its output keys) is unchanged.
+    prio = target_priority.build_target_priority(scn, ent)
+    amb = ambush.build_ambush(scn, ent)
+    lane = lane_block.build_lane_block(scn, ent, world)
+    if (prio is not None or amb is not None) and tracks is not None:
+        raise ValueError("target_priority and ambush are not available with belief tracks "
+                         "(belief.engage has its own target rule)")
     # Escort cost (Issue #12) is reported only when the escort feature is declared, so existing
     # convoy runs keep their output keys.
     _cs = resolve_convoy_spec(scn.params)
@@ -150,7 +161,9 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
                 c2.step(ent, op, comms, scn, k, rng, world, bhv=bhv)
         if bhv is not None:
             behavior.step(ent, bhv, op, comms, scn, k, rng, world=world)
-        planning.step(ent, world, scn, spawn_x, pers=pers, bhv=bhv)
+        if lane is not None:
+            lane_block.update(ent, lane, k, dt)
+        planning.step(ent, world, scn, spawn_x, pers=pers, bhv=bhv, lane=lane, k=k)
         motion.step(ent, world, dt, tempo)
         sensing.step(ent, world, rng, comms)
         if mech is not None:
@@ -158,7 +171,12 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
         if fired_at is not None:
             fired_at[:] = False
         if tracks is None:
-            engagement.step(ent, world, dt, rng, mech=mech, fired_at=fired_at)
+            hold_fire = ambush.step(ent, amb, k, dt) if amb is not None else None
+            if prio is not None:
+                target_priority.begin_step(ent, prio, k)
+            engagement.step(ent, world, dt, rng, mech=mech, fired_at=fired_at, prio=prio, hold_fire=hold_fire)
+            if prio is not None:
+                target_priority.end_step(ent, prio)
         else:
             belief.update(ent, tracks, comms, rng)
             belief.engage(ent, world, tracks, rng, mech=mech)
@@ -231,6 +249,12 @@ def run_mission(scenario: Scenario, seed: int = 0, params: dict | None = None) -
         result.update(metrics.contact_metrics(bhv, dt))
     if bhv is not None and bhv.ll is not None:
         result.update(metrics.leader_loss_metrics(bhv))
+    if prio is not None:
+        result.update(target_priority.metrics(prio))
+    if amb is not None:
+        result.update(ambush.metrics(amb))
+    if lane is not None:
+        result.update(lane_block.metrics(lane))
     if crew_on:
         result.update(metrics.crew_metrics(ent, crew_risk, crew_init, bhv))
     result["detection_coverage"] = cov_sum / max(cov_steps, 1)

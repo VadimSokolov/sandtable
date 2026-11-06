@@ -32,7 +32,8 @@ class EngagementAdapter:
                 )
             pr = self.state["priority"]
             self.tp.begin_step(ent, pr, k)
-            self.branch.step(ent, w, dt, rng, prio=pr, **kw)
+            kw["prio"] = pr
+            self.branch.step(ent, w, dt, rng, **kw)
             self.tp.end_step(ent, pr)
         for i in np.flatnonzero(before & ~ent.alive):
             self.events.append(
