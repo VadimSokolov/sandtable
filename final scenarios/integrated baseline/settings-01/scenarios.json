@@ -1,0 +1,172 @@
+{
+  "shared": {
+    "route": "direct",
+    "pace_mps": 10,
+    "target_gap_s": 4,
+    "minimum_spacing_m": 40
+  },
+  "scenarios": [
+    {
+      "map": "clear-map",
+      "leader_loss": "promote",
+      "communications": "C0",
+      "reaction": "continue"
+    },
+    {
+      "map": "clear-map",
+      "leader_loss": "promote",
+      "communications": "C2",
+      "reaction": "continue"
+    },
+    {
+      "map": "clear-map",
+      "leader_loss": "promote",
+      "communications": "C3",
+      "reaction": "continue"
+    },
+    {
+      "map": "clear-map",
+      "leader_loss": "promote",
+      "communications": "C4",
+      "reaction": "continue"
+    },
+    {
+      "map": "clear-map",
+      "leader_loss": "promote",
+      "communications": "C5",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "promote",
+      "communications": "C0",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "promote",
+      "communications": "C2",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "promote",
+      "communications": "C3",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "promote",
+      "communications": "C4",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "promote",
+      "communications": "C5",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "absorb",
+      "communications": "C0",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "absorb",
+      "communications": "C2",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "absorb",
+      "communications": "C3",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "absorb",
+      "communications": "C4",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "absorb",
+      "communications": "C5",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "continue",
+      "communications": "C0",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "continue",
+      "communications": "C2",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "continue",
+      "communications": "C3",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "continue",
+      "communications": "C4",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "continue",
+      "communications": "C5",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "halt",
+      "communications": "C0",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "halt",
+      "communications": "C2",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "halt",
+      "communications": "C3",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "halt",
+      "communications": "C4",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "halt",
+      "communications": "C5",
+      "reaction": "continue"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "promote",
+      "communications": "C0",
+      "reaction": "halt"
+    },
+    {
+      "map": "sketch-with-enemies",
+      "leader_loss": "promote",
+      "communications": "C0",
+      "reaction": "herringbone-with-halt"
+    }
+  ]
+}

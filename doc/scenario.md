@@ -19,10 +19,8 @@ before using it in a formal deliverable.
 
 ## 1. Questions
 
-1. Are C0-C5 (contested comms / EW degradation) and control modality (direct/teleoperation vs
-   supervisory autonomy) the correct primary variables for GVSC?
-2. Which mission scenarios are of highest relevance to GVSC, and how do they map to what SandTable
-   already implements?
+1. Are C0-C5 (contested comms / EW degradation) and control modality (direct/teleoperation vs supervisory autonomy) the correct primary variables for GVSC?
+2. Which mission scenarios are of highest relevance to GVSC, and how do they map to what SandTable already implements?
 
 ## 2. Executive verdict
 
